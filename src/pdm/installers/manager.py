@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 from pdm import termui
@@ -29,10 +30,16 @@ class InstallManager:
     def install(self, candidate: Candidate) -> Distribution:
         """Install a candidate into the environment, return the distribution"""
         prepared = candidate.prepare(self.environment)
+        wheel = prepared.build()
+        additional_metadata: dict[str, bytes] = {}
+        if direct_url := prepared.direct_url():
+            additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode("utf-8")
+        elif provenance_url := prepared.provenance_url():
+            additional_metadata["provenance_url.json"] = json.dumps(provenance_url, indent=2).encode("utf-8")
         dist_info = install_wheel(
-            prepared.build(),
+            wheel,
             self.environment,
-            direct_url=prepared.direct_url(),
+            additional_metadata=additional_metadata,
             install_links=self.use_install_cache and not candidate.req.editable,
             rename_pth=self.rename_pth,
         )

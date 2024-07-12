@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import os
+import posixpath
 import re
 import warnings
 from functools import cached_property
@@ -21,6 +22,7 @@ from pdm.models.backends import get_backend, get_backend_by_spec
 from pdm.models.reporter import BaseReporter
 from pdm.models.requirements import (
     FileRequirement,
+    NamedRequirement,
     Requirement,
     VcsRequirement,
     _egg_info_re,
@@ -45,6 +47,9 @@ if TYPE_CHECKING:
 
     from pdm._types import FileHash
     from pdm.environments import BaseEnvironment
+
+
+ALLOWED_HASHES = hashlib.algorithms_guaranteed - {"shake_128", "shake_256", "sha1", "md5"}
 
 
 def _dist_info_files(whl_zip: ZipFile) -> list[str]:
@@ -339,7 +344,9 @@ class PreparedCandidate:
         )
 
     def direct_url(self) -> dict[str, Any] | None:
-        """PEP 610 direct_url.json data"""
+        """PEP 610 direct_url.json data
+        https://peps.python.org/pep-0610/
+        """
         req = self.req
         if isinstance(req, VcsRequirement):
             if req.editable:
@@ -386,6 +393,29 @@ class PreparedCandidate:
             )
         else:
             return None
+
+    def provenance_url(self) -> dict[str, Any] | None:
+        """PEP 710 provenance_url.json data
+        https://peps.python.org/pep-0710/
+        """
+        req = self.req
+        if not isinstance(req, NamedRequirement):
+            return None
+        assert self.link is not None
+        comes_from = self.link.comes_from  # e.g. https://pypi.org/simple/requests/
+        if comes_from is None:  # can't determine the index_url
+            return None
+        # FIXME: what about find-links source?
+        index_url = posixpath.dirname(comes_from.rstrip("/")) + "/"
+        return {
+            "url": self.link.url_without_fragment,
+            "index_url": index_url,
+            "archive_info": {
+                "hashes": {
+                    name: hashes[0] for name, hashes in (self.link.hash_option or {}).items() if name in ALLOWED_HASHES
+                },
+            },
+        }
 
     def build(self) -> Path:
         """Call PEP 517 build hook to build the candidate into a wheel"""

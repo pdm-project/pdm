@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import stat
 from functools import cached_property
@@ -151,7 +150,7 @@ def _get_link_method(cache_method: str) -> LinkMethod:
 def install_wheel(
     wheel: Path,
     environment: BaseEnvironment,
-    direct_url: dict[str, Any] | None = None,
+    additional_metadata: dict[str, bytes] | None = None,
     install_links: bool = False,
     rename_pth: bool = False,
 ) -> str:
@@ -169,9 +168,8 @@ def install_wheel(
     else:
         link_method = _get_link_method(cache_method)
 
-    additional_metadata: dict[str, bytes] = {}
-    if direct_url is not None:
-        additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode()
+    if additional_metadata is None:
+        additional_metadata = {}
 
     destination = InstallDestination(
         scheme_dict=environment.get_paths(dist_name),
