@@ -5,6 +5,7 @@ import shutil
 import pytest
 from unearth import Link
 
+from pdm.exceptions import CandidateNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -271,8 +272,8 @@ def test_legacy_pep345_tag_link(project):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     req = parse_requirement("pep345-legacy")
     repo = project.get_repository()
-    candidate = next(iter(repo.find_candidates(req)))
-    assert candidate.requires_python == ">=3,<4"
+    with pytest.raises(CandidateNotFound):
+        _ = next(iter(repo.find_candidates(req)))
 
 
 @pytest.mark.filterwarnings("ignore::FutureWarning")
@@ -280,8 +281,8 @@ def test_ignore_invalid_py_version(project):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     req = parse_requirement("wheel")
     repo = project.get_repository()
-    candidate = next(iter(repo.find_candidates(req)))
-    assert not candidate.requires_python
+    with pytest.raises(CandidateNotFound):
+        _ = next(iter(repo.find_candidates(req)))
 
 
 def test_find_candidates_from_find_links(project):
@@ -291,7 +292,8 @@ def test_find_candidates_from_find_links(project):
     project.pyproject.write(False)
     repo = project.get_repository()
     candidates = list(repo.find_candidates(parse_requirement("demo")))
-    assert len(candidates) == 2
+    assert len(candidates) == 1
+    assert candidates[0].link.filename == "demo-0.0.1-py2.py3-none-any.whl"
 
 
 def test_parse_metadata_from_pep621(project, mocker):
