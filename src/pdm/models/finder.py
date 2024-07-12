@@ -50,7 +50,7 @@ class PDMEvaluator(Evaluator):
     def check_wheel_tags(self, filename: str) -> None:
         if self.env_spec.wheel_compatibility(filename) is None:
             raise LinkMismatchError(
-                f"The wheel file {filename} is not compatible with the target environment {self.env_spec.platform}."
+                f"The wheel file {filename} is not compatible with the target environment {self.env_spec}."
             )
 
 
