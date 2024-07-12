@@ -339,17 +339,14 @@ class Project:
         result = []
         with cd(self.root):
             for line in deps:
-                if line.startswith("-e "):
-                    if in_metadata:
-                        self.core.ui.warn(
-                            f"Skipping editable dependency [b]{line}[/] in the"
-                            r" [success]\[project][/] table. Please move it to the "
-                            r"[success]\[tool.pdm.dev-dependencies][/] table"
-                        )
-                        continue
-                    req = parse_requirement(line[3:].strip(), True)
-                else:
-                    req = parse_requirement(line)
+                if line.startswith("-e ") and in_metadata:
+                    self.core.ui.warn(
+                        f"Skipping editable dependency [b]{line}[/] in the"
+                        r" [success]\[project][/] table. Please move it to the "
+                        r"[success]\[tool.pdm.dev-dependencies][/] table"
+                    )
+                    continue
+                req = parse_line(line)
                 req.groups = [group]
                 # make editable packages behind normal ones to override correctly.
                 result.append(req)
@@ -601,25 +598,27 @@ class Project:
             )
             requirements = requirements.values()
         deps, setter = self.use_pyproject_dependencies(to_group, dev)
-        parsed_deps = [parse_line(dep) for dep in deps]
         updated_indices: set[int] = set()
 
-        for req in requirements:
-            if isinstance(req, str):
-                req = parse_line(req)
-            matched_index = next(
-                (i for i, r in enumerate(deps) if req.matches(r) and i not in updated_indices),
-                None,
-            )
-            dep = req.as_line()
-            if matched_index is None:
-                updated_indices.add(len(deps))
-                deps.append(dep)
-                parsed_deps.append(req)
-            else:
-                deps[matched_index] = dep
-                parsed_deps[matched_index] = req
-                updated_indices.add(matched_index)
+        with cd(self.root):
+            parsed_deps = [parse_line(dep) for dep in deps]
+
+            for req in requirements:
+                if isinstance(req, str):
+                    req = parse_line(req)
+                matched_index = next(
+                    (i for i, r in enumerate(deps) if req.matches(r) and i not in updated_indices),
+                    None,
+                )
+                dep = req.as_line()
+                if matched_index is None:
+                    updated_indices.add(len(deps))
+                    deps.append(dep)
+                    parsed_deps.append(req)
+                else:
+                    deps[matched_index] = dep
+                    parsed_deps[matched_index] = req
+                    updated_indices.add(matched_index)
         setter(cast(Array, deps).multiline(True))
         if write:
             self.pyproject.write(show_message)
