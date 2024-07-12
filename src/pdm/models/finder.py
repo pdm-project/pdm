@@ -37,7 +37,7 @@ class PDMEvaluator(Evaluator):
         self.env_spec = env_spec
 
     def check_requires_python(self, link: unearth.Link) -> None:
-        if not self.ignore_compatibility and link.requires_python:
+        if link.requires_python:
             try:
                 requires_python = parse_version_specifier(link.requires_python)
             except (InvalidSpecifier, PkgInvalidSpecifier) as e:
@@ -48,11 +48,9 @@ class PDMEvaluator(Evaluator):
                 )
 
     def check_wheel_tags(self, filename: str) -> None:
-        if self.ignore_compatibility:
-            return
         if self.env_spec.wheel_compatibility(filename) is None:
             raise LinkMismatchError(
-                f"The wheel file {filename} is not compatible with the target environment {self.env_spec.platform}."
+                f"The wheel file {filename} is not compatible with the target environment {self.env_spec}."
             )
 
 
@@ -74,7 +72,6 @@ class PDMPackageFinder(unearth.PackageFinder):
         return PDMEvaluator(
             package_name=package_name,
             target_python=self.target_python,
-            ignore_compatibility=self.env_spec.is_allow_all(),
             allow_yanked=allow_yanked,
             format_control=format_control,
             exclude_newer_than=self.exclude_newer_than,
