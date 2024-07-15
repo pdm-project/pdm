@@ -12,7 +12,7 @@ from rich.progress import SpinnerColumn, TaskProgressColumn
 
 from pdm import termui
 from pdm.environments import BaseEnvironment
-from pdm.exceptions import InstallationError
+from pdm.exceptions import BuildError, InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.reporter import BaseReporter, RichProgressReporter
@@ -117,7 +117,10 @@ class BaseSynchronizer:
         if not self.install_self or "editables" in self.requested_candidates:
             return False
         # As editables may be added by the backend, we need to check the metadata
-        metadata = self.self_candidate.prepare(self.environment).metadata
+        try:
+            metadata = self.self_candidate.prepare(self.environment).metadata
+        except BuildError:
+            return False
         return any(req.startswith("editables") for req in metadata.requires or [])
 
     @property

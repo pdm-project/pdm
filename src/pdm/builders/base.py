@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import logging
 import os
 import shutil
@@ -10,7 +11,13 @@ from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, cast
 
-from pyproject_hooks import BuildBackendHookCaller
+from pyproject_hooks import (
+    BackendInvalid,
+    BackendUnavailable,
+    BuildBackendHookCaller,
+    HookMissing,
+    UnsupportedOperation,
+)
 
 from pdm.compat import tomllib
 from pdm.environments import PythonEnvironment
@@ -21,7 +28,12 @@ from pdm.models.working_set import WorkingSet
 from pdm.termui import logger
 
 if TYPE_CHECKING:
+    from typing import Callable, ParamSpec, TypeVar
+
     from pdm.environments import BaseEnvironment
+
+    R = TypeVar("R")
+    P = ParamSpec("P")
 
 
 class LoggerWrapper(threading.Thread):
@@ -64,6 +76,16 @@ class LoggerWrapper(threading.Thread):
     def stop(self) -> None:
         os.close(self.fd_write)
         self.join()
+
+
+def wrap_error(func: Callable[P, R]) -> Callable[P, R]:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return func(*args, **kwargs)
+        except (HookMissing, BackendUnavailable, BackendInvalid, UnsupportedOperation) as e:
+            raise BuildError(str(e)) from e
+
+    return functools.update_wrapper(wrapper, func)
 
 
 def build_error(e: subprocess.CalledProcessError) -> BuildError:

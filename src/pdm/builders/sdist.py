@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import os
 
-from pdm.builders.base import EnvBuilder
+from pdm.builders.base import EnvBuilder, wrap_error
 
 
 class SdistBuilder(EnvBuilder):
     """Build sdist in isolated env with managed Python."""
 
+    @wrap_error
     def build(self, out_dir: str, metadata_directory: str | None = None) -> str:
         if self.isolated:
             self.install(self._requires, shared=True)
