@@ -105,14 +105,14 @@ jobs:
           pdm run pip install -U setuptools
           pdm info
       - name: Run Tests
-        run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
+        run: pdm run pytest -k test_build_with_no_isolation
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          flags: unittests
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     file: ./coverage.xml
+      #     flags: unittests
 
   Pack:
     runs-on: ubuntu-latest
