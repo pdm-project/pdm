@@ -137,7 +137,7 @@ class _Prefix:
         for path in (overlay, shared):
             paths = get_sys_config_paths(executable, vars={"base": path, "platbase": path}, kind="prefix")
             self.bin_dirs.append(paths["scripts"])
-            self.lib_dirs.extend([paths["platlib"], paths["purelib"]])
+            self.lib_dirs.extend({paths["platlib"], paths["purelib"]})
         self.site_dir = os.path.join(overlay, "site")
         if os.path.isdir(self.site_dir):
             # Clear existing site dir as .pyc may be cached.
@@ -244,11 +244,9 @@ class EnvBuilder:
 
     @property
     def _env_vars(self) -> dict[str, str]:
-        paths = self._prefix.bin_dirs
-        if "PATH" in os.environ:
-            paths.append(os.getenv("PATH", ""))
         env: dict[str, str] = {}
         if self.isolated:
+            paths = self._prefix.bin_dirs[:]
             env.update(
                 {
                     "PYTHONPATH": self._prefix.site_dir,
@@ -257,14 +255,15 @@ class EnvBuilder:
             )
         else:
             env_paths = self._env.get_paths()
-            project_libs = env_paths["purelib"]
-            pythonpath = [*self._prefix.lib_dirs, project_libs]
+            pythonpath = list({env_paths["purelib"], env_paths["platlib"]})
             if "PYTHONPATH" in os.environ:
                 pythonpath.append(os.getenv("PYTHONPATH", ""))
             env.update(
                 PYTHONPATH=os.pathsep.join(pythonpath),
             )
-            paths.append(env_paths["scripts"])
+            paths = [env_paths["scripts"]]
+        if "PATH" in os.environ:
+            paths.append(os.getenv("PATH", ""))
         env["PATH"] = os.pathsep.join(paths)
         return env
 
