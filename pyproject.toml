@@ -76,7 +76,7 @@ pdm = "pdm.core:main"
 
 [tool.pdm.version]
 source = "scm"
-write_to = "pdm/VERSION"
+write_to = "pdm/models/VERSION"
 
 [tool.pdm.build]
 excludes = ["./**/.git"]
