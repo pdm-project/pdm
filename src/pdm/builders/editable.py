@@ -5,7 +5,7 @@ from typing import Any, ClassVar
 
 from pyproject_hooks import HookMissing
 
-from pdm.builders.base import EnvBuilder
+from pdm.builders.base import EnvBuilder, wrap_error
 from pdm.termui import logger
 
 
@@ -17,6 +17,7 @@ class EditableBuilder(EnvBuilder):
         "requires": ["setuptools_pep660"],
     }
 
+    @wrap_error
     def prepare_metadata(self, out_dir: str) -> str:
         if self.isolated:
             self.install(self._requires, shared=True)
@@ -30,6 +31,7 @@ class EditableBuilder(EnvBuilder):
             return self.prepare_metadata(out_dir)
         return os.path.join(out_dir, filename)
 
+    @wrap_error
     def build(self, out_dir: str, metadata_directory: str | None = None) -> str:
         if self.isolated:
             self.install(self._requires, shared=True)
