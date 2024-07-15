@@ -160,7 +160,6 @@ def test_cli_build_with_config_settings(fixture_project, pdm):
 
 @pytest.mark.usefixtures("local_finder")
 def test_build_with_no_isolation(pdm, project):
-    project.project_config["python.use_venv"] = True
     result = pdm(["build", "--no-isolation"], obj=project)
     assert result.exit_code == 1
     pdm(["add", "pdm-backend", "--no-self"], obj=project, strict=True)
