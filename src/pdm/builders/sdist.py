@@ -16,7 +16,7 @@ class SdistBuilder(EnvBuilder):
             requires = self._hook.get_requires_for_build_sdist(self.config_settings)
             self.install(requires)
         lib = self._env.get_paths()["purelib"]
-        logger.info("Libs: %s", os.listdir(lib))
+        logger.info("Libs(%s): %s", lib, os.listdir(lib))
         logger.info("PYTHONPATH: %s", self._env_vars["PYTHONPATH"])
         filename = self._hook.build_sdist(out_dir, self.config_settings)
         return os.path.join(out_dir, filename)
