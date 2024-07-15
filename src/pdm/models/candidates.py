@@ -11,10 +11,12 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, cast, no_type_check
 from zipfile import ZipFile
 
+from packaging.version import InvalidVersion
+
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
-from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning
+from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning, RequirementError
 from pdm.models.backends import get_backend, get_backend_by_spec
 from pdm.models.reporter import BaseReporter
 from pdm.models.requirements import (
@@ -242,7 +244,10 @@ class Candidate:
         """Build a lockfile entry dictionary for the candidate."""
         version = str(self.version)
         if not self.req.is_pinned:
-            version = str(comparable_version(version))
+            try:
+                version = str(comparable_version(version))
+            except InvalidVersion as e:
+                raise RequirementError(f"Invalid version for {self.req.as_line()}: {e}") from None
         result = {
             "name": normalize_name(self.name),
             "version": version,
