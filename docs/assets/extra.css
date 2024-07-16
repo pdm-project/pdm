@@ -5,10 +5,11 @@ a.pdm-expansions {
 }
 
 .bot-container {
+  z-index: 9;
   position: fixed;
   width: 400px;
   right: 20px;
-  bottom: 20px;
+  bottom: 110px;
   display: flex;
   flex-direction: column;
   align-items:end;
