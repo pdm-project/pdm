@@ -23,12 +23,16 @@
     const iFrame = document.querySelector('.bot-container > iframe');
     const hideBot = () => {
       iFrame.style.height = null;
+      botButton.style.display = 'block';
       document.removeEventListener('click', hideBot);
     }
     botButton.addEventListener('click', (e) => {
       const curHeight = window.getComputedStyle(iFrame).height;
+      const header = document.querySelector('.md-header');
+      const height = `calc(100vh - ${header.clientHeight + 120}px)`;
       if (curHeight === '0px') {
-        iFrame.style.height = '600px';
+        iFrame.style.height = height;
+        botButton.style.display = 'none';
         document.addEventListener('click', hideBot);
       } else {
         hideBot();
@@ -38,5 +42,13 @@
     iFrame.addEventListener('click', (e) => {
       e.stopPropagation();
     });
+    window.addEventListener('resize', (e) => {
+      if (iFrame.style.height) {
+        const header = document.querySelector('.md-header');
+        const height = `calc(100vh - ${header.clientHeight + 120}px)`;
+        iFrame.style.height = height;
+      }
+      e.stopPropagation();
+    })
   </script>
 {% endblock %}
