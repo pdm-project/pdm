@@ -1,3 +1,63 @@
+## Release v2.17.0 (2024-07-18)
+
+
+### Breaking Changes
+
+- `LockedRepository.all_candidates` now returns a `dict[str, list[Candidate]]` instead of `dict[str, Candidate]`. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `post_lock` hook now receives a resolution result of type `dict[str, list[Candidate]]`, instead of `dict[str, Candidate]`. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+
+### Features & Improvements
+
+- Support reading requirement constraints from pip-style requirement files for "overriding" via `--override` option. ([#2896](https://github.com/pdm-project/pdm/issues/2896))
+- Add a `--non-interactive` option for automation scenarios, also interactive prompts will not show up when not running in an interactive terminal. ([#2934](https://github.com/pdm-project/pdm/issues/2934))
+- Add `--license` and `--project-version` as CLI options to control and streamline them during `pdm init` - especially in automated scenarios with `--non-interactive` ([#2978](https://github.com/pdm-project/pdm/issues/2978))
+- Run pdm sync in "post-rewrite" stage of pre-commit ([#2994](https://github.com/pdm-project/pdm/issues/2994))
+- `Project.get_dependencies()` now returns a list of `Requirement` instead of a mapping.
+  The first argument of `Project.add_dependencies()` now accepts a list of `Requirement` instead of a mapping.
+  The old usage will be kept working for a short period of time and will be removed in the future. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- Support locking for specific target, which is a combination of (python, platform, implementation) triple. Bump lock file version to `4.5.0`.
+
+  Example usage: `pdm lock --platform=linux --python="==3.8.*" --implementation=cpython`. See the [docs](https://pdm-project.org/en/latest/usage/lock-targets) for more details. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- Rename `--reuse-env` to `--recreate` for `run` command, and reverse the behavior. ([#2999](https://github.com/pdm-project/pdm/issues/2999))
+- PDM is now published with optional pinned dependencies using the pdm plugin [pdm-build-locked](https://pdm-build-locked.readthedocs.io/).
+
+  To install pdm with its dependencies pinned to the versions it was tested with, run:
+
+  ```bash
+
+      pipx install pdm[locked]
+  ```
+
+  To install optional dependency group copier:
+
+  ```bash
+
+      pipx install pdm[locked,copier-locked]
+  ```
+
+  This feature is entirely optional. Installing pdm without the extra will work the same way as before this change. ([#3001](https://github.com/pdm-project/pdm/issues/3001))
+- Added `--clean-unselected` alias for `--only-keep` ([#3007](https://github.com/pdm-project/pdm/issues/3007))
+- Group options for update strategy and save strategy. ([#3016](https://github.com/pdm-project/pdm/issues/3016))
+
+### Bug Fixes
+
+- When locking dependencies that references the self project, the referenced groups should also be recorded in the lockfile. ([#2976](https://github.com/pdm-project/pdm/issues/2976))
+- Retry failed installation jobs if they are run sequentially, such as for editable dependencies. ([#3005](https://github.com/pdm-project/pdm/issues/3005))
+- Fix the local path issue when `-p` is passed to change the project root. ([#3009](https://github.com/pdm-project/pdm/issues/3009))
+- Fix a bug that PDM can't install editable self package with non-isolated build in one go. ([#3018](https://github.com/pdm-project/pdm/issues/3018))
+- Add context when parsing version failed. ([#3020](https://github.com/pdm-project/pdm/issues/3020))
+- Fix a mistake in build env setup that will cause the `PATH` env var length to grow. ([#3022](https://github.com/pdm-project/pdm/issues/3022))
+
+### Removals and Deprecations
+
+- Remove the deprecation warning of `BaseCommand.__init__()` method. Now it doesn't take any arguments. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `Provider.get_reuse_candidate()` method is deprecated in favor of `Provider.iter_reuse_candidates()`, to return an iterable of reuse candidates. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `--no-markers` option in `pdm export` command becomes a no-op and is marked as deprecated, because it doesn't make sense anymore. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `ignore_compatibility` parameter of `Project.get_provider()`/`Project.get_repository()`/`Environment.get_finder()` is deprecated. Pass in a `EnvSpec` via `env_spec` parameter instead.
+  `requires_python` parameter of `pdm.resolver.core.resolve()` function is deprecated and has no effect.
+  `cross_platform` parameter of `pdm.cli.actions.resolve_candidates_from_lockfile()` function is deprecated and has no effect. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+
+
 ## Release v2.16.1 (2024-06-26)
 
 
