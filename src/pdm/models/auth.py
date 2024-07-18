@@ -7,7 +7,7 @@ from unearth.utils import commonprefix, split_auth_from_url
 
 from pdm._types import RepositoryConfig
 from pdm.exceptions import PdmException
-from pdm.termui import UI, Verbosity
+from pdm.termui import UI, Verbosity, is_interactive
 
 
 class PdmBasicAuth(MultiDomainBasicAuth):
@@ -18,7 +18,7 @@ class PdmBasicAuth(MultiDomainBasicAuth):
     """
 
     def __init__(self, ui: UI, sources: list[RepositoryConfig]) -> None:
-        super().__init__(prompting=True)
+        super().__init__(prompting=is_interactive())
         self.sources = sources
         self.ui = ui
 

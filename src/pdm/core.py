@@ -25,7 +25,7 @@ from resolvelib import Resolver
 
 from pdm import termui
 from pdm.__version__ import __version__
-from pdm.cli.options import ignore_python_option, no_cache_option, pep582_option, verbose_option
+from pdm.cli.options import ignore_python_option, no_cache_option, non_interactive_option, pep582_option, verbose_option
 from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
@@ -108,6 +108,7 @@ class Core:
         no_cache_option.add_to_parser(self.parser)
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
+        non_interactive_option.add_to_parser(self.parser)
 
         self.subparsers = self.parser.add_subparsers(parser_class=ArgumentParser, title="commands", metavar="")
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
