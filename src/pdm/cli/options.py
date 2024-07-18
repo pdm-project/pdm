@@ -192,7 +192,13 @@ def frozen_lockfile_option(
     project.enable_write_lockfile = False  # type: ignore[has-type]
 
 
-@Option("--pep582", const="AUTO", metavar="SHELL", nargs="?", help="Print the command line to be eval'd by the shell")
+@Option(
+    "--pep582",
+    const="AUTO",
+    metavar="SHELL",
+    nargs="?",
+    help="Print the command line to be eval'd by the shell for PEP 582",
+)
 def pep582_option(
     project: Project,
     namespace: argparse.Namespace,
@@ -411,6 +417,22 @@ def ignore_python_option(
     option_string: str | None = None,
 ) -> None:
     os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
+
+
+@Option(
+    "-n",
+    "--non-interactive",
+    nargs=0,
+    dest="_non_interactive",
+    help="Don't show interactive prompts but use defaults. [env var: PDM_NON_INTERACTIVE]",
+)
+def non_interactive_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
+    os.environ.update({"PDM_NON_INTERACTIVE": "1"})
 
 
 prerelease_option = ArgumentGroup("prerelease", is_mutually_exclusive=True)

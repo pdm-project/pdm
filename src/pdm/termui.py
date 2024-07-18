@@ -45,7 +45,7 @@ def is_interactive(console: Console | None = None) -> bool:
     """Check if the terminal is run under interactive mode"""
     if console is None:
         console = rich.get_console()
-    return console.is_interactive
+    return "PDM_NON_INTERACTIVE" not in os.environ and console.is_interactive
 
 
 def is_legacy_windows(console: Console | None = None) -> bool:
@@ -71,7 +71,9 @@ def style(text: str, *args: str, style: str | None = None, **kwargs: Any) -> str
 
 
 def confirm(*args: str, **kwargs: Any) -> bool:
-    kwargs.setdefault("default", False)
+    default = kwargs.setdefault("default", False)
+    if not is_interactive():
+        return default
     return Confirm.ask(*args, **kwargs)
 
 

@@ -235,7 +235,7 @@ class Command(BaseCommand):
             project.core.ui.echo("pyproject.toml already exists, update it now.", style="primary")
         else:
             project.core.ui.echo("Creating a pyproject.toml for PDM...", style="primary")
-        self.set_interactive(not options.non_interactive)
+        self.set_interactive(not options.non_interactive and termui.is_interactive())
         self.do_init(project, options=options)
         project.core.ui.echo("Project is initialized successfully", style="primary")
         if self.interactive:

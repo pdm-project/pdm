@@ -1,10 +1,20 @@
 import sys
 from unittest.mock import ANY
 
+import pytest
+
 from pdm.compat import tomllib
 from pdm.models.python import PythonInfo
 
 PYTHON_VERSION = f"{sys.version_info[0]}.{sys.version_info[1]}"
+
+
+@pytest.fixture(autouse=True)
+def enable_interactive_mode(mocker):
+    from rich import get_console
+
+    console = get_console()
+    mocker.patch.object(console, "is_interactive", True)
 
 
 def test_init_validate_python_requires(project_no_init, pdm):

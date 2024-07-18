@@ -34,9 +34,11 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generator,
     Iterable,
     Iterator,
     Mapping,
+    MutableMapping,
     Tuple,
     Union,
     cast,
@@ -302,6 +304,16 @@ def build_env_wheels() -> Iterable[Path]:
         a list of wheels paths to install
     """
     return []
+
+
+@pytest.fixture(autouse=True)
+def temp_env() -> Generator[MutableMapping[str, str], None, None]:
+    old_env = os.environ.copy()
+    try:
+        yield os.environ
+    finally:
+        os.environ.clear()
+        os.environ.update(old_env)
 
 
 @pytest.fixture(scope="session")

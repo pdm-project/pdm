@@ -104,7 +104,8 @@ class Command(BaseCommand):
             req = python if ignore_requires_python else f'requires-python="{project.python_requires}"'
             raise NoPythonVersion(f"No Python interpreter matching [success]{req}[/] is found.")
 
-        if first or len(found_interpreters) == 1:
+        if first or len(found_interpreters) == 1 or not termui.is_interactive():
+            project.core.ui.info("Using the first matched interpreter.")
             return found_interpreters[0]
 
         project.core.ui.echo(
