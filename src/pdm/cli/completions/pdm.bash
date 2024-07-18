@@ -121,7 +121,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (sync)
-            opts="--clean --config-setting --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --only-keep --production --project --quiet --reinstall --skip --venv --verbose --without"
+            opts="--clean --config-setting --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --clean-unselected --only-keep --production --project --quiet --reinstall --skip --venv --verbose --without"
             ;;
 
             (update)
