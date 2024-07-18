@@ -24,7 +24,9 @@ There are a few similar commands to do this job with slight differences:
 `pdm sync` also has a few options to manage installed packages:
 
 - `--clean`: will remove packages no longer in the lockfile
-- `--only-keep`: only selected packages (using options like `-G` or `--prod`) will be kept.
+- `--clean-unselected` (or `--only-keep`): more thorough version of `--clean` that will also remove packages not in the groups specified by the `-G`, `-d`, and `--prod` options.
+Note: by default, `pdm sync` selects all groups from the lockfile, so `--clean-unselected` is identical to `--clean` unless `-G`, `-d`, and `--prod` are used.
+
 
 ## Hashes in the lock file
 

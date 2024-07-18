@@ -455,7 +455,8 @@ _pdm() {
         '--dry-run[Only prints actions without actually running them]'
         {-r,--reinstall}"[Force reinstall existing dependencies]"
         '--clean[Clean unused packages]'
-        "--only-keep[Only keep the selected packages]"
+        "--clean-unselected[Remove all but the selected packages]"
+        "--only-keep[Remove all but the selected packages]"
         "--no-default[Don\'t include dependencies from the default group]"
         {-x,--fail-fast}'[Abort on first installation error]'
         '--no-editable[Install non-editable versions for all packages]'

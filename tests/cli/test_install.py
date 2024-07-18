@@ -197,12 +197,12 @@ def test_install_check(pdm, project, repository):
     assert result.exit_code == 1
 
 
-def test_sync_with_only_keep_option(project, working_set, pdm):
+def test_sync_with_clean_unselected_option(project, working_set, pdm):
     project.add_dependencies(["requests>=2.0"])
     project.add_dependencies(["django"], "web", True)
     pdm(["install"], obj=project, strict=True)
     assert all(p in working_set for p in ("requests", "urllib3", "django", "pytz")), list(working_set)
-    pdm(["sync", "--prod", "--only-keep"], obj=project, strict=True)
+    pdm(["sync", "--prod", "--clean-unselected"], obj=project, strict=True)
     assert "requests" in working_set
     assert "urllib3" in working_set
     assert "django" not in working_set
