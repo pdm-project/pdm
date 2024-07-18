@@ -384,7 +384,7 @@ global_option = Option(
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
 clean_group.add_argument("--clean", action="store_true", help="Clean packages not in the lockfile")
-clean_group.add_argument("--clean-unselected", "--only-keep", action="store_true", help="Only keep the selected packages")
+clean_group.add_argument("--only-keep", "--clean-unselected", action="store_true", help="Only keep the selected packages")
 
 packages_group = ArgumentGroup("Package Arguments")
 packages_group.add_argument(
