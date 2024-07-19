@@ -5,7 +5,7 @@
 groups = ["default", "all", "cookiecutter", "copier", "doc", "keyring", "pytest", "template", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:0688c2fef695c5f8c5d662a1e5a006c55c3644741999146d8e2a4698df214e44"
+content_hash = "sha256:857f9a265e99a5e3f37e50f9ae87a0df094c4d27bce6f60600cbb276b87ac6e2"
 
 [[metadata.targets]]
 requires_python = ">=3.8"
