@@ -1,3 +1,16 @@
+## Release v2.17.1 (2024-07-19)
+
+
+### Bug Fixes
+
+- Raise dep-logic lower bound to 0.4.2 to fix issues with pdm lock after upgrading from older pdm versions ([#3033](https://github.com/pdm-project/pdm/issues/3033))
+- Correct the current platform and architecture for win32 and macos systems. ([#3035](https://github.com/pdm-project/pdm/issues/3035))
+
+### Miscellany
+
+- Fix zsh completions ([#3031](https://github.com/pdm-project/pdm/issues/3031))
+
+
 ## Release v2.17.0 (2024-07-18)
 
 
