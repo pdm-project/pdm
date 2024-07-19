@@ -10,6 +10,7 @@
 
 - Support reading requirement constraints from pip-style requirement files for "overriding" via `--override` option. ([#2896](https://github.com/pdm-project/pdm/issues/2896))
 - Add a `--non-interactive` option for automation scenarios, also interactive prompts will not show up when not running in an interactive terminal. ([#2934](https://github.com/pdm-project/pdm/issues/2934))
+- Refactored `pdm python install --list` to reuse the same implementation as other cli commands that work with Python interpreters from pbs_installer. ([#2977](https://github.com/pdm-project/pdm/issues/2977))
 - Add `--license` and `--project-version` as CLI options to control and streamline them during `pdm init` - especially in automated scenarios with `--non-interactive` ([#2978](https://github.com/pdm-project/pdm/issues/2978))
 - Run pdm sync in "post-rewrite" stage of pre-commit ([#2994](https://github.com/pdm-project/pdm/issues/2994))
 - `Project.get_dependencies()` now returns a list of `Requirement` instead of a mapping.
