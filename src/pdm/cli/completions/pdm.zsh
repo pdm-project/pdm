@@ -51,7 +51,7 @@ _pdm() {
     {-I,--ignore-python}'[Ignore the Python path saved in .pdm-python]' \
     '--no-cache:Disable the cache for the current command. [env var: PDM_NO_CACHE]' \
     '--pep582:Print the command line to be eval by the shell for PEP 582:shell:(zsh bash fish tcsh csh)' \
-    {-n,--non-interactive}"[Don't show interactive prompts but use defaults. \[env var: PDM_NON_INTERACTIVE\]]"
+    {-n,--non-interactive}"[Don't show interactive prompts but use defaults. \[env var: PDM_NON_INTERACTIVE\]]" \
     '*:: :->_subcmds' \
     && return 0
 
