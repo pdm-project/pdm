@@ -13,6 +13,8 @@ def get_arch() -> str:
     if arch in ("i386", "i686"):
         return "x86"
     if arch == "amd64":
+        if platform.architecture()[0] == "32bit":
+            return "x86"
         return "x86_64"
     if arch == "arm64":
         return "aarch64"
@@ -42,7 +44,10 @@ def get_platform() -> str:
         mac_ver = platform.mac_ver()[0].split(".")
         if arch == "aarch64":
             arch = "arm64"
-        return f"macos_{mac_ver[0]}_{mac_ver[1]}_{arch}"
+        major, minor = int(mac_ver[0]), int(mac_ver[1])
+        if major >= 11:
+            minor = 0
+        return f"macos_{major}_{minor}_{arch}"
     else:
         raise EnvError("Unsupported platform")
 
