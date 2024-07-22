@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, Callable
 
 import unearth
 from dep_logic.specifiers import InvalidSpecifier, parse_version_specifier
-from packaging.specifiers import InvalidSpecifier as PkgInvalidSpecifier
 from packaging.version import Version
 from unearth.evaluator import Evaluator, FormatControl, LinkMismatchError, Package
 
 from pdm.models.markers import EnvSpec
 from pdm.utils import parse_version
+
+logger = logging.getLogger("unearth")
 
 if TYPE_CHECKING:
     from pdm.models.session import PDMPyPIClient
@@ -40,8 +42,11 @@ class PDMEvaluator(Evaluator):
         if link.requires_python:
             try:
                 requires_python = parse_version_specifier(link.requires_python)
-            except (InvalidSpecifier, PkgInvalidSpecifier) as e:
-                raise LinkMismatchError(f"Invalid requires-python: {link.requires_python}") from e
+            except InvalidSpecifier as e:
+                logger.debug(
+                    "Invalid requires-python specifier for link(%s) %s: %s", link.redacted, link.requires_python, e
+                )
+                return
             if (requires_python & self.env_spec.requires_python).is_empty():
                 raise LinkMismatchError(
                     f"The package requires-python {link.requires_python} is not compatible with the target {self.env_spec.requires_python}."

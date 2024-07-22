@@ -35,7 +35,7 @@ def _read_max_versions() -> dict[Version, int]:
 def get_specifier(version_str: str | None) -> SpecifierSet:
     if not version_str or version_str == "*":
         return SpecifierSet()
-    return SpecifierSet(fix_legacy_specifier(version_str))
+    return SpecifierSet(version_str)
 
 
 _legacy_specifier_re = re.compile(r"(==|!=|<=|>=|<|>)(\s*)([^,;\s)]*)")
