@@ -237,6 +237,10 @@ class Candidate:
 
     @requires_python.setter
     def requires_python(self, value: str) -> None:
+        try:  # ensure the specifier is valid
+            PySpecSet(value)
+        except InvalidPyVersion:
+            return
         self._requires_python = value
 
     @no_type_check

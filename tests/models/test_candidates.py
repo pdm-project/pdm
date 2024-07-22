@@ -5,7 +5,6 @@ import shutil
 import pytest
 from unearth import Link
 
-from pdm.exceptions import CandidateNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -272,8 +271,7 @@ def test_legacy_pep345_tag_link(project):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     req = parse_requirement("pep345-legacy")
     repo = project.get_repository()
-    with pytest.raises(CandidateNotFound):
-        _ = next(iter(repo.find_candidates(req)))
+    _ = next(iter(repo.find_candidates(req)))
 
 
 @pytest.mark.filterwarnings("ignore::FutureWarning")
@@ -281,8 +279,7 @@ def test_ignore_invalid_py_version(project):
     project.project_config["pypi.url"] = "https://my.pypi.org/simple"
     req = parse_requirement("wheel")
     repo = project.get_repository()
-    with pytest.raises(CandidateNotFound):
-        _ = next(iter(repo.find_candidates(req)))
+    _ = next(iter(repo.find_candidates(req)))
 
 
 def test_find_candidates_from_find_links(project):
