@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Sequence, TypeVar, cast
 
 from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
 
 from pdm.compat import Distribution
@@ -143,7 +143,10 @@ class Requirement:
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(e.strip() for e in kwargs["extras"][1:-1].split(","))
         version = kwargs.pop("version", "")
-        kwargs["specifier"] = get_specifier(version)
+        try:
+            kwargs["specifier"] = get_specifier(version)
+        except InvalidSpecifier as e:
+            raise RequirementError(f'Invalid specifier for {kwargs.get("name")}: {version}: {e}') from None
         return cls(**{k: v for k, v in kwargs.items() if k in inspect.signature(cls).parameters})
 
     @classmethod
@@ -171,7 +174,7 @@ class Requirement:
     @classmethod
     def from_req_dict(cls, name: str, req_dict: RequirementDict, check_installable: bool = True) -> Requirement:
         if isinstance(req_dict, str):  # Version specifier only.
-            return NamedRequirement(name=name, specifier=get_specifier(req_dict))
+            return NamedRequirement.create(name=name, version=req_dict)
         for vcs in VCS_SCHEMA:
             if vcs in req_dict:
                 repo = cast(str, req_dict.pop(vcs, None))
