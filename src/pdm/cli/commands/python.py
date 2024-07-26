@@ -11,6 +11,7 @@ from pdm.cli.options import verbose_option
 from pdm.environments import BareEnvironment
 from pdm.exceptions import InstallationError, PdmArgumentError
 from pdm.models.python import PythonInfo
+from pdm.termui import Verbosity
 from pdm.utils import get_all_installable_python_versions
 
 if TYPE_CHECKING:
@@ -79,7 +80,7 @@ class RemoveCommand(BaseCommand):
                 ui.echo(f"  {child.name}", err=True)
             sys.exit(1)
         shutil.rmtree(matched, ignore_errors=True)
-        ui.echo(f"[success]Removed installed[/] {options.version}")
+        ui.echo(f"[success]Removed installed[/] {options.version}", verbosity=Verbosity.NORMAL)
 
 
 class InstallCommand(BaseCommand):
@@ -152,7 +153,10 @@ class InstallCommand(BaseCommand):
             raise InstallationError("Installation failed, please try again.")
 
         python_info = PythonInfo.from_path(interpreter)
-        ui.echo(f"[success]Successfully installed[/] {python_info.implementation}@{python_info.version}")
-        ui.echo(f"[info]Version:[/] {python_info.version}")
-        ui.echo(f"[info]Executable:[/] {python_info.path}")
+        ui.echo(
+            f"[success]Successfully installed[/] {python_info.implementation}@{python_info.version}",
+            verbosity=Verbosity.NORMAL,
+        )
+        ui.echo(f"[info]Version:[/] {python_info.version}", verbosity=Verbosity.NORMAL)
+        ui.echo(f"[info]Executable:[/] {python_info.path}", verbosity=Verbosity.NORMAL)
         return python_info
