@@ -3,7 +3,6 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import os
-import posixpath
 import re
 import warnings
 from functools import cached_property
@@ -402,14 +401,8 @@ class PreparedCandidate:
         if not isinstance(req, NamedRequirement):
             return None
         assert self.link is not None
-        comes_from = self.link.comes_from  # e.g. https://pypi.org/simple/requests/
-        if comes_from is None:  # can't determine the index_url
-            return None
-        # FIXME: what about find-links source?
-        index_url = posixpath.dirname(comes_from.rstrip("/")) + "/"
         return {
             "url": self.link.url_without_fragment,
-            "index_url": index_url,
             "archive_info": {
                 "hashes": {
                     name: hashes[0] for name, hashes in (self.link.hash_option or {}).items() if name in ALLOWED_HASHES
