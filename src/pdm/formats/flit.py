@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, cast
+from typing import TYPE_CHECKING, Any, List, Mapping, cast
 
 from pdm.compat import tomllib
 from pdm.formats.base import (
@@ -36,7 +36,7 @@ def check_fingerprint(project: Project | None, filename: PathLike) -> bool:
 def _get_author(metadata: dict[str, Any], type_: str = "author") -> list[str]:
     name = metadata.pop(type_)
     email = metadata.pop(f"{type_}-email", None)
-    return cast(list[str], array_of_inline_tables([{"name": name, "email": email}]))
+    return cast(List[str], array_of_inline_tables([{"name": name, "email": email}]))
 
 
 def get_docstring_and_version_via_ast(
