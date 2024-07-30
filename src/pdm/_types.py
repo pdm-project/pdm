@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses as dc
 import re
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NamedTuple, Tuple, TypeVar, Union
 
 if TYPE_CHECKING:
     from typing import Protocol
@@ -84,8 +84,8 @@ class RepositoryConfig(_RepositoryConfig):
         return "\n".join(lines)
 
 
-RequirementDict = Union[str, dict[str, Union[str, bool]]]
-CandidateInfo = tuple[list[str], str, str]
+RequirementDict = Union[str, Dict[str, Union[str, bool]]]
+CandidateInfo = Tuple[List[str], str, str]
 
 
 class Package(NamedTuple):
