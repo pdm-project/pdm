@@ -33,13 +33,11 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generator,
     Iterable,
     Iterator,
     Mapping,
     MutableMapping,
-    Tuple,
     Union,
     cast,
 )
@@ -285,11 +283,11 @@ class MockWorkingSet(collections.abc.MutableMapping):
 #   When going through pytest assertions rewrite, the future annotations is ignored.
 #   As a consequence, type definition must comply with Python 3.7 syntax
 
-IndexMap = Dict[str, Path]
+IndexMap = dict[str, Path]
 """Path some root-relative http paths to some local paths"""
-IndexOverrides = Dict[str, bytes]
+IndexOverrides = dict[str, bytes]
 """PyPI indexes overrides fixture format"""
-IndexesDefinition = Dict[str, Union[Tuple[IndexMap, IndexOverrides, bool], IndexMap]]
+IndexesDefinition = dict[str, Union[tuple[IndexMap, IndexOverrides, bool], IndexMap]]
 """Mock PyPI indexes format"""
 
 

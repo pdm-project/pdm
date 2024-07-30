@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Dict, cast
+from typing import TYPE_CHECKING, cast
 
 from pdm import termui
 from pdm.models.candidates import Candidate
@@ -49,7 +49,7 @@ def resolve(
             verbosity=termui.Verbosity.NORMAL,
         )
 
-    mapping = cast(Dict[str, Candidate], result.mapping)
+    mapping = cast(dict[str, Candidate], result.mapping)
     mapping.pop("python", None)
 
     local_name = (
