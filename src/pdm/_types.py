@@ -94,7 +94,7 @@ class Package(NamedTuple):
     summary: str
 
 
-SearchResult = list[Package]
+SearchResult = List[Package]
 
 
 if TYPE_CHECKING:
