@@ -107,7 +107,7 @@ class Command(BaseCommand):
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 
         name = self.ask_project(project)
-        version = self.ask("Project version", "0.1.0")
+        version = self.ask("Project version", options.project_version or "0.1.0")
         is_dist = options.dist or bool(options.backend)
         if not is_dist and self.interactive:
             is_dist = termui.confirm(
@@ -139,7 +139,7 @@ class Command(BaseCommand):
         else:
             description = ""
             default_python_requires = f"=={python.major}.{python.minor}.*"
-        license = self.ask("License(SPDX name)", "MIT")
+        license = self.ask("License(SPDX name)", options.license or "MIT")
 
         git_user, git_email = get_user_email_from_git()
         author = self.ask("Author name", git_user)
@@ -201,6 +201,8 @@ class Command(BaseCommand):
             "--dist", "--lib", dest="dist", action="store_true", help="Create a package for distribution"
         )
         group.add_argument("--backend", choices=list(_BACKENDS), help="Specify the build backend, which implies --dist")
+        group.add_argument("--license", help="Specify the license (SPDX name)")
+        group.add_argument("--project-version", help="Specify the project's version")
         parser.add_argument(
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"
         )
@@ -233,7 +235,7 @@ class Command(BaseCommand):
             project.core.ui.echo("pyproject.toml already exists, update it now.", style="primary")
         else:
             project.core.ui.echo("Creating a pyproject.toml for PDM...", style="primary")
-        self.set_interactive(not options.non_interactive)
+        self.set_interactive(not options.non_interactive and termui.is_interactive())
         self.do_init(project, options=options)
         project.core.ui.echo("Project is initialized successfully", style="primary")
         if self.interactive:

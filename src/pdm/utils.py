@@ -7,6 +7,7 @@ from __future__ import annotations
 import atexit
 import contextlib
 import functools
+import inspect
 import json
 import os
 import re
@@ -23,6 +24,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Mapping
 
 from packaging.version import Version, _cmpkey
+from pbs_installer import PythonVersion
 
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PDMDeprecationWarning, PdmException
@@ -423,7 +425,7 @@ def fs_supports_link_method(method: str) -> bool:
         return True
 
 
-def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:
+def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | None = None) -> None:  # pragma: no cover
     """Show a deprecation warning with the given message and raise an error
     after a specified version.
     """
@@ -441,7 +443,7 @@ def is_pip_compatible_with_python(python_version: Version | str) -> bool:
     from pdm.models.specifiers import get_specifier
 
     pip = importlib_metadata.distribution("pip")
-    requires_python = get_specifier(pip.metadata["Requires-Python"])
+    requires_python = get_specifier(pip.metadata.get("Requires-Python"))
     return requires_python.contains(python_version, True)
 
 
@@ -537,3 +539,32 @@ def convert_to_datetime(value: str) -> datetime:
     if "T" in value:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
+
+def get_all_installable_python_versions(build_dir: bool = False) -> list[PythonVersion]:
+    """Returns all installable standalone Python interpreter versions from @indygreg
+
+    Installable means:
+        Fitting current platform and arch
+
+    Parameters:
+        build_dir: Whether to include the `build/` directory from indygreg builds (aka 'Full Archive')
+    """
+    from pbs_installer._install import THIS_ARCH, THIS_PLATFORM
+    from pbs_installer._versions import PYTHON_VERSIONS
+
+    arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
+    matches = [v for v, u in PYTHON_VERSIONS.items() if u.get((THIS_PLATFORM, arch, not build_dir))]
+    return matches
+
+
+def get_class_init_params(klass: type) -> set[str]:
+    arguments: set[str] = set()
+    for cls in klass.__mro__:
+        if "__init__" not in cls.__dict__:
+            continue
+        params = inspect.signature(cls).parameters
+        arguments.update({k for k, v in params.items() if v.kind not in (v.VAR_POSITIONAL, v.VAR_KEYWORD)})
+        if not any(p.kind in (p.VAR_POSITIONAL, p.VAR_KEYWORD) for p in params.values()):
+            break
+    return arguments

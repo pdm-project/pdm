@@ -16,7 +16,7 @@ A modern Python package and dependency manager supporting the latest PEP standar
 [![codecov](https://codecov.io/gh/pdm-project/pdm/branch/main/graph/badge.svg?token=erZTquL5n0)](https://codecov.io/gh/pdm-project/pdm)
 [![Packaging status](https://repology.org/badge/tiny-repos/pdm.svg)](https://repology.org/project/pdm/versions)
 [![Downloads](https://pepy.tech/badge/pdm/week)](https://pepy.tech/project/pdm)
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm-project.org)
+[![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
 <a href="https://trackgit.com">
 <img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/l4eztudjnh9bfay668fl" alt="trackgit-views" />
 </a>
@@ -178,10 +178,10 @@ You can add multiple dependencies in the same command. After a while, check the 
 Tell people you are using PDM in your project by including the markdown code in README.md:
 
 ```markdown
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm-project.org)
+[![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
 ```
 
-[![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm-project.org)
+[![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
 
 
 ## Packaging Status

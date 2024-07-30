@@ -11,10 +11,12 @@ from pdm.cli.options import (
     frozen_lockfile_option,
     install_group,
     lockfile_option,
+    override_option,
     skip_option,
     venv_option,
 )
 from pdm.exceptions import PdmUsageError, ProjectError
+from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
     from typing import Collection
@@ -30,6 +32,7 @@ class Command(BaseCommand):
         install_group,
         dry_run_option,
         lockfile_option,
+        override_option,
         frozen_lockfile_option,
         skip_option,
         venv_option,
@@ -98,6 +101,7 @@ class Command(BaseCommand):
             f"Removing {'[bold]global[/] ' if project.is_global else ''}packages from [primary]{group}[/] "
             f"{'dev-' if selection.dev else ''}dependencies: " + ", ".join(f"[req]{name}[/]" for name in packages)
         )
+        tracked_names: set[str] = set()
         with cd(project.root):
             for name in packages:
                 req = parse_requirement(name)
@@ -106,6 +110,7 @@ class Command(BaseCommand):
                     raise ProjectError(f"[req]{name}[/] does not exist in [primary]{group}[/] dependencies.")
                 for i in matched_indexes:
                     del deps[i]
+                tracked_names.add(normalize_name(name))
         setter(cast(Array, deps).multiline(True))
 
         if not dry_run:
@@ -113,7 +118,7 @@ class Command(BaseCommand):
         if lock_groups and group not in lock_groups:
             project.core.ui.warn(f"Group [success]{group}[/] isn't in lockfile, skipping lock.")
             return
-        do_lock(project, "reuse", dry_run=dry_run, hooks=hooks, groups=lock_groups)
+        do_lock(project, "reuse", dry_run=dry_run, tracked_names=tracked_names, hooks=hooks, groups=lock_groups)
         if sync:
             do_sync(
                 project,

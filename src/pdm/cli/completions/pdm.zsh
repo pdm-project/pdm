@@ -30,7 +30,7 @@ _pdm() {
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
     'self:Manage the PDM program itself (previously known as plugin)'
-    'outdated:Check for outdated packages and list the latest versions'
+    'outdated:Check for outdated packages and list the latest versions on indexes'
     'publish:Build and publish the project to PyPI'
     'python:Manage installed Python interpreters'
     'py:Manage installed Python interpreters'
@@ -50,7 +50,8 @@ _pdm() {
     {-V,--version}'[Show the version and exit]' \
     {-I,--ignore-python}'[Ignore the Python path saved in .pdm-python]' \
     '--no-cache:Disable the cache for the current command. [env var: PDM_NO_CACHE]' \
-    '--pep582:Print the command line to be eval by the shell:shell:(zsh bash fish tcsh csh)' \
+    '--pep582:Print the command line to be eval by the shell for PEP 582:shell:(zsh bash fish tcsh csh)' \
+    {-n,--non-interactive}"[Don't show interactive prompts but use defaults. \[env var: PDM_NON_INTERACTIVE\]]" \
     '*:: :->_subcmds' \
     && return 0
 
@@ -68,6 +69,7 @@ _pdm() {
         {-d,--dev}'[Add packages into dev dependencies]'
         {-G,--group}'[Specify the target dependency group to add into]:group:_pdm_groups'
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         '--no-sync[Only write pyproject.toml and do not sync the working set]'
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
@@ -82,7 +84,7 @@ _pdm() {
         "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
-        {-u,--unconstrained}'[Ignore the version constraint of packages]'
+        {-u,--unconstrained}'[Ignore the version constraints in pyproject.toml and overwrite with new ones from the resolution result]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
         "--stable[Only allow stable versions to be pinned]"
         {-e+,--editable+}'[Specify editable packages]:packages'
@@ -205,6 +207,8 @@ _pdm() {
         '--python[Specify the Python version/path to use]:python:'
         '--copier[Use Copier to generate project]'
         '--cookiecutter[Use Cookiecutter to generate project]'
+        '--license[Specify the license (SPDX name)]:license:'
+        "--project-version[Specify the project's version]:project_version:"
         '1:template:'
       )
       ;;
@@ -215,6 +219,7 @@ _pdm() {
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-d,--dev}"[Select dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         {--prod,--production}"[Unselect dev dependencies]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
@@ -259,6 +264,7 @@ _pdm() {
         "--check[Check if the lock file is up to date and quit]"
         {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         {-d,--dev}"[Select dev dependencies]"
         {--prod,--production}"[Unselect dev dependencies]"
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
@@ -268,7 +274,11 @@ _pdm() {
         "--no-default[Don\'t include dependencies from the default group]"
         "--no-cross-platform[(DEPRECATED) Only lock packages for the current platform]"
         "--exclude-newer[Exclude packages newer than the given UTC date in format YYYY-MM-DD\[THH:MM:SSZ\]]:exclude-newer:"
-        {-S,--strategy}'[Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.]:strategy:'
+        {-S,--strategy}'[Specify lock strategy(cross_platform,static_urls,direct_minimal_versions). Add no_ prefix to disable. Support given multiple times or split by comma.]:strategy:_pdm_lock_strategy'
+        "--append[Append the result to the current lock file]"
+        "--python[The Python range to lock for. E.g. >=3.9, ==3.12.*]:python:"
+        "--implementation[The Python implementation to lock for. E.g. cpython, pypy]:implementation:"
+        "--platform[The platform to lock for. E.g. linux, windows, macos, alpine, windows_amd64]:platform:_pdm_lock_platform"
       )
       ;;
     outdated)
@@ -351,6 +361,7 @@ _pdm() {
             install)
               arguments+=(
                 '--list[List all available Python versions]'
+                '--min[Use minimum instead of highest version for installation if `version` is left empty]'
                 ':python:_files'
               )
               ;;
@@ -383,6 +394,7 @@ _pdm() {
         {-G,--group}'[Specify the target dependency group to remove from]:group:_pdm_groups'
         {-d,--dev}"[Remove packages from dev dependencies]"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
         "--no-sync[Only write pyproject.toml and do not uninstall packages]"
         '--no-editable[Install non-editable versions for all packages]'
@@ -401,7 +413,7 @@ _pdm() {
         {-g,--global}'[Use the global project, supply the project root with `-p` option]' \
         {-l,--list}'[Show all available scripts defined in pyproject.toml]' \
         '--json[Output all scripts infos in JSON]' \
-        '--reuse-env[Reuse the script environment for self-contained scripts]' \
+        '--recreate[Recreate the script environment for self-contained scripts]' \
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]' \
         {-s,--site-packages}'[Load site-packages from the selected interpreter]' \
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:' \
@@ -444,7 +456,8 @@ _pdm() {
         '--dry-run[Only prints actions without actually running them]'
         {-r,--reinstall}"[Force reinstall existing dependencies]"
         '--clean[Clean unused packages]'
-        "--only-keep[Only keep the selected packages]"
+        "--clean-unselected[Remove all but the selected packages]"
+        "--only-keep[Remove all but the selected packages]"
         "--no-default[Don\'t include dependencies from the default group]"
         {-x,--fail-fast}'[Abort on first installation error]'
         '--no-editable[Install non-editable versions for all packages]'
@@ -460,6 +473,7 @@ _pdm() {
         {-G+,--group+,--with+}'[Select group of optional-dependencies or dev-dependencies(with -d). Can be supplied multiple times, use ":all" to include all groups under the same species]:group:_pdm_groups'
         "--without+[Exclude groups of optional-dependencies or dev-dependencies]:group:_pdm_groups"
         {-L,--lockfile}'[Specify another lockfile path, or use `PDM_LOCKFILE` env variable. Default: pdm.lock]:lockfile:_files'
+        "--override+[Use the constraint file in pip-requirements format for overriding. \[env var: PDM_CONSTRAINT\] This option can be used multiple times. See https://pip.pypa.io/en/stable/user_guide/#constraints-files]:override:_files"
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
@@ -473,7 +487,7 @@ _pdm() {
         "--no-sync[Only update lock file but do not sync packages]"
         "--frozen-lockfile[Don't try to create or update the lockfile. \[env var: PDM_FROZEN_LOCKFILE\]]"
         {-k,--skip}'[Skip some tasks and/or hooks by their comma-separated names]'
-        {-u,--unconstrained}'[Ignore the version constraint of packages]'
+        {-u,--unconstrained}'[Ignore the version constraints in pyproject.toml and overwrite with new ones from the resolution result]'
         {--pre,--prerelease}'[Allow prereleases to be pinned]'
         "--stable[Only allow stable versions to be pinned]"
         {-d,--dev}'[Select dev dependencies]'
@@ -491,7 +505,9 @@ _pdm() {
       ;;
     use)
       arguments+=(
-        {-f,--first}'[Select the first matched interpreter]'
+        {-f,--first}'[Select the first matched interpreter -- no auto install]'
+        '--auto-install-min[If `python` argument not given, auto install minimum best match - otherwise has no effect]'
+        '--auto-install-max[If `python` argument not given, auto install maximum best match - otherwise has no effect]'
         {-i,--ignore-remembered}'[Ignore the remembered selection]'
         '--venv[Use the interpreter in the virtual environment with the given name]:venv:'
         '*:python:_files'
@@ -625,6 +641,35 @@ _pdm_packages() {
   fi
   local packages=(${=$(_get_packages_with_python)})
   compadd -X packages -a packages
+}
+
+_pdm_lock_strategy() {
+  local -a strategy=(
+    'cross_platform:(DEPRECATED)Lock packages for all platforms'
+    'inherit_metadata:Calculate and store the markers for the packages'
+    'static_urls:Store static file URLs in the lockfile'
+    'direct_minimal_versions:Store the minimal versions of the dependencies'
+    'no_cross_platform:Only lock packages for the current platform'
+    'no_static_urls:Do not store static file URLs in the lockfile'
+    'no_inherit_metadata:Do not calculate and store the markers for the packages'
+    'no_direct_minimal_versions:Do not store the minimal versions of the dependencies'
+  )
+  _describe -t strategy "lock strategy" strategy
+}
+
+_pdm_lock_platform() {
+  local -a platforms=(
+    "linux"
+    "windows"
+    "macos"
+    "alpine"
+    "windows_amd64"
+    "windows_x86"
+    "windows_arm64"
+    "macos_arm64"
+    "macos_x86_64"
+  )
+  _describe -t platform "platform" platforms
 }
 
 _pdm_caching_policy() {

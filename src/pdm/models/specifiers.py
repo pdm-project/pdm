@@ -32,10 +32,10 @@ def _read_max_versions() -> dict[Version, int]:
 
 
 @lru_cache
-def get_specifier(version_str: str) -> SpecifierSet:
+def get_specifier(version_str: str | None) -> SpecifierSet:
     if not version_str or version_str == "*":
         return SpecifierSet()
-    return SpecifierSet(fix_legacy_specifier(version_str))
+    return SpecifierSet(version_str)
 
 
 _legacy_specifier_re = re.compile(r"(==|!=|<=|>=|<|>)(\s*)([^,;\s)]*)")
@@ -142,14 +142,18 @@ class PySpecSet(SpecifierSet):
         return f"<PySpecSet {self}>"
 
     def __and__(self, other: Any) -> PySpecSet:
-        if not isinstance(other, PySpecSet):
-            return NotImplemented
-        return type(self)(self._logic & other._logic)
+        if isinstance(other, PySpecSet):
+            return type(self)(self._logic & other._logic)
+        elif isinstance(other, VersionSpecifier):
+            return type(self)(self._logic & other)
+        return NotImplemented
 
     def __or__(self, other: Any) -> PySpecSet:
-        if not isinstance(other, PySpecSet):
-            return NotImplemented
-        return type(self)(self._logic | other._logic)
+        if isinstance(other, PySpecSet):
+            return type(self)(self._logic | other._logic)
+        elif isinstance(other, VersionSpecifier):
+            return type(self)(self._logic | other)
+        return NotImplemented
 
     @classmethod
     def _populate_version_range(cls, lower: Version, upper: Version) -> Iterable[Version]:

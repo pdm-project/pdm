@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-import functools
 import os
 import re
 import shutil
@@ -10,12 +9,14 @@ import sys
 import tempfile
 import weakref
 from contextlib import contextmanager
-from functools import cached_property, partial
+from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator, no_type_check
+from typing import TYPE_CHECKING, Generator
 
+from pdm._types import NotSet, NotSetType
 from pdm.exceptions import BuildError, PdmUsageError
-from pdm.models.in_process import get_pep508_environment, get_python_abis, get_uname, sysconfig_get_platform
+from pdm.models.in_process import get_env_spec
+from pdm.models.markers import EnvSpec
 from pdm.models.python import PythonInfo
 from pdm.models.working_set import WorkingSet
 from pdm.utils import deprecation_warning, is_pip_compatible_with_python
@@ -29,31 +30,11 @@ if TYPE_CHECKING:
     from pdm.project import Project
 
 
-@no_type_check
-def get_paths_wrapper(get_paths):  # pragma: no cover
-    @functools.wraps(get_paths)
-    def wrapped(self: BaseEnvironment, dist_name: str | None = None) -> dict[str, str]:
-        result = get_paths(self)
-        if dist_name and "headers" in result:
-            result["headers"] = os.path.join(result["headers"], dist_name)
-        return result
-
-    return wrapped
-
-
 class BaseEnvironment(abc.ABC):
     """Environment dependent stuff related to the selected Python interpreter."""
 
     project: Project
     is_local = False
-
-    def __init_subclass__(cls) -> None:
-        import inspect
-
-        get_paths_params = inspect.signature(cls.get_paths).parameters
-        if "dist_name" not in get_paths_params:  # pragma: no cover
-            deprecation_warning("get_paths() should accept a `dist_name` argument", stacklevel=3)
-            cls.get_paths = get_paths_wrapper(cls.get_paths)  # type: ignore[method-assign]
 
     def __init__(self, project: Project, *, python: str | None = None) -> None:
         """
@@ -98,18 +79,6 @@ class BaseEnvironment(abc.ABC):
         new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
         return {"PATH": new_path, "PDM_PROJECT_ROOT": str(project.root)}
 
-    @cached_property
-    def target_python(self) -> unearth.TargetPython:
-        from unearth import TargetPython
-
-        python_version = self.interpreter.version_tuple
-        python_abis = get_python_abis(str(self.interpreter.executable))
-        tp = TargetPython(python_version, python_abis)
-        # calculate the target platform tags
-        with self._patch_target_python():
-            tp.supported_tags()
-        return tp
-
     def _build_session(
         self, sources: list[RepositoryConfig] | None = None, mounts: dict[str, BaseTransport | None] | None = None
     ) -> PDMPyPIClient:
@@ -134,44 +103,20 @@ class BaseEnvironment(abc.ABC):
         return self._build_session()
 
     @contextmanager
-    def _patch_target_python(self) -> Generator[None, None, None]:
-        """Patch the packaging modules to respect the arch of target python."""
-        import sysconfig
-
-        import packaging.tags
-
-        old_32bit = packaging.tags._32_BIT_INTERPRETER
-        old_os_uname = getattr(os, "uname", None)
-        old_get_platform = sysconfig.get_platform
-
-        if old_os_uname is not None:
-
-            def uname() -> os.uname_result:
-                return get_uname(str(self.interpreter.path))
-
-            os.uname = uname
-        packaging.tags._32_BIT_INTERPRETER = self.interpreter.is_32bit
-        sysconfig.get_platform = partial(sysconfig_get_platform, str(self.interpreter.path))
-        try:
-            yield
-        finally:
-            sysconfig.get_platform = old_get_platform
-            packaging.tags._32_BIT_INTERPRETER = old_32bit
-            if old_os_uname is not None:
-                os.uname = old_os_uname
-
-    @contextmanager
     def get_finder(
         self,
         sources: list[RepositoryConfig] | None = None,
-        ignore_compatibility: bool = False,
+        ignore_compatibility: bool | NotSetType = NotSet,
         minimal_version: bool = False,
+        env_spec: EnvSpec | None = None,
     ) -> Generator[unearth.PackageFinder, None, None]:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.
-        :param ignore_compatibility: whether to ignore the python version
+        :param ignore_compatibility: (DEPRECATED)whether to ignore the python version
             and wheel tags.
+        :param minimal_version: whether to find the minimal version of the package.
+        :param env_spec: the environment spec to filter the packages.
         """
         from pdm.models.finder import PDMPackageFinder
 
@@ -183,11 +128,23 @@ class BaseEnvironment(abc.ABC):
                 "The 'pypi.ignore_stored_index' config value is "
                 f"{self.project.config['pypi.ignore_stored_index']}"
             )
+        if ignore_compatibility is not NotSet:  # pragma: no cover
+            deprecation_warning(
+                "`ignore_compatibility` argument is deprecated, pass in `env_spec` instead.\n",
+                stacklevel=2,
+            )
+        else:
+            ignore_compatibility = False
+
+        if env_spec is None:
+            if ignore_compatibility:  # pragma: no cover
+                env_spec = self.allow_all_spec
+            else:
+                env_spec = self.spec
 
         finder = PDMPackageFinder(
             session=self.session,
-            target_python=self.target_python,
-            ignore_compatibility=ignore_compatibility,
+            env_spec=env_spec,
             no_binary=self._setting_list("PDM_NO_BINARY", "resolution.no-binary"),
             only_binary=self._setting_list("PDM_ONLY_BINARY", "resolution.only-binary"),
             prefer_binary=self._setting_list("PDM_PREFER_BINARY", "resolution.prefer-binary"),
@@ -225,9 +182,12 @@ class BaseEnvironment(abc.ABC):
         return WorkingSet([paths["platlib"], paths["purelib"]])
 
     @cached_property
-    def marker_environment(self) -> dict[str, str]:
-        """Get environment for marker evaluation"""
-        return get_pep508_environment(str(self.interpreter.executable))
+    def spec(self) -> EnvSpec:
+        return get_env_spec(self.interpreter.executable.as_posix())
+
+    @property
+    def allow_all_spec(self) -> EnvSpec:
+        return EnvSpec(self.python_requires._logic)
 
     def which(self, command: str) -> str | None:
         """Get the full path of the given executable against this environment."""
@@ -242,12 +202,12 @@ class BaseEnvironment(abc.ABC):
         new_path = os.pathsep.join([this_path, os.getenv("PATH", ""), python_root])
         return shutil.which(command, path=new_path)
 
-    def _download_pip_wheel(self, path: str | Path) -> None:
+    def _download_pip_wheel(self, path: str | Path) -> None:  # pragma: no cover
         from unearth import UnpackError
 
         download_error = BuildError("Can't get a working copy of pip for the project")
         with self.get_finder([self.project.default_source]) as finder:
-            finder.only_binary = ["pip"]
+            finder.only_binary = {"pip"}
             best_match = finder.find_best_match("pip").best
             if not best_match:
                 raise download_error
@@ -290,12 +250,14 @@ class BaseEnvironment(abc.ABC):
 
     @property
     def script_kind(self) -> str:
+        from dep_logic.tags.platform import Arch
+
         if os.name != "nt":
             return "posix"
-        is_32bit = self.interpreter.is_32bit
-        # TODO: support win arm64
-        if is_32bit:
+        if (arch := self.spec.platform.arch) == Arch.X86:  # pragma: no cover
             return "win-ia32"
+        elif arch == Arch.Aarch64:  # pragma: no cover
+            return "win-arm64"
         else:
             return "win-amd64"
 

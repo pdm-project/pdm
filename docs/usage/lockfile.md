@@ -24,7 +24,9 @@ There are a few similar commands to do this job with slight differences:
 `pdm sync` also has a few options to manage installed packages:
 
 - `--clean`: will remove packages no longer in the lockfile
-- `--only-keep`: only selected packages (using options like `-G` or `--prod`) will be kept.
+- `--clean-unselected` (or `--only-keep`): more thorough version of `--clean` that will also remove packages not in the groups specified by the `-G`, `-d`, and `--prod` options.
+Note: by default, `pdm sync` selects all groups from the lockfile, so `--clean-unselected` is identical to `--clean` unless `-G`, `-d`, and `--prod` are used.
+
 
 ## Hashes in the lock file
 
@@ -114,6 +116,9 @@ This command makes the lockfile not cross-platform.
 
 +++ 2.6.0
 
+!!! warning "Deprecated in 2.17.0"
+    See [Lock for specific platforms or Python versions](./lock-targets.md) for the new behavior.
+
 By default, the generated lockfile is **cross-platform**, which means the current platform isn't taken into account when resolving the dependencies. The result lockfile will contain wheels and dependencies for all possible platforms and Python versions.
 However, sometimes this will result in a wrong lockfile when a release doesn't contain all wheels.
 To avoid this, you can tell PDM to create a lockfile that works for **this platform** only, trimming the wheels not relevant to the current platform.
@@ -197,7 +202,7 @@ They accept the same format as the environment variables and also support lists.
 [tool.pdm.resolution]
 # No binary for werkzeug and flask will be locked nor used for installation
 no-binary = "werkzeug,flask"
-# equivalent to 
+# equivalent to
 no-binary = ["werkzeug", "flask"]
 # Only binaries will be locked in the lock file
 only-binary = ":all:"

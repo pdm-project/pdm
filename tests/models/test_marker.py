@@ -1,6 +1,6 @@
 import pytest
 
-from pdm.models.markers import get_marker
+from pdm.models.markers import EnvSpec, get_marker
 from pdm.models.specifiers import PySpecSet
 
 
@@ -28,3 +28,27 @@ def test_split_pyspec(original, marker, py_spec):
     a, b = m.split_pyspec()
     assert marker == str(a)
     assert b == PySpecSet(py_spec)
+
+
+@pytest.mark.parametrize(
+    "marker,env_spec,expected",
+    [
+        ("os_name == 'nt'", EnvSpec.from_spec(">=3.10", "windows"), True),
+        ("os_name == 'nt'", EnvSpec.from_spec(">=3.10"), True),
+        ("os_name != 'nt'", EnvSpec.from_spec(">=3.10", "windows"), False),
+        ("python_version >= '3.7' and os_name == 'nt'", EnvSpec.from_spec(">=3.10"), True),
+        ("python_version < '3.7' and os_name == 'nt'", EnvSpec.from_spec(">=3.10"), False),
+        ("python_version < '3.7' or os_name == 'nt'", EnvSpec.from_spec(">=3.10"), False),
+        ("python_version >= '3.7' and os_name == 'nt'", EnvSpec.from_spec(">=3.10", "linux"), False),
+        ("python_version >= '3.7' or os_name == 'nt'", EnvSpec.from_spec(">=3.10", "linux"), True),
+        ("python_version >= '3.7' and implementation_name == 'pypy'", EnvSpec.from_spec(">=3.10"), True),
+        (
+            "python_version >= '3.7' and implementation_name == 'pypy'",
+            EnvSpec.from_spec(">=3.10", implementation="cpython"),
+            False,
+        ),
+    ],
+)
+def test_match_env_spec(marker, env_spec, expected):
+    m = get_marker(marker)
+    assert m.matches(env_spec) is expected

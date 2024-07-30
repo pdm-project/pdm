@@ -6,13 +6,13 @@ import traceback
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import cached_property
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any, Callable, Collection, TypeVar
+from typing import TYPE_CHECKING, Collection
 
 from rich.progress import SpinnerColumn, TaskProgressColumn
 
 from pdm import termui
 from pdm.environments import BaseEnvironment
-from pdm.exceptions import InstallationError
+from pdm.exceptions import BuildError, InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
 from pdm.models.reporter import BaseReporter, RichProgressReporter
@@ -23,55 +23,6 @@ if TYPE_CHECKING:
     from rich.progress import Progress
 
     from pdm.compat import Distribution
-
-
-_T = TypeVar("_T")
-
-
-class DummyFuture:
-    _NOT_SET = object()
-
-    def __init__(self) -> None:
-        self._result = self._NOT_SET
-        self._exc: Exception | None = None
-
-    def set_result(self, result: Any) -> None:
-        self._result = result
-
-    def set_exception(self, exc: Exception) -> None:
-        self._exc = exc
-
-    def result(self) -> Any:
-        return self._result
-
-    def exception(self) -> Exception | None:
-        return self._exc
-
-    def add_done_callback(self: _T, func: Callable[[_T], Any]) -> None:
-        func(self)
-
-    def cancel(self) -> bool:
-        return False
-
-
-class DummyExecutor:
-    """A synchronous pool class to mimic ProcessPoolExecuter's interface.
-    functions are called and awaited for the result
-    """
-
-    def submit(self, func: Callable, *args: Any, **kwargs: Any) -> DummyFuture:
-        future = DummyFuture()
-        try:
-            future.set_result(func(*args, **kwargs))
-        except Exception as exc:
-            future.set_exception(exc)
-        return future
-
-    def __enter__(self: _T) -> _T:
-        return self
-
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        return
 
 
 def editables_candidate(environment: BaseEnvironment) -> Candidate | None:
@@ -166,7 +117,10 @@ class BaseSynchronizer:
         if not self.install_self or "editables" in self.requested_candidates:
             return False
         # As editables may be added by the backend, we need to check the metadata
-        metadata = self.self_candidate.prepare(self.environment).metadata
+        try:
+            metadata = self.self_candidate.prepare(self.environment).metadata
+        except BuildError:
+            return False
         return any(req.startswith("editables") for req in metadata.requires or [])
 
     @property
@@ -201,8 +155,8 @@ class BaseSynchronizer:
             if not isinstance(dreq, FileRequirement):
                 return True
             url = dreq.get_full_url()
-            if url.startswith("file:"):
-                # We don't know whether local files are changed, always update
+            if dreq.is_local_dir:
+                # We don't know whether a local dir has been changed, always update
                 return True
             assert can.link is not None
             return url != backend.expand_line(can.link.url_without_fragment)
@@ -216,7 +170,7 @@ class BaseSynchronizer:
         to_update: set[str] = set()
         to_remove: set[str] = set()
         to_add: set[str] = set()
-        locked_repository = self.environment.project.locked_repository
+        locked_repository = self.environment.project.get_locked_repository()
         all_candidate_keys = list(locked_repository.all_candidates)
 
         for key, dist in working_set.items():
@@ -267,12 +221,6 @@ class BaseSynchronizer:
 
 
 class Synchronizer(BaseSynchronizer):
-    def create_executor(self) -> ThreadPoolExecutor | DummyExecutor:
-        if self.parallel:
-            return ThreadPoolExecutor()
-        else:
-            return DummyExecutor()
-
     def install_candidate(self, key: str, progress: Progress) -> Candidate:
         """Install candidate"""
         can = self.candidates[key]
@@ -410,7 +358,7 @@ class Synchronizer(BaseSynchronizer):
 
         for kind in to_do:
             for key in to_do[kind]:
-                if key in self.SEQUENTIAL_PACKAGES:
+                if key in self.SEQUENTIAL_PACKAGES or not self.parallel:
                     sequential_jobs.append((kind, key))
                 elif key in self.candidates and self.candidates[key].req.editable:
                     # Editable packages are installed sequentially.
@@ -418,14 +366,14 @@ class Synchronizer(BaseSynchronizer):
                 else:
                     parallel_jobs.append((kind, key))
 
-        state = SimpleNamespace(errors=[], failed_jobs=[], jobs=[], mark_failed=False)
+        state = SimpleNamespace(errors=[], parallel_failed=[], sequential_failed=[], jobs=[], mark_failed=False)
 
-        def update_progress(future: Future | DummyFuture, kind: str, key: str) -> None:
+        def update_progress(future: Future, kind: str, key: str) -> None:
             error = future.exception()
             if error:
                 exc_info = (type(error), error, error.__traceback__)
                 termui.logger.exception("Error occurs: ", exc_info=exc_info)
-                state.failed_jobs.append((kind, key))
+                state.parallel_failed.append((kind, key))
                 state.errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
                 if self.fail_fast:
                     for future in state.jobs:
@@ -441,18 +389,35 @@ class Synchronizer(BaseSynchronizer):
             TaskProgressColumn("[info]{task.percentage:>3.0f}%[/]"),
         ) as progress:
             live = progress.live
-            for kind, key in sequential_jobs:
-                handlers[kind](key, progress)
             for i in range(self.retry_times + 1):
-                state.jobs.clear()
-                with self.create_executor() as executor:
-                    for kind, key in parallel_jobs:
-                        future = executor.submit(handlers[kind], key, progress)
-                        future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
-                        state.jobs.append(future)
-                if state.mark_failed or not state.failed_jobs or i == self.retry_times:
+                for kind, key in sequential_jobs:
+                    try:
+                        handlers[kind](key, progress)
+                    except Exception:
+                        termui.logger.exception("Error occurs: ")
+                        state.sequential_failed.append((kind, key))
+                        state.errors.extend([f"{kind} [success]{key}[/] failed:\n", traceback.format_exc()])
+                        if self.fail_fast:
+                            state.mark_failed = True
+                            break
+                if state.mark_failed:
                     break
-                parallel_jobs, state.failed_jobs = state.failed_jobs, []
+                state.jobs.clear()
+                if parallel_jobs:
+                    with ThreadPoolExecutor() as executor:
+                        for kind, key in parallel_jobs:
+                            future = executor.submit(handlers[kind], key, progress)
+                            future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
+                            state.jobs.append(future)
+                if (
+                    state.mark_failed
+                    or i == self.retry_times
+                    or not state.sequential_failed
+                    and not state.parallel_failed
+                ):
+                    break
+                sequential_jobs, state.sequential_failed = state.sequential_failed, []
+                parallel_jobs, state.parallel_failed = state.parallel_failed, []
                 state.errors.clear()
                 live.console.print("Retry failed jobs")
 

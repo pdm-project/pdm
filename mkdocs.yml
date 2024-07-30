@@ -7,12 +7,14 @@ theme:
   name: material
   palette:
     - scheme: default
+      media: "(prefers-color-scheme: light)"
       primary: deep purple
       accent: teal
       toggle:
         icon: material/weather-sunny
         name: Switch to dark mode
     - scheme: slate
+      media: "(prefers-color-scheme: dark)"
       primary: deep purple
       accent: teal
       toggle:
@@ -55,7 +57,9 @@ nav:
       - Introduction: index.md
       - usage/project.md
       - usage/dependency.md
-      - usage/lockfile.md
+      - Lock Files:
+        - usage/lockfile.md
+        - usage/lock-targets.md
       - usage/publish.md
       - usage/config.md
       - usage/scripts.md

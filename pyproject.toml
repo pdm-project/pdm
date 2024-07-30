@@ -1,5 +1,5 @@
 [build-system]
-requires = ["pdm-backend"]
+requires = ["pdm-backend", "pdm-build-locked"]
 build-backend = "pdm.backend"
 
 [project]
@@ -20,8 +20,8 @@ dependencies = [
     "rich>=12.3.0",
     "virtualenv>=20",
     "pyproject-hooks",
-    "unearth>=0.15.0",
-    "dep-logic>=0.2.0,<1.0",
+    "unearth>=0.16.0",
+    "dep-logic>=0.4.4",
     "findpython>=0.6.0,<1.0.0a0",
     "tomlkit>=0.11.1,<1",
     "shellingham>=1.3.2",
@@ -34,7 +34,7 @@ dependencies = [
     "importlib-metadata>=3.6; python_version < \"3.10\"",
     "hishel>=0.0.24,<0.1.0",
     "msgpack>=1.0",
-    "pbs-installer",
+    "pbs-installer>=2024.4.18",
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
 ]
@@ -85,6 +85,8 @@ includes = ["src/pdm"]
 source-includes = ["tests", "typings", "CHANGELOG.md", "LICENSE", "README.md", "tox.ini"]
 # editables backend doesn't work well with namespace packages
 editable-backend = "path"
+locked = true
+locked-groups = ["default", "all"]
 
 [tool.pdm.scripts]
 pre_release = "python tasks/max_versions.py"
@@ -125,10 +127,9 @@ doc = [
     "mkdocs-version-annotations>=1.0.0",
 ]
 workflow = [
-    "pdm-pep517>=1.0.0,<2.0.0",
     "parver>=0.3.1",
     "towncrier>=20",
-    "pycomplete~=0.3"
+    "pycomplete~=0.3",
 ]
 
 [tool.ruff]

@@ -69,12 +69,12 @@ class WorkingSet(Mapping[str, im.Distribution]):
         self._dist_map = {
             normalize_name(dist.metadata["Name"]): dist
             for dist in distributions(path=list(dict.fromkeys(paths)))
-            if dist.metadata["Name"]
+            if dist.metadata.get("Name")
         }
         self._shared_map = {
             normalize_name(dist.metadata["Name"]): dist
             for dist in distributions(path=list(dict.fromkeys(shared_paths)))
-            if dist.metadata["Name"]
+            if dist.metadata.get("Name")
         }
         self._iter_map = ChainMap(self._dist_map, self._shared_map)
 

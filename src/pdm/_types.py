@@ -119,3 +119,10 @@ if TYPE_CHECKING:
         url: str
         hash: str
         file: str
+
+
+class NotSetType:
+    pass
+
+
+NotSet = NotSetType()

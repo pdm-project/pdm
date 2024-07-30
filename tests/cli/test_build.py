@@ -159,17 +159,12 @@ def test_cli_build_with_config_settings(fixture_project, pdm):
 
 
 @pytest.mark.usefixtures("local_finder")
-@pytest.mark.parametrize("isolated", (True, False))
-def test_build_with_no_isolation(fixture_project, pdm, isolated):
-    project = fixture_project("demo-failure")
-    project.pyproject.set_data({"project": {"name": "demo", "version": "0.1.0"}})
-    project.pyproject.write()
-    pdm(["add", "first"], obj=project)
-    args = ["build"]
-    if not isolated:
-        args.append("--no-isolation")
-    result = pdm(args, obj=project)
-    assert result.exit_code == int(isolated)
+def test_build_with_no_isolation(pdm, project):
+    result = pdm(["build", "--no-isolation"], obj=project)
+    assert result.exit_code == 1
+    pdm(["add", "pdm-backend", "--no-self"], obj=project, strict=True)
+    result = pdm(["build", "--no-isolation"], obj=project)
+    assert result.exit_code == 0
 
 
 def test_build_ignoring_pip_environment(fixture_project, monkeypatch):

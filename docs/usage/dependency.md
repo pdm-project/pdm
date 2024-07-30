@@ -312,6 +312,59 @@ Besides, if you don't want the root project to be installed, add `--no-self` opt
 
 You may also use the pdm lock command with these options to lock only the specified groups, which will be recorded in the `[metadata]` table of the lock file. If no `--group/--prod/--dev/--no-default` option is specified, `pdm sync` and `pdm update` will operate using the groups in the lockfile. However, if any groups that are not included in the lockfile are given as arguments to the commands, PDM will raise an error.
 
+## Dependency Overrides
+
+If none of versions of a specific package doesn't meet all the constraints, the resolution will fail. In this case, you can tell the resolver to use a specific version of the package with dependency overrides.
+
+Overrides are a useful last resort for cases in which the user knows that a dependency is compatible with a newer version of a package than the package declares, but the package has not yet been updated to declare that compatibility.
+
+For example, if a transitive dependency declares `pydantic>=1.0,<2.0`, but the user knows that the package is compatible with `pydantic>=2.0`, the user can override the declared dependency with `pydantic>=2.0,<3` to allow the resolver to continue.
+
+In PDM, there are two ways to specify overrides:
+
+### In the project file
+
++++ 1.12.0
+
+You can specify the overrides in the `pyproject.toml` file, under the `[tool.pdm.resolution.overrides]` table:
+
+```toml
+[tool.pdm.resolution.overrides]
+asgiref = "3.2.10"  # exact version
+urllib3 = ">=1.26.2"  # version range
+pytz = "https://mypypi.org/packages/pytz-2020.9-py3-none-any.whl"  # absolute URL
+```
+
+Each entry in the table is a package name and a version specifier. The version specifier can be a version range, an exact version, or an absolute URL.
+
+### Via CLI option
+
++++ 2.17.0
+
+PDM also supports reading dependency overrides from a requirements file. The file works similarly to the constraint file in pip(`--constraint constraints.txt`), and the syntax is the same as the requirements file:
+
+```
+requests==2.20.0
+django==1.11.8
+certifi==2018.11.17
+chardet==3.0.4
+idna==2.7
+pytz==2019.3
+urllib3==1.23
+```
+
+Override files serve as an easy way to store the dependencies in a centralized location that can be shared by multiple projects in your organization.
+
+You can pass the constraint file to various PDM commands that would perform a resolution, such as [`pdm install`](../reference/cli.md#install), [`pdm lock`](../reference/cli.md#lock), [`pdm add`](../reference/cli.md#add), etc.
+
+```bash
+pdm lock --override constraints.txt
+```
+
+This option can be supplied multiple times.
+
+Override files can also be served via a URL, e.g. `--override http://example.com/constraints.txt`, so that your organization can store and serve them in a remote server.
+
 ## Show what packages are installed
 
 Similar to `pip list`, you can list all packages installed in the packages directory:

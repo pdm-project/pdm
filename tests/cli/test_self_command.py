@@ -62,20 +62,35 @@ def test_self_add(pdm, mock_pip):
     mock_pip.assert_called_with(ANY, ["install", "--force-reinstall", "--upgrade", "foo"])
 
 
-def test_self_remove(pdm, mock_pip, monkeypatch):
-    def _mock_resolve(self, packages):
+def test_self_remove(pdm, mock_pip, mocker, monkeypatch):
+    from rich import get_console
+
+    console = get_console()
+
+    def _mock_resolve(packages):
         return ["demo", "pytz"] if "demo" in packages else packages
 
-    monkeypatch.setattr(
+    mocker.patch.object(
         self_cmd.RemoveCommand,
         "_resolve_dependencies_to_remove",
-        _mock_resolve,
+        side_effect=_mock_resolve,
     )
+    mocker.patch.object(console, "is_interactive", True)
 
     result = pdm(["self", "remove", "foo"])
     assert result.exit_code != 0
 
     result = pdm(["self", "remove", "-y", "demo"])
+    assert result.exit_code == 0, result.stderr
+    mock_pip.assert_called_with(ANY, ["uninstall", "-y", "demo", "pytz"])
+
+    with monkeypatch.context() as m:
+        m.setenv("PDM_NON_INTERACTIVE", "1")
+        result = pdm(["self", "remove", "demo"])
+        assert result.exit_code == 0, result.stderr
+        mock_pip.assert_called_with(ANY, ["uninstall", "-y", "demo", "pytz"])
+
+    result = pdm(["-n", "self", "remove", "demo"])
     assert result.exit_code == 0, result.stderr
     mock_pip.assert_called_with(ANY, ["uninstall", "-y", "demo", "pytz"])
 

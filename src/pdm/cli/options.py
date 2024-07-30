@@ -192,7 +192,13 @@ def frozen_lockfile_option(
     project.enable_write_lockfile = False  # type: ignore[has-type]
 
 
-@Option("--pep582", const="AUTO", metavar="SHELL", nargs="?", help="Print the command line to be eval'd by the shell")
+@Option(
+    "--pep582",
+    const="AUTO",
+    metavar="SHELL",
+    nargs="?",
+    help="Print the command line to be eval'd by the shell for PEP 582",
+)
 def pep582_option(
     project: Project,
     namespace: argparse.Namespace,
@@ -288,35 +294,37 @@ dev_group.add_argument(
 )
 groups_group.options.append(dev_group)
 
-save_strategy_group = ArgumentGroup("save_strategy", is_mutually_exclusive=True)
-save_strategy_group.add_argument(
+save_strategy_group = ArgumentGroup("Save Strategy")
+_save_sub_group = ArgumentGroup("save_strategy", is_mutually_exclusive=True)
+_save_sub_group.add_argument(
     "--save-compatible",
     action="store_const",
     dest="save_strategy",
     const="compatible",
     help="Save compatible version specifiers",
 )
-save_strategy_group.add_argument(
+_save_sub_group.add_argument(
     "--save-wildcard",
     action="store_const",
     dest="save_strategy",
     const="wildcard",
     help="Save wildcard version specifiers",
 )
-save_strategy_group.add_argument(
+_save_sub_group.add_argument(
     "--save-exact",
     action="store_const",
     dest="save_strategy",
     const="exact",
     help="Save exact version specifiers",
 )
-save_strategy_group.add_argument(
+_save_sub_group.add_argument(
     "--save-minimum",
     action="store_const",
     dest="save_strategy",
     const="minimum",
     help="Save minimum version specifiers",
 )
+save_strategy_group.add_argument(_save_sub_group)
 
 skip_option = Option(
     "-k",
@@ -330,35 +338,37 @@ skip_option = Option(
     default=from_splitted_env("PDM_SKIP_HOOKS", ","),
 )
 
-update_strategy_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)
-update_strategy_group.add_argument(
+update_strategy_group = ArgumentGroup("Update Strategy")
+_update_sub_group = ArgumentGroup("update_strategy", is_mutually_exclusive=True)
+_update_sub_group.add_argument(
     "--update-reuse",
     action="store_const",
     dest="update_strategy",
     const="reuse",
     help="Reuse pinned versions already present in lock file if possible",
 )
-update_strategy_group.add_argument(
+_update_sub_group.add_argument(
     "--update-eager",
     action="store_const",
     dest="update_strategy",
     const="eager",
     help="Try to update the packages and their dependencies recursively",
 )
-update_strategy_group.add_argument(
+_update_sub_group.add_argument(
     "--update-all",
     action="store_const",
     dest="update_strategy",
     const="all",
     help="Update all dependencies and sub-dependencies",
 )
-update_strategy_group.add_argument(
+_update_sub_group.add_argument(
     "--update-reuse-installed",
     action="store_const",
     dest="update_strategy",
     const="reuse-installed",
     help="Reuse installed packages if possible",
 )
+update_strategy_group.add_argument(_update_sub_group)
 
 project_option = Option(
     "-p",
@@ -380,11 +390,9 @@ global_option = Option(
 
 clean_group = ArgumentGroup("clean", is_mutually_exclusive=True)
 clean_group.add_argument("--clean", action="store_true", help="Clean packages not in the lockfile")
-clean_group.add_argument("--only-keep", action="store_true", help="Only keep the selected packages")
-
-sync_group = ArgumentGroup("sync", is_mutually_exclusive=True)
-sync_group.add_argument("--sync", action="store_true", dest="sync", help="Sync packages")
-sync_group.add_argument("--no-sync", action="store_false", dest="sync", help="Don't sync packages")
+clean_group.add_argument(
+    "--only-keep", "--clean-unselected", action="store_true", help="Only keep the selected packages"
+)
 
 packages_group = ArgumentGroup("Package Arguments")
 packages_group.add_argument(
@@ -413,6 +421,22 @@ def ignore_python_option(
     os.environ.update({"PDM_IGNORE_SAVED_PYTHON": "1"})
 
 
+@Option(
+    "-n",
+    "--non-interactive",
+    nargs=0,
+    dest="_non_interactive",
+    help="Don't show interactive prompts but use defaults. [env var: PDM_NON_INTERACTIVE]",
+)
+def non_interactive_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
+    os.environ.update({"PDM_NON_INTERACTIVE": "1"})
+
+
 prerelease_option = ArgumentGroup("prerelease", is_mutually_exclusive=True)
 prerelease_option.add_argument(
     "--pre",
@@ -430,7 +454,7 @@ unconstrained_option = Option(
     "--unconstrained",
     action="store_true",
     default=False,
-    help="Ignore the version constraint of packages",
+    help="Ignore the version constraints in pyproject.toml and overwrite with new ones from the resolution result",
 )
 
 
@@ -486,3 +510,12 @@ config_setting_option = Option(
     "or `-Ckey(=value)`",
 )
 install_group.options.append(config_setting_option)
+
+override_option = Option(
+    "--override",
+    default=os.getenv("PDM_OVERRIDE"),
+    action="append",
+    help="Use the constraint file in pip-requirements format for overriding. [env var: PDM_OVERRIDE] "
+    "This option can be used multiple times. "
+    "See https://pip.pypa.io/en/stable/user_guide/#constraints-files",
+)

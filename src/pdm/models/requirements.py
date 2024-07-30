@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Sequence, TypeVar, cast
 
 from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
 
 from pdm.compat import Distribution
@@ -143,7 +143,10 @@ class Requirement:
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
             kwargs["extras"] = tuple(e.strip() for e in kwargs["extras"][1:-1].split(","))
         version = kwargs.pop("version", "")
-        kwargs["specifier"] = get_specifier(version)
+        try:
+            kwargs["specifier"] = get_specifier(version)
+        except InvalidSpecifier as e:
+            raise RequirementError(f'Invalid specifier for {kwargs.get("name")}: {version}: {e}') from None
         return cls(**{k: v for k, v in kwargs.items() if k in inspect.signature(cls).parameters})
 
     @classmethod
@@ -152,7 +155,7 @@ class Requirement:
         if direct_url_json is not None:
             direct_url = json.loads(direct_url_json)
             data = {
-                "name": dist.metadata["Name"],
+                "name": dist.metadata.get("Name"),
                 "url": direct_url.get("url"),
                 "editable": direct_url.get("dir_info", {}).get("editable"),
                 "subdirectory": direct_url.get("subdirectory"),
@@ -171,7 +174,7 @@ class Requirement:
     @classmethod
     def from_req_dict(cls, name: str, req_dict: RequirementDict, check_installable: bool = True) -> Requirement:
         if isinstance(req_dict, str):  # Version specifier only.
-            return NamedRequirement(name=name, specifier=get_specifier(req_dict))
+            return NamedRequirement.create(name=name, version=req_dict)
         for vcs in VCS_SCHEMA:
             if vcs in req_dict:
                 repo = cast(str, req_dict.pop(vcs, None))
@@ -200,11 +203,13 @@ class Requirement:
         """Return whether the passed in PEP 508 string
         is the same requirement as this one.
         """
-        if line.strip().startswith("-e "):
-            req = parse_requirement(line.split("-e ", 1)[-1], True)
-        else:
-            req = parse_requirement(line, False)
-        return self.key == req.key
+        req = parse_line(line)
+        return (
+            self.key == req.key
+            or isinstance(self, FileRequirement)
+            and isinstance(req, FileRequirement)
+            and self.url == req.url
+        )
 
     @classmethod
     def from_pkg_requirement(cls, req: PackageRequirement) -> Requirement:
@@ -219,7 +224,7 @@ class Requirement:
         if getattr(req, "url", None):
             link = Link(cast(str, req.url))
             klass = VcsRequirement if link.is_vcs else FileRequirement
-            return klass(url=req.url, **kwargs)
+            return klass(url=cast(str, req.url), **kwargs)
         else:
             return NamedRequirement(**kwargs)  # type: ignore[arg-type]
 
@@ -242,6 +247,7 @@ class FileRequirement(Requirement):
     path: Path | None = None
     subdirectory: str | None = None
     check_installable: bool = True
+    _root: Path = dataclasses.field(default_factory=Path.cwd, repr=False)
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -293,7 +299,7 @@ class FileRequirement(Requirement):
             return None
         if self.path.is_absolute():
             try:
-                result = self.path.relative_to(Path.cwd()).as_posix()
+                result = self.path.relative_to(self._root).as_posix()
             except ValueError:
                 return self.path.as_posix()
         else:
@@ -330,14 +336,19 @@ class FileRequirement(Requirement):
         if path == ".":
             path = ""
         self.url = backend.relative_path_to_url(path)
+        self._root = backend.root
+
+    @property
+    def absolute_path(self) -> Path | None:
+        return self._root.joinpath(self.path) if self.path else None
 
     @property
     def is_local(self) -> bool:
-        return self.path and self.path.exists() or False
+        return (path := self.absolute_path) is not None and path.exists()
 
     @property
     def is_local_dir(self) -> bool:
-        return self.is_local and cast(Path, self.path).is_dir()
+        return self.is_local and cast(Path, self.absolute_path).is_dir()
 
     def as_file_link(self) -> Link:
         from unearth import Link
@@ -433,12 +444,12 @@ class VcsRequirement(FileRequirement):
 
 def filter_requirements_with_extras(
     requirement_lines: list[str], extras: Sequence[str], include_default: bool = False
-) -> list[str]:
+) -> list[Requirement]:
     """Filter the requirements with extras.
     If extras are given, return those with matching extra markers.
     Otherwise, return those without extra markers.
     """
-    result: list[str] = []
+    result: list[Requirement] = []
     for req in requirement_lines:
         _r = parse_requirement(req)
         req_extras = get_marker("")
@@ -451,7 +462,7 @@ def filter_requirements_with_extras(
         # The requirement has no extras while requested extras are empty or include_default is True, or
         # The requirement has extras, in which case the `evaluate()` test must have been passed.
         if not req_extras.is_any() or include_default or not extras:
-            result.append(_r.as_line())
+            result.append(_r)
 
     return result
 
@@ -465,6 +476,12 @@ def parse_as_pkg_requirement(line: str) -> PackageRequirement:
             raise
         new_line = fix_legacy_specifier(line)
         return PackageRequirement(new_line)
+
+
+def parse_line(line: str) -> Requirement:
+    if line.startswith("-e "):
+        return parse_requirement(line[3:].strip(), editable=True)
+    return parse_requirement(line)
 
 
 def parse_requirement(line: str, editable: bool = False) -> Requirement:

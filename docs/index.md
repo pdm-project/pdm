@@ -100,6 +100,12 @@ You can either pass the options after the script or set the env var value.
     scoop install pdm
     ```
 
+=== "uv"
+
+    ```bash
+    uv tool install pdm
+    ```
+
 === "pipx"
 
     ```bash

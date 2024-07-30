@@ -19,18 +19,18 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, cast
 
 from resolvelib import Resolver
 
 from pdm import termui
 from pdm.__version__ import __version__
-from pdm.cli.options import ignore_python_option, no_cache_option, pep582_option, verbose_option
+from pdm.cli.options import ignore_python_option, no_cache_option, non_interactive_option, pep582_option, verbose_option
 from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager, Synchronizer
-from pdm.models.repositories import PyPIRepository
+from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config
 from pdm.utils import is_in_zipapp
@@ -56,6 +56,8 @@ class State:
     """Whether to make an isolated environment and install requirements for build"""
     enable_cache: bool = True
     """Whether to enable the cache"""
+    overrides: list[str] = dc.field(default_factory=list)
+    """The requirement overrides for the resolver"""
 
 
 class Core:
@@ -65,7 +67,7 @@ class Core:
     subparsers: argparse._SubParsersAction
 
     project_class = Project
-    repository_class = PyPIRepository
+    repository_class: type[BaseRepository] = PyPIRepository
     resolver_class = Resolver
     synchronizer_class = Synchronizer
     install_manager_class = InstallManager
@@ -74,33 +76,10 @@ class Core:
         self.version = __version__
         self.exit_stack = contextlib.ExitStack()
         self.ui = termui.UI(exit_stack=self.exit_stack)
-        self._states = [State()]
+        self.state = State()
         self.exit_stack.callback(setattr, self, "config_settings", None)
         self.init_parser()
         self.load_plugins()
-
-    @property
-    def state(self) -> State:
-        """Get the current state object."""
-        return self._states[-1]
-
-    @contextlib.contextmanager
-    def push_state(self, __empty: bool = False, /, **kwargs: Any) -> Iterator[State]:  # pragma: no cover
-        """Push a new state object to the stack.
-
-        Args:
-            __empty (bool): Whether to make an empty state.
-            **kwargs: The new attributes to set to the state object.
-        """
-        if __empty:
-            new_state = State(**kwargs)
-        else:
-            new_state = dc.replace(self.state, **kwargs)
-        self._states.append(new_state)
-        try:
-            yield new_state
-        finally:
-            self._states.pop()
 
     def create_temp_dir(self, *args: Any, **kwargs: Any) -> str:
         return self.exit_stack.enter_context(TemporaryDirectory(*args, **kwargs))
@@ -129,6 +108,7 @@ class Core:
         no_cache_option.add_to_parser(self.parser)
         ignore_python_option.add_to_parser(self.parser)
         pep582_option.add_to_parser(self.parser)
+        non_interactive_option.add_to_parser(self.parser)
 
         self.subparsers = self.parser.add_subparsers(parser_class=ArgumentParser, title="commands", metavar="")
         for _, name, _ in pkgutil.iter_modules(COMMANDS_MODULE_PATH):
@@ -200,11 +180,14 @@ class Core:
         for callback in getattr(options, "callbacks", []):
             callback(project, options)
 
-        if getattr(options, "lockfile", None):
-            project.set_lockfile(cast(str, options.lockfile))
+        if lockfile := getattr(options, "lockfile", None):
+            project.set_lockfile(cast(str, lockfile))
 
         if getattr(options, "use_venv", None):
             use_venv(project, cast(str, options.use_venv))
+
+        if overrides := getattr(options, "override", None):
+            self.state.overrides = overrides
 
         if command is None:
             self.parser.print_help()

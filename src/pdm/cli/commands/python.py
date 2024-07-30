@@ -9,8 +9,10 @@ from typing import TYPE_CHECKING
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.environments import BareEnvironment
-from pdm.exceptions import InstallationError
+from pdm.exceptions import InstallationError, PdmArgumentError
 from pdm.models.python import PythonInfo
+from pdm.termui import Verbosity
+from pdm.utils import get_all_installable_python_versions
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace, _SubParsersAction
@@ -78,7 +80,7 @@ class RemoveCommand(BaseCommand):
                 ui.echo(f"  {child.name}", err=True)
             sys.exit(1)
         shutil.rmtree(matched, ignore_errors=True)
-        ui.echo(f"[success]Removed installed[/] {options.version}")
+        ui.echo(f"[success]Removed installed[/] {options.version}", verbosity=Verbosity.NORMAL)
 
 
 class InstallCommand(BaseCommand):
@@ -87,17 +89,35 @@ class InstallCommand(BaseCommand):
     arguments = (verbose_option,)
 
     def add_arguments(self, parser: ArgumentParser) -> None:
-        parser.add_argument("version", help="The Python version to install. E.g. cpython@3.10.3", nargs="?")
+        parser.add_argument(
+            "version",
+            help="The Python version to install (e.g. cpython@3.10.3). If left empty, "
+            "highest cPython version that matches this platform/arch is installed. "
+            "If pyproject.toml with requires-python is available, this is considered as well.",
+            nargs="?",
+        )
         parser.add_argument("--list", "-l", action="store_true", help="List all available Python versions")
+        parser.add_argument(
+            "--min",
+            action="store_true",
+            help="Use minimum instead of highest version " "for installation if `version` is left empty",
+        )
 
     def handle(self, project: Project, options: Namespace) -> None:
-        from pbs_installer._versions import PYTHON_VERSIONS
-
         if options.list:
-            for version in PYTHON_VERSIONS:
+            for version in get_all_installable_python_versions(build_dir=False):
                 project.core.ui.echo(str(version))
             return
-        self.install_python(project, options.version)
+        version = options.version
+        if version is None:
+            match = project.get_best_matching_cpython_version(options.min)
+            if match is not None:
+                version = str(match)
+
+        if version is None:
+            raise PdmArgumentError("Please specify a Python version to be installed. E.g. cpython@3.10.3")
+
+        self.install_python(project, version)
 
     @staticmethod
     def install_python(project: Project, request: str) -> PythonInfo:
@@ -114,7 +134,7 @@ class InstallCommand(BaseCommand):
         version, _, arch = version.partition("-")
         arch = "x86" if arch == "32" else (arch or THIS_ARCH)
 
-        ver, python_file = get_download_link(version, implementation=implementation, arch=arch)
+        ver, python_file = get_download_link(version, implementation=implementation, arch=arch, build_dir=False)
         with ui.open_spinner(f"Downloading [success]{ver}[/]") as spinner:
             destination = root / str(ver)
             interpreter = destination / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
@@ -133,7 +153,10 @@ class InstallCommand(BaseCommand):
             raise InstallationError("Installation failed, please try again.")
 
         python_info = PythonInfo.from_path(interpreter)
-        ui.echo(f"[success]Successfully installed[/] {python_info.implementation}@{python_info.version}")
-        ui.echo(f"[info]Version:[/] {python_info.version}")
-        ui.echo(f"[info]Executable:[/] {python_info.path}")
+        ui.echo(
+            f"[success]Successfully installed[/] {python_info.implementation}@{python_info.version}",
+            verbosity=Verbosity.NORMAL,
+        )
+        ui.echo(f"[info]Version:[/] {python_info.version}", verbosity=Verbosity.NORMAL)
+        ui.echo(f"[info]Executable:[/] {python_info.path}", verbosity=Verbosity.NORMAL)
         return python_info

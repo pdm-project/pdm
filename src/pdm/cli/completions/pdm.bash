@@ -24,12 +24,12 @@ _pdm_a919b69078acdf0a_complete()
 
     # completing for an option
     if [[ ${cur} == --* ]] ; then
-        opts="--config --help --ignore-python --no-cache --pep582 --quiet --verbose --version"
+        opts="--config --help --ignore-python --no-cache --non-interactive --pep582 --quiet --verbose --version"
 
         case "$com" in
 
             (add)
-            opts="--config-setting --dev --dry-run --editable --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --prerelease --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose"
+            opts="--config-setting --dev --dry-run --editable --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --override --prerelease --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose"
             ;;
 
             (build)
@@ -65,11 +65,11 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (init)
-            opts="--backend --cookiecutter --copier --dist --global --help --non-interactive --overwrite --project --python --quiet --skip --verbose"
+            opts="--backend --cookiecutter --copier --dist --global --help --license --non-interactive --overwrite --project --project-version --python --quiet --skip --verbose"
             ;;
 
             (install)
-            opts="--check --config-setting --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --plugins --production --project --quiet --skip --venv --verbose --without"
+            opts="--check --config-setting --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --override --plugins --production --project --quiet --skip --venv --verbose --without"
             ;;
 
             (list)
@@ -77,7 +77,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (lock)
-            opts="--check --config-setting --dev --exclude-newer --global --group --help --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --production --project --quiet --refresh --skip --static-urls --strategy --update-reuse --update-reuse-installed --verbose --without"
+            opts="--append --check --config-setting --dev --exclude-newer --global --group --help --implementation --lockfile --no-cross-platform --no-default --no-isolation --no-static-urls --override --platform --production --project --python --quiet --refresh --skip --static-urls --strategy --update-reuse --update-reuse-installed --verbose --without"
             ;;
 
             (outdated)
@@ -101,11 +101,11 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (remove)
-            opts="--config-setting --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --project --quiet --skip --venv --verbose"
+            opts="--config-setting --dev --dry-run --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --override --project --quiet --skip --venv --verbose"
             ;;
 
             (run)
-            opts="--global --help --json --list --project --quiet --reuse-env --site-packages --skip --venv --verbose"
+            opts="--global --help --json --list --project --quiet --recreate --site-packages --skip --venv --verbose"
             ;;
 
             (search)
@@ -121,15 +121,15 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (sync)
-            opts="--clean --config-setting --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --only-keep --production --project --quiet --reinstall --skip --venv --verbose --without"
+            opts="--clean --config-setting --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --clean-unselected --only-keep --production --project --quiet --reinstall --skip --venv --verbose --without"
             ;;
 
             (update)
-            opts="--config-setting --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
+            opts="--config-setting --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --override --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
             ;;
 
             (use)
-            opts="--first --global --help --ignore-remembered --project --quiet --skip --venv --verbose"
+            opts="--auto-install-max --auto-install-min --first --global --help --ignore-remembered --project --quiet --skip --venv --verbose"
             ;;
 
             (venv)

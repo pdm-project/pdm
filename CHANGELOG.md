@@ -1,3 +1,113 @@
+## Release v2.17.1 (2024-07-19)
+
+
+### Bug Fixes
+
+- Raise dep-logic lower bound to 0.4.2 to fix issues with pdm lock after upgrading from older pdm versions ([#3033](https://github.com/pdm-project/pdm/issues/3033))
+- Correct the current platform and architecture for win32 and macos systems. ([#3035](https://github.com/pdm-project/pdm/issues/3035))
+
+### Miscellany
+
+- Fix zsh completions ([#3031](https://github.com/pdm-project/pdm/issues/3031))
+
+
+## Release v2.17.0 (2024-07-18)
+
+
+### Breaking Changes
+
+- `LockedRepository.all_candidates` now returns a `dict[str, list[Candidate]]` instead of `dict[str, Candidate]`. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `post_lock` hook now receives a resolution result of type `dict[str, list[Candidate]]`, instead of `dict[str, Candidate]`. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+
+### Features & Improvements
+
+- Support reading requirement constraints from pip-style requirement files for "overriding" via `--override` option. ([#2896](https://github.com/pdm-project/pdm/issues/2896))
+- Add a `--non-interactive` option for automation scenarios, also interactive prompts will not show up when not running in an interactive terminal. ([#2934](https://github.com/pdm-project/pdm/issues/2934))
+- Refactored `pdm python install --list` to reuse the same implementation as other cli commands that work with Python interpreters from pbs_installer. ([#2977](https://github.com/pdm-project/pdm/issues/2977))
+- Add `--license` and `--project-version` as CLI options to control and streamline them during `pdm init` - especially in automated scenarios with `--non-interactive` ([#2978](https://github.com/pdm-project/pdm/issues/2978))
+- Run pdm sync in "post-rewrite" stage of pre-commit ([#2994](https://github.com/pdm-project/pdm/issues/2994))
+- `Project.get_dependencies()` now returns a list of `Requirement` instead of a mapping.
+  The first argument of `Project.add_dependencies()` now accepts a list of `Requirement` instead of a mapping.
+  The old usage will be kept working for a short period of time and will be removed in the future. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- Support locking for specific target, which is a combination of (python, platform, implementation) triple. Bump lock file version to `4.5.0`.
+
+  Example usage: `pdm lock --platform=linux --python="==3.8.*" --implementation=cpython`. See the [docs](https://pdm-project.org/en/latest/usage/lock-targets) for more details. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- Rename `--reuse-env` to `--recreate` for `run` command, and reverse the behavior. ([#2999](https://github.com/pdm-project/pdm/issues/2999))
+- PDM is now published with optional pinned dependencies using the pdm plugin [pdm-build-locked](https://pdm-build-locked.readthedocs.io/).
+
+  To install pdm with its dependencies pinned to the versions it was tested with, run:
+
+  ```bash
+
+      pipx install pdm[locked]
+  ```
+
+  To install optional dependency group copier:
+
+  ```bash
+
+      pipx install pdm[locked,copier-locked]
+  ```
+
+  This feature is entirely optional. Installing pdm without the extra will work the same way as before this change. ([#3001](https://github.com/pdm-project/pdm/issues/3001))
+- Added `--clean-unselected` alias for `--only-keep` ([#3007](https://github.com/pdm-project/pdm/issues/3007))
+- Group options for update strategy and save strategy. ([#3016](https://github.com/pdm-project/pdm/issues/3016))
+
+### Bug Fixes
+
+- When locking dependencies that references the self project, the referenced groups should also be recorded in the lockfile. ([#2976](https://github.com/pdm-project/pdm/issues/2976))
+- Retry failed installation jobs if they are run sequentially, such as for editable dependencies. ([#3005](https://github.com/pdm-project/pdm/issues/3005))
+- Fix the local path issue when `-p` is passed to change the project root. ([#3009](https://github.com/pdm-project/pdm/issues/3009))
+- Fix a bug that PDM can't install editable self package with non-isolated build in one go. ([#3018](https://github.com/pdm-project/pdm/issues/3018))
+- Add context when parsing version failed. ([#3020](https://github.com/pdm-project/pdm/issues/3020))
+- Fix a mistake in build env setup that will cause the `PATH` env var length to grow. ([#3022](https://github.com/pdm-project/pdm/issues/3022))
+
+### Removals and Deprecations
+
+- Remove the deprecation warning of `BaseCommand.__init__()` method. Now it doesn't take any arguments. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `Provider.get_reuse_candidate()` method is deprecated in favor of `Provider.iter_reuse_candidates()`, to return an iterable of reuse candidates. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `--no-markers` option in `pdm export` command becomes a no-op and is marked as deprecated, because it doesn't make sense anymore. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+- `ignore_compatibility` parameter of `Project.get_provider()`/`Project.get_repository()`/`Environment.get_finder()` is deprecated. Pass in a `EnvSpec` via `env_spec` parameter instead.
+  `requires_python` parameter of `pdm.resolver.core.resolve()` function is deprecated and has no effect.
+  `cross_platform` parameter of `pdm.cli.actions.resolve_candidates_from_lockfile()` function is deprecated and has no effect. ([#2995](https://github.com/pdm-project/pdm/issues/2995))
+
+
+## Release v2.16.1 (2024-06-26)
+
+
+### Bug Fixes
+
+- Fix new interface from pbs_installer regarding `build_dir` and best match auto-install strategy for `pdm use`
+  (same as for `pdm python install --list`) ([#2943](https://github.com/pdm-project/pdm/issues/2943))
+- Fix crash when pdm is used with `importlib-metadata` version 8.0. ([#2974](https://github.com/pdm-project/pdm/issues/2974))
+
+
+## Release v2.16.0 (2024-06-25)
+
+
+### Features & Improvements
+
+- Add `--no-extras` to `pdm export` to strip extras from the requirements. Now the default behavior is to keep extras. ([#2519](https://github.com/pdm-project/pdm/issues/2519))
+- Support PEP 723: running scripts with inline metadata in standalone environment with dependencies. ([#2924](https://github.com/pdm-project/pdm/issues/2924))
+- `pdm use` and `pdm python install` now take `requires-python` into account (incl. from pyproject.toml) if python version
+  not specified and `pdm use` provides auto installation by that. ([#2943](https://github.com/pdm-project/pdm/issues/2943))
+- `--no-isolation` no longer installs `build-requires` nor dynamic build dependencies, to be consistent with `pip`. ([#2944](https://github.com/pdm-project/pdm/issues/2944))
+- Add notifiers in CLI output when global project is being used. ([#2952](https://github.com/pdm-project/pdm/issues/2952))
+- Use `tool.pdm.resolution` table when calculating the content hash of project file, previously only `overrides` table was used.
+  This will change the hash already stored in the lockfile, so bump the lockfile version to `4.4.2`. ([#2956](https://github.com/pdm-project/pdm/issues/2956))
+
+### Bug Fixes
+
+- Add max retries on read timeout or bad connection. ([#2914](https://github.com/pdm-project/pdm/issues/2914))
+- Don't update local files if they don't change. ([#2966](https://github.com/pdm-project/pdm/issues/2966))
+- Don't list python versions that don't have any installation link for the current platform. ([#2970](https://github.com/pdm-project/pdm/issues/2970))
+
+### Documentation
+
+- Clarify the purposes of `pdm outdated` and `--unconstrained` option. ([#2965](https://github.com/pdm-project/pdm/issues/2965))
+- Some clarifications on the interpreter selection and central package cache. ([#2967](https://github.com/pdm-project/pdm/issues/2967))
+
+
 ## Release v2.15.4 (2024-05-30)
 
 

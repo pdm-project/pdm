@@ -146,7 +146,7 @@ class TaskRunner:
             self.project.scripts.get("_", {}) if self.project.scripts else {},
         )
         self.global_options = global_options.copy()
-        self.reuse_env = False
+        self.recreate_env = False
         self.hooks = hooks
 
     def _get_script_env(self, script_file: str) -> BaseEnvironment:
@@ -167,7 +167,7 @@ class TaskRunner:
         venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8")).hexdigest()
         venv_backend = BACKENDS[script_project.config["venv.backend"]](script_project, None)
         venv = venv_backend.get_location(None, venv_name)
-        if venv.exists() and self.reuse_env:
+        if venv.exists() and not self.recreate_env:
             self.project.core.ui.info(f"Reusing existing script environment: {venv}", verbosity=termui.Verbosity.DETAIL)
         else:
             self.project.core.ui.info(f"Creating environment for script: {venv}", verbosity=termui.Verbosity.DETAIL)
@@ -176,7 +176,7 @@ class TaskRunner:
         script_project._python = env.interpreter
         env.project = script_project  # keep a strong reference to the project
         if reqs := script_project.get_dependencies():
-            install_requirements(list(reqs.values()), env, clean=True)
+            install_requirements(reqs, env, clean=True)
         return env
 
     def get_task(self, script_name: str) -> Task | None:
@@ -478,7 +478,7 @@ class Command(BaseCommand):
             help="Load site-packages from the selected interpreter",
         )
         exec.add_argument(
-            "--reuse-env", action="store_true", help="Reuse the script environment for self-contained scripts"
+            "--recreate", action="store_true", help="Recreate the script environment for self-contained scripts"
         )
         exec.add_argument("script", nargs="?", help="The command to run")
         exec.add_argument(
@@ -493,7 +493,7 @@ class Command(BaseCommand):
             runner = cast("type[TaskRunner]", runner_cls)(project, hooks)
         else:
             runner = TaskRunner(project, hooks)
-        runner.reuse_env = options.reuse_env
+        runner.recreate_env = options.recreate
         if options.site_packages:
             runner.global_options["site_packages"] = True
         return runner

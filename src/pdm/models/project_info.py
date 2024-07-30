@@ -42,8 +42,8 @@ class ProjectInfo:
             project_urls = {}
 
         return cls(
-            name=metadata["Name"],
-            version=metadata["Version"],
+            name=metadata.get("Name", ""),
+            version=metadata.get("Version", ""),
             summary=metadata.get("Summary", ""),
             author=metadata.get("Author", ""),
             email=metadata.get("Author-email", ""),

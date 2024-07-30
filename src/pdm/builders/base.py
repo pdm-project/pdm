@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import logging
 import os
 import shutil
@@ -10,7 +11,13 @@ from logging import Logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Iterable, cast
 
-from pyproject_hooks import BuildBackendHookCaller
+from pyproject_hooks import (
+    BackendInvalid,
+    BackendUnavailable,
+    BuildBackendHookCaller,
+    HookMissing,
+    UnsupportedOperation,
+)
 
 from pdm.compat import tomllib
 from pdm.environments import PythonEnvironment
@@ -21,7 +28,12 @@ from pdm.models.working_set import WorkingSet
 from pdm.termui import logger
 
 if TYPE_CHECKING:
+    from typing import Callable, ParamSpec, TypeVar
+
     from pdm.environments import BaseEnvironment
+
+    R = TypeVar("R")
+    P = ParamSpec("P")
 
 
 class LoggerWrapper(threading.Thread):
@@ -64,6 +76,16 @@ class LoggerWrapper(threading.Thread):
     def stop(self) -> None:
         os.close(self.fd_write)
         self.join()
+
+
+def wrap_error(func: Callable[P, R]) -> Callable[P, R]:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return func(*args, **kwargs)
+        except (HookMissing, BackendUnavailable, BackendInvalid, UnsupportedOperation) as e:
+            raise BuildError(str(e)) from e
+
+    return functools.update_wrapper(wrapper, func)
 
 
 def build_error(e: subprocess.CalledProcessError) -> BuildError:
@@ -115,7 +137,7 @@ class _Prefix:
         for path in (overlay, shared):
             paths = get_sys_config_paths(executable, vars={"base": path, "platbase": path}, kind="prefix")
             self.bin_dirs.append(paths["scripts"])
-            self.lib_dirs.extend([paths["platlib"], paths["purelib"]])
+            self.lib_dirs.extend({paths["platlib"], paths["purelib"]})
         self.site_dir = os.path.join(overlay, "site")
         if os.path.isdir(self.site_dir):
             # Clear existing site dir as .pyc may be cached.
@@ -159,7 +181,7 @@ class EnvBuilder:
     if TYPE_CHECKING:
         _hook: BuildBackendHookCaller
         _requires: list[str]
-        _prefix: _Prefix
+        _prefix: _Prefix | None
 
     def get_shared_env(self, key: int) -> str:
         if key in self._shared_envs:
@@ -212,21 +234,24 @@ class EnvBuilder:
             python_executable=self.executable,
         )
         self._requires = build_system["requires"]
-        self._prefix = _Prefix(
-            self.executable,
-            # Build backends with the same requires list share the cached base env.
-            shared=self.get_shared_env(hash(frozenset(self._requires))),
-            # Overlay envs are unique for each source to be built.
-            overlay=self.get_overlay_env(os.path.normcase(self.src_dir).rstrip("\\/")),
+        self._prefix = (
+            _Prefix(
+                self.executable,
+                # Build backends with the same requires list share the cached base env.
+                shared=self.get_shared_env(hash(frozenset(self._requires))),
+                # Overlay envs are unique for each source to be built.
+                overlay=self.get_overlay_env(os.path.normcase(self.src_dir).rstrip("\\/")),
+            )
+            if self.isolated
+            else None
         )
 
     @property
     def _env_vars(self) -> dict[str, str]:
-        paths = self._prefix.bin_dirs
-        if "PATH" in os.environ:
-            paths.append(os.getenv("PATH", ""))
         env: dict[str, str] = {}
         if self.isolated:
+            assert self._prefix is not None
+            paths = self._prefix.bin_dirs[:]
             env.update(
                 {
                     "PYTHONPATH": self._prefix.site_dir,
@@ -235,14 +260,15 @@ class EnvBuilder:
             )
         else:
             env_paths = self._env.get_paths()
-            project_libs = env_paths["purelib"]
-            pythonpath = [*self._prefix.lib_dirs, project_libs]
+            pythonpath = list({env_paths["purelib"], env_paths["platlib"]})
             if "PYTHONPATH" in os.environ:
                 pythonpath.append(os.getenv("PYTHONPATH", ""))
             env.update(
                 PYTHONPATH=os.pathsep.join(pythonpath),
             )
-            paths.append(env_paths["scripts"])
+            paths = [env_paths["scripts"]]
+        if "PATH" in os.environ:
+            paths.append(os.getenv("PATH", ""))
         env["PATH"] = os.pathsep.join(paths)
         return env
 
@@ -257,14 +283,17 @@ class EnvBuilder:
     def check_requirements(self, reqs: Iterable[str]) -> Iterable[Requirement]:
         missing = set()
         conflicting = set()
-        project_lib = self._env.get_paths()["purelib"]
-        libs = self._prefix.lib_dirs + ([project_lib] if not self.isolated else [])
+        env_paths = self._env.get_paths()
+        libs = (
+            list({env_paths["purelib"], env_paths["platlib"]})
+            if not self.isolated
+            else cast(_Prefix, self._prefix).lib_dirs
+        )
         if reqs:
             ws = WorkingSet(libs)
-            marker_env = self._env.marker_environment
             for req in reqs:
                 parsed_req = parse_requirement(req)
-                if parsed_req.marker and not parsed_req.marker.evaluate(marker_env):
+                if parsed_req.marker and not parsed_req.marker.matches(self._env.spec):
                     logger.debug(
                         "Skipping requirement %s: mismatching marker %s",
                         req,
@@ -287,6 +316,7 @@ class EnvBuilder:
         missing = list(self.check_requirements(requirements))
         if not missing:
             return
+        assert self._prefix is not None
         path = self._prefix.shared if shared else self._prefix.overlay
         env = PythonEnvironment(self._env.project, python=str(self._env.interpreter.path), prefix=path)
         install_requirements(missing, env)
