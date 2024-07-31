@@ -220,7 +220,7 @@ class Project:
 
         config = self.config
         saved_path = self._saved_python
-        if saved_path and not os.getenv("PDM_IGNORE_SAVED_PYTHON"):
+        if saved_path and not ensure_boolean(os.getenv("PDM_IGNORE_SAVED_PYTHON")):
             python = PythonInfo.from_path(saved_path)
             if match_version(python):
                 return python
