@@ -122,7 +122,7 @@ These configurations are read in the following order to build the final source l
 - Sources in `pyproject.toml`
 - `pypi.<name>.url` in PDM config.
 
-You can set `pypi.ignore_stored_index` to `true` to disable all indexes from the PDM config and only use those specified in `pyproject.toml`.
+You can set `pypi.ignore_stored_index` to `true` to disable all additional indexes from the PDM config and only use those specified in `pyproject.toml`.
 
 !!! TIP "Disable the default PyPI index"
     If you want to omit the default PyPI index, just set the source name to `pypi` and that source will **replace** it.

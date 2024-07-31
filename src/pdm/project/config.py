@@ -192,7 +192,7 @@ class Config(MutableMapping[str, str]):
             "Path to a CA certificate bundle used for verifying the identity of the PyPI server", global_only=True
         ),
         "pypi.ignore_stored_index": ConfigItem(
-            "Ignore the configured indexes",
+            "Don't add the indexes from the config that is not listed in project",
             False,
             env_var="PDM_IGNORE_STORED_INDEX",
             coerce=ensure_boolean,
