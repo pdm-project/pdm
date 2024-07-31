@@ -1,3 +1,19 @@
+## Release v2.17.2 (2024-07-31)
+
+
+### Features & Improvements
+
+- Improve the installation progress output to show the time elapsed. ([#3051](https://github.com/pdm-project/pdm/issues/3051))
+- The effect of `pypi.ignore_stored_index` changes a bit. Now even if it is true, index configurations in the config will still be loaded if the index is listed in the `pyproject.toml`. ([#3052](https://github.com/pdm-project/pdm/issues/3052))
+
+### Bug Fixes
+
+- Ignore invalid requires-python values from index. ([#3038](https://github.com/pdm-project/pdm/issues/3038))
+- Fix the group selection logic, to make `--without GROUP` work as expected.
+  ``` ([#3045](https://github.com/pdm-project/pdm/issues/3045))
+- Suppress outputs for `pdm python install --quiet`. ([#3049](https://github.com/pdm-project/pdm/issues/3049))
+
+
 ## Release v2.17.1 (2024-07-19)
 
 
