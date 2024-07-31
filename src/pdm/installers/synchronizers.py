@@ -8,14 +8,12 @@ from functools import cached_property
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Collection
 
-from rich.progress import SpinnerColumn, TaskProgressColumn
-
 from pdm import termui
 from pdm.environments import BaseEnvironment
 from pdm.exceptions import BuildError, InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
-from pdm.models.reporter import BaseReporter, RichProgressReporter
+from pdm.models.reporter import BaseReporter, InstallationStatus, RichProgressReporter
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
 from pdm.utils import is_editable, normalize_name
 
@@ -229,10 +227,10 @@ class Synchronizer(BaseSynchronizer):
         try:
             self.manager.install(can)
         except Exception:
-            progress.live.console.print(f"  [error]{termui.Emoji.FAIL}[/] Install {can.format()} failed")
+            progress.console.print(f"  [error]{termui.Emoji.FAIL}[/] Install {can.format()} failed")
             raise
         else:
-            progress.live.console.print(f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful")
+            progress.console.print(f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful")
         finally:
             progress.update(job, visible=False)
             can.prepare(self.environment, BaseReporter())
@@ -250,14 +248,14 @@ class Synchronizer(BaseSynchronizer):
         try:
             self.manager.overwrite(dist, can)
         except Exception:
-            progress.live.console.print(
+            progress.console.print(
                 f"  [error]{termui.Emoji.FAIL}[/] Update [req]{key}[/] "
                 f"[warning]{dist_version}[/] "
                 f"-> [warning]{can.version}[/] failed",
             )
             raise
         else:
-            progress.live.console.print(
+            progress.console.print(
                 f"  [success]{termui.Emoji.SUCC}[/] Update [req]{key}[/] "
                 f"[warning]{dist_version}[/] "
                 f"-> [warning]{can.version}[/] successful",
@@ -277,12 +275,12 @@ class Synchronizer(BaseSynchronizer):
         try:
             self.manager.uninstall(dist)
         except Exception:
-            progress.live.console.print(
+            progress.console.print(
                 f"  [error]{termui.Emoji.FAIL}[/] Remove [req]{key}[/] [warning]{dist_version}[/] failed",
             )
             raise
         else:
-            progress.live.console.print(
+            progress.console.print(
                 f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] [warning]{dist_version}[/] successful"
             )
         finally:
@@ -370,6 +368,7 @@ class Synchronizer(BaseSynchronizer):
 
         def update_progress(future: Future, kind: str, key: str) -> None:
             error = future.exception()
+            status.update_spinner(advance=1)  # type: ignore[has-type]
             if error:
                 exc_info = (type(error), error, error.__traceback__)
                 termui.logger.exception("Error occurs: ", exc_info=exc_info)
@@ -381,18 +380,12 @@ class Synchronizer(BaseSynchronizer):
                     state.mark_failed = True
 
         # get rich progress and live handler to deal with multiple spinners
-        with self.ui.make_progress(
-            " ",
-            SpinnerColumn(termui.SPINNER, speed=1, style="primary"),
-            "{task.description}",
-            "[info]{task.fields[text]}",
-            TaskProgressColumn("[info]{task.percentage:>3.0f}%[/]"),
-        ) as progress:
-            live = progress.live
+        with InstallationStatus(self.ui, "Synchronizing") as status:
             for i in range(self.retry_times + 1):
+                status.update_spinner(completed=0, total=len(sequential_jobs) + len(parallel_jobs))
                 for kind, key in sequential_jobs:
                     try:
-                        handlers[kind](key, progress)
+                        handlers[kind](key, status.progress)
                     except Exception:
                         termui.logger.exception("Error occurs: ")
                         state.sequential_failed.append((kind, key))
@@ -400,13 +393,15 @@ class Synchronizer(BaseSynchronizer):
                         if self.fail_fast:
                             state.mark_failed = True
                             break
+                    finally:
+                        status.update_spinner(advance=1)
                 if state.mark_failed:
                     break
                 state.jobs.clear()
                 if parallel_jobs:
                     with ThreadPoolExecutor() as executor:
                         for kind, key in parallel_jobs:
-                            future = executor.submit(handlers[kind], key, progress)
+                            future = executor.submit(handlers[kind], key, status.progress)
                             future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
                             state.jobs.append(future)
                 if (
@@ -419,27 +414,28 @@ class Synchronizer(BaseSynchronizer):
                 sequential_jobs, state.sequential_failed = state.sequential_failed, []
                 parallel_jobs, state.parallel_failed = state.parallel_failed, []
                 state.errors.clear()
-                live.console.print("Retry failed jobs")
+                status.update_spinner(description=f"Retry failed jobs({i + 2}/{self.retry_times + 1})")
 
             try:
                 if state.errors:
                     if self.ui.verbosity < termui.Verbosity.DETAIL:
-                        live.console.print("\n[error]ERRORS[/]:")
-                        live.console.print("".join(state.errors), end="")
-                    raise InstallationError("Some package operations are not complete yet")
+                        status.console.print("\n[error]ERRORS[/]:")
+                        status.console.print("".join(state.errors), end="")
+                    status.update_spinner(description=f"[error]{termui.Emoji.FAIL}[/] Some package operations failed.")
+                    raise InstallationError("Some package operations failed.")
 
                 if self.install_self:
                     self_key = self.self_key
                     assert self_key
                     self.candidates[self_key] = self.self_candidate
                     word = "a" if self.no_editable else "an editable"
-                    live.console.print(f"Installing the project as {word} package...")
+                    status.update_spinner(description=f"Installing the project as {word} package...")
                     if self_key in self.working_set:
-                        self.update_candidate(self_key, progress)
+                        self.update_candidate(self_key, status.progress)
                     else:
-                        self.install_candidate(self_key, progress)
+                        self.install_candidate(self_key, status.progress)
 
-                live.console.print(f"\n{termui.Emoji.POPPER} All complete!")
+                status.update_spinner(description=f"{termui.Emoji.POPPER} All complete!")
             finally:
                 # Now we remove the .pdmtmp suffix from the installed packages
                 self._fix_pth_files()
