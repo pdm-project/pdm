@@ -385,21 +385,24 @@ class Project:
         for source in self.pyproject.settings.get("source", []):
             result[source["name"]] = RepositoryConfig(**source, config_prefix="pypi")
 
+        add_missing_sources = not self.config.get("pypi.ignore_stored_index", False)
+
         def merge_sources(other_sources: Iterable[RepositoryConfig]) -> None:
             for source in other_sources:
                 name = source.name
                 if name in result:
                     result[name].passive_update(source)
-                else:
+                elif add_missing_sources:
                     result[name] = source
 
-        if not self.config.get("pypi.ignore_stored_index", False):
-            if "pypi" not in result:  # put pypi source at the beginning
-                result = {"pypi": self.default_source, **result}
-            else:
-                result["pypi"].passive_update(self.default_source)
-            merge_sources(self.project_config.iter_sources())
-            merge_sources(self.global_config.iter_sources())
+        merge_sources(self.project_config.iter_sources())
+        merge_sources(self.global_config.iter_sources())
+        if "pypi" in result:
+            result["pypi"].passive_update(self.default_source)
+        elif add_missing_sources:
+            # put pypi source at the beginning
+            result = {"pypi": self.default_source, **result}
+
         sources: list[RepositoryConfig] = []
         for source in result.values():
             if not source.url:
