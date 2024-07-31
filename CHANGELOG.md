@@ -9,8 +9,7 @@
 ### Bug Fixes
 
 - Ignore invalid requires-python values from index. ([#3038](https://github.com/pdm-project/pdm/issues/3038))
-- Fix the group selection logic, to make `--without GROUP` work as expected.
-  ``` ([#3045](https://github.com/pdm-project/pdm/issues/3045))
+- Fix the group selection logic, to make `--without GROUP` work as expected. ([#3045](https://github.com/pdm-project/pdm/issues/3045))
 - Suppress outputs for `pdm python install --quiet`. ([#3049](https://github.com/pdm-project/pdm/issues/3049))
 
 
