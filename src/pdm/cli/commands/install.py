@@ -1,5 +1,6 @@
 import argparse
 import sys
+import sysconfig
 
 from pdm import termui
 from pdm.cli import actions
@@ -51,7 +52,10 @@ class Command(BaseCommand):
         if not plugins:
             return
         plugin_root = project.root / ".pdm-plugins"
-        environment = PythonEnvironment(project, python=sys.executable, prefix=str(plugin_root))
+        extra_paths = list({sysconfig.get_path("purelib"), sysconfig.get_path("platlib")})
+        environment = PythonEnvironment(
+            project, python=sys.executable, prefix=str(plugin_root), extra_paths=extra_paths
+        )
         with project.core.ui.open_spinner("[success]Installing plugins...[/]"):
             with project.core.ui.logging("install-plugins"):
                 install_requirements(

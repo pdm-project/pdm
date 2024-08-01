@@ -14,9 +14,17 @@ if TYPE_CHECKING:
 class PythonEnvironment(BaseEnvironment):
     """A project environment that is directly derived from a Python interpreter"""
 
-    def __init__(self, project: Project, *, python: str | None = None, prefix: str | None = None) -> None:
+    def __init__(
+        self,
+        project: Project,
+        *,
+        python: str | None = None,
+        prefix: str | None = None,
+        extra_paths: list[str] | None = None,
+    ) -> None:
         super().__init__(project, python=python)
         self.prefix = prefix
+        self.extra_paths = extra_paths or []
 
     def get_paths(self, dist_name: str | None = None) -> dict[str, str]:
         is_venv = self.interpreter.get_venv() is not None
@@ -50,7 +58,7 @@ class PythonEnvironment(BaseEnvironment):
         scheme = self.get_paths()
         paths = [scheme["platlib"], scheme["purelib"]]
         venv = self.interpreter.get_venv()
-        shared_paths = []
+        shared_paths = self.extra_paths[:]
         if venv is not None and venv.include_system_site_packages:
             shared_paths.extend(venv.base_paths)
         return WorkingSet(paths, shared_paths=list(dict.fromkeys(shared_paths)))
