@@ -401,13 +401,14 @@ class PreparedCandidate:
         if not isinstance(req, NamedRequirement):
             return None
         assert self.link is not None
+        hashes = {name: hashes[0] for name, hashes in (self.link.hash_option or {}).items() if name in ALLOWED_HASHES}
+        if not hashes:
+            hash_cache = self.environment.project.make_hash_cache()
+            hash_name, hash_value = hash_cache.get_hash(self.link, self.environment.session).split(":", 1)
+            hashes.update({hash_name: hash_value})
         return {
             "url": self.link.url_without_fragment,
-            "archive_info": {
-                "hashes": {
-                    name: hashes[0] for name, hashes in (self.link.hash_option or {}).items() if name in ALLOWED_HASHES
-                },
-            },
+            "archive_info": {"hashes": hashes},
         }
 
     def build(self) -> Path:
