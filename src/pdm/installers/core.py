@@ -18,6 +18,8 @@ def install_requirements(
     # Clear the overrides and excludes
     provider.overrides = {}
     provider.excludes = set()
+    # Disable this so installing self will not skip including dependencies
+    provider.repository.find_dependencies_from_local = False
     reqs = [req for req in reqs if not req.marker or req.marker.matches(provider.repository.env_spec)]
     reporter = project.get_reporter(reqs)
     resolver = project.core.resolver_class(provider, reporter)

@@ -51,7 +51,8 @@ class PyPIRepository(BaseRepository):
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
         yield self._get_dependencies_from_cache
-        yield self._get_dependencies_from_local_package
+        if self.find_dependencies_from_local:
+            yield self._get_dependencies_from_local_package
         if self.environment.project.config["pypi.json_api"]:
             yield self._get_dependencies_from_json
         yield self._get_dependencies_from_metadata

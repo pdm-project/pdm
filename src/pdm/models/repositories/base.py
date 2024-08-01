@@ -15,7 +15,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import Requirement, parse_line
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import filtered_sources, normalize_name
+from pdm.utils import deprecation_warning, filtered_sources, normalize_name
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable
@@ -71,11 +71,11 @@ class BaseRepository:
         self._hash_cache = environment.project.make_hash_cache()
         self.has_warnings = False
         self.collected_groups: set[str] = set()
+        self.find_dependencies_from_local = True
         if ignore_compatibility is not NotSet:  # pragma: no cover
-            warnings.warn(
+            deprecation_warning(
                 "The ignore_compatibility argument is deprecated and will be removed in the future. "
                 "Pass in env_set instead. This repository doesn't support lock targets.",
-                DeprecationWarning,
                 stacklevel=2,
             )
         else:
