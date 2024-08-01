@@ -1,3 +1,13 @@
+## Release v2.17.3 (2024-08-01)
+
+
+### Bug Fixes
+
+- Fix a crash issue when `requires-python` is absent in the project metadata. ([#3062](https://github.com/pdm-project/pdm/issues/3062))
+- Now correctly sets related config for PDM_IGNORE_SAVED_PYTHON when it is set to "false", "no", "0". ([#3064](https://github.com/pdm-project/pdm/issues/3064))
+- Fix a bug that PDM plugins installed from project-root cannot be loaded, if they have dependencies. ([#3067](https://github.com/pdm-project/pdm/issues/3067))
+
+
 ## Release v2.17.2 (2024-07-31)
 
 
