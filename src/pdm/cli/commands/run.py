@@ -145,9 +145,9 @@ class TaskRunner:
             "TaskOptions",
             self.project.scripts.get("_", {}) if self.project.scripts else {},
         )
-        if 'env' not in global_options:
-            global_options['env'] = {}
-        global_options['env']['PROJECT_ROOT'] = str(project.root)
+        if "env" not in global_options:
+            global_options["env"] = {}
+        global_options["env"]["PROJECT_ROOT"] = str(project.root)
         self.global_options = global_options.copy()
         self.recreate_env = False
         self.hooks = hooks
