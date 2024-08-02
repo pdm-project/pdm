@@ -481,7 +481,13 @@ def test_run_json_list_of_scripts(project, pdm):
 
     sep = termui.Emoji.ARROW_SEPARATOR
     assert json.loads(result.outputs) == {
-        "_": {"name": "_", "env": {"PROJECT_ROOT": str(project.root)}, "help": "Shared options", "kind": "shared", "env_file": ".env"},
+        "_": {
+            "name": "_",
+            "env": {"PROJECT_ROOT": str(project.root)},
+            "help": "Shared options",
+            "kind": "shared",
+            "env_file": ".env",
+        },
         "test_cmd": {"name": "test_cmd", "help": "flask db upgrade", "kind": "cmd", "args": "flask db upgrade"},
         "test_composite": {
             "name": "test_composite",
