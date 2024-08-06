@@ -136,6 +136,7 @@ def test_venv_activate(pdm, mocker, project):
         assert result.output.strip("'\"\n").endswith("activate")
         if platform.system() == "Windows":
             assert not result.output.startswith("source")
+            assert not result.output.startswith("'")
         else:
             assert result.output.startswith("source")
 
@@ -192,6 +193,7 @@ def test_venv_activate_no_shell(pdm, mocker, project):
         assert result.output.strip("'\"\n").endswith("activate")
         if platform.system() == "Windows":
             assert not result.output.startswith("source")
+            assert not result.output.startswith("'")
         else:
             assert result.output.startswith("source")
 

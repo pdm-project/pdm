@@ -65,5 +65,5 @@ class ActivateCommand(BaseCommand):
     @staticmethod
     def quote(command: str, shell: str) -> str:
         if shell in ["powershell", "pwsh"]:
-            return "'{}'".format(command.replace("'", "''"))
+            return "{}".format(command.replace("'", "''"))
         return shlex.quote(command)
