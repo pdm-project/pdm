@@ -143,12 +143,22 @@ You can set `pypi.ignore_stored_index` to `true` to disable all additional index
 
 By default, all sources are considered equal, packages from them are sorted by the version and wheel tags, the most matching one with the highest version is selected.
 
-In some cases you may want to return packages from the preferred source, and search for others if they are missing from the former source. PDM supports this by reading the configuration `respect-source-order`:
+In some cases you may want to return packages from the preferred source, and search for others if they are missing from the former source. PDM supports this by reading the configuration `respect-source-order`. For example:
 
 ```toml
 [tool.pdm.resolution]
 respect-source-order = true
+
+[[tool.pdm.source]]
+name = "private"
+url = "https://private.pypi.org/simple"
+
+[[tool.pdm.source]]
+name = "pypi"
+url = "https://pypi.org/simple"
 ```
+
+A package will be searched from the `private` index first, and only if no matching version is found there, it will be searched from the `pypi` index.
 
 ### Specify index for individual packages
 
