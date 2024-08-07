@@ -185,7 +185,12 @@ class Config(MutableMapping[str, str]):
             DEFAULT_PYPI_INDEX,
             env_var="PDM_PYPI_URL",
         ),
-        "pypi.verify_ssl": ConfigItem("Verify SSL certificate when query PyPI", True, coerce=ensure_boolean),
+        "pypi.verify_ssl": ConfigItem(
+            "Verify SSL certificate when query PyPI",
+            True,
+            env_var="PDM_PYPI_VERIFY_SSL",
+            coerce=ensure_boolean,
+        ),
         "pypi.username": ConfigItem("The username to access PyPI", env_var="PDM_PYPI_USERNAME"),
         "pypi.password": ConfigItem("The password to access PyPI", env_var="PDM_PYPI_PASSWORD"),
         "pypi.ca_certs": ConfigItem(
