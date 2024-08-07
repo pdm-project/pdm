@@ -598,7 +598,7 @@ class PreparedCandidate:
             result = self.prepare_metadata()
             if not self.candidate.name:
                 self.req.name = self.candidate.name = cast(str, result.metadata.get("Name"))
-            if not self.candidate.version:
+            if not self.candidate.version and result.metadata.get("Version"):
                 self.candidate.version = result.version
             if not self.candidate.requires_python:
                 self.candidate.requires_python = result.metadata.get("Requires-Python", "")
