@@ -180,7 +180,7 @@ class BaseRepository:
             if requirement.specifier.contains(c.version, allow_prereleases)  # type: ignore[arg-type, union-attr]
         )
 
-        def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate, None, None]:
+        def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate]:
             env_requires_python = PySpecSet(self.env_spec.requires_python)
             if ignore_requires_python:
                 yield from candidates

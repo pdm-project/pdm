@@ -307,7 +307,7 @@ def build_env_wheels() -> Iterable[Path]:
 
 
 @pytest.fixture(autouse=True)
-def temp_env() -> Generator[MutableMapping[str, str], None, None]:
+def temp_env() -> Generator[MutableMapping[str, str]]:
     old_env = os.environ.copy()
     try:
         yield os.environ
