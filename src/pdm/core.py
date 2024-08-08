@@ -21,7 +21,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
 
-import tomlkit
 import tomlkit.exceptions
 from resolvelib import Resolver
 
