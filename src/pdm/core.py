@@ -221,7 +221,7 @@ class Core:
             return args
         try:
             config = project.pyproject.settings.get("options", {})
-        except tomlkit.exceptions.TOMLKitError as e:
+        except tomlkit.exceptions.TOMLKitError as e:  # pragma: no cover
             self.ui.error(f"Failed to parse pyproject.toml: {e}")
             config = {}
         (pos, command) = self.get_command(args)
