@@ -21,6 +21,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
 
+import tomlkit.exceptions
 from resolvelib import Resolver
 
 from pdm import termui
@@ -217,7 +218,11 @@ class Core:
         project = self.create_project(is_global=False) if obj is None else obj
         if project.is_global:
             return args
-        config = project.pyproject.settings.get("options", {})
+        try:
+            config = project.pyproject.settings.get("options", {})
+        except tomlkit.exceptions.TOMLKitError as e:  # pragma: no cover
+            self.ui.error(f"Failed to parse pyproject.toml: {e}")
+            config = {}
         (pos, command) = self.get_command(args)
         if command and command in config:
             # add args after the command
