@@ -866,6 +866,19 @@ def test_composite_inherit_dotfile(project, pdm, capfd, _echo):
     assert "Post-Task CALLED with VAR=overriden" in out
 
 
+def test_resolve_env_vars_in_dotfile(project, pdm, capfd, _echo):
+    (project.root / ".env").write_text("VAR=42\nFOO=${OUT}/${VAR}")
+    project.pyproject.settings["scripts"] = {
+        "_": {"env_file": ".env"},
+        "test": {"cmd": "python echo.py Task FOO BAR", "env": {"BAR": "${FOO}/bar"}},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "test"], strict=True, obj=project, env={"OUT": "hello"})
+    out, _ = capfd.readouterr()
+    assert "Task CALLED with FOO=hello/42 BAR=hello/42/bar" in out
+
+
 def test_composite_can_have_commands(project, pdm, capfd):
     project.pyproject.settings["scripts"] = {
         "task": {"cmd": ["python", "-c", 'print("Task CALLED")']},
