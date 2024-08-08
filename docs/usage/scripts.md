@@ -247,8 +247,24 @@ start.cmd = "flask run -p 54321"
 start.env_file.override = ".env"
 ```
 
-!!! note
+!!! note "Environment variable loading order"
+    Env vars loaded from different sources are loaded in the following order:
+
+    1. OS environment variables
+    2. Project environments such as `PDM_PROJECT_ROOT`, `PATH`, `VIRTUAL_ENV`, etc
+    3. Dotenv file specified by `env_file`
+    4. Env vars mapping specified by `env`
+
+    Env vars from the latter sources will override those from the former sources.
     A dotenv file specified on a composite task level will override those defined by called tasks.
+
+    An env var can contain a reference to another env var from the sources loaded before, for example:
+
+    ```
+    VAR=42
+    FOO=hello-${VAR}
+    ```
+    will result in `FOO=hello-42`. The reference can also contain a default value with the syntax `${VAR:-default}`.
 
 ### `working_dir`
 

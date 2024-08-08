@@ -639,6 +639,7 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
         args = args.split() if isinstance(args, str) else args
 
         with monkeypatch.context() as m:
+            old_env = os.environ.copy()
             m.setattr("sys.stdin", stdin)
             m.setattr("sys.stdout", stdout)
             m.setattr("sys.stderr", stderr)
@@ -652,6 +653,8 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
                 exit_code = 1
                 exception = e
             finally:
+                os.environ.clear()
+                os.environ.update(old_env)
                 if cleanup:
                     core.exit_stack.close()
 
