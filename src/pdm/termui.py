@@ -305,7 +305,8 @@ class UI:
         import time
         from pathlib import Path
 
-        assert self.log_dir
+        if self.log_dir is None:
+            return
         for file in Path(self.log_dir).iterdir():
             if not file.is_file():
                 continue
