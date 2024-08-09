@@ -330,7 +330,7 @@ class ReusePinProvider(BaseProvider):
         bare_name = strip_extras(identifier)[0]
         if bare_name in self.tracked_names or identifier not in self.locked_candidates:
             return []
-        return self.locked_candidates[identifier]
+        return sorted(self.locked_candidates[identifier], key=lambda c: c.version or "", reverse=True)
 
     def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
         deprecation_warning(
