@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -35,7 +36,11 @@ def _create_truststore_ssl_context() -> SSLContext | None:
     except ImportError:
         return None
 
-    return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    import certifi
+
+    ctx = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.load_verify_locations(certifi.where())
+    return ctx
 
 
 _ssl_context = _create_truststore_ssl_context()
@@ -168,10 +173,12 @@ class PDMPyPIClient(PyPIClient):
         self._transport = cache_transport(self._transport)  # type: ignore[has-type]
 
     def _transport_for(self, source: RepositoryConfig) -> httpx.BaseTransport:
-        if source.ca_certs:
-            verify: str | bool | SSLContext = source.ca_certs
+        if source.verify_ssl is False:
+            verify: str | bool | SSLContext = False
+        elif source.ca_certs:
+            verify = source.ca_certs
         else:
-            verify = source.verify_ssl is not False and (_ssl_context or True)
+            verify = os.getenv("REQUESTS_CA_BUNDLE") or os.getenv("CURL_CA_BUNDLE") or _ssl_context or True
         if source.client_cert:
             cert = (source.client_cert, source.client_key)
         else:

@@ -203,6 +203,8 @@ To use `truststore`, you need Python 3.10 or newer and install `truststore` into
 pdm self add truststore
 ```
 
+In addition, CA certificates specified by env vars `REQUESTS_CA_BUNDLE` and `CURL_CA_BUNDLE` will be used if they are set.
+
 ### Index configuration merging
 
 Index configurations are merged with the `name` field of `[[tool.pdm.source]]` table or `pypi.<name>` key in the config file.
