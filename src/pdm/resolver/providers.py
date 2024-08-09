@@ -218,15 +218,15 @@ class BaseProvider(AbstractProvider):
                 return iter(self._find_candidates(self.overrides[identifier]))
             elif (name := strip_extras(identifier)[0]) in self.overrides:
                 return iter(self._find_candidates(self.overrides[name]))
-            reqs = sorted(requirements[identifier], key=self.requirement_preference)
+            reqs = list(requirements[identifier])
             if not reqs:
                 return iter(())
-            original_req = reqs[0]
+            original_req = min(reqs, key=self.requirement_preference)
             bare_name, extras = strip_extras(identifier)
             if extras and bare_name in requirements:
                 # We should consider the requirements for both foo and foo[extra]
                 reqs.extend(requirements[bare_name])
-                reqs.sort(key=self.requirement_preference)
+            reqs.sort(key=self.requirement_preference)
             candidates = self._find_candidates(reqs[0])
             return (
                 # In some cases we will use candidates from the bare requirement,
@@ -349,6 +349,7 @@ class ReusePinProvider(BaseProvider):
         def matches_gen() -> Iterator[Candidate]:
             requested_req = next(filter(lambda r: r.is_named, requirements[identifier]), None)
             for pin in self.iter_reuse_candidates(identifier, requested_req):
+                pin = pin.copy_with(min(requirements[identifier], key=self.requirement_preference))
                 incompat = list(incompatibilities[identifier])
                 pin._preferred = True  # type: ignore[attr-defined]
                 if pin not in incompat and all(self.is_satisfied_by(r, pin) for r in requirements[identifier]):
@@ -371,11 +372,11 @@ class EagerUpdateProvider(ReusePinProvider):
     specified packages to upgrade, and free their pins when it has a chance.
     """
 
-    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+    def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
         if identifier in self.tracked_names:
             # If this is a tracked package, don't reuse its pinned version, so it can be upgraded.
-            return None
-        return super().get_reuse_candidate(identifier, requirement)
+            return []
+        return super().iter_reuse_candidates(identifier, requirement)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         # If this package is being tracked for upgrade, remove pins of its
