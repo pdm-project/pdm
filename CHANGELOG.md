@@ -1,23 +1,3 @@
-## Release v2.17.6 (2024-08-06)
-
-
-No significant changes.
-
-
-## Release v2.17.5 (2024-08-06)
-
-
-No significant changes.
-
-
-## Release v2.17.4 (2024-08-06)
-
-
-### Bug Fixes
-
-- Fixed `pdm venv activate` to remove quotes such that `iex (pdm venv activate)` works correctly ([#2895](https://github.com/pdm-project/pdm/issues/2895))
-
-
 ## Release v2.17.3 (2024-08-01)
 
 
