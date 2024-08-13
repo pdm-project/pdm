@@ -270,7 +270,7 @@ class Config(MutableMapping[str, str]):
         self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
         self._data = collections.ChainMap(
-            cast(MutableMapping[str, Any], self.env_map) if is_global else {},
+            cast(MutableMapping[str, Any], self.env_map) if not is_global else {},
             self._file_data,
             self.get_defaults() if is_global else {},
         )
