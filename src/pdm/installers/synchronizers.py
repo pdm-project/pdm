@@ -371,7 +371,7 @@ class Synchronizer(BaseSynchronizer):
             status.update_spinner(advance=1)  # type: ignore[has-type]
             if error:
                 exc_info = (type(error), error, error.__traceback__)
-                termui.logger.exception("Error occurs: ", exc_info=exc_info)
+                termui.logger.exception("Error occurs %sing %s: ", kind.rstrip("e"), key, exc_info=exc_info)
                 state.parallel_failed.append((kind, key))
                 state.errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
                 if self.fail_fast:
