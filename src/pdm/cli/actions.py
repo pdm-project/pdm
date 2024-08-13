@@ -34,13 +34,13 @@ from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver import resolve
+from pdm.resolver.reporters import RichLockReporter
 from pdm.termui import logger
 from pdm.utils import deprecation_warning
 
 if TYPE_CHECKING:
     from pdm.models.requirements import Requirement
     from pdm.resolver.providers import BaseProvider
-    from pdm.resolver.reporters import LockReporter
 
 
 def do_lock(
@@ -123,7 +123,7 @@ def do_lock(
     with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
-        with cast("LockReporter", project.get_reporter(requirements, tracked_names)) as reporter:
+        with RichLockReporter(requirements, ui) as reporter:
             try:
                 for target in targets:
                     if supports_env_spec:
@@ -141,6 +141,7 @@ def do_lock(
                             direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
                             ignore_compatibility=target.is_allow_all(),
                         )
+                    provider.repository.reporter = reporter
                     mapping = _lock_for_env(
                         project, target, provider, reporter, requirements, lock_strategy, resolve_max_rounds
                     )
@@ -177,7 +178,7 @@ def _lock_for_env(
     project: Project,
     env_spec: EnvSpec,
     provider: BaseProvider,
-    reporter: LockReporter,
+    reporter: RichLockReporter,
     requirements: list[Requirement],
     lock_strategy: set[str],
     max_rounds: int,

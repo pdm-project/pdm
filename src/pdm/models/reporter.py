@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from rich.progress import Progress, TaskID
 
 
-class SilentReporter:
+class CandidateReporter:
     def report_download(self, link: Any, completed: int, total: int | None) -> None:
         pass
 
@@ -30,7 +30,7 @@ class SilentReporter:
 
 
 @dataclass
-class RichProgressReporter(SilentReporter):
+class RichProgressReporter(CandidateReporter):
     progress: Progress
     task_id: TaskID
 

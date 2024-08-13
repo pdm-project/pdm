@@ -13,7 +13,7 @@ from pdm.environments import BaseEnvironment
 from pdm.exceptions import BuildError, InstallationError
 from pdm.installers.manager import InstallManager
 from pdm.models.candidates import Candidate
-from pdm.models.reporter import InstallationStatus, RichProgressReporter, SilentReporter
+from pdm.models.reporter import CandidateReporter, InstallationStatus, RichProgressReporter
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
 from pdm.utils import is_editable, normalize_name
 
@@ -233,7 +233,7 @@ class Synchronizer(BaseSynchronizer):
             progress.console.print(f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful")
         finally:
             progress.update(job, visible=False)
-            can.prepare(self.environment, SilentReporter())
+            can.prepare(self.environment, CandidateReporter())
         return can
 
     def update_candidate(self, key: str, progress: Progress) -> tuple[Distribution, Candidate]:
@@ -262,7 +262,7 @@ class Synchronizer(BaseSynchronizer):
             )
         finally:
             progress.update(job, visible=False)
-            can.prepare(self.environment, SilentReporter())
+            can.prepare(self.environment, CandidateReporter())
 
         return dist, can
 

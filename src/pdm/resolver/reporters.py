@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Generator
 
 from resolvelib import BaseReporter
 from rich import get_console
 from rich.live import Live
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TimeElapsedColumn
 
-from pdm.models.reporter import RichProgressReporter, SilentReporter
+from pdm.models.reporter import CandidateReporter, RichProgressReporter
 from pdm.termui import SPINNER, UI, Verbosity, logger
 
 if TYPE_CHECKING:
@@ -23,6 +24,32 @@ def log_title(title: str) -> None:
 
 
 class LockReporter(BaseReporter):
+    @contextmanager
+    def make_candidate_reporter(self, candidate: Candidate) -> Generator[CandidateReporter]:
+        yield CandidateReporter()
+
+    def starting(self) -> Any:
+        log_title("Start resolving requirements")
+
+    def adding_requirement(self, requirement: Requirement, parent: Candidate) -> None:
+        parent_line = f"(from {parent.name} {parent.version})" if parent else ""
+        logger.info("  Adding requirement %s%s", requirement.as_line(), parent_line)
+
+    def ending(self, state: State) -> Any:
+        log_title("Resolution Result")
+        if state.mapping:
+            column_width = max(map(len, state.mapping.keys()))
+            for k, can in state.mapping.items():
+                if not can.req.is_named:
+                    can_info = can.req.url
+                    if can.req.is_vcs:
+                        can_info = f"{can_info}@{can.get_revision()}"
+                else:
+                    can_info = can.version
+                logger.info(f"  {k.rjust(column_width)} {can_info}")
+
+
+class RichLockReporter(LockReporter):
     def __init__(self, requirements: list[Requirement], ui: UI) -> None:
         self.ui = ui
         self.console = get_console()
@@ -44,9 +71,15 @@ class LockReporter(BaseReporter):
         self._spinner_task = self._spinner.add_task("Resolving dependencies", info="", total=1)
         self.live = Live(self)
 
-    def make_candidate_reporter(self, candidate: Candidate) -> RichProgressReporter:
+    @contextmanager
+    def make_candidate_reporter(self, candidate: Candidate) -> Generator[CandidateReporter]:
         task_id = self.progress.add_task(f"Resolving {candidate.format()}", text="")
-        return RichProgressReporter(self.progress, task_id)
+        try:
+            yield RichProgressReporter(self.progress, task_id)
+        finally:
+            self.progress.update(task_id, visible=False)
+            if candidate._prepared:
+                candidate._prepared.reporter = CandidateReporter()
 
     def update(self, description: str | None = None, info: str | None = None, completed: float | None = None) -> None:
         self._spinner.update(self._spinner_task, description=description, info=info, completed=completed)
@@ -67,7 +100,7 @@ class LockReporter(BaseReporter):
         if not self.console.is_interactive:  # pragma: no cover
             self.console.print()
 
-    def __enter__(self) -> LockReporter:
+    def __enter__(self) -> RichLockReporter:
         self.start()
         return self
 
@@ -93,32 +126,6 @@ class LockReporter(BaseReporter):
         to_resolve = len(state.criteria) - resolved
         self.update(info=f"[info]{resolved}[/] resolved, [info]{to_resolve}[/] to resolve")
 
-    def ending(self, state: State) -> None:
-        """Called before the resolution ends successfully."""
-        log_title("Resolution Result")
-        if state.mapping:
-            column_width = max(map(len, state.mapping.keys()))
-            for k, can in state.mapping.items():
-                if not can.req.is_named:
-                    can_info = can.req.url
-                    if can.req.is_vcs:
-                        can_info = f"{can_info}@{can.get_revision()}"
-                else:
-                    can_info = can.version
-                logger.info(f"  {k.rjust(column_width)} {can_info}")
-
-    def adding_requirement(self, requirement: Requirement, parent: Candidate) -> None:
-        """Called when adding a new requirement into the resolve criteria.
-
-        :param requirement: The additional requirement to be applied to filter
-            the available candidates.
-        :param parent: The candidate that requires ``requirement`` as a
-            dependency, or None if ``requirement`` is one of the root
-            requirements passed in from ``Resolver.resolve()``.
-        """
-        parent_line = f"(from {parent.name} {parent.version})" if parent else ""
-        logger.info("  Adding requirement %s%s", requirement.as_line(), parent_line)
-
     def rejecting_candidate(self, criterion: Criterion, candidate: Candidate) -> None:
         if not criterion.information:
             logger.info("Candidate rejected because it contains invalid metadata: %s", candidate)
@@ -136,11 +143,6 @@ class LockReporter(BaseReporter):
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
-        # clear the progress reporter
-        if (prepared := candidate.prepared) and isinstance(prepared.reporter, RichProgressReporter):
-            self.progress.update(prepared.reporter.task_id, visible=False)
-            self.live.refresh()
-            prepared.reporter = SilentReporter()
         logger.info("Adding new pin: %s %s", candidate.name, candidate.version)
 
     def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:

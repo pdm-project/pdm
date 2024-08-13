@@ -6,6 +6,7 @@ from pdm.environments import BaseEnvironment
 from pdm.installers.synchronizers import BaseSynchronizer
 from pdm.models.requirements import Requirement
 from pdm.resolver.core import resolve
+from pdm.resolver.reporters import LockReporter
 
 
 def install_requirements(
@@ -21,7 +22,7 @@ def install_requirements(
     # Disable this so installing self will not skip including dependencies
     provider.repository.find_dependencies_from_local = False
     reqs = [req for req in reqs if not req.marker or req.marker.matches(provider.repository.env_spec)]
-    reporter = project.get_reporter(reqs)
+    reporter = LockReporter()
     resolver = project.core.resolver_class(provider, reporter)
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     backend = project.backend

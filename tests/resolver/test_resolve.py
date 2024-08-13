@@ -43,8 +43,8 @@ def resolve(project, repository):
         )
 
         ui = project.core.ui
-        with LockReporter(requirements, ui) as reporter, ui.logging("lock"):
-            resolver = Resolver(provider, reporter)
+        with ui.logging("lock"):
+            resolver = Resolver(provider, LockReporter())
             mapping, *_ = _resolve(resolver, requirements, inherit_metadata=inherit_metadata)
             return mapping
 

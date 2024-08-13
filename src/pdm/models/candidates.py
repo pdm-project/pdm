@@ -18,7 +18,7 @@ from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning, RequirementError
 from pdm.models.backends import get_backend, get_backend_by_spec
-from pdm.models.reporter import SilentReporter
+from pdm.models.reporter import CandidateReporter
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -280,10 +280,10 @@ class Candidate:
         """Format for output."""
         return f"[req]{self.name}[/] [warning]{self.version}[/]"
 
-    def prepare(self, environment: BaseEnvironment, reporter: SilentReporter | None = None) -> PreparedCandidate:
+    def prepare(self, environment: BaseEnvironment, reporter: CandidateReporter | None = None) -> PreparedCandidate:
         """Prepare the candidate for installation."""
         if self._prepared is None:
-            self._prepared = PreparedCandidate(self, environment, reporter=reporter or SilentReporter())
+            self._prepared = PreparedCandidate(self, environment, reporter=reporter or CandidateReporter())
         else:
             self._prepared.environment = environment
             if reporter is not None:
@@ -299,7 +299,7 @@ class PreparedCandidate:
 
     candidate: Candidate
     environment: BaseEnvironment
-    reporter: SilentReporter = dataclasses.field(default_factory=SilentReporter)
+    reporter: CandidateReporter = dataclasses.field(default_factory=CandidateReporter)
 
     def __post_init__(self) -> None:
         self.req = self.candidate.req

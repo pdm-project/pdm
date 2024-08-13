@@ -44,13 +44,13 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from findpython import Finder
-    from resolvelib.reporters import BaseReporter
 
     from pdm.core import Core
     from pdm.environments import BaseEnvironment
     from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
     from pdm.models.candidates import Candidate
     from pdm.resolver.providers import BaseProvider
+    from pdm.resolver.reporters import RichLockReporter
 
 
 PYENV_ROOT = os.path.expanduser(os.getenv("PYENV_ROOT", "~/.pyenv"))
@@ -497,7 +497,9 @@ class Project:
         params["locked_candidates"] = locked_candidates
         return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
-    def get_reporter(self, requirements: list[Requirement], tracked_names: Iterable[str] | None = None) -> BaseReporter:
+    def get_reporter(
+        self, requirements: list[Requirement], tracked_names: Iterable[str] | None = None
+    ) -> RichLockReporter:  # pragma: no cover
         """Return the reporter object to construct a resolver.
 
         :param requirements: requirements to resolve
@@ -505,9 +507,9 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
-        from pdm.resolver.reporters import LockReporter
+        from pdm.resolver.reporters import RichLockReporter
 
-        return LockReporter(requirements, self.core.ui)
+        return RichLockReporter(requirements, self.core.ui)
 
     def get_lock_metadata(self) -> dict[str, Any]:
         content_hash = "sha256:" + self.pyproject.content_hash("sha256")
