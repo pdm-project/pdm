@@ -116,6 +116,15 @@ The available configuration options are:
 ??? note "About the source types"
     By default, all sources are [PEP 503](https://www.python.org/dev/peps/pep-0503/) style "indexes" like pip's `--index-url` and `--extra-index-url`, however, you can set the type to `find_links` which contains files or links to be looked for directly. See [this answer](https://stackoverflow.com/a/46651848) for the difference between the two types.
 
+    For example, to use a local directory as a source:
+
+    ```toml
+    [[tool.pdm.source]]
+    name = "local"
+    url = "file:///${PROJECT_ROOT}/packages"
+    type = "find_links"
+    ```
+
 These configurations are read in the following order to build the final source list:
 
 - `pypi.url`, if `pypi` doesn't appear in the `name` field of any source in `pyproject.toml`
