@@ -247,23 +247,16 @@ def test_install_retry(project, pdm, mocker):
 
 @pytest.mark.usefixtures("repository")
 def test_install_fail_fast(project, pdm, mocker):
-    project.project_config["install.parallel"] = True
+    project.project_config["install.parallel"] = False
     pdm(["add", "certifi", "chardet", "pytz", "--no-sync"], obj=project)
 
     handler = mocker.patch(
         "pdm.installers.synchronizers.Synchronizer.install_candidate",
         side_effect=RuntimeError,
     )
-    mocker.patch("multiprocessing.cpu_count", return_value=1)
     result = pdm(["install", "--fail-fast"], obj=project)
     assert result.exit_code == 1
-    handler.assert_has_calls(
-        [
-            mocker.call("certifi", mocker.ANY),
-            mocker.call("chardet", mocker.ANY),
-        ],
-        any_order=True,
-    )
+    assert handler.call_count == 1
 
 
 @pytest.mark.usefixtures("working_set")
