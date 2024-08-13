@@ -65,6 +65,8 @@ class BaseRepository:
             the current environment.
         :param env_spec: the environment specifier to filter the candidates.
         """
+        from pdm.resolver.reporters import LockReporter
+
         self.sources = sources
         self.environment = environment
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
@@ -86,6 +88,7 @@ class BaseRepository:
             else:
                 env_spec = environment.spec
         self.env_spec = env_spec
+        self.reporter = LockReporter()
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
@@ -138,7 +141,8 @@ class BaseRepository:
         project = self.environment.project
         link = Link.from_path(project.root)
         candidate = Candidate(requirement, project.name, link=link)
-        candidate.prepare(self.environment).metadata
+        with self.reporter.make_candidate_reporter(candidate) as reporter:
+            candidate.prepare(self.environment, reporter=reporter).metadata
         return candidate
 
     def _should_ignore_package_warning(self, requirement: Requirement) -> bool:
@@ -272,10 +276,11 @@ class BaseRepository:
 
     @cache_result
     def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateMetadata:
-        prepared = candidate.prepare(self.environment)
-        deps = prepared.get_dependencies_from_metadata()
-        requires_python = candidate.requires_python
-        summary = prepared.metadata.metadata.get("Summary", "")
+        with self.reporter.make_candidate_reporter(candidate) as reporter:
+            prepared = candidate.prepare(self.environment, reporter=reporter)
+            deps = prepared.get_dependencies_from_metadata()
+            requires_python = candidate.requires_python
+            summary = prepared.metadata.metadata.get("Summary", "")
         return CandidateMetadata(deps, requires_python, summary)
 
     def _get_dependencies_from_local_package(self, candidate: Candidate) -> CandidateMetadata:

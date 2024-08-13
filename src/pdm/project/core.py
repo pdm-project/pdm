@@ -15,7 +15,6 @@ import tomlkit
 from pbs_installer import PythonVersion
 from tomlkit.items import Array
 
-from pdm import termui
 from pdm._types import NotSet, NotSetType, RepositoryConfig
 from pdm.compat import CompatibleSequence
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
@@ -45,14 +44,13 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from findpython import Finder
-    from resolvelib.reporters import BaseReporter
 
-    from pdm._types import Spinner
     from pdm.core import Core
     from pdm.environments import BaseEnvironment
     from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
     from pdm.models.candidates import Candidate
     from pdm.resolver.providers import BaseProvider
+    from pdm.resolver.reporters import RichLockReporter
 
 
 PYENV_ROOT = os.path.expanduser(os.getenv("PYENV_ROOT", "~/.pyenv"))
@@ -500,11 +498,8 @@ class Project:
         return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
     def get_reporter(
-        self,
-        requirements: list[Requirement],
-        tracked_names: Iterable[str] | None = None,
-        spinner: Spinner | None = None,
-    ) -> BaseReporter:
+        self, requirements: list[Requirement], tracked_names: Iterable[str] | None = None
+    ) -> RichLockReporter:  # pragma: no cover
         """Return the reporter object to construct a resolver.
 
         :param requirements: requirements to resolve
@@ -512,12 +507,9 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
-        from pdm.resolver.reporters import SpinnerReporter
+        from pdm.resolver.reporters import RichLockReporter
 
-        if spinner is None:
-            spinner = termui.SilentSpinner("")
-
-        return SpinnerReporter(spinner, requirements)
+        return RichLockReporter(requirements, self.core.ui)
 
     def get_lock_metadata(self) -> dict[str, Any]:
         content_hash = "sha256:" + self.pyproject.content_hash("sha256")

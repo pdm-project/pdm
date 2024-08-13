@@ -34,13 +34,13 @@ from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver import resolve
+from pdm.resolver.reporters import RichLockReporter
 from pdm.termui import logger
 from pdm.utils import deprecation_warning
 
 if TYPE_CHECKING:
     from pdm.models.requirements import Requirement
     from pdm.resolver.providers import BaseProvider
-    from pdm.resolver.reporters import SpinnerReporter
 
 
 def do_lock(
@@ -123,9 +123,8 @@ def do_lock(
     with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
-        try:
-            with ui.open_spinner(title="Resolving dependencies") as spin:
-                reporter = cast("SpinnerReporter", project.get_reporter(requirements, tracked_names, spin))
+        with RichLockReporter(requirements, ui) as reporter:
+            try:
                 for target in targets:
                     if supports_env_spec:
                         provider = project.get_provider(
@@ -142,34 +141,35 @@ def do_lock(
                             direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
                             ignore_compatibility=target.is_allow_all(),
                         )
+                    provider.repository.reporter = reporter
                     mapping = _lock_for_env(
                         project, target, provider, reporter, requirements, lock_strategy, resolve_max_rounds
                     )
                     locked_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
                     if result_repo is not locked_repo:
                         result_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
-        except ResolutionTooDeep:
-            ui.echo(f"{termui.Emoji.LOCK} Lock failed.", err=True)
-            ui.echo(
-                "The dependency resolution exceeds the maximum loop depth of "
-                f"{resolve_max_rounds}, there may be some circular dependencies "
-                "in your project. Try to solve them or increase the "
-                f"[success]`strategy.resolve_max_rounds`[/] config.",
-                err=True,
-            )
-            raise
-        except ResolutionImpossible as err:
-            ui.echo(f"{termui.Emoji.LOCK} Lock failed.", err=True)
-            ui.error(format_resolution_impossible(err))
-            raise ResolutionImpossible("Unable to find a resolution") from None
-        else:
-            groups = list(set(groups) | provider.repository.collected_groups)
-            provider.repository.collected_groups.clear()
-            data = result_repo.format_lockfile(groups=groups, strategy=lock_strategy)
-            if project.enable_write_lockfile:
-                ui.echo(f"{termui.Emoji.LOCK} Lock successful.")
-            project.write_lockfile(data, write=not dry_run)
-            hooks.try_emit("post_lock", resolution=result_repo.all_candidates, dry_run=dry_run)
+            except ResolutionTooDeep:
+                reporter.update(f"{termui.Emoji.LOCK} Lock failed.", info="", completed=1)
+                ui.echo(
+                    "The dependency resolution exceeds the maximum loop depth of "
+                    f"{resolve_max_rounds}, there may be some circular dependencies "
+                    "in your project. Try to solve them or increase the "
+                    f"[success]`strategy.resolve_max_rounds`[/] config.",
+                    err=True,
+                )
+                raise
+            except ResolutionImpossible as err:
+                reporter.update(f"{termui.Emoji.LOCK} Lock failed.", info="", completed=1)
+                ui.error(format_resolution_impossible(err))
+                raise ResolutionImpossible("Unable to find a resolution") from None
+            else:
+                groups = list(set(groups) | provider.repository.collected_groups)
+                provider.repository.collected_groups.clear()
+                data = result_repo.format_lockfile(groups=groups, strategy=lock_strategy)
+                if project.enable_write_lockfile:
+                    reporter.update(f"{termui.Emoji.LOCK} Lock successful.", info="", completed=1)
+                project.write_lockfile(data, write=not dry_run)
+                hooks.try_emit("post_lock", resolution=result_repo.all_candidates, dry_run=dry_run)
 
     return result_repo.all_candidates
 
@@ -178,12 +178,12 @@ def _lock_for_env(
     project: Project,
     env_spec: EnvSpec,
     provider: BaseProvider,
-    reporter: SpinnerReporter,
+    reporter: RichLockReporter,
     requirements: list[Requirement],
     lock_strategy: set[str],
     max_rounds: int,
 ) -> dict[str, Candidate]:
-    reporter.spinner.update(f"Resolve for environment {env_spec}")
+    reporter.update(f"Resolve for environment {env_spec}")
     requirements = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
     resolver: Resolver = project.core.resolver_class(provider, reporter)
     mapping, *_ = resolve(
@@ -193,6 +193,7 @@ def _lock_for_env(
         inherit_metadata=FLAG_INHERIT_METADATA in lock_strategy,
     )
     if project.enable_write_lockfile:
+        reporter.update(info="Fetching hashes for resolved packages")
         fetch_hashes(provider.repository, mapping.values())
     if not (env_python := PySpecSet(env_spec.requires_python)).is_superset(project.environment.python_requires):
         python_marker = get_marker(env_python.as_marker_string())
