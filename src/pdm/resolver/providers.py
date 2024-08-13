@@ -160,7 +160,7 @@ class BaseProvider(AbstractProvider):
             requirements[r.identify()] = r
 
         # Read from --override files
-        parser = RequirementParser(self.repository.environment)
+        parser = RequirementParser(self.repository.environment.session)
         for override_file in self.repository.environment.project.core.state.overrides:
             parser.parse_file(override_file)
         for r in parser.requirements:

@@ -7,6 +7,7 @@ import urllib.parse
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
+from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError
 from pdm.formats.base import make_array
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
@@ -16,8 +17,8 @@ if TYPE_CHECKING:
     from argparse import Namespace
     from os import PathLike
 
-    from pdm.environments import BaseEnvironment
     from pdm.models.candidates import Candidate
+    from pdm.models.session import PDMPyPIClient
     from pdm.project import Project
 
 
@@ -28,7 +29,7 @@ class RequirementParser:
 
     # TODO: support no_binary, only_binary, prefer_binary, pre and no_index
 
-    def __init__(self, environment: BaseEnvironment) -> None:
+    def __init__(self, session: PDMPyPIClient) -> None:
         self.requirements: list[Requirement] = []
         self.index_url: str | None = None
         self.extra_index_urls: list[str] = []
@@ -44,7 +45,7 @@ class RequirementParser:
         parser.add_argument("-e", "--editable", nargs="+")
         parser.add_argument("-r", "--requirement")
         self._parser = parser
-        self._env = environment
+        self._session = session
 
     def _clean_line(self, line: str) -> str:
         """Strip the surrounding whitespaces and comment from the line"""
@@ -95,7 +96,7 @@ class RequirementParser:
     def parse_file(self, filename_or_url: str) -> None:
         parsed = urllib.parse.urlparse(filename_or_url)
         if parsed.scheme in ("http", "https", "file"):
-            resp = self._env.session.get(filename_or_url)
+            resp = self._session.get(filename_or_url)
             if resp.is_error:  # pragma: no cover
                 raise PdmException(
                     f"Failed to fetch {filename_or_url}: ({resp.status_code} - {resp.reason_phrase}) {resp.text}"
@@ -143,7 +144,8 @@ def convert_url_to_source(url: str, name: str | None, trusted_hosts: list[str], 
 
 
 def convert(project: Project, filename: PathLike, options: Namespace) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
-    parser = RequirementParser(project.environment)
+    env = BareEnvironment(project)
+    parser = RequirementParser(env.session)
     parser.parse_file(str(filename))
     backend = project.backend
 
