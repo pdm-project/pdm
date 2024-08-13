@@ -227,20 +227,23 @@ def export(
     elif options.editable_self:
         lines.append("-e .  # this package\n")
 
-    sources = project.pyproject.settings.get("source", [])
-    for source in sources:
-        url = source["url"]
+    project_sources = [s["name"] for s in project.pyproject.settings.get("source", [])]
+
+    for source in project.sources:
+        if source.name not in project_sources:
+            continue
+        assert source.url
         if options.expandvars:
-            url = expand_env_vars_in_auth(url)
-        source_type = source.get("type", "index")
+            url = expand_env_vars_in_auth(source.url)
+        source_type = source.type or "index"
         if source_type == "index":
-            prefix = "--index-url" if source["name"] == "pypi" else "--extra-index-url"
+            prefix = "--index-url" if source.name == "pypi" else "--extra-index-url"
         elif source_type == "find_links":
             prefix = "--find-links"
         else:
             raise ValueError(f"Unknown source type: {source_type}")
         lines.append(f"{prefix} {url}\n")
-        if not source.get("verify_ssl", True):
+        if source.verify_ssl is not False:
             host = urllib.parse.urlparse(url).hostname
             lines.append(f"--trusted-host {host}\n")
     return "".join(lines)
