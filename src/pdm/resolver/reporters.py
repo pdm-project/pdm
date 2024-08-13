@@ -1,31 +1,78 @@
 from __future__ import annotations
 
-import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from resolvelib import BaseReporter
+from rich import get_console
+from rich.live import Live
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TimeElapsedColumn
 
-from pdm import termui
+from pdm.models.reporter import RichProgressReporter, SilentReporter
+from pdm.termui import SPINNER, UI, Verbosity, logger
 
 if TYPE_CHECKING:
     from resolvelib.resolvers import Criterion, RequirementInformation, State
+    from rich.console import Console, ConsoleOptions, RenderResult
 
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
-
-
-logger = logging.getLogger("pdm.termui")
 
 
 def log_title(title: str) -> None:
     logger.info("=" * 8 + " " + title + " " + "=" * 8)
 
 
-class SpinnerReporter(BaseReporter):
-    def __init__(self, spinner: termui.Spinner, requirements: list[Requirement]) -> None:
-        self.spinner = spinner
+class LockReporter(BaseReporter):
+    def __init__(self, requirements: list[Requirement], ui: UI) -> None:
+        self.ui = ui
+        self.console = get_console()
         self.requirements = requirements
-        self._previous: dict[str, Candidate] | None = None
+        self.progress = Progress(
+            "[progress.description]{task.description}",
+            "[info]{task.fields[text]}",
+            BarColumn(),
+            TaskProgressColumn(),
+            console=self.console,
+        )
+        self._spinner = Progress(
+            SpinnerColumn(SPINNER, style="primary"),
+            TimeElapsedColumn(),
+            "[bold]{task.description}",
+            "{task.fields[info]}",
+            console=self.console,
+        )
+        self._spinner_task = self._spinner.add_task("Resolving dependencies", info="", total=1)
+        self.live = Live(self)
+
+    def make_candidate_reporter(self, candidate: Candidate) -> RichProgressReporter:
+        task_id = self.progress.add_task(f"Resolving {candidate.format()}", text="")
+        return RichProgressReporter(self.progress, task_id)
+
+    def update(self, description: str | None = None, info: str | None = None, completed: float | None = None) -> None:
+        self._spinner.update(self._spinner_task, description=description, info=info, completed=completed)
+        self.live.refresh()
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:  # pragma: no cover
+        yield self._spinner
+        yield self.progress
+
+    def start(self) -> None:
+        """Start the progress display."""
+        if self.ui.verbosity < Verbosity.DETAIL:
+            self.live.start(refresh=True)
+
+    def stop(self) -> None:
+        """Stop the progress display."""
+        self.live.stop()
+        if not self.console.is_interactive:  # pragma: no cover
+            self.console.print()
+
+    def __enter__(self) -> LockReporter:
+        self.start()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.stop()
 
     def starting_round(self, index: int) -> None:
         log_title(f"Starting round {index}")
@@ -42,12 +89,13 @@ class SpinnerReporter(BaseReporter):
         This is NOT called if the resolution ends at this round. Use `ending`
         if you want to report finalization. The index is zero-based.
         """
-        log_title(f"Ending round {index}")
+        resolved = len(state.mapping)
+        to_resolve = len(state.criteria) - resolved
+        self.update(info=f"[info]{resolved}[/] resolved, [info]{to_resolve}[/] to resolve")
 
     def ending(self, state: State) -> None:
         """Called before the resolution ends successfully."""
         log_title("Resolution Result")
-        logger.info("Stable pins:")
         if state.mapping:
             column_width = max(map(len, state.mapping.keys()))
             for k, can in state.mapping.items():
@@ -88,8 +136,12 @@ class SpinnerReporter(BaseReporter):
 
     def pinning(self, candidate: Candidate) -> None:
         """Called when adding a candidate to the potential solution."""
-        self.spinner.update(f"Resolving: new pin {candidate.format()}")
-        logger.info("Pinning: %s %s", candidate.name, candidate.version)
+        # clear the progress reporter
+        if (prepared := candidate.prepared) and isinstance(prepared.reporter, RichProgressReporter):
+            self.progress.update(prepared.reporter.task_id, visible=False)
+            self.live.refresh()
+            prepared.reporter = SilentReporter()
+        logger.info("Adding new pin: %s %s", candidate.name, candidate.version)
 
     def resolving_conflicts(self, causes: list[RequirementInformation]) -> None:
         conflicts = sorted({f"  {req.as_line()} (from {parent if parent else 'project'})" for req, parent in causes})

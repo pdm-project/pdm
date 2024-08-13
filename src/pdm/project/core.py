@@ -15,7 +15,6 @@ import tomlkit
 from pbs_installer import PythonVersion
 from tomlkit.items import Array
 
-from pdm import termui
 from pdm._types import NotSet, NotSetType, RepositoryConfig
 from pdm.compat import CompatibleSequence
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
@@ -47,7 +46,6 @@ if TYPE_CHECKING:
     from findpython import Finder
     from resolvelib.reporters import BaseReporter
 
-    from pdm._types import Spinner
     from pdm.core import Core
     from pdm.environments import BaseEnvironment
     from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
@@ -499,12 +497,7 @@ class Project:
         params["locked_candidates"] = locked_candidates
         return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
-    def get_reporter(
-        self,
-        requirements: list[Requirement],
-        tracked_names: Iterable[str] | None = None,
-        spinner: Spinner | None = None,
-    ) -> BaseReporter:
+    def get_reporter(self, requirements: list[Requirement], tracked_names: Iterable[str] | None = None) -> BaseReporter:
         """Return the reporter object to construct a resolver.
 
         :param requirements: requirements to resolve
@@ -512,12 +505,9 @@ class Project:
         :param spinner: optional spinner object
         :returns: a reporter
         """
-        from pdm.resolver.reporters import SpinnerReporter
+        from pdm.resolver.reporters import LockReporter
 
-        if spinner is None:
-            spinner = termui.SilentSpinner("")
-
-        return SpinnerReporter(spinner, requirements)
+        return LockReporter(requirements, self.core.ui)
 
     def get_lock_metadata(self) -> dict[str, Any]:
         content_hash = "sha256:" + self.pyproject.content_hash("sha256")

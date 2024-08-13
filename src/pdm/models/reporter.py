@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from rich.progress import Progress, TaskID
 
 
-class BaseReporter:
+class SilentReporter:
     def report_download(self, link: Any, completed: int, total: int | None) -> None:
         pass
 
@@ -30,7 +30,7 @@ class BaseReporter:
 
 
 @dataclass
-class RichProgressReporter(BaseReporter):
+class RichProgressReporter(SilentReporter):
     progress: Progress
     task_id: TaskID
 
@@ -56,9 +56,9 @@ class InstallationStatus:
         self.console = get_console()
         self._spinner = Progress(
             SpinnerColumn(termui.SPINNER),
+            TimeElapsedColumn(),
             "{task.description}",
             MofNCompleteColumn(),
-            TimeElapsedColumn(),
             console=self.console,
         )
         self._spinner_task = self._spinner.add_task(text, total=None)
@@ -90,6 +90,7 @@ class InstallationStatus:
         self._spinner.update(
             self._spinner_task, total=total, completed=completed, advance=advance, description=description
         )
+        self.live.refresh()
 
     def start(self) -> None:
         """Start the progress display."""

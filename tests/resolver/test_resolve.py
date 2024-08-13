@@ -7,7 +7,7 @@ from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver import resolve as _resolve
-from pdm.resolver.reporters import SpinnerReporter
+from pdm.resolver.reporters import LockReporter
 from tests import FIXTURES
 
 
@@ -43,8 +43,7 @@ def resolve(project, repository):
         )
 
         ui = project.core.ui
-        with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
-            reporter = SpinnerReporter(spin, requirements)
+        with LockReporter(requirements, ui) as reporter, ui.logging("lock"):
             resolver = Resolver(provider, reporter)
             mapping, *_ = _resolve(resolver, requirements, inherit_metadata=inherit_metadata)
             return mapping

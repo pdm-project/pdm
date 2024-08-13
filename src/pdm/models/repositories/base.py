@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
     from pdm._types import FileHash, RepositoryConfig, SearchResult
     from pdm.environments import BaseEnvironment
+    from pdm.resolver.reporters import LockReporter
 
 
 T = TypeVar("T", bound="BaseRepository")
@@ -86,6 +87,7 @@ class BaseRepository:
             else:
                 env_spec = environment.spec
         self.env_spec = env_spec
+        self.reporter: LockReporter | None = None
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
@@ -138,7 +140,8 @@ class BaseRepository:
         project = self.environment.project
         link = Link.from_path(project.root)
         candidate = Candidate(requirement, project.name, link=link)
-        candidate.prepare(self.environment).metadata
+        reporter = self.reporter.make_candidate_reporter(candidate) if self.reporter else None
+        candidate.prepare(self.environment, reporter=reporter).metadata
         return candidate
 
     def _should_ignore_package_warning(self, requirement: Requirement) -> bool:
@@ -272,7 +275,8 @@ class BaseRepository:
 
     @cache_result
     def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateMetadata:
-        prepared = candidate.prepare(self.environment)
+        reporter = self.reporter.make_candidate_reporter(candidate) if self.reporter else None
+        prepared = candidate.prepare(self.environment, reporter=reporter)
         deps = prepared.get_dependencies_from_metadata()
         requires_python = candidate.requires_python
         summary = prepared.metadata.metadata.get("Summary", "")
