@@ -5,13 +5,12 @@ import hashlib
 import shlex
 import urllib.parse
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
 
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError
 from pdm.formats.base import make_array
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
-from pdm.utils import expand_env_vars_in_auth
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -227,14 +226,8 @@ def export(
     elif options.editable_self:
         lines.append("-e .  # this package\n")
 
-    project_sources = [s["name"] for s in project.pyproject.settings.get("source", [])]
-
-    for source in project.sources:
-        if source.name not in project_sources:
-            continue
-        assert source.url
-        if options.expandvars:
-            url = expand_env_vars_in_auth(source.url)
+    for source in project.get_sources(expand_env=options.expandvars, include_stored=False):
+        url = cast(str, source.url)
         source_type = source.type or "index"
         if source_type == "index":
             prefix = "--index-url" if source.name == "pypi" else "--extra-index-url"
@@ -243,7 +236,7 @@ def export(
         else:
             raise ValueError(f"Unknown source type: {source_type}")
         lines.append(f"{prefix} {url}\n")
-        if source.verify_ssl is not False:
+        if source.verify_ssl is False:
             host = urllib.parse.urlparse(url).hostname
             lines.append(f"--trusted-host {host}\n")
     return "".join(lines)

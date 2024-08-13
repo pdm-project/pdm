@@ -381,25 +381,26 @@ class Project:
 
     @property
     def sources(self) -> list[RepositoryConfig]:
+        return self.get_sources(include_stored=not self.config.get("pypi.ignore_stored_index", False))
+
+    def get_sources(self, expand_env: bool = True, include_stored: bool = False) -> list[RepositoryConfig]:
         result: dict[str, RepositoryConfig] = {}
         for source in self.pyproject.settings.get("source", []):
             result[source["name"]] = RepositoryConfig(**source, config_prefix="pypi")
-
-        add_missing_sources = not self.config.get("pypi.ignore_stored_index", False)
 
         def merge_sources(other_sources: Iterable[RepositoryConfig]) -> None:
             for source in other_sources:
                 name = source.name
                 if name in result:
                     result[name].passive_update(source)
-                elif add_missing_sources:
+                elif include_stored:
                     result[name] = source
 
         merge_sources(self.project_config.iter_sources())
         merge_sources(self.global_config.iter_sources())
         if "pypi" in result:
             result["pypi"].passive_update(self.default_source)
-        elif add_missing_sources:
+        elif include_stored:
             # put pypi source at the beginning
             result = {"pypi": self.default_source, **result}
 
@@ -407,7 +408,8 @@ class Project:
         for source in result.values():
             if not source.url:
                 continue
-            source.url = DEFAULT_BACKEND(self.root).expand_line(expand_env_vars_in_auth(source.url))
+            if expand_env:
+                source.url = DEFAULT_BACKEND(self.root).expand_line(expand_env_vars_in_auth(source.url))
             sources.append(source)
         return sources
 
@@ -751,7 +753,7 @@ class Project:
                         return
             finder_arg = python_spec
         if search_venv is None:
-            search_venv = config["python.use_venv"]
+            search_venv = cast(bool, config["python.use_venv"])
         finder = self._get_python_finder(search_venv)
         for entry in finder.find_all(finder_arg, allow_prereleases=True):
             yield PythonInfo(entry)
@@ -793,7 +795,7 @@ class Project:
         if "package-type" in settings:
             return settings["package-type"] == "library"
         elif "distribution" in settings:
-            return settings["distribution"]
+            return cast(bool, settings["distribution"])
         else:
             return True
 
@@ -805,7 +807,7 @@ class Project:
         """
         try:
             return reduce(operator.getitem, key.split("."), self.pyproject.settings)
-        except tomlkit.exceptions.NonExistentKey:
+        except KeyError:
             return None
 
     def env_or_setting(self, var: str, key: str) -> Any:
