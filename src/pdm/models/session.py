@@ -190,13 +190,7 @@ class PDMPyPIClient(PyPIClient):
     def _make_user_agent(self) -> str:
         import platform
 
-        return "pdm/{} {}/{} {}/{}".format(
-            __version__,
-            platform.python_implementation(),
-            platform.python_version(),
-            platform.system(),
-            platform.release(),
-        )
+        return f"pdm/{__version__} {platform.python_implementation()}/{platform.python_version()} {platform.system()}/{platform.release()}"
 
     def on_response(self, response: httpx.Response) -> None:
         from unearth.utils import ARCHIVE_EXTENSIONS

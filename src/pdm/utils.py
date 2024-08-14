@@ -394,7 +394,7 @@ def pdm_scheme(base: str) -> dict[str, str]:
             "purelib": "{pep582_base}/lib",
             "platlib": "{pep582_base}/lib",
             "include": "{pep582_base}/include",
-            "scripts": "{pep582_base}/%s" % bin_prefix,
+            "scripts": f"{{pep582_base}}/{bin_prefix}",
             "data": "{pep582_base}",
             "prefix": "{pep582_base}",
             "headers": "{pep582_base}/include",

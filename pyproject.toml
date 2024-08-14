@@ -143,9 +143,11 @@ extend-select = [
   "I",    # isort
   "B",    # flake8-bugbear
   "C4",   # flake8-comprehensions
+  "FA",   # flake8-future-annotations
   "PGH",  # pygrep-hooks
   "RUF",  # ruff
   "W",    # pycodestyle
+  "UP",   # pyupgrade
   "YTT",  # flake8-2020
 ]
 extend-ignore = ["B018", "B019", "RUF018"]

@@ -42,10 +42,10 @@ def print_results(
             if normalize_name(name) in working_set:
                 dist = working_set[normalize_name(name)]
                 if dist.version == latest:
-                    ui.echo("  INSTALLED: %s (latest)" % dist.version)
+                    ui.echo(f"  INSTALLED: {dist.version} (latest)")
                 else:
-                    ui.echo("  INSTALLED: %s" % dist.version)
-                    ui.echo("  LATEST:    %s" % latest)
+                    ui.echo(f"  INSTALLED: {dist.version}")
+                    ui.echo(f"  LATEST:    {latest}")
         except UnicodeEncodeError:
             pass
 

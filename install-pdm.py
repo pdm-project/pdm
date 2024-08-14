@@ -16,7 +16,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Sequence
 
-if sys.version_info < (3, 8):
+if sys.version_info < (3, 8):  # noqa: UP036
     sys.exit("Python 3.8 or above is required to install PDM.")
 
 _plat = platform.system()

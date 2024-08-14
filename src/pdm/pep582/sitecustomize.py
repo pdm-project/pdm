@@ -82,7 +82,7 @@ def patch_sysconfig(libpath):
         "purelib": "{pep582_base}/lib",
         "platlib": "{pep582_base}/lib",
         "include": "{pep582_base}/include",
-        "scripts": "{pep582_base}/%s" % bin_prefix,
+        "scripts": f"{{pep582_base}}/{bin_prefix}",
         "data": "{pep582_base}",
         "prefix": "{pep582_base}",
         "headers": "{pep582_base}/include",
@@ -110,7 +110,7 @@ def main():
     self_path = os.path.normcase(os.path.dirname(os.path.abspath(__file__)))
     sys.path[:] = [path for path in sys.path if os.path.normcase(path) != self_path]
 
-    if sys.version_info[0] == 2:
+    if sys.version_info[0] == 2:  # noqa: UP036
         load_next_sitecustomize_py2()
     else:
         load_next_sitecustomize_py3()
