@@ -1,3 +1,25 @@
+## Release v2.18.0 (2024-08-14)
+
+
+### Features & Improvements
+
+- Respect certificates in env vars `REQUESTS_CA_BUNDLE` and `CURL_CA_BUNDLE` when verifying SSL certificates. ([#3076](https://github.com/pdm-project/pdm/issues/3076))
+- Allow pypi.verify_ssl to be configured via PDM_PYPI_VERIFY_SSL environmental variable. ([#3081](https://github.com/pdm-project/pdm/issues/3081))
+- Clean logs older than 7 days. ([#3091](https://github.com/pdm-project/pdm/issues/3091))
+- Polish the UI looking of locking packages to display the progress. ([#3100](https://github.com/pdm-project/pdm/issues/3100))
+
+### Bug Fixes
+
+- Fixed `pdm venv activate` to remove quotes such that `iex (pdm venv activate)` works correctly ([#2895](https://github.com/pdm-project/pdm/issues/2895))
+- Don't crash if the version can't be resolved from the self project. ([#3077](https://github.com/pdm-project/pdm/issues/3077))
+- Don't fail `install-pdm.py` if there is an invalid `pyproject.toml` file under the current directory. ([#3085](https://github.com/pdm-project/pdm/issues/3085))
+- Make it able to expand env vars in the the dotenv file. Expose `PDM_PROJECT_ROOT` to the dotenv file for expansion. ([#3087](https://github.com/pdm-project/pdm/issues/3087))
+- Fix a bug that Python markers from the existing locked packages are considered when locking with `--append` option. ([#3089](https://github.com/pdm-project/pdm/issues/3089))
+- Backfill urls from configured indexed when exporting to requirements.txt. ([#3094](https://github.com/pdm-project/pdm/issues/3094))
+- Consider the auto-selected Python range when installing from requirements.txt. ([#3095](https://github.com/pdm-project/pdm/issues/3095))
+- Fix a bug that env vars do not override project config correctly. ([#3099](https://github.com/pdm-project/pdm/issues/3099))
+
+
 ## Release v2.17.3 (2024-08-01)
 
 
