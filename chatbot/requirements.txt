@@ -54,7 +54,7 @@ multidict==6.0.5
 mypy-extensions==1.0.0
 nest-asyncio==1.6.0
 networkx==3.3
-nltk==3.8.1
+nltk==3.8.2
 numpy==1.26.4
 openai==1.23.1
 packaging==23.2
