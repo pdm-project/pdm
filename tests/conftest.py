@@ -9,6 +9,7 @@ from urllib.parse import unquote, urlparse
 import pytest
 from unearth.vcs import Git, vcs_support
 
+from pdm.models.auth import keyring
 from pdm.project import Project
 from pdm.utils import path_to_url
 from tests import FIXTURES
@@ -27,6 +28,11 @@ pytest_plugins = [
 @pytest.fixture
 def index() -> dict[str, bytes]:
     return {}
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_keyring():
+    keyring.enabled = False
 
 
 @pytest.fixture
