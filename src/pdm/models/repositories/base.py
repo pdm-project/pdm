@@ -272,6 +272,7 @@ class BaseRepository:
         deps: list[Requirement] = []
         for line in info[0]:
             deps.append(parse_line(line))
+        termui.logger.debug("Using cached metadata for %s", candidate)
         return CandidateMetadata(deps, info[1], info[2])
 
     @cache_result
