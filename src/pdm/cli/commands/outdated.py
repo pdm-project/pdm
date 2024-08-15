@@ -96,7 +96,7 @@ class Command(BaseCommand):
         for name, distribution in installed.items():
             if not self._match_pattern(name, options.patterns):
                 continue
-            if name == normalize_name(project.name):
+            if project.name and name == normalize_name(project.name):
                 continue
             constrained_version = resolved.pop(name).version or "" if name in resolved else ""
             collected.append(ListPackage(name, distribution.version or "", constrained_version))
