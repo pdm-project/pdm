@@ -76,8 +76,12 @@ Read the [specification](https://packaging.python.org/en/latest/specifications/i
 
 PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.
 
-!!! NOTE
-  The `[tool.pdm.scripts]` directory must not be confused with `[project.scripts]`. The latter is used to install a command as part of your package, as explained [here](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#creating-executable-scripts).
+!!! NOTE "Confuse with `[project.scripts]`?"
+    There is another field `[project.scripts]` in `pyproject.toml`, and the scripts can also be invoked with `pdm run`. It's used to define the console script entry points to be installed with the package. Therefore, the executables can only be run after the project itself is installed into the environment. That is to say, you must have `distribution = true`.
+
+    In contrast, `[tool.pdm.scripts]` defines some tasks to be run in your project. It works for projects regardless of whether the `distribution` is `true` or `false`. The tasks are primarily for development and testing purposes and support more types and settings, as will be shown later., you can regard it as a replacement for `Makefile`. It doesn't require the project to be installed but requires the existence of a `pyproject.toml` file.
+
+    See more explanations about `[project.scripts]` [here](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#creating-executable-scripts).
 
 You can then run `pdm run <script_name>` to invoke the script in the context of your PDM project. For example:
 
