@@ -129,6 +129,7 @@ class Candidate:
         "_prepared",
         "_requires_python",
         "_preferred",
+        "_revision",
     )
 
     def __init__(
@@ -155,6 +156,7 @@ class Candidate:
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None
+        self._revision = getattr(req, "revision", None)
 
     def identify(self) -> str:
         return self.req.identify()
@@ -165,6 +167,7 @@ class Candidate:
         can.hashes = self.hashes
         can._requires_python = self._requires_python
         can._prepared = self._prepared
+        can._revision = self._revision
         if can._prepared:
             can._prepared.req = requirement
         return can
@@ -192,6 +195,8 @@ class Candidate:
     def get_revision(self) -> str:
         if not self.req.is_vcs:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
+        if self._revision:
+            return self._revision
         if self.req.revision:  # type: ignore[attr-defined]
             return self.req.revision  # type: ignore[attr-defined]
         return self._prepared.revision if self._prepared else "unknown"
