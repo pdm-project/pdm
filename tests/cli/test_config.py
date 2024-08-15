@@ -200,10 +200,17 @@ def test_config_password_save_into_keyring(project, keyring):
 
     assert project.global_config["pypi.extra.password"] == "barbaz"
     assert project.global_config["repository.pypi.password"] == "password"
+    for key in ("pypi.extra", "repository.pypi"):
+        assert "password" not in project.global_config._file_data[key]
 
     assert keyring.enabled
     assert keyring.get_auth_info("pdm-pypi-extra", "foo") == ("foo", "barbaz")
     assert keyring.get_auth_info("pdm-repository-pypi", None) == ("frost", "password")
+
+    del project.global_config["pypi.extra"]
+    del project.global_config["repository.pypi.password"]
+    assert keyring.get_auth_info("pdm-pypi-extra", "foo") is None
+    assert keyring.get_auth_info("pdm-repository-pypi", None) is None
 
 
 def test_keyring_operation_error_disables_itself(project, keyring, mocker):

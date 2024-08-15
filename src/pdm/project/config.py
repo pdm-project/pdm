@@ -340,7 +340,12 @@ class Config(MutableMapping[str, str]):
             index_key = ".".join(parts[:2])
             username = self._data.get(index_key, {}).get("username")  # type: ignore[call-overload]
             service = f'pdm-{index_key.replace(".", "-")}'
-            if parts[2] == "password" and self.is_global and keyring.save_auth_info(service, username, value):
+            if (
+                parts[2] == "password"
+                and self.is_global
+                and username
+                and keyring.save_auth_info(service, username, value)
+            ):
                 return
             if parts[2] == "verify_ssl":
                 value = ensure_boolean(value)
@@ -375,15 +380,24 @@ class Config(MutableMapping[str, str]):
         return iter(keys)
 
     def __delitem__(self, key: str) -> None:
+        from pdm.models.auth import keyring
+
         parts = key.split(".")
         if parts[0] in (REPOSITORY, SOURCE) and key not in self._config_map:
             if len(parts) < 2:
                 raise PdmUsageError(f"Should specify the name of {parts[0]}")
+            index_key = ".".join(parts[:2])
+            username = self._data.get(index_key, {}).get("username")  # type: ignore[call-overload]
+            service = f'pdm-{index_key.replace(".", "-")}'
             if len(parts) >= 3:
                 index_key, attr = key.rsplit(".", 1)
-                del self._file_data.get(index_key, {})[attr]
+                if attr == "password" and username:
+                    keyring.delete_auth_info(service, username)
+                self._file_data.get(index_key, {}).pop(attr, None)
             else:
                 del self._file_data[key]
+                if username:
+                    keyring.delete_auth_info(service, username)
             self._save_config()
             return
 
