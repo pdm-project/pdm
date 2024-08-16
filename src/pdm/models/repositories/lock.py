@@ -284,7 +284,6 @@ class LockedRepository(BaseRepository):
         metadata = tomlkit.table()
         if groups is None:
             groups = list(project.iter_groups())
-        strategy.discard(FLAG_CROSS_PLATFORM)
         metadata.update(
             {
                 "groups": sorted(groups, key=_group_sort_key),
