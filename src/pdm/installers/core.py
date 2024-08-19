@@ -16,9 +16,6 @@ def install_requirements(
     project = environment.project
     # Rewrite the python requires to only resolve for the current python version.
     provider = project.get_provider(env_spec=environment.spec)
-    # Clear the overrides and excludes
-    provider.overrides = {}
-    provider.excludes = set()
     # Disable this so installing self will not skip including dependencies
     provider.repository.find_dependencies_from_local = False
     reqs = [req for req in reqs if not req.marker or req.marker.matches(provider.repository.env_spec)]
