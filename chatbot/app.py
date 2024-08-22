@@ -6,13 +6,13 @@ from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.llms.azure_openai import AzureOpenAI
 
 st.set_page_config(
-    page_title="Chat with the PDM docs, powered by LlamaIndex",
+    page_title="Chat with the PDM docs",
     page_icon="📝",
     layout="centered",
     initial_sidebar_state="auto",
     menu_items=None,
 )
-st.title("Chat with the PDM docs, powered by LlamaIndex 💬🦙")
+st.title("Chat with the PDM docs 💬🦙")
 st.info(
     "PDM - A modern Python package and dependency manager. "
     "Check out the full documentation at [PDM docs](https://pdm-project.org).",
@@ -22,7 +22,7 @@ Settings.llm = AzureOpenAI(
     api_key=st.secrets.get("aoai_key"),
     azure_endpoint=st.secrets.get("aoai_endpoint"),
     engine="gpt-35-turbo",
-    api_version="2024-02-01",
+    api_version="2024-02-15-preview",
     temperature=0.5,
     system_prompt="You are an expert on PDM and your job is to answer technical questions. "
     "Assume that all questions are related to PDM. Keep your answers technical and based on facts - do not hallucinate features.",
@@ -30,7 +30,7 @@ Settings.llm = AzureOpenAI(
 Settings.embed_model = AzureOpenAIEmbedding(
     azure_deployment="embedding",
     api_key=st.secrets.get("aoai_key"),
-    api_version="2024-02-01",
+    api_version="2023-05-15",
     azure_endpoint=st.secrets.get("aoai_endpoint"),
 )
 
