@@ -226,6 +226,7 @@ class Command(BaseCommand):
         if python_info.get_venv() is None:
             project.core.ui.info(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"
+                "You can change configuration with `pdm config python.use_venv True`.\n"
                 "For more info, please visit https://peps.python.org/pep-0582/"
             )
         project.python = python_info
