@@ -79,7 +79,10 @@ class Command(BaseCommand):
                 raise PdmUsageError(
                     "Can't export a lock file without environment markers, please re-generate the lock file with `inherit_metadata` strategy."
                 )
-            candidates = [entry.candidate for entry in project.get_locked_repository().packages.values()]
+            candidates = sorted(
+                (entry.candidate for entry in project.get_locked_repository().packages.values()),
+                key=lambda c: not c.req.extras,
+            )
             groups = set(selection)
             packages = []
             seen_extras: set[str] = set()
