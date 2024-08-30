@@ -118,6 +118,10 @@ class Command(BaseCommand):
         if lock_groups and group not in lock_groups:
             project.core.ui.warn(f"Group [success]{group}[/] isn't in lockfile, skipping lock.")
             return
+        # It may remove the whole group, exclude it from lock groups first
+        project_groups = project.iter_groups()
+        if lock_groups is not None:
+            lock_groups = [g for g in lock_groups if g in project_groups]
         do_lock(project, "reuse", dry_run=dry_run, tracked_names=tracked_names, hooks=hooks, groups=lock_groups)
         if sync:
             do_sync(
