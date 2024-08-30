@@ -556,7 +556,10 @@ class Project:
         def update_dev_dependencies(deps: list[str]) -> None:
             from tomlkit.container import OutOfOrderTableProxy
 
-            settings.setdefault("dev-dependencies", {})[group] = deps
+            if deps:
+                settings.setdefault("dev-dependencies", {})[group] = deps
+            else:
+                settings.setdefault("dev-dependencies", {}).pop(group, None)
             if isinstance(self.pyproject._data["tool"], OutOfOrderTableProxy):
                 # In case of a separate table, we have to remove and re-add it to make the write correct.
                 # This may change the order of tables in the TOML file, but it's the best we can do.
@@ -570,7 +573,9 @@ class Project:
         deps_setter = [
             (
                 metadata.get("optional-dependencies", {}),
-                lambda x: metadata.setdefault("optional-dependencies", {}).__setitem__(group, x),
+                lambda x: metadata.setdefault("optional-dependencies", {}).__setitem__(group, x)
+                if x
+                else metadata.setdefault("optional-dependencies", {}).pop(group, None),
             ),
             (settings.get("dev-dependencies", {}), update_dev_dependencies),
         ]

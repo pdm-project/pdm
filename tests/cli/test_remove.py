@@ -69,7 +69,7 @@ def test_remove_package_exist_in_multi_groups(project, working_set, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
     pdm(["add", "--dev", "urllib3"], obj=project, strict=True)
     pdm(["remove", "--dev", "urllib3"], obj=project, strict=True)
-    assert all("urllib3" not in line for line in project.pyproject.settings["dev-dependencies"]["dev"])
+    assert "dev-dependencies" not in project.pyproject.settings
     assert "urllib3" in working_set
     assert "requests" in working_set
 
@@ -103,5 +103,5 @@ def test_remove_group_not_in_lockfile(project, pdm, mocker):
     assert project.lockfile.groups == ["default"]
     locker = mocker.patch.object(actions, "do_lock")
     pdm(["remove", "--group", "tz", "pytz"], obj=project, strict=True)
-    assert not project.pyproject.metadata["optional-dependencies"].get("tz")
+    assert "optional-dependencies" not in project.pyproject.metadata
     locker.assert_not_called()
