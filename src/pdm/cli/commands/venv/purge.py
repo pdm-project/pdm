@@ -1,5 +1,6 @@
 import argparse
 import shutil
+from pathlib import Path
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
