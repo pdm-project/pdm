@@ -1,5 +1,6 @@
 import argparse
 import shutil
+from pathlib import Path
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
@@ -58,6 +59,9 @@ class PurgeCommand(BaseCommand):
             project.core.ui.echo("Purged successfully!")
 
     def del_all_venvs(self, project: Project) -> None:
+        saved_python = project._saved_python
         for _, venv in iter_central_venvs(project):
             shutil.rmtree(venv)
+            if saved_python and Path(saved_python).parent.parent == venv:
+                project._saved_python = None
         project.core.ui.echo("Purged successfully!")
