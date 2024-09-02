@@ -49,6 +49,7 @@ if TYPE_CHECKING:
     from pdm.environments import BaseEnvironment
     from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
     from pdm.models.candidates import Candidate
+    from pdm.resolver.base import Resolver
     from pdm.resolver.providers import BaseProvider
     from pdm.resolver.reporters import RichLockReporter
 
@@ -462,7 +463,7 @@ class Project:
 
         import inspect
 
-        from pdm.resolver.providers import BaseProvider, get_provider
+        from pdm.resolver.providers import get_provider
 
         if env_spec is None:
             env_spec = (
@@ -477,16 +478,9 @@ class Project:
             try:
                 locked_repository = self.get_locked_repository(env_spec)
             except Exception:  # pragma: no cover
-                if for_install:
-                    raise
                 if strategy != "all":
                     self.core.ui.warn("Unable to reuse the lock file as it is not compatible with PDM")
 
-        if for_install:
-            assert locked_repository is not None
-            return BaseProvider(
-                locked_repository, direct_minimal_versions=direct_minimal_versions, locked_candidates={}
-            )
         provider_class = get_provider(strategy)
         params: dict[str, Any] = {}
         if strategy != "all":
@@ -841,3 +835,9 @@ class Project:
     @property
     def lock_targets(self) -> list[EnvSpec]:
         return [self.environment.allow_all_spec]
+
+    def get_resolver(self) -> type[Resolver]:
+        from pdm.resolver.resolvelib import RLResolver
+
+        # TODO: support switching resolvers with config
+        return RLResolver

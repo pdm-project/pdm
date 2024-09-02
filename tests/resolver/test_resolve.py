@@ -1,12 +1,12 @@
 import pytest
-from resolvelib.resolvers import ResolutionImpossible, Resolver
+from resolvelib.resolvers import ResolutionImpossible
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.exceptions import PackageWarning
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver import resolve as _resolve
+from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver.reporters import LockReporter
 from tests import FIXTURES
 
@@ -38,14 +38,25 @@ def resolve(project, repository):
                 requirements.append(parse_requirement(line[3:], True))
             else:
                 requirements.append(parse_requirement(line))
-        provider = project.get_provider(
-            strategy, tracked_names, direct_minimal_versions=direct_minimal_versions, env_spec=env_spec
-        )
 
         ui = project.core.ui
+        strategies = project.lockfile.default_strategies.copy()
+        if inherit_metadata:
+            strategies.add(FLAG_INHERIT_METADATA)
+        if direct_minimal_versions:
+            strategies.add(FLAG_DIRECT_MINIMAL_VERSIONS)
+
         with ui.logging("lock"):
-            resolver = Resolver(provider, LockReporter())
-            mapping, *_ = _resolve(resolver, requirements, inherit_metadata=inherit_metadata)
+            resolver = project.get_resolver()(
+                project=project,
+                requirements=requirements,
+                update_strategy=strategy,
+                strategies=strategies,
+                target=env_spec,
+                tracked_names=tracked_names,
+                reporter=LockReporter(),
+            )
+            mapping, *_ = resolver.resolve()
             return mapping
 
     return resolve_func

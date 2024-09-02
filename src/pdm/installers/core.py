@@ -5,27 +5,33 @@ from typing import Iterable
 from pdm.environments import BaseEnvironment
 from pdm.installers.synchronizers import BaseSynchronizer
 from pdm.models.requirements import Requirement
-from pdm.resolver.core import resolve
 from pdm.resolver.reporters import LockReporter
+from pdm.resolver.resolvelib import RLResolver
 
 
 def install_requirements(
     reqs: Iterable[Requirement], environment: BaseEnvironment, clean: bool = False, use_install_cache: bool = False
 ) -> None:  # pragma: no cover
     """Resolve and install the given requirements into the environment."""
-    project = environment.project
-    # Rewrite the python requires to only resolve for the current python version.
-    provider = project.get_provider(env_spec=environment.spec)
-    # Disable this so installing self will not skip including dependencies
-    provider.repository.find_dependencies_from_local = False
-    reqs = [req for req in reqs if not req.marker or req.marker.matches(provider.repository.env_spec)]
+    reqs = [req for req in reqs if not req.marker or req.marker.matches(environment.spec)]
     reporter = LockReporter()
-    resolver = project.core.resolver_class(provider, reporter)
-    resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
+    project = environment.project
     backend = project.backend
     for req in reqs:
         if req.is_file_or_url:
             req.relocate(backend)  # type: ignore[attr-defined]
-    resolved, _ = resolve(resolver, reqs, max_rounds=resolve_max_rounds, keep_self=True)
+    resolver = project.get_resolver()(
+        project=project,
+        requirements=reqs,
+        update_strategy="all",
+        strategies=project.lockfile.default_strategies,
+        target=environment.spec,
+        tracked_names=(),
+        keep_self=True,
+        reporter=reporter,
+    )
+    if isinstance(resolver, RLResolver):
+        resolver.provider.repository.find_dependencies_from_local = False
+    resolved, *_ = resolver.resolve()
     syncer = BaseSynchronizer(resolved, environment, clean=clean, retry_times=0, use_install_cache=use_install_cache)
     syncer.synchronize()

@@ -7,7 +7,6 @@ import os
 import re
 import sys
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
@@ -52,7 +51,6 @@ if TYPE_CHECKING:
     from pdm.compat import Distribution
     from pdm.compat import importlib_metadata as im
     from pdm.models.candidates import Candidate
-    from pdm.models.repositories import BaseRepository
     from pdm.project import Project
 
 
@@ -670,16 +668,6 @@ def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any],
                 target[key].multiline(True)  # type: ignore[attr-defined]
         else:
             target[key] = value
-
-
-def fetch_hashes(repository: BaseRepository, candidates: Iterable[Candidate]) -> None:
-    """Fetch hashes for candidates in parallel"""
-
-    def do_fetch(candidate: Candidate) -> None:
-        candidate.hashes = repository.get_hashes(candidate)
-
-    with ThreadPoolExecutor() as executor:
-        executor.map(do_fetch, candidates)
 
 
 def is_pipx_installation() -> bool:

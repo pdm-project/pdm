@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import dataclasses
 import datetime
 import hashlib
 import inspect
@@ -11,15 +10,13 @@ import sys
 import textwrap
 from typing import TYPE_CHECKING, Collection, Iterable, cast
 
-from resolvelib.reporters import BaseReporter
-from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
+from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm import termui
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.utils import (
     check_project_file,
-    fetch_hashes,
     find_importable_files,
     format_resolution_impossible,
     get_pep582_path,
@@ -28,19 +25,16 @@ from pdm.cli.utils import (
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
-from pdm.models.markers import EnvSpec, get_marker
+from pdm.models.markers import EnvSpec
 from pdm.models.repositories import LockedRepository
-from pdm.models.specifiers import PySpecSet
 from pdm.project import Project
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
-from pdm.resolver import resolve
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA
 from pdm.resolver.reporters import RichLockReporter
 from pdm.termui import logger
 from pdm.utils import deprecation_warning
 
 if TYPE_CHECKING:
     from pdm.models.requirements import Requirement
-    from pdm.resolver.providers import BaseProvider
 
 
 def do_lock(
@@ -79,7 +73,7 @@ def do_lock(
                 candidates = [entry.candidate for entry in locked_repo.packages.values()]
                 for c in candidates:
                     c.hashes.clear()
-                fetch_hashes(repo, candidates)
+                repo.fetch_hashes(candidates)
             lockfile = locked_repo.format_lockfile(groups=project.lockfile.groups, strategy=lock_strategy)
         project.write_lockfile(lockfile)
         return locked_repo.all_candidates
@@ -123,31 +117,25 @@ def do_lock(
     with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
+        resolver_class = project.get_resolver()
         with RichLockReporter(requirements, ui) as reporter:
             try:
                 for target in targets:
-                    if supports_env_spec:
-                        provider = project.get_provider(
-                            strategy,
-                            tracked_names,
-                            direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
-                            env_spec=target,
-                            locked_repository=locked_repo,
-                        )
-                    else:  # pragma: no cover
-                        provider = project.get_provider(
-                            strategy,
-                            tracked_names,
-                            direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
-                            ignore_compatibility=target.is_allow_all(),
-                        )
-                    provider.repository.reporter = reporter
-                    mapping = _lock_for_env(
-                        project, target, provider, reporter, requirements, lock_strategy, resolve_max_rounds
+                    resolver = resolver_class(
+                        project=project,
+                        requirements=requirements,
+                        update_strategy=strategy,
+                        strategies=lock_strategy,
+                        target=target,
+                        tracked_names=list(tracked_names or ()),
+                        locked_repository=locked_repo,
+                        reporter=reporter,
                     )
-                    locked_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
+                    reporter.update(f"Resolve for environment {target}")
+                    mapping, fetched_dependencies, collected_groups = resolver.resolve()
+                    locked_repo.merge_result(target, mapping.values(), fetched_dependencies)
                     if result_repo is not locked_repo:
-                        result_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
+                        result_repo.merge_result(target, mapping.values(), fetched_dependencies)
             except ResolutionTooDeep:
                 reporter.update(f"{termui.Emoji.LOCK} Lock failed.", info="", completed=1)
                 ui.echo(
@@ -163,8 +151,7 @@ def do_lock(
                 ui.error(format_resolution_impossible(err))
                 raise ResolutionImpossible("Unable to find a resolution") from None
             else:
-                groups = list(set(groups) | provider.repository.collected_groups)
-                provider.repository.collected_groups.clear()
+                groups = list(set(groups) | collected_groups)
                 data = result_repo.format_lockfile(groups=groups, strategy=lock_strategy)
                 if project.enable_write_lockfile:
                     reporter.update(f"{termui.Emoji.LOCK} Lock successful.", info="", completed=1)
@@ -172,35 +159,6 @@ def do_lock(
                 hooks.try_emit("post_lock", resolution=result_repo.all_candidates, dry_run=dry_run)
 
     return result_repo.all_candidates
-
-
-def _lock_for_env(
-    project: Project,
-    env_spec: EnvSpec,
-    provider: BaseProvider,
-    reporter: RichLockReporter,
-    requirements: list[Requirement],
-    lock_strategy: set[str],
-    max_rounds: int,
-) -> dict[str, Candidate]:
-    reporter.update(f"Resolve for environment {env_spec}")
-    requirements = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
-    resolver: Resolver = project.core.resolver_class(provider, reporter)
-    mapping, *_ = resolve(
-        resolver,
-        requirements,
-        max_rounds=max_rounds,
-        inherit_metadata=FLAG_INHERIT_METADATA in lock_strategy,
-    )
-    if project.enable_write_lockfile:
-        reporter.update(info="Fetching hashes for resolved packages")
-        fetch_hashes(provider.repository, mapping.values())
-    if not (env_python := PySpecSet(env_spec.requires_python)).is_superset(project.environment.python_requires):
-        python_marker = get_marker(env_python.as_marker_string())
-        for candidate in mapping.values():
-            marker = candidate.req.marker or get_marker("")
-            candidate.req = dataclasses.replace(candidate.req, marker=marker & python_marker)
-    return mapping
 
 
 def resolve_candidates_from_lockfile(
@@ -212,8 +170,9 @@ def resolve_candidates_from_lockfile(
 ) -> dict[str, Candidate]:
     from dep_logic.tags import EnvCompatibility
 
+    from pdm.resolver.resolvelib import RLResolver
+
     ui = project.core.ui
-    resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     if cross_platform is not None:  # pragma: no cover
         deprecation_warning("cross_platform argument is deprecated", stacklevel=2)
     if env_spec is None:
@@ -221,9 +180,7 @@ def resolve_candidates_from_lockfile(
         env_spec = project.environment.spec
     reqs = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
     with ui.open_spinner("Resolving packages from lockfile...") as spinner:
-        reporter = BaseReporter()
-        provider = project.get_provider(for_install=True, env_spec=env_spec)
-        locked_repo = cast("LockedRepository", provider.repository)
+        locked_repo = project.get_locked_repository(env_spec)
         lock_targets = locked_repo.targets
         if env_spec not in lock_targets:
             compatibilities = [target.compare(env_spec) for target in lock_targets]
@@ -246,16 +203,23 @@ def resolve_candidates_from_lockfile(
                     raise PdmException("No compatible lock target found")
 
         with ui.logging("install-resolve"):
-            if FLAG_INHERIT_METADATA in project.lockfile.strategy and groups is not None:
+            strategies = project.lockfile.strategy.copy()
+            if FLAG_INHERIT_METADATA in strategies and groups is not None:
                 return locked_repo.evaluate_candidates(groups)
-            resolver: Resolver = project.core.resolver_class(provider, reporter)
+            strategies.add(FLAG_INHERIT_METADATA)
+            resolver = project.get_resolver()(
+                project=project,
+                requirements=reqs,
+                update_strategy="all",
+                strategies=strategies,
+                target=env_spec,
+                tracked_names=(),
+                locked_repository=locked_repo,
+            )
+            if isinstance(resolver, RLResolver):  # resolve from lock file
+                resolver.provider.repository = locked_repo
             try:
-                mapping, *_ = resolve(
-                    resolver,
-                    reqs,
-                    max_rounds=resolve_max_rounds,
-                    inherit_metadata=True,
-                )
+                mapping, *_ = resolver.resolve()
             except ResolutionImpossible as e:
                 logger.exception("Broken lockfile")
                 raise PdmException(
@@ -263,7 +227,6 @@ def resolve_candidates_from_lockfile(
                 ) from e
             else:
                 spinner.update("Fetching hashes for resolved packages...")
-                fetch_hashes(provider.repository, mapping.values())
                 return mapping
 
 
