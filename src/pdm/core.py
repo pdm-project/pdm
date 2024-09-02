@@ -22,7 +22,6 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
 
 import tomlkit.exceptions
-from resolvelib import Resolver
 
 from pdm import termui
 from pdm.__version__ import __version__
@@ -69,7 +68,6 @@ class Core:
 
     project_class = Project
     repository_class: type[BaseRepository] = PyPIRepository
-    resolver_class = Resolver
     synchronizer_class = Synchronizer
     install_manager_class = InstallManager
 

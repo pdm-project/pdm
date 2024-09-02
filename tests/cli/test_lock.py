@@ -261,7 +261,7 @@ def test_lock_default_inherit_metadata(project, pdm, mocker, working_set):
     packages = project.lockfile["package"]
     assert all(package["groups"] == ["default"] for package in packages)
 
-    resolver = mocker.patch("pdm.cli.actions.resolve")
+    resolver = mocker.patch.object(project, "get_resolver")
     pdm(["sync"], obj=project, strict=True)
     resolver.assert_not_called()
     for key in ("requests", "idna", "chardet", "urllib3"):
@@ -275,7 +275,7 @@ def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
     packages = project.lockfile["package"]
     assert all(package["groups"] == ["default"] for package in packages)
 
-    resolver = mocker.patch("pdm.cli.actions.resolve")
+    resolver = mocker.patch.object(project, "get_resolver")
     pdm(["sync"], obj=project, strict=True)
     resolver.assert_not_called()
     for key in ("requests", "idna", "chardet", "urllib3"):

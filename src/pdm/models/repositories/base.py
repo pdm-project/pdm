@@ -360,3 +360,13 @@ class BaseRepository:
         :returns: search result, a dictionary of name: package metadata
         """
         raise NotImplementedError
+
+    def fetch_hashes(self, candidates: Iterable[Candidate]) -> None:
+        """Fetch hashes for candidates in parallel"""
+        from concurrent.futures import ThreadPoolExecutor
+
+        def do_fetch(candidate: Candidate) -> None:
+            candidate.hashes = self.get_hashes(candidate)
+
+        with ThreadPoolExecutor() as executor:
+            executor.map(do_fetch, candidates)
