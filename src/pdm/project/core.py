@@ -838,6 +838,9 @@ class Project:
 
     def get_resolver(self) -> type[Resolver]:
         from pdm.resolver.resolvelib import RLResolver
+        from pdm.resolver.uv import UvResolver
 
-        # TODO: support switching resolvers with config
-        return RLResolver
+        if self.config.get("use_uv"):
+            return UvResolver
+        else:
+            return RLResolver

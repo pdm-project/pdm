@@ -21,7 +21,7 @@ def install_requirements(
         if req.is_file_or_url:
             req.relocate(backend)  # type: ignore[attr-defined]
     resolver = project.get_resolver()(
-        project=project,
+        environment=environment,
         requirements=reqs,
         update_strategy="all",
         strategies=project.lockfile.default_strategies,

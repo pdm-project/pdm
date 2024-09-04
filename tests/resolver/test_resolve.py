@@ -48,7 +48,7 @@ def resolve(project, repository):
 
         with ui.logging("lock"):
             resolver = project.get_resolver()(
-                project=project,
+                environment=project.environment,
                 requirements=requirements,
                 update_strategy=strategy,
                 strategies=strategies,
