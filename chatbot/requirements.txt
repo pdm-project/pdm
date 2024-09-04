@@ -18,7 +18,7 @@ cffi==1.16.0; platform_python_implementation != "PyPy"
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6; platform_system == "Windows"
-cryptography==42.0.8
+cryptography==43.0.1
 dataclasses-json==0.6.4
 deprecated==1.2.14
 dirtyjson==1.0.8
