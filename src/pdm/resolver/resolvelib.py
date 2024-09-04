@@ -48,9 +48,7 @@ class RLResolver(Resolver):
             if isinstance(self.reporter, RichLockReporter):
                 self.reporter.update(info="Fetching hashes for resolved packages")
             self.provider.repository.fetch_hashes(mapping.values())
-        if not (env_python := PySpecSet(self.target.requires_python)).is_superset(
-            self.project.environment.python_requires
-        ):
+        if not (env_python := PySpecSet(self.target.requires_python)).is_superset(self.environment.python_requires):
             python_marker = get_marker(env_python.as_marker_string())
             for candidate in mapping.values():
                 marker = candidate.req.marker or get_marker("")
@@ -71,7 +69,7 @@ class RLResolver(Resolver):
         result = resolver.resolve(requirements, max_rounds)
 
         if repository.has_warnings:
-            repository.environment.project.core.ui.info(
+            self.project.core.ui.info(
                 "Use `-q/--quiet` to suppress these warnings, or ignore them per-package with "
                 r"`ignore_package_warnings` config in \[tool.pdm] table.",
                 verbosity=termui.Verbosity.NORMAL,
@@ -80,11 +78,7 @@ class RLResolver(Resolver):
         mapping = cast(Dict[str, Candidate], result.mapping)
         mapping.pop("python", None)
 
-        local_name = (
-            normalize_name(repository.environment.project.name)
-            if repository.environment.project.is_distribution
-            else None
-        )
+        local_name = normalize_name(self.project.name) if self.project.is_distribution else None
         for key, candidate in list(mapping.items()):
             if key is None:
                 continue

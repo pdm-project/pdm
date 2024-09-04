@@ -9,6 +9,7 @@ from resolvelib import BaseReporter
 from pdm.models.repositories.lock import LockedRepository
 
 if t.TYPE_CHECKING:
+    from pdm.environments import BaseEnvironment
     from pdm.models.candidates import Candidate
     from pdm.models.markers import EnvSpec
     from pdm.models.requirements import Requirement
@@ -30,8 +31,8 @@ class Resolution(t.NamedTuple):
 class Resolver(abc.ABC):
     """The resolver class."""
 
-    project: Project
-    """The project instance."""
+    environment: BaseEnvironment
+    """The environment instance."""
     requirements: list[Requirement]
     """The list of requirements to resolve."""
     update_strategy: str
@@ -53,3 +54,8 @@ class Resolver(abc.ABC):
     def resolve(self) -> Resolution:
         """Resolve the requirements."""
         pass
+
+    @property
+    def project(self) -> Project:
+        """The project instance."""
+        return self.environment.project

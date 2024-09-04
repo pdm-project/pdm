@@ -122,8 +122,8 @@ def do_lock(
             try:
                 for target in targets:
                     resolver = resolver_class(
-                        project=project,
-                        requirements=requirements,
+                        environment=project.environment,
+                        requirements=[r for r in requirements if not r.marker or r.marker.matches(target)],
                         update_strategy=strategy,
                         strategies=lock_strategy,
                         target=target,
@@ -208,7 +208,7 @@ def resolve_candidates_from_lockfile(
                 return locked_repo.evaluate_candidates(groups)
             strategies.add(FLAG_INHERIT_METADATA)
             resolver = project.get_resolver()(
-                project=project,
+                environment=project.environment,
                 requirements=reqs,
                 update_strategy="all",
                 strategies=strategies,

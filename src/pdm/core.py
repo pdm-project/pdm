@@ -17,6 +17,7 @@ import os
 import pkgutil
 import sys
 from datetime import datetime
+from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
@@ -340,6 +341,35 @@ class Core:
                 self.ui.error(
                     f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
                 )
+
+    @cached_property
+    def uv_cmd(self) -> list[str]:
+        from pdm.compat import importlib_metadata
+
+        self.ui.info("Using uv is experimental and might break due to uv updates.")
+        # First, try to find uv in Python modules
+        try:
+            importlib_metadata.distribution("uv")
+        except ModuleNotFoundError:
+            pass
+        else:
+            return [sys.executable, "-m", "uv"]
+        # Try to find it in the typical place:
+        if (uv_path := Path.home() / ".cargo/bin/uv").exists():
+            return [str(uv_path)]
+        # If not found, try to find it in PATH
+        import shutil
+
+        path = shutil.which("uv")
+        if path:
+            return [path]
+        # If not found, try to find in the bin dir:
+        if (uv_path := Path(sys.argv[0]).with_name("uv")).exists():
+            return [str(uv_path)]
+        raise PdmUsageError(
+            "use_uv is enabled but can't find uv, please install it first: "
+            "https://docs.astral.sh/uv/getting-started/installation/"
+        )
 
 
 def main(args: list[str] | None = None) -> None:
