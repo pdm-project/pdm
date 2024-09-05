@@ -11,7 +11,7 @@ from pdm.models.search import SearchResultParser
 if TYPE_CHECKING:
     from typing import Callable, Iterable
 
-    from pdm._types import SearchResult
+    from pdm._types import SearchResults
 
 
 class PyPIRepository(BaseRepository):
@@ -74,7 +74,7 @@ class PyPIRepository(BaseRepository):
             )
         return cans
 
-    def search(self, query: str) -> SearchResult:
+    def search(self, query: str) -> SearchResults:
         pypi_simple = self.sources[0].url.rstrip("/")  # type: ignore[union-attr]
 
         if pypi_simple.endswith("/simple"):

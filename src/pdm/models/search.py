@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Callable
 
-from pdm._types import Package
+from pdm._types import SearchResult
 
 
 @dataclass
@@ -14,8 +14,8 @@ class Result:
     version: str = ""
     description: str = ""
 
-    def as_package(self) -> Package:
-        return Package(self.name, self.version, self.description)
+    def as_frozen(self) -> SearchResult:
+        return SearchResult(self.name, self.version, self.description)
 
 
 class SearchResultParser(HTMLParser):
@@ -23,7 +23,7 @@ class SearchResultParser(HTMLParser):
 
     def __init__(self) -> None:
         super().__init__()
-        self.results: list[Package] = []
+        self.results: list[SearchResult] = []
         self._current: Result | None = None
         self._nest_anchors = 0
         self._data_callback: Callable[[str], None] | None = None
@@ -59,5 +59,5 @@ class SearchResultParser(HTMLParser):
         self._nest_anchors -= 1
         if self._nest_anchors == 0:
             if self._current.name and self._current.version:
-                self.results.append(self._current.as_package())
+                self.results.append(self._current.as_frozen())
             self._current = None

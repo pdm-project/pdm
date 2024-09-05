@@ -10,7 +10,7 @@ from pdm import termui
 from pdm.cli.actions import get_latest_pdm_version_from_pypi
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.cli.utils import Package, build_dependency_graph
+from pdm.cli.utils import PackageNode, build_dependency_graph
 from pdm.compat import Distribution
 from pdm.environments import BareEnvironment
 from pdm.models.markers import EnvSpec
@@ -161,12 +161,12 @@ class RemoveCommand(BaseCommand):
         ws = WorkingSet()
         graph = build_dependency_graph(ws, env_spec=EnvSpec.current())
         while to_resolve:
-            temp: list[Package] = []
+            temp: list[PackageNode] = []
             for name in to_resolve:
                 key = normalize_name(name)
                 if key in ws:
                     result.add(key)
-                package = Package(key, "0.0.0", {})
+                package = PackageNode(key, "0.0.0", {})
                 if package not in graph:
                     continue
                 for dep in graph.iter_children(package):

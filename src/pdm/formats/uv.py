@@ -11,7 +11,7 @@ import tomlkit
 
 from pdm.models.candidates import Candidate
 from pdm.models.markers import Marker, get_marker
-from pdm.models.repositories.lock import LockedRepository, PackageEntry
+from pdm.models.repositories import LockedRepository, Package
 from pdm.models.requirements import FileRequirement, Requirement, VcsRequirement, parse_requirement, strip_extras
 from pdm.project.core import Project
 from pdm.utils import normalize_name
@@ -29,6 +29,9 @@ class _UvFileBuilder:
     def default_source(self) -> str:
         return cast(str, self.project.sources[0].url)
 
+    def __post_init__(self) -> None:
+        self._enter_path(self.project.root / "uv.lock")
+
     def build_pyproject_toml(self) -> Path:
         data = self.project.pyproject._data.unwrap()
         data.setdefault("project", {})["requires-python"] = self.requires_python
@@ -36,7 +39,6 @@ class _UvFileBuilder:
         data.setdefault("project", {}).pop("optional-dependencies", None)
         sources = {}
         collected_deps: dict[str, list[str]] = {}
-        path = self.project.root / "pyproject.toml"
         for dep in self.requirements:
             if isinstance(dep, FileRequirement):
                 entry = self._get_name(dep)
@@ -55,16 +57,21 @@ class _UvFileBuilder:
         if sources:
             data.setdefault("tool", {}).setdefault("uv", {}).setdefault("sources", {}).update(sources)
 
-        if path.exists():
-            backup = path.rename(path.with_name(f"{path.name}.bak"))
-            self.stack.callback(backup.rename, path)
+        path = self._enter_path(self.project.root / "pyproject.toml")
         with path.open("w", newline="") as f:
             tomlkit.dump(data, f)
         return path
 
+    def _enter_path(self, path: Path) -> Path:
+        if path.exists():
+            backup = path.rename(path.with_name(f"{path.name}.bak"))
+            self.stack.callback(backup.rename, path)
+        else:
+            self.stack.callback(path.unlink, True)
+        return path
+
     def build_uv_lock(self) -> Path:
         locked_repo = self.locked_repository
-        path = self.project.root / "uv.lock"
         packages: list[dict[str, Any]] = []
         for key in locked_repo.packages:
             if "[" in key[0]:  # skip entries with extras
@@ -75,7 +82,8 @@ class _UvFileBuilder:
             ]
             packages.append(self._build_lock_entry(related_packages))
         if name := self.project.name:
-            this_package = {"name": normalize_name(name), "version": ".", "source": {"editable": "."}}
+            version = self.project.pyproject.metadata.get("version", "0.0.0")
+            this_package = {"name": normalize_name(name), "version": version, "source": {"editable": "."}}
             dependencies: list[dict[str, Any]] = []
             optional_dependencies: dict[str, list[dict[str, Any]]] = {}
             this_candidate = self.project.make_self_candidate(True)
@@ -93,14 +101,10 @@ class _UvFileBuilder:
                 this_package["optional-dependencies"] = optional_dependencies
             packages.append(this_package)
 
-        data = {
-            "version": 1,
-            "requires-python": self.requires_python,
-            "package": packages,
-        }
-        if path.exists():
-            backup = path.rename(path.with_name(f"{path.name}.bak"))
-            self.stack.callback(backup.rename, path)
+        data = {"version": 1, "requires-python": self.requires_python}
+        if packages:
+            data["package"] = packages
+        path = self.project.root / "uv.lock"
         with path.open("w", newline="") as f:
             tomlkit.dump(data, f)
         return path
@@ -136,7 +140,7 @@ class _UvFileBuilder:
         else:
             return {"registry": self.default_source}
 
-    def _build_lock_entry(self, packages: list[PackageEntry]) -> dict[str, Any]:
+    def _build_lock_entry(self, packages: list[Package]) -> dict[str, Any]:
         packages.sort(key=lambda x: len(x.candidate.req.extras or []))
         candidate = packages[0].candidate
         req = candidate.req
@@ -146,8 +150,9 @@ class _UvFileBuilder:
             "source": self._build_lock_source(req),
         }
         for file_hash in candidate.hashes:
-            is_wheel = file_hash.get("url", file_hash.get("file", "")).endswith(".whl")
-            item = {k: v for k, v in file_hash.items() if k in {"url", "hash"}}
+            filename = file_hash.get("url", file_hash.get("file", ""))
+            is_wheel = filename.endswith(".whl")
+            item = {"url": file_hash.get("url", filename), "hash": file_hash["hash"]}
             if is_wheel:
                 result.setdefault("wheels", []).append(item)
             else:

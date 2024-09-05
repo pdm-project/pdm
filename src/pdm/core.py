@@ -30,7 +30,7 @@ from pdm.cli.options import ignore_python_option, no_cache_option, non_interacti
 from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
-from pdm.installers import InstallManager, Synchronizer
+from pdm.installers import InstallManager
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config
@@ -69,7 +69,6 @@ class Core:
 
     project_class = Project
     repository_class: type[BaseRepository] = PyPIRepository
-    synchronizer_class = Synchronizer
     install_manager_class = InstallManager
 
     def __init__(self) -> None:

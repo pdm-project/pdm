@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Iterable
 
 from pdm.environments import BaseEnvironment
-from pdm.installers.synchronizers import BaseSynchronizer
 from pdm.models.requirements import Requirement
 from pdm.resolver.reporters import LockReporter
 from pdm.resolver.resolvelib import RLResolver
@@ -32,6 +31,13 @@ def install_requirements(
     )
     if isinstance(resolver, RLResolver):
         resolver.provider.repository.find_dependencies_from_local = False
-    resolved = resolver.resolve().candidates
-    syncer = BaseSynchronizer(resolved, environment, clean=clean, retry_times=0, use_install_cache=use_install_cache)
+    resolved = resolver.resolve().packages
+    syncer = environment.project.get_synchronizer(quiet=True)(
+        environment,
+        clean=clean,
+        retry_times=0,
+        use_install_cache=use_install_cache,
+        packages=resolved,
+        requirements=reqs,
+    )
     syncer.synchronize()

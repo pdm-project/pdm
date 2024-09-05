@@ -45,7 +45,7 @@ pre_install: NamedSignal = pdm_signals.signal("pre_install")
 
 Args:
     project (Project): The project object
-    candidates (dict[str, Candidate]): The candidates to install
+    packages (list[Package]): The packages to install
     dry_run (bool): If true, won't perform any actions
 """
 post_install: NamedSignal = pdm_signals.signal("post_install")
@@ -53,7 +53,7 @@ post_install: NamedSignal = pdm_signals.signal("post_install")
 
 Args:
     project (Project): The project object
-    candidates (dict[str, Candidate]): The candidates installed
+    packages (list[Package]): The packages installed
     dry_run (bool): If true, won't perform any actions
 """
 pre_build: NamedSignal = pdm_signals.signal("pre_build")
