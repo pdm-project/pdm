@@ -206,7 +206,7 @@ def resolve_from_lockfile(
             resolver = project.get_resolver()(
                 environment=project.environment,
                 requirements=reqs,
-                update_strategy="all",
+                update_strategy="reuse",
                 strategies=strategies,
                 target=env_spec,
                 tracked_names=(),
