@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import inspect
+import os
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Dict, cast
 
 from pdm import termui
 from pdm.models.candidates import Candidate
 from pdm.models.markers import get_marker
-from pdm.models.requirements import Requirement, strip_extras
+from pdm.models.requirements import FileRequirement, Requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver.base import Resolution, Resolver
@@ -43,6 +45,8 @@ class RLResolver(Resolver):
         self.provider = provider
 
     def resolve(self) -> Resolution:
+        from pdm.models.repositories.lock import PackageEntry
+
         mapping = self._do_resolve()
         if self.project.enable_write_lockfile:  # type: ignore[has-type]
             if isinstance(self.reporter, RichLockReporter):
@@ -53,7 +57,22 @@ class RLResolver(Resolver):
             for candidate in mapping.values():
                 marker = candidate.req.marker or get_marker("")
                 candidate.req = replace(candidate.req, marker=marker & python_marker)
-        return Resolution(mapping, self.provider.fetched_dependencies, self.provider.repository.collected_groups)
+        backend = self.project.backend
+        packages: list[PackageEntry] = []
+        for candidate in mapping.values():
+            deps: list[str] = []
+            for r in self.provider.fetched_dependencies[candidate.dep_key]:
+                if isinstance(r, FileRequirement) and r.path:
+                    try:
+                        if r.path.is_absolute():
+                            r.path = Path(os.path.normpath(r.path)).relative_to(os.path.normpath(self.project.root))
+                    except ValueError:
+                        pass
+                    else:
+                        r.url = backend.relative_path_to_url(r.path.as_posix())
+                deps.append(r.as_line())
+            packages.append(PackageEntry(candidate, deps, candidate.summary))
+        return Resolution(packages, self.provider.repository.collected_groups)
 
     def _do_resolve(self) -> dict[str, Candidate]:
         from resolvelib import Resolver as _Resolver

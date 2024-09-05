@@ -132,10 +132,10 @@ def do_lock(
                         reporter=reporter,
                     )
                     reporter.update(f"Resolve for environment {target}")
-                    mapping, fetched_dependencies, collected_groups = resolver.resolve()
-                    locked_repo.merge_result(target, mapping.values(), fetched_dependencies)
+                    resolved, collected_groups = resolver.resolve()
+                    locked_repo.merge_result(target, resolved)
                     if result_repo is not locked_repo:
-                        result_repo.merge_result(target, mapping.values(), fetched_dependencies)
+                        result_repo.merge_result(target, resolved)
             except ResolutionTooDeep:
                 reporter.update(f"{termui.Emoji.LOCK} Lock failed.", info="", completed=1)
                 ui.echo(
@@ -179,7 +179,7 @@ def resolve_candidates_from_lockfile(
         # Resolve for the current environment by default
         env_spec = project.environment.spec
     reqs = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
-    with ui.open_spinner("Resolving packages from lockfile...") as spinner:
+    with ui.open_spinner("Resolving packages from lockfile..."):
         locked_repo = project.get_locked_repository(env_spec)
         lock_targets = locked_repo.targets
         if env_spec not in lock_targets:
@@ -219,15 +219,12 @@ def resolve_candidates_from_lockfile(
             if isinstance(resolver, RLResolver):  # resolve from lock file
                 resolver.provider.repository = locked_repo
             try:
-                mapping, *_ = resolver.resolve()
+                return resolver.resolve().candidates
             except ResolutionImpossible as e:
                 logger.exception("Broken lockfile")
                 raise PdmException(
                     "Resolving from lockfile failed. You may fix the lockfile by `pdm lock --update-reuse` and retry."
                 ) from e
-            else:
-                spinner.update("Fetching hashes for resolved packages...")
-                return mapping
 
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:

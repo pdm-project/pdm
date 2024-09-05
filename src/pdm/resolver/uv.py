@@ -14,7 +14,7 @@ import tomlkit
 from pdm.models.candidates import Candidate
 from pdm.models.repositories.lock import PackageEntry
 from pdm.models.requirements import FileRequirement, NamedRequirement, Requirement, VcsRequirement
-from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_STATIC_URLS
+from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.resolver.base import Resolution, Resolver
 from pdm.utils import normalize_name
 
@@ -35,8 +35,13 @@ class UvResolver(Resolver):
                         self.requirements.extend(self.project.get_dependencies(group))
                         self.requested_groups.add(group)
         if self.update_strategy not in {"reuse", "all"}:
-            logger.warning("%s update strategy is not supported by uv, use 'reuse' instead", self.update_strategy)
+            self.project.core.ui.warn(
+                f"{self.update_strategy} update strategy is not supported by uv, using 'reuse' instead"
+            )
             self.update_strategy = "reuse"
+        if FLAG_INHERIT_METADATA in self.strategies:
+            self.project.core.ui.warn("inherit_metadata strategy is not supported by uv resolver, it will be ignored")
+            self.strategies.discard(FLAG_INHERIT_METADATA)
 
     def _build_lock_command(self) -> list[str]:
         cmd = [*self.project.core.uv_cmd, "lock", "-p", str(self.environment.interpreter.executable)]
@@ -116,7 +121,7 @@ class UvResolver(Resolver):
         with path.open("r", newline="") as f:
             tomlkit.dump(data, f)
 
-    def _build_uv_lock(self, path: Path) -> None:
+    def build_uv_lock(self, path: Path) -> None:
         lock_repo = self.locked_repository or self.project.get_locked_repository()
         packages: list[dict[str, Any]] = []
         for package in lock_repo.packages.values():
@@ -139,8 +144,7 @@ class UvResolver(Resolver):
         with path.open("rb") as f:
             data = tomllib.load(f)
 
-        mapping: dict[str, Candidate] = {}
-        all_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
+        packages: list[PackageEntry] = []
 
         for package in data["package"]:
             if self.project.name and package["name"] == normalize_name(self.project.name) and not self.keep_self:
@@ -176,8 +180,8 @@ class UvResolver(Resolver):
             if not req.is_file_or_url:
                 for wheel in chain(package.get("wheels", []), package.get("sdist", [])):
                     candidate.hashes.append(hash_maker(wheel))
-            mapping[candidate.identify()] = candidate
-        return Resolution(mapping, all_dependencies, self.requested_groups)
+            packages.append(PackageEntry(candidate, [], ""))
+        return Resolution(packages, self.requested_groups)
 
     def _build_source(self, req: FileRequirement) -> dict[str, Any]:
         result: dict[str, Any]
@@ -243,7 +247,7 @@ class UvResolver(Resolver):
             self._build_pyproject_toml(self.project.root / "pyproject.toml")
             uv_lock_path = self.project.root / "uv.lock"
             if self.update_strategy != "all":
-                self._build_uv_lock(uv_lock_path)
+                self.build_uv_lock(uv_lock_path)
             uv_lock_command = self._build_lock_command()
             logger.debug("Running uv lock command: %s", uv_lock_command)
             subprocess.run(uv_lock_command, cwd=self.project.root, check=True)

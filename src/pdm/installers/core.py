@@ -32,6 +32,6 @@ def install_requirements(
     )
     if isinstance(resolver, RLResolver):
         resolver.provider.repository.find_dependencies_from_local = False
-    resolved, *_ = resolver.resolve()
+    resolved = resolver.resolve().candidates
     syncer = BaseSynchronizer(resolved, environment, clean=clean, retry_times=0, use_install_cache=use_install_cache)
     syncer.synchronize()
