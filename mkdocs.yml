@@ -60,6 +60,7 @@ nav:
       - Lock Files:
         - usage/lockfile.md
         - usage/lock-targets.md
+      - usage/uv.md
       - usage/publish.md
       - usage/config.md
       - usage/scripts.md

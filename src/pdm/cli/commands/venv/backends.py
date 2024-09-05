@@ -169,6 +169,18 @@ class VenvBackend(VirtualenvBackend):
         self.subprocess_call(cmd)
 
 
+class UvBackend(VirtualenvBackend):
+    def pip_args(self, with_pip: bool) -> Iterable[str]:
+        if with_pip:
+            return ("--seed", "pip")
+        return ()
+
+    def perform_create(self, location: Path, args: tuple[str, ...], prompt: str | None = None) -> None:
+        prompt_option = (f"--prompt={prompt}",) if prompt else ()
+        cmd = [*self.project.core.uv_cmd, "venv", *prompt_option, *args, str(location)]
+        self.subprocess_call(cmd)
+
+
 class CondaBackend(Backend):
     @property
     def ident(self) -> str:
@@ -200,4 +212,5 @@ BACKENDS: Mapping[str, type[Backend]] = {
     "virtualenv": VirtualenvBackend,
     "venv": VenvBackend,
     "conda": CondaBackend,
+    "uv": UvBackend,
 }

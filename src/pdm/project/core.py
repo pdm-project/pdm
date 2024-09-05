@@ -296,6 +296,8 @@ class Project:
         from pdm.cli.commands.venv.backends import BACKENDS
 
         backend: str = self.config["venv.backend"]
+        if backend == "virtualenv" and self.config["use_uv"]:
+            backend = "uv"
         venv_backend = BACKENDS[backend](self, python)
         path = venv_backend.create(
             force=True,
