@@ -3,20 +3,22 @@ from __future__ import annotations
 import logging
 import re
 import subprocess
-from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import chain
 from pathlib import Path
-from typing import Any, Iterator
-
-import tomlkit
+from typing import TYPE_CHECKING, Any
 
 from pdm.models.candidates import Candidate
+from pdm.models.markers import get_marker
 from pdm.models.repositories.lock import PackageEntry
 from pdm.models.requirements import FileRequirement, NamedRequirement, Requirement, VcsRequirement
+from pdm.models.specifiers import get_specifier
 from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.resolver.base import Resolution, Resolver
 from pdm.utils import normalize_name
+
+if TYPE_CHECKING:
+    from pdm._types import FileHash
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,9 @@ GIT_URL = re.compile(r"(?P<repo>[^:/]+://[^\?#]+)(?:\?rev=(?P<ref>[^#]+?))?(?:#(
 @dataclass
 class UvResolver(Resolver):
     def __post_init__(self) -> None:
+        self.default_source = self.project.sources[0].url
+        if self.locked_repository is None:
+            self.locked_repository = self.project.get_locked_repository()
         self.requested_groups = {g for r in self.requirements for g in r.groups}
         for r in self.requirements:
             if self.project.name and r.key == normalize_name(self.project.name):
@@ -45,6 +50,8 @@ class UvResolver(Resolver):
 
     def _build_lock_command(self) -> list[str]:
         cmd = [*self.project.core.uv_cmd, "lock", "-p", str(self.environment.interpreter.executable)]
+        if self.project.core.ui.verbosity > 0:
+            cmd.append("--verbose")
         first_index = True
         for source in self.project.sources:
             assert source.url is not None
@@ -93,58 +100,23 @@ class UvResolver(Resolver):
 
         return cmd
 
-    def _build_pyproject_toml(self, path: Path) -> None:
-        data = self.project.pyproject._data.unwrap()
-        data.setdefault("project", {})["requires-python"] = str(self.target.requires_python)
-        data.setdefault("project", {})["dependencies"] = []
-        data.setdefault("project", {}).pop("optional-dependencies", None)
-        sources = {}
-        collected_deps: dict[str, list[str]] = {}
-        for dep in self.requirements:
-            if isinstance(dep, FileRequirement):
-                entry = self._get_name(dep)
-                sources[entry] = self._build_source(dep)
-            else:
-                entry = dep.as_line()
-            for group in dep.groups:
-                collected_deps.setdefault(group, []).append(entry)
-
-        for group, deps in collected_deps.items():
-            if group == "default":
-                data.setdefault("project", {})["dependencies"] = deps
-            else:
-                data.setdefault("project", {}).setdefault("optional-dependencies", {})[group] = deps
-
-        if sources:
-            data.setdefault("tool", {}).setdefault("uv", {}).setdefault("sources", {}).update(sources)
-
-        with path.open("r", newline="") as f:
-            tomlkit.dump(data, f)
-
-    def build_uv_lock(self, path: Path) -> None:
-        lock_repo = self.locked_repository or self.project.get_locked_repository()
-        packages: list[dict[str, Any]] = []
-        for package in lock_repo.packages.values():
-            packages.append(self._build_lock_entry(package))
-
-        data = {
-            "version": 1,
-            "requires-python": str(self.target.requires_python),
-            "package": packages,
-        }
-        with path.open("w", newline="") as f:
-            tomlkit.dump(data, f)
-
     def _parse_uv_lock(self, path: Path) -> Resolution:
         from unearth import Link
 
-        from pdm._types import FileHash
         from pdm.compat import tomllib
 
         with path.open("rb") as f:
             data = tomllib.load(f)
 
         packages: list[PackageEntry] = []
+
+        def make_requirement(dep: dict[str, Any]) -> str:
+            req = NamedRequirement(name=dep["name"])
+            if version := dep.get("version"):
+                req.specifier = get_specifier(f"=={version}")
+            if marker := dep.get("marker"):
+                req.marker = get_marker(marker)
+            return req.as_line()
 
         for package in data["package"]:
             if self.project.name and package["name"] == normalize_name(self.project.name) and not self.keep_self:
@@ -178,76 +150,29 @@ class UvResolver(Resolver):
                     return {"file": Link(item["url"]).filename, "hash": item["hash"]}
 
             if not req.is_file_or_url:
-                for wheel in chain(package.get("wheels", []), package.get("sdist", [])):
+                for wheel in chain(package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []):
                     candidate.hashes.append(hash_maker(wheel))
-            packages.append(PackageEntry(candidate, [], ""))
+            entry = PackageEntry(candidate, [make_requirement(dep) for dep in package.get("dependencies", [])], "")
+            packages.append(entry)
+            if optional_dependencies := package.get("optional-dependencies"):
+                for group, deps in optional_dependencies.items():
+                    extra_entry = PackageEntry(
+                        candidate.copy_with(replace(req, extras=(group,))),
+                        [f"{req.key}=={candidate.version}", *(make_requirement(dep) for dep in deps)],
+                        "",
+                    )
+                    packages.append(extra_entry)
         return Resolution(packages, self.requested_groups)
 
-    def _build_source(self, req: FileRequirement) -> dict[str, Any]:
-        result: dict[str, Any]
-        if isinstance(req, VcsRequirement):
-            result = {req.vcs: req.repo}
-            if req.ref:
-                result["rev"] = req.ref
-        elif req.path:
-            result = {"path": req.str_path}
-        else:
-            result = {"url": req.url}
-        if req.editable:
-            result["editable"] = True
-        return result
-
-    def _build_lock_entry(self, package: PackageEntry) -> dict[str, Any]:
-        candidate = package.candidate
-        default_source = self.project.sources[0].url
-        req = candidate.req
-        result: dict[str, Any] = {"name": candidate.name, "version": candidate.version}
-        if isinstance(req, VcsRequirement):
-            result["source"] = {req.vcs: f"{req.repo}?rev={req.ref}#{req.revision}"}
-        elif isinstance(req, FileRequirement):
-            if req.editable:
-                result["source"] = {"editable": req.str_path}
-            else:
-                result["source"] = {"url": req.url}
-        else:
-            result["source"] = {"registry": default_source}
-        for file_hash in candidate.hashes:
-            is_wheel = file_hash.get("url", file_hash.get("file", "")).endswith(".whl")
-            item = {k: v for k, v in file_hash.items() if k in {"url", "hash"}}
-            if is_wheel:
-                result.setdefault("wheels", []).append(item)
-            else:
-                result.setdefault("sdist", []).append(item)
-        return result
-
-    def _get_name(self, req: FileRequirement) -> str:
-        if req.key:
-            return req.key
-        can = Candidate(req).prepare(self.environment)
-        return normalize_name(can.metadata.name)
-
-    @contextmanager
-    def _temp_project_files(self) -> Iterator[None]:
-        pyproject_backup: Path | None = None
-        uv_lock_backup: Path | None = None
-        if (pyproject_toml := self.project.root / "pyproject.toml").exists():
-            pyproject_backup = pyproject_toml.rename(self.project.root / ".backup.pyproject.toml")
-        if (uv_lock := self.project.root / "uv.lock").exists():
-            uv_lock_backup = uv_lock.rename(self.project.root / ".backup.uv.lock")
-        try:
-            yield
-        finally:
-            if pyproject_backup:
-                pyproject_backup.rename(self.project.root / "pyproject.toml")
-            if uv_lock_backup:
-                uv_lock_backup.rename(self.project.root / "uv.lock")
-
     def resolve(self) -> Resolution:
-        with self._temp_project_files():
-            self._build_pyproject_toml(self.project.root / "pyproject.toml")
+        from pdm.formats.uv import uv_file_builder
+
+        locked_repo = self.locked_repository or self.project.get_locked_repository()
+        with uv_file_builder(self.project, str(self.target.requires_python), self.requirements, locked_repo) as builder:
+            builder.build_pyproject_toml()
             uv_lock_path = self.project.root / "uv.lock"
             if self.update_strategy != "all":
-                self.build_uv_lock(uv_lock_path)
+                builder.build_uv_lock()
             uv_lock_command = self._build_lock_command()
             logger.debug("Running uv lock command: %s", uv_lock_command)
             subprocess.run(uv_lock_command, cwd=self.project.root, check=True)
