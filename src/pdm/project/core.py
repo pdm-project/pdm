@@ -26,7 +26,7 @@ from pdm.models.repositories import BaseRepository, LockedRepository
 from pdm.models.requirements import Requirement, parse_line, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config, ensure_boolean
-from pdm.project.lockfile import Lockfile
+from pdm.project.lockfile import FLAG_INHERIT_METADATA, Lockfile
 from pdm.project.project_file import PyProject
 from pdm.utils import (
     cd,
@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 
     from pdm.core import Core
     from pdm.environments import BaseEnvironment
+    from pdm.installers.base import BaseSynchronizer
     from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
     from pdm.models.candidates import Candidate
     from pdm.resolver.base import Resolver
@@ -127,6 +128,10 @@ class Project:
     def lockfile(self) -> Lockfile:
         if self._lockfile is None:
             self._lockfile = Lockfile(self.root / self.LOCKFILE_FILENAME, ui=self.core.ui)
+            if self.config.get("use_uv"):
+                self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
+            if not self.config["strategy.inherit_metadata"]:
+                self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
         return self._lockfile
 
     def set_lockfile(self, path: str | Path) -> None:
@@ -837,6 +842,7 @@ class Project:
         return [self.environment.allow_all_spec]
 
     def get_resolver(self) -> type[Resolver]:
+        """Get the resolver class to use for the project."""
         from pdm.resolver.resolvelib import RLResolver
         from pdm.resolver.uv import UvResolver
 
@@ -844,3 +850,14 @@ class Project:
             return UvResolver
         else:
             return RLResolver
+
+    def get_synchronizer(self, quiet: bool = False) -> type[BaseSynchronizer]:
+        """Get the synchronizer class to use for the project."""
+        from pdm.installers import BaseSynchronizer, Synchronizer, UvSynchronizer
+        from pdm.installers.uv import QuietUvSynchronizer
+
+        if self.config.get("use_uv"):
+            return QuietUvSynchronizer if quiet else UvSynchronizer
+        if quiet:
+            return BaseSynchronizer
+        return getattr(self.core, "synchronizer_class", Synchronizer)

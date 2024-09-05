@@ -10,11 +10,12 @@ from typing import TYPE_CHECKING, Any
 
 from pdm.models.candidates import Candidate
 from pdm.models.markers import get_marker
-from pdm.models.repositories.lock import PackageEntry
+from pdm.models.repositories import Package
 from pdm.models.requirements import FileRequirement, NamedRequirement, Requirement, VcsRequirement
 from pdm.models.specifiers import get_specifier
 from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.resolver.base import Resolution, Resolver
+from pdm.termui import Verbosity
 from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
@@ -52,6 +53,8 @@ class UvResolver(Resolver):
         cmd = [*self.project.core.uv_cmd, "lock", "-p", str(self.environment.interpreter.executable)]
         if self.project.core.ui.verbosity > 0:
             cmd.append("--verbose")
+        if not self.project.core.state.enable_cache:
+            cmd.append("--no-cache")
         first_index = True
         for source in self.project.sources:
             assert source.url is not None
@@ -108,7 +111,7 @@ class UvResolver(Resolver):
         with path.open("rb") as f:
             data = tomllib.load(f)
 
-        packages: list[PackageEntry] = []
+        packages: list[Package] = []
 
         def make_requirement(dep: dict[str, Any]) -> str:
             req = NamedRequirement(name=dep["name"])
@@ -152,11 +155,11 @@ class UvResolver(Resolver):
             if not req.is_file_or_url:
                 for wheel in chain(package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []):
                     candidate.hashes.append(hash_maker(wheel))
-            entry = PackageEntry(candidate, [make_requirement(dep) for dep in package.get("dependencies", [])], "")
+            entry = Package(candidate, [make_requirement(dep) for dep in package.get("dependencies", [])], "")
             packages.append(entry)
             if optional_dependencies := package.get("optional-dependencies"):
                 for group, deps in optional_dependencies.items():
-                    extra_entry = PackageEntry(
+                    extra_entry = Package(
                         candidate.copy_with(replace(req, extras=(group,))),
                         [f"{req.key}=={candidate.version}", *(make_requirement(dep) for dep in deps)],
                         "",
@@ -174,6 +177,6 @@ class UvResolver(Resolver):
             if self.update_strategy != "all":
                 builder.build_uv_lock()
             uv_lock_command = self._build_lock_command()
-            logger.debug("Running uv lock command: %s", uv_lock_command)
+            self.project.core.ui.echo(f"Running uv lock command: {uv_lock_command}", verbosity=Verbosity.DETAIL)
             subprocess.run(uv_lock_command, cwd=self.project.root, check=True)
             return self._parse_uv_lock(uv_lock_path)

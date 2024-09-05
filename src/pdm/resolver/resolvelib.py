@@ -45,7 +45,7 @@ class RLResolver(Resolver):
         self.provider = provider
 
     def resolve(self) -> Resolution:
-        from pdm.models.repositories.lock import PackageEntry
+        from pdm.models.repositories import Package
 
         mapping = self._do_resolve()
         if self.project.enable_write_lockfile:  # type: ignore[has-type]
@@ -58,7 +58,7 @@ class RLResolver(Resolver):
                 marker = candidate.req.marker or get_marker("")
                 candidate.req = replace(candidate.req, marker=marker & python_marker)
         backend = self.project.backend
-        packages: list[PackageEntry] = []
+        packages: list[Package] = []
         for candidate in mapping.values():
             deps: list[str] = []
             for r in self.provider.fetched_dependencies[candidate.dep_key]:
@@ -71,7 +71,7 @@ class RLResolver(Resolver):
                     else:
                         r.url = backend.relative_path_to_url(r.path.as_posix())
                 deps.append(r.as_line())
-            packages.append(PackageEntry(candidate, deps, candidate.summary))
+            packages.append(Package(candidate, deps, candidate.summary))
         return Resolution(packages, self.provider.repository.collected_groups)
 
     def _do_resolve(self) -> dict[str, Candidate]:

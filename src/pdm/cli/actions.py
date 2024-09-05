@@ -26,9 +26,9 @@ from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
-from pdm.models.repositories import LockedRepository
+from pdm.models.repositories import LockedRepository, Package
 from pdm.project import Project
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.resolver.reporters import RichLockReporter
 from pdm.termui import logger
 from pdm.utils import deprecation_warning
@@ -53,8 +53,6 @@ def do_lock(
     """Performs the locking process and update lockfile."""
     hooks = hooks or HookManager(project)
     check_project_file(project)
-    if not project.config["strategy.inherit_metadata"]:
-        project.lockfile.default_strategies.remove(FLAG_INHERIT_METADATA)
     lock_strategy = project.lockfile.apply_strategy_change(strategy_change or [])
     if FLAG_CROSS_PLATFORM in lock_strategy:  # pragma: no cover
         project.core.ui.deprecated(
@@ -161,20 +159,18 @@ def do_lock(
     return result_repo.all_candidates
 
 
-def resolve_candidates_from_lockfile(
+def resolve_from_lockfile(
     project: Project,
     requirements: Iterable[Requirement],
-    cross_platform: bool | None = None,
     groups: Collection[str] | None = None,
     env_spec: EnvSpec | None = None,
-) -> dict[str, Candidate]:
+) -> Iterable[Package]:
     from dep_logic.tags import EnvCompatibility
 
     from pdm.resolver.resolvelib import RLResolver
 
     ui = project.core.ui
-    if cross_platform is not None:  # pragma: no cover
-        deprecation_warning("cross_platform argument is deprecated", stacklevel=2)
+
     if env_spec is None:
         # Resolve for the current environment by default
         env_spec = project.environment.spec
@@ -206,7 +202,7 @@ def resolve_candidates_from_lockfile(
             strategies = project.lockfile.strategy.copy()
             if FLAG_INHERIT_METADATA in strategies and groups is not None:
                 return locked_repo.evaluate_candidates(groups)
-            strategies.add(FLAG_INHERIT_METADATA)
+            strategies.update((FLAG_STATIC_URLS, FLAG_INHERIT_METADATA))
             resolver = project.get_resolver()(
                 environment=project.environment,
                 requirements=reqs,
@@ -219,12 +215,25 @@ def resolve_candidates_from_lockfile(
             if isinstance(resolver, RLResolver):  # resolve from lock file
                 resolver.provider.repository = locked_repo
             try:
-                return resolver.resolve().candidates
+                return resolver.resolve().packages
             except ResolutionImpossible as e:
                 logger.exception("Broken lockfile")
                 raise PdmException(
                     "Resolving from lockfile failed. You may fix the lockfile by `pdm lock --update-reuse` and retry."
                 ) from e
+
+
+def resolve_candidates_from_lockfile(
+    project: Project,
+    requirements: Iterable[Requirement],
+    cross_platform: bool | None = None,
+    groups: Collection[str] | None = None,
+    env_spec: EnvSpec | None = None,
+) -> dict[str, Candidate]:
+    if cross_platform is not None:  # pragma: no cover
+        deprecation_warning("cross_platform argument is deprecated", stacklevel=2)
+    packages = resolve_from_lockfile(project, requirements, groups, env_spec)
+    return {p.candidate.identify(): p.candidate for p in packages}
 
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:
@@ -272,11 +281,10 @@ def do_sync(
         selection.validate()
         for group in selection:
             requirements.extend(project.get_dependencies(group))
-    candidates = resolve_candidates_from_lockfile(project, requirements, groups=list(selection))
+    packages = resolve_from_lockfile(project, requirements, groups=list(selection))
     if tracked_names and dry_run:
-        candidates = {name: c for name, c in candidates.items() if name in tracked_names}
-    synchronizer = project.core.synchronizer_class(
-        candidates,
+        packages = [p for p in packages if p.candidate.identify() in tracked_names]
+    synchronizer = project.get_synchronizer()(
         project.environment,
         clean=clean,
         dry_run=dry_run,
@@ -285,11 +293,13 @@ def do_sync(
         reinstall=reinstall,
         only_keep=only_keep,
         fail_fast=fail_fast,
+        packages=packages,
+        requirements=requirements,
     )
     with project.core.ui.logging("install"):
-        hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
+        hooks.try_emit("pre_install", packages=packages, dry_run=dry_run)
         synchronizer.synchronize()
-        hooks.try_emit("post_install", candidates=candidates, dry_run=dry_run)
+        hooks.try_emit("post_install", packages=packages, dry_run=dry_run)
 
 
 def ask_for_import(project: Project) -> None:

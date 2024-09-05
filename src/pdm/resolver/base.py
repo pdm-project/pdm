@@ -7,12 +7,12 @@ from dataclasses import dataclass, field
 from resolvelib import BaseReporter
 
 from pdm.models.candidates import Candidate
-from pdm.models.repositories.lock import LockedRepository
+from pdm.models.repositories import LockedRepository
 
 if t.TYPE_CHECKING:
     from pdm.environments import BaseEnvironment
     from pdm.models.markers import EnvSpec
-    from pdm.models.repositories.lock import PackageEntry
+    from pdm.models.repositories import Package
     from pdm.models.requirements import Requirement
     from pdm.project import Project
 
@@ -20,7 +20,7 @@ if t.TYPE_CHECKING:
 class Resolution(t.NamedTuple):
     """The resolution result."""
 
-    packages: t.Iterable[PackageEntry]
+    packages: t.Iterable[Package]
     """The list of pinned packages with dependencies."""
     collected_groups: set[str]
     """The list of collected groups."""

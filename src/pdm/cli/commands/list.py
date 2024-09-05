@@ -13,7 +13,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import venv_option
 from pdm.cli.utils import (
     DirectedGraph,
-    Package,
+    PackageNode,
     build_dependency_graph,
     check_project_file,
     get_dist_location,
@@ -211,7 +211,7 @@ class Command(BaseCommand):
 
     def handle_graph(
         self,
-        dep_graph: DirectedGraph[Package | None],
+        dep_graph: DirectedGraph[PackageNode | None],
         project: Project,
         options: argparse.Namespace,
     ) -> None:

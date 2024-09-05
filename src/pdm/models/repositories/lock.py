@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     CandidateKey = tuple[str, str | None, str | None, bool]
 
 
-class PackageEntry(NamedTuple):
+class Package(NamedTuple):
     candidate: Candidate
     dependencies: list[str]
     summary: str
@@ -38,9 +38,12 @@ class LockedRepository(BaseRepository):
         env_spec: EnvSpec | None = None,
     ) -> None:
         super().__init__(sources, environment, env_spec=env_spec or environment.spec)
-        self.packages: dict[CandidateKey, PackageEntry] = {}
+        self.packages: dict[CandidateKey, Package] = {}
         self.targets: list[EnvSpec] = []
         self._read_lockfile(lockfile)
+
+    def add_package(self, package: Package) -> None:
+        self.packages[self._identify_candidate(package.candidate)] = package
 
     @cached_property
     def all_candidates(self) -> dict[str, list[Candidate]]:
@@ -95,7 +98,7 @@ class LockedRepository(BaseRepository):
                     )
                 can_id = self._identify_candidate(can)
                 can.requires_python = package.get("requires_python", "")
-                entry = PackageEntry(
+                entry = Package(
                     can,
                     package.get("dependencies", []),
                     package.get("summary", ""),
@@ -138,7 +141,7 @@ class LockedRepository(BaseRepository):
             self._get_dependencies_from_lockfile,
         )
 
-    def _matching_entries(self, requirement: Requirement) -> Iterable[PackageEntry]:
+    def _matching_entries(self, requirement: Requirement) -> Iterable[Package]:
         for key, entry in self.packages.items():
             can_req = entry.candidate.req
             if requirement.name:
@@ -178,16 +181,16 @@ class LockedRepository(BaseRepository):
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         return candidate.hashes
 
-    def evaluate_candidates(self, groups: Collection[str]) -> dict[str, Candidate]:
-        all_candidates = self.candidates
-        result: dict[str, Candidate] = {}
-        for key, can in all_candidates.items():
+    def evaluate_candidates(self, groups: Collection[str]) -> Iterable[Package]:
+        for package in self.packages.values():
+            can = package.candidate
+            if can.req.marker and not can.req.marker.matches(self.env_spec):
+                continue
             if not any(g in can.req.groups for g in groups):
                 continue
-            result[key] = can
-        return result
+            yield package
 
-    def merge_result(self, env_spec: EnvSpec, result: Iterable[PackageEntry]) -> None:
+    def merge_result(self, env_spec: EnvSpec, result: Iterable[Package]) -> None:
         if env_spec not in self.targets:
             self.targets.append(env_spec)
         for entry in result:
