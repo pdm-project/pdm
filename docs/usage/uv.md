@@ -1,5 +1,7 @@
 # Use uv (Experimental)
 
++++ 2.19.0
+
 PDM has experimental support for [uv](https://github.com/astral-sh/uv) as the resolver and installer. To enable it:
 
 ```
