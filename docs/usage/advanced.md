@@ -119,9 +119,9 @@ Testing:
       os: [ubuntu-latest, macOS-latest, windows-latest]
 
   steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up PDM
-      uses: pdm-project/setup-pdm@v3
+      uses: pdm-project/setup-pdm@v4
       with:
         python-version: ${{ matrix.python-version }}
 
