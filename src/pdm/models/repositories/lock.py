@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import dataclasses
-import os
 import posixpath
 from functools import cached_property
-from pathlib import Path
 from typing import TYPE_CHECKING, Collection, NamedTuple, cast
 
 from pdm.exceptions import CandidateNotFound, PdmException
@@ -141,8 +139,6 @@ class LockedRepository(BaseRepository):
         )
 
     def _matching_entries(self, requirement: Requirement) -> Iterable[PackageEntry]:
-        from pdm.models.requirements import FileRequirement
-
         for key, entry in self.packages.items():
             can_req = entry.candidate.req
             if requirement.name:
@@ -191,52 +187,33 @@ class LockedRepository(BaseRepository):
             result[key] = can
         return result
 
-    def merge_result(
-        self,
-        env_spec: EnvSpec,
-        result: Iterable[Candidate],
-        fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
-    ) -> None:
-        project = self.environment.project
-        backend = project.backend
+    def merge_result(self, env_spec: EnvSpec, result: Iterable[PackageEntry]) -> None:
         if env_spec not in self.targets:
             self.targets.append(env_spec)
-        for candidate in result:
-            key = self._identify_candidate(candidate)
+        for entry in result:
+            key = self._identify_candidate(entry.candidate)
             existing = self.packages.get(key)
             if existing is None:
-                deps: list[str] = []
-                for r in fetched_dependencies[candidate.dep_key]:
-                    # Try to convert to relative paths to make it portable
-                    if isinstance(r, FileRequirement) and r.path:
-                        try:
-                            if r.path.is_absolute():
-                                r.path = Path(os.path.normpath(r.path)).relative_to(os.path.normpath(project.root))
-                        except ValueError:
-                            pass
-                        else:
-                            r.url = backend.relative_path_to_url(r.path.as_posix())
-                    deps.append(r.as_line())
-                self.packages[key] = PackageEntry(candidate, deps, candidate.summary)
+                self.packages[key] = entry
             else:
                 # merge markers
                 old_marker = existing.candidate.req.marker
-                if old_marker is None or candidate.req.marker is None:
+                if old_marker is None or entry.candidate.req.marker is None:
                     new_marker = None
                 else:
-                    new_marker = old_marker | candidate.req.marker
+                    new_marker = old_marker | entry.candidate.req.marker
                     bare_marker, py_spec = new_marker.split_pyspec()
                     if py_spec.is_superset(self.environment.python_requires):
                         new_marker = bare_marker
                     if new_marker.is_any():
                         new_marker = None
                 # merge groups
-                new_groups = list(set(existing.candidate.req.groups) | set(candidate.req.groups))
+                new_groups = list(set(existing.candidate.req.groups) | set(entry.candidate.req.groups))
                 existing.candidate.req = dataclasses.replace(
                     existing.candidate.req, marker=new_marker, groups=new_groups
                 )
                 # merge file hashes
-                for file in candidate.hashes:
+                for file in entry.candidate.hashes:
                     if file not in existing.candidate.hashes:
                         existing.candidate.hashes.append(file)
         # clear caches

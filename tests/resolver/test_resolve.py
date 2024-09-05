@@ -56,8 +56,7 @@ def resolve(project, repository):
                 tracked_names=tracked_names,
                 reporter=LockReporter(),
             )
-            mapping, *_ = resolver.resolve()
-            return mapping
+            return resolver.resolve().candidates
 
     return resolve_func
 

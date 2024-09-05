@@ -6,12 +6,13 @@ from dataclasses import dataclass, field
 
 from resolvelib import BaseReporter
 
+from pdm.models.candidates import Candidate
 from pdm.models.repositories.lock import LockedRepository
 
 if t.TYPE_CHECKING:
     from pdm.environments import BaseEnvironment
-    from pdm.models.candidates import Candidate
     from pdm.models.markers import EnvSpec
+    from pdm.models.repositories.lock import PackageEntry
     from pdm.models.requirements import Requirement
     from pdm.project import Project
 
@@ -19,12 +20,14 @@ if t.TYPE_CHECKING:
 class Resolution(t.NamedTuple):
     """The resolution result."""
 
-    mapping: dict[str, Candidate]
-    """The mapping of package names to candidates."""
-    all_dependencies: dict[tuple[str, str | None], list[Requirement]]
-    """The list of dependencies that were fetched."""
+    packages: t.Iterable[PackageEntry]
+    """The list of pinned packages with dependencies."""
     collected_groups: set[str]
     """The list of collected groups."""
+
+    @property
+    def candidates(self) -> dict[str, Candidate]:
+        return {entry.candidate.identify(): entry.candidate for entry in self.packages}
 
 
 @dataclass
@@ -37,7 +40,7 @@ class Resolver(abc.ABC):
     """The list of requirements to resolve."""
     update_strategy: str
     """The update strategy to use [all|reuse|eager|reuse-installed]."""
-    strategies: t.Collection[str]
+    strategies: set[str]
     """The list of strategies to use."""
     target: EnvSpec
     """The target environment specification."""
