@@ -65,7 +65,11 @@ class _UvFileBuilder:
     def _enter_path(self, path: Path) -> Path:
         if path.exists():
             backup = path.rename(path.with_name(f"{path.name}.bak"))
-            self.stack.callback(backup.rename, path)
+
+            @self.stack.callback
+            def restore() -> None:
+                path.unlink(True)
+                backup.rename(path)
         else:
             self.stack.callback(path.unlink, True)
         return path

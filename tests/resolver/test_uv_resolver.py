@@ -44,11 +44,11 @@ def test_resolve_vcs_requirement(project):
 
 def test_resolve_with_python_requires(project):
     requirements = ["urllib3<2; python_version<'3.10'", "urllib3>=2; python_version>='3.10'"]
-
-    resolution = resolve(project.environment, requirements, EnvSpec.from_spec(">=3.10"))
-    packages = list(resolution.packages)
-    assert len(packages) == 1
-    assert packages[0].candidate.version.startswith("2.")
+    if project.python.version_tuple >= (3, 10):
+        resolution = resolve(project.environment, requirements, EnvSpec.from_spec(">=3.10"))
+        packages = list(resolution.packages)
+        assert len(packages) == 1
+        assert packages[0].candidate.version.startswith("2.")
 
     resolution = resolve(project.environment, requirements, EnvSpec.from_spec(">=3.8"))
     packages = list(resolution.packages)
