@@ -19,3 +19,4 @@ Despite the significant performance improvements brought by uv, it is important 
 - `inherit_metadata` lock strategy is not supported by uv. This will be ignored when writing to the lock file.
 - Update strategies other than `all` and `reuse` are not supported.
 - Editable requirement must be a local path. Requirements like `-e git+<git_url>` are not supported.
+- `overrides` and `excludes` settings under `[tool.pdm.resolution]` are not supported.

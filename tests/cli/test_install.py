@@ -419,3 +419,23 @@ def test_install_from_lock_with_incompatible_targets(project, pdm, python, platf
     result = pdm(["install"], obj=project)
     assert result.exit_code == 1
     assert "No compatible lock target found" in result.stderr
+
+
+@pytest.mark.network
+def test_uv_install(project, pdm):
+    project.project_config.update({"use_uv": True, "python.use_venv": True})
+    project._saved_python = None
+    pdm(["add", "requests"], obj=project, strict=True)
+    working_set = project.environment.get_working_set()
+    assert "requests" in working_set
+    assert "urllib3" in working_set
+    assert "idna" in working_set
+
+
+@pytest.mark.network
+def test_uv_install_pep582_not_allowed(project, pdm):
+    project.project_config.update({"use_uv": True})
+    pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
+    result = pdm(["sync"], obj=project)
+    assert result.exit_code == 1
+    assert "doesn't support PEP 582 local packages" in result.stderr
