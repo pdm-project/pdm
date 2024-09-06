@@ -28,12 +28,12 @@ class Synchronizer(BaseSynchronizer):
         try:
             self.manager.install(can)
         except Exception:
-            progress.console.print(f"  [error]{termui.Emoji.FAIL}[/] Install {can.format()} failed")
+            progress.print(f"  [error]{termui.Emoji.FAIL}[/] Install {can.format()} failed")
             raise
         else:
-            progress.console.print(f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful")
+            progress.print(f"  [success]{termui.Emoji.SUCC}[/] Install {can.format()} successful")
         finally:
-            progress.update(job, visible=False)
+            progress.remove_task(job)
             can.prepare(self.environment, CandidateReporter())
         return can
 
@@ -49,20 +49,20 @@ class Synchronizer(BaseSynchronizer):
         try:
             self.manager.overwrite(dist, can)
         except Exception:
-            progress.console.print(
+            progress.print(
                 f"  [error]{termui.Emoji.FAIL}[/] Update [req]{key}[/] "
                 f"[warning]{dist_version}[/] "
                 f"-> [warning]{can.version}[/] failed",
             )
             raise
         else:
-            progress.console.print(
+            progress.print(
                 f"  [success]{termui.Emoji.SUCC}[/] Update [req]{key}[/] "
                 f"[warning]{dist_version}[/] "
                 f"-> [warning]{can.version}[/] successful",
             )
         finally:
-            progress.update(job, visible=False)
+            progress.remove_task(job)
             can.prepare(self.environment, CandidateReporter())
 
         return dist, can
@@ -76,16 +76,16 @@ class Synchronizer(BaseSynchronizer):
         try:
             self.manager.uninstall(dist)
         except Exception:
-            progress.console.print(
+            progress.print(
                 f"  [error]{termui.Emoji.FAIL}[/] Remove [req]{key}[/] [warning]{dist_version}[/] failed",
             )
             raise
         else:
-            progress.console.print(
+            progress.print(
                 f"  [success]{termui.Emoji.SUCC}[/] Remove [req]{key}[/] [warning]{dist_version}[/] successful"
             )
         finally:
-            progress.update(job, visible=False)
+            progress.remove_task(job)
         return dist
 
     def _show_headline(self, packages: dict[str, list[str]]) -> None:
