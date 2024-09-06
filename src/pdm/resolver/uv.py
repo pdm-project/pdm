@@ -15,6 +15,7 @@ from pdm.models.requirements import FileRequirement, NamedRequirement, Requireme
 from pdm.models.specifiers import get_specifier
 from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.resolver.base import Resolution, Resolver
+from pdm.resolver.reporters import RichLockReporter
 from pdm.termui import Verbosity
 from pdm.utils import normalize_name
 
@@ -176,7 +177,13 @@ class UvResolver(Resolver):
             uv_lock_path = self.project.root / "uv.lock"
             if self.update_strategy != "all":
                 builder.build_uv_lock()
-            uv_lock_command = self._build_lock_command()
-            self.project.core.ui.echo(f"Running uv lock command: {uv_lock_command}", verbosity=Verbosity.DETAIL)
-            subprocess.run(uv_lock_command, cwd=self.project.root, check=True)
+            try:
+                if isinstance(self.reporter, RichLockReporter):
+                    self.reporter.stop()
+                uv_lock_command = self._build_lock_command()
+                self.project.core.ui.echo(f"Running uv lock command: {uv_lock_command}", verbosity=Verbosity.DETAIL)
+                subprocess.run(uv_lock_command, cwd=self.project.root, check=True)
+            finally:
+                if isinstance(self.reporter, RichLockReporter):
+                    self.reporter.start()
             return self._parse_uv_lock(uv_lock_path)
