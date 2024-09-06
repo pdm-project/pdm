@@ -10,9 +10,17 @@ pdm config use_uv true
 
 PDM will automatically detect the `uv` binary on your system. You need to install `uv` first. See [uv's installation guide](https://docs.astral.sh/uv/getting-started/installation/) for more details.
 
+## Reuse the Python installations of uv
+
+uv also supports installing Python interpreters. To avoid overhead, you can configure PDM to reuse the Python installations of uv by:
+
+```
+pdm config python.install_root $(uv python dir)
+```
+
 ## Limitations
 
-Despite the significant performance improvements brought by uv, it is important to note the following limitations of uv:
+Despite the significant performance improvements brought by uv, it is important to note the following limitations:
 
 - The cache files are stored in uv's own cache directory, and you have to use `uv` command to manage them.
 - PEP 582 local packages layout is not supported.
