@@ -127,7 +127,7 @@ These variables will be read from the environment variables when installing the 
 +++ 1.5.0
 
 PDM also supports defining groups of dependencies that are useful for development,
-e.g. some for testing and others for linting. We usually don't want these dependencies appear in the distribution's metadata
+e.g. some for testing and others for linting. We usually don't want these dependencies to appear in the distribution's metadata
 so using `optional-dependencies` is probably not a good idea. We can define them as development dependencies:
 
 ```bash
