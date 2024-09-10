@@ -68,7 +68,9 @@ class Command(BaseCommand):
             options.hashes = False
         selection = GroupSelection.from_options(project, options)
         if options.markers is False:
-            project.core.ui.deprecated("The --no-markers option is deprecated and has no effect.")
+            project.core.ui.warn(
+                "The --no-markers option is on, the exported requirements can only work on the current platform"
+            )
         packages: Iterable[Requirement] | Iterable[Candidate]
         if options.pyproject:
             packages = [r for group in selection for r in project.get_dependencies(group)]
@@ -86,6 +88,7 @@ class Command(BaseCommand):
             groups = set(selection)
             packages = []
             seen_extras: set[str] = set()
+            this_spec = project.environment.spec
             for candidate in candidates:
                 if groups.isdisjoint(candidate.req.groups):
                     continue
@@ -97,6 +100,10 @@ class Command(BaseCommand):
                         continue
                 elif candidate.req.extras:
                     continue
+                if not options.markers and candidate.req.marker:
+                    if not candidate.req.marker.matches(this_spec):
+                        continue
+                    candidate.req.marker = None
                 packages.append(candidate)  # type: ignore[arg-type]
 
         content = FORMATS[options.format].export(project, packages, options)
