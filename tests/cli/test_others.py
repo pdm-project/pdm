@@ -234,12 +234,20 @@ def test_show_update_hint(pdm, project, monkeypatch):
 
 @pytest.mark.usefixtures("repository")
 def test_export_with_platform_markers(pdm, project):
-    pdm(["add", "--no-sync", 'urllib3; sys_platform == "fake"'], obj=project, strict=True)
+    pdm(
+        ["add", "--no-sync", 'urllib3; sys_platform == "fake"', 'idna; python_version >= "3.7"'],
+        obj=project,
+        strict=True,
+    )
     result = pdm(["export", "--no-hashes"], obj=project, strict=True)
-    assert 'urllib3==1.22; sys_platform == "fake"' in result.output.splitlines()
+    result_lines = result.output.splitlines()
+    assert 'urllib3==1.22; sys_platform == "fake"' in result_lines
+    assert 'idna==2.7; python_version >= "3.7"' in result_lines
 
     result = pdm(["export", "--no-hashes", "--no-markers"], obj=project, strict=True)
-    assert not any(line.startswith("urllib3") for line in result.output.splitlines())
+    result_lines = result.output.splitlines()
+    assert not any(line.startswith("urllib3") for line in result_lines)
+    assert "idna==2.7" in result_lines
 
 
 @pytest.mark.usefixtures("repository", "vcs")
