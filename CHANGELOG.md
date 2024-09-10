@@ -1,3 +1,20 @@
+## Release v2.18.2 (2024-09-10)
+
+
+### Bug Fixes
+
+- Respect the `excludes` and `overrides` settings when installing packages. ([#3113](https://github.com/pdm-project/pdm/issues/3113))
+- Fix a bug of export command that packages with extras are included twice. ([#3123](https://github.com/pdm-project/pdm/issues/3123))
+- Remove empty groups when removing packages with `pdm remove`. ([#3133](https://github.com/pdm-project/pdm/issues/3133))
+- When running `pdm venv purge`, if the current project's python version had been referencing the removed venv then clear it out. ([#3137](https://github.com/pdm-project/pdm/issues/3137))
+- Fix command `pdm config` to not show site configuration file path if it doesn't exist. ([#3149](https://github.com/pdm-project/pdm/issues/3149))
+- Now when `--no-markers` is used, the exported requirements can only work on the current platform. ([#3152](https://github.com/pdm-project/pdm/issues/3152))
+
+### Miscellany
+
+- Skip tests related to python installation on non-standard platforms. ([#3053](https://github.com/pdm-project/pdm/issues/3053))
+
+
 ## Release v2.18.1 (2024-08-16)
 
 
