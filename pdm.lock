@@ -575,7 +575,7 @@ files = [
 
 [[package]]
 name = "dep-logic"
-version = "0.4.4"
+version = "0.4.5"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
 groups = ["default"]
@@ -583,8 +583,8 @@ dependencies = [
     "packaging>=22",
 ]
 files = [
-    {file = "dep_logic-0.4.4-py3-none-any.whl", hash = "sha256:3f47301f9a8230443d3df7d7f9bdc33d35d8591a14112d36f221b0e33810d3ae"},
-    {file = "dep_logic-0.4.4.tar.gz", hash = "sha256:e716afdda9351107c54ef4f6fd3fd29568f53529afb333b4958183b9d306e44a"},
+    {file = "dep_logic-0.4.5-py3-none-any.whl", hash = "sha256:8c7c4310413fe88129216865e20a5c656b4dc8c72b118dbdcda04565d5b00dde"},
+    {file = "dep_logic-0.4.5.tar.gz", hash = "sha256:e6e831bb0eb10b200864c482ad6a1c7f08f5c15cdb5909c4dfb8186976368a78"},
 ]
 
 [[package]]
@@ -2143,7 +2143,7 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.17.0"
+version = "0.17.2"
 requires_python = ">=3.8"
 summary = "A utility to fetch and download python packages"
 groups = ["default"]
@@ -2152,8 +2152,8 @@ dependencies = [
     "packaging>=20",
 ]
 files = [
-    {file = "unearth-0.17.0-py3-none-any.whl", hash = "sha256:81c2f1fad5bb0065371df221934c3cae22dc7526c9606ec83fb3405c3acfd5e6"},
-    {file = "unearth-0.17.0.tar.gz", hash = "sha256:771ca270fec8bea262774a0b1ce2752739056e65234434028eceaf466cbba0b6"},
+    {file = "unearth-0.17.2-py3-none-any.whl", hash = "sha256:4d21af1238a583835fca156322f7225382e718cdcc42d6278050a88e605c4ad5"},
+    {file = "unearth-0.17.2.tar.gz", hash = "sha256:0b8a2afd3476f1ab6155fc579501ac47fffe43547d88a70e5a5b76a7fe6caa2c"},
 ]
 
 [[package]]
