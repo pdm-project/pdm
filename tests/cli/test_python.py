@@ -10,6 +10,9 @@ from pdm.utils import parse_version
 
 @pytest.fixture
 def mock_install(mocker):
+    if (arch := platform.machine().lower()) not in ("arm64", "aarch64", "amd64", "x86_64"):
+        pytest.skip(f"Skipped on non-standard platform: {arch}")
+
     def install_file(
         filename,
         destination,
