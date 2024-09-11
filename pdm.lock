@@ -575,7 +575,7 @@ files = [
 
 [[package]]
 name = "dep-logic"
-version = "0.4.5"
+version = "0.4.6"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
 groups = ["default"]
@@ -583,8 +583,8 @@ dependencies = [
     "packaging>=22",
 ]
 files = [
-    {file = "dep_logic-0.4.5-py3-none-any.whl", hash = "sha256:8c7c4310413fe88129216865e20a5c656b4dc8c72b118dbdcda04565d5b00dde"},
-    {file = "dep_logic-0.4.5.tar.gz", hash = "sha256:e6e831bb0eb10b200864c482ad6a1c7f08f5c15cdb5909c4dfb8186976368a78"},
+    {file = "dep_logic-0.4.6-py3-none-any.whl", hash = "sha256:837a890bff8c8eeef0aa54ece388d423a83f48e8697f25b74549d90f65f7da72"},
+    {file = "dep_logic-0.4.6.tar.gz", hash = "sha256:673d45402e9f11c4e501b08ebaea1efaa5e9bc6f69410684a9e448f8f5b26d6a"},
 ]
 
 [[package]]
@@ -1373,13 +1373,13 @@ files = [
 
 [[package]]
 name = "pbs-installer"
-version = "2024.4.24"
+version = "2024.9.9"
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
 groups = ["default"]
 files = [
-    {file = "pbs_installer-2024.4.24-py3-none-any.whl", hash = "sha256:f8291f0231003d279d0de8fde88fa87b7c6d7fabc2671235113cf67513ff74f5"},
-    {file = "pbs_installer-2024.4.24.tar.gz", hash = "sha256:19224733068b0ffa39b53afbb61544bee8ecb9503e7222ba034f07b9913e2c1c"},
+    {file = "pbs_installer-2024.9.9-py3-none-any.whl", hash = "sha256:0c5846d3327cb09ea2bcbbc5521f5f45fd4f0021e78e57ca670e9d251085830b"},
+    {file = "pbs_installer-2024.9.9.tar.gz", hash = "sha256:bed162d05ef71c53a0e5e5c6349bab1b07a3d0e5af1800d619a4414a1fda309a"},
 ]
 
 [[package]]
