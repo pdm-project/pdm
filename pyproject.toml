@@ -76,7 +76,7 @@ pdm = "pdm.core:main"
 
 [tool.pdm.version]
 source = "scm"
-write_to = "pdm/models/VERSION"
+write_to = "pdm/VERSION"
 
 [tool.pdm.build]
 excludes = ["./**/.git"]
@@ -221,12 +221,12 @@ ignore-words-list = "ba,overriden,te"
 
 [tool.coverage.run]
 branch = true
-source = ["pdm/"]
+source = ["pdm"]
 omit = [
-    "pdm/__main__.py",
-    "pdm/pep582/sitecustomize.py",
-    "pdm/models/in_process/*.py",
-    "pdm/models/setup.py",
+    "*/pdm/__main__.py",
+    "*/pdm/pep582/sitecustomize.py",
+    "*/pdm/models/in_process/*.py",
+    "*/pdm/models/setup.py",
     "*/pdm-test-*-env/*",
 ]
 
