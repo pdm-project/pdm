@@ -350,7 +350,7 @@ def normalize_name(name: str, lowercase: bool = True) -> str:
 
 def comparable_version(version: str) -> Version:
     """Normalize a version to make it valid in a specifier."""
-    parsed = parse_version(version)
+    parsed = parse_version(version or "0.0.0")
     if parsed.local is not None:
         # strip the local part
         parsed._version = parsed._version._replace(local=None)
