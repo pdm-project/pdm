@@ -1,3 +1,11 @@
+## Release v2.19.1 (2024-09-23)
+
+
+### Bug Fixes
+
+- PDM libraries are not loaded correctly for in-process scripts when installed in the user site. ([#3178](https://github.com/pdm-project/pdm/issues/3178))
+
+
 ## Release v2.19.0 (2024-09-23)
 
 ### Breaking Changes
