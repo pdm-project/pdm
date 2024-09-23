@@ -1,3 +1,21 @@
+## Release v2.19.0 (2024-09-23)
+
+
+### Bug Fixes
+
+- Fallback version to 0.0.0 when the version is not specified or empty. This can avoid crash when building such project. ([#3163](https://github.com/pdm-project/pdm/issues/3163))
+- Ensures that  `/` is URL encoded in sources URL environment variables. ([#3169](https://github.com/pdm-project/pdm/issues/3169))
+- Call functions from shared library in the in-process `env_spec.py` script. ([#3176](https://github.com/pdm-project/pdm/issues/3176))
+
+### Removals and Deprecations
+
+- PDM no longer falls back to `setuptools-pep660` when the build backend doesn't support PEP 660. ([#3159](https://github.com/pdm-project/pdm/issues/3159))
+
+### Miscellany
+
+- Change the project structure to a normal package from a namespace package. ([#3155](https://github.com/pdm-project/pdm/issues/3155))
+
+
 ## Release v2.18.2 (2024-09-10)
 
 ### Bug Fixes
