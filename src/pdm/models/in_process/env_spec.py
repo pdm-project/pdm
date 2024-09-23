@@ -7,8 +7,7 @@ import sys
 import sysconfig
 
 
-def get_current_env_spec(shared_lib: str) -> dict[str, str | bool]:
-    site.addsitedir(shared_lib)
+def get_current_env_spec() -> dict[str, str | bool]:
     from dep_logic.tags import Platform
 
     python_version = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
@@ -21,4 +20,6 @@ def get_current_env_spec(shared_lib: str) -> dict[str, str | bool]:
 
 
 if __name__ == "__main__":
-    print(json.dumps(get_current_env_spec(sys.argv[1]), indent=2))
+    for shared_lib in sys.argv[1:]:
+        site.addsitedir(shared_lib)
+    print(json.dumps(get_current_env_spec(), indent=2))

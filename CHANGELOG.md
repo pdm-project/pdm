@@ -1,5 +1,9 @@
 ## Release v2.19.0 (2024-09-23)
 
+### Breaking Changes
+
+- The minimum supported Python version of projects using PDM has been bumped to 3.8. ([#3176](https://github.com/pdm-project/pdm/issues/3176))
+
 
 ### Bug Fixes
 
