@@ -6,7 +6,7 @@ import textwrap
 from shutil import get_terminal_size
 
 from pdm import termui
-from pdm._types import SearchResult
+from pdm._types import SearchResults
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.environments import BareEnvironment
@@ -17,7 +17,7 @@ from pdm.utils import normalize_name
 
 def print_results(
     ui: termui.UI,
-    hits: SearchResult,
+    hits: SearchResults,
     working_set: WorkingSet,
     terminal_width: int | None = None,
 ) -> None:

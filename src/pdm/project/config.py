@@ -124,6 +124,13 @@ class Config(MutableMapping[str, str]):
         "request_timeout": ConfigItem(
             "The timeout for network requests in seconds", 15, True, "PDM_REQUEST_TIMEOUT", coerce=int
         ),
+        "use_uv": ConfigItem(
+            "Use uv for faster resolution and installation",
+            False,
+            False,
+            "PDM_USE_UV",
+            ensure_boolean,
+        ),
         "global_project.fallback": ConfigItem(
             "Use the global project implicitly if no local project is found",
             False,

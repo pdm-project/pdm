@@ -7,7 +7,6 @@ import os
 import re
 import sys
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
@@ -52,7 +51,6 @@ if TYPE_CHECKING:
     from pdm.compat import Distribution
     from pdm.compat import importlib_metadata as im
     from pdm.models.candidates import Candidate
-    from pdm.models.repositories import BaseRepository
     from pdm.project import Project
 
 
@@ -176,7 +174,7 @@ class ErrorArgumentParser(ArgumentParser):
 
 
 @dc.dataclass(frozen=True)
-class Package:
+class PackageNode:
     """An internal class for the convenience of dependency graph building."""
 
     name: str = dc.field(hash=True, compare=True)
@@ -194,11 +192,11 @@ def build_dependency_graph(
     include_sub: bool = True,
 ) -> DirectedGraph:
     """Build a dependency graph from locked result."""
-    graph: DirectedGraph[Package | None] = DirectedGraph()
+    graph: DirectedGraph[PackageNode | None] = DirectedGraph()
     graph.add(None)  # sentinel parent of top nodes.
     node_with_extras: set[str] = set()
 
-    def add_package(key: str, dist: Distribution | None) -> Package:
+    def add_package(key: str, dist: Distribution | None) -> PackageNode:
         name, extras = strip_extras(key)
         extras = extras or ()
         reqs: dict[str, Requirement] = {}
@@ -211,7 +209,7 @@ def build_dependency_graph(
         else:
             version = None
 
-        node = Package(key, version, reqs)
+        node = PackageNode(key, version, reqs)
         if node not in graph:
             if extras:
                 node_with_extras.add(name)
@@ -255,7 +253,7 @@ def specifier_from_requirement(requirement: Requirement) -> str:
 def add_package_to_tree(
     root: Tree,
     graph: DirectedGraph,
-    package: Package,
+    package: PackageNode,
     required: list[str],
     visited: frozenset[str] = frozenset(),
 ) -> None:
@@ -291,8 +289,8 @@ def add_package_to_tree(
 def add_package_to_reverse_tree(
     root: Tree,
     graph: DirectedGraph,
-    package: Package,
-    child: Package | None = None,
+    package: PackageNode,
+    child: PackageNode | None = None,
     requires: str = "",
     visited: frozenset[str] = frozenset(),
 ) -> None:
@@ -315,24 +313,24 @@ def add_package_to_reverse_tree(
 
     if package.name in visited:
         return
-    parents: list[Package] = sorted(filter(None, graph.iter_parents(package)), key=lambda p: p.name)
+    parents: list[PackageNode] = sorted(filter(None, graph.iter_parents(package)), key=lambda p: p.name)
     for parent in parents:
         requires = specifier_from_requirement(parent.requirements[package.name])
         add_package_to_reverse_tree(node, graph, parent, package, requires, visited=visited | {package.name})
     return
 
 
-def package_is_project(package: Package, project: Project) -> bool:
+def package_is_project(package: PackageNode, project: Project) -> bool:
     return project.is_distribution and package.name == normalize_name(project.name)
 
 
 def _format_forward_dependency_graph(
-    project: Project, graph: DirectedGraph[Package | None], patterns: list[str]
+    project: Project, graph: DirectedGraph[PackageNode | None], patterns: list[str]
 ) -> Tree:
     """Format dependency graph for output."""
     root = Tree("Dependencies", hide_root=True)
 
-    def find_package_to_add(package: Package) -> Package | None:
+    def find_package_to_add(package: PackageNode) -> PackageNode | None:
         if not patterns:
             return package
         to_check = [package]
@@ -367,11 +365,11 @@ def _format_forward_dependency_graph(
 
 
 def _format_reverse_dependency_graph(
-    project: Project, graph: DirectedGraph[Package | None], patterns: list[str]
+    project: Project, graph: DirectedGraph[PackageNode | None], patterns: list[str]
 ) -> Tree:
     """Format reverse dependency graph for output."""
 
-    def find_package_to_add(package: Package) -> Package | None:
+    def find_package_to_add(package: PackageNode) -> PackageNode | None:
         if not patterns:
             return package
         to_check = [package]
@@ -392,10 +390,10 @@ def _format_reverse_dependency_graph(
 
 
 def build_forward_dependency_json_subtree(
-    root: Package,
+    root: PackageNode,
     project: Project,
-    graph: DirectedGraph[Package | None],
-    required_by: Package | None = None,
+    graph: DirectedGraph[PackageNode | None],
+    required_by: PackageNode | None = None,
     visited: frozenset[str] = frozenset(),
 ) -> dict:
     required: set[str] = set()
@@ -436,10 +434,10 @@ def build_forward_dependency_json_subtree(
 
 
 def build_reverse_dependency_json_subtree(
-    root: Package,
+    root: PackageNode,
     project: Project,
-    graph: DirectedGraph[Package | None],
-    requires: Package | None = None,
+    graph: DirectedGraph[PackageNode | None],
+    requires: PackageNode | None = None,
     visited: frozenset[str] = frozenset(),
 ) -> dict:
     parents = graph.iter_parents(root) if root.name not in visited else []
@@ -458,14 +456,14 @@ def build_reverse_dependency_json_subtree(
     )
 
 
-def package_match_patterns(package: Package, patterns: list[str]) -> bool:
+def package_match_patterns(package: PackageNode, patterns: list[str]) -> bool:
     return not patterns or any(fnmatch(package.name, pattern) for pattern in patterns)
 
 
 def build_dependency_json_tree(
-    project: Project, graph: DirectedGraph[Package | None], reverse: bool, patterns: list[str]
+    project: Project, graph: DirectedGraph[PackageNode | None], reverse: bool, patterns: list[str]
 ) -> list[dict]:
-    def find_package_to_add(package: Package) -> Package | None:
+    def find_package_to_add(package: PackageNode) -> PackageNode | None:
         if not patterns:
             return package
         to_check = [package]
@@ -479,7 +477,7 @@ def build_dependency_json_tree(
                 to_check.extend(graph.iter_children(package))
         return None
 
-    top_level_packages: Iterable[Package | None]
+    top_level_packages: Iterable[PackageNode | None]
     if reverse:
         top_level_packages = filter(lambda n: not list(graph.iter_children(n)), graph)  # leaf nodes
         build_dependency_json_subtree: Callable = build_reverse_dependency_json_subtree
@@ -495,7 +493,7 @@ def build_dependency_json_tree(
 
 def show_dependency_graph(
     project: Project,
-    graph: DirectedGraph[Package | None],
+    graph: DirectedGraph[PackageNode | None],
     reverse: bool = False,
     json: bool = False,
     patterns: list[str] | None = None,
@@ -670,16 +668,6 @@ def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any],
                 target[key].multiline(True)  # type: ignore[attr-defined]
         else:
             target[key] = value
-
-
-def fetch_hashes(repository: BaseRepository, candidates: Iterable[Candidate]) -> None:
-    """Fetch hashes for candidates in parallel"""
-
-    def do_fetch(candidate: Candidate) -> None:
-        candidate.hashes = repository.get_hashes(candidate)
-
-    with ThreadPoolExecutor() as executor:
-        executor.map(do_fetch, candidates)
 
 
 def is_pipx_installation() -> bool:

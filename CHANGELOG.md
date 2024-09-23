@@ -1,6 +1,5 @@
 ## Release v2.18.2 (2024-09-10)
 
-
 ### Bug Fixes
 
 - Respect the `excludes` and `overrides` settings when installing packages. ([#3113](https://github.com/pdm-project/pdm/issues/3113))
@@ -13,6 +12,18 @@
 ### Miscellany
 
 - Skip tests related to python installation on non-standard platforms. ([#3053](https://github.com/pdm-project/pdm/issues/3053))
+
+## Release v2.19.0a0 (2024-09-05)
+
+### Breaking Changes
+
+- `pre_install` and `post_install` signals now receive the list of packages to be installed, instead of a candidate mapping. ([#3144](https://github.com/pdm-project/pdm/issues/3144))
+
+### Features & Improvements
+
+- Deprecate `Core.synchronizer_class` attribute. To get the synchronizer class, use `Project.get_synchronizer` method instead.
+  Deprecate `Core.resolver_class` attribute. To get the resolver class, use `Project.get_resolver` method instead. ([#3144](https://github.com/pdm-project/pdm/issues/3144))
+- Add experimental support for `uv` as the resolver and installer. One can opt in by setting `use_uv` to `true` using `pdm config` command. ([#3144](https://github.com/pdm-project/pdm/issues/3144))
 
 
 ## Release v2.18.1 (2024-08-16)

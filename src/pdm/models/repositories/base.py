@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from unearth import Link
 
-    from pdm._types import FileHash, RepositoryConfig, SearchResult
+    from pdm._types import FileHash, RepositoryConfig, SearchResults
     from pdm.environments import BaseEnvironment
 
 
@@ -353,10 +353,20 @@ class BaseRepository:
         """
         raise NotImplementedError
 
-    def search(self, query: str) -> SearchResult:
+    def search(self, query: str) -> SearchResults:
         """Search package by name or summary.
 
         :param query: query string
         :returns: search result, a dictionary of name: package metadata
         """
         raise NotImplementedError
+
+    def fetch_hashes(self, candidates: Iterable[Candidate]) -> None:
+        """Fetch hashes for candidates in parallel"""
+        from concurrent.futures import ThreadPoolExecutor
+
+        def do_fetch(candidate: Candidate) -> None:
+            candidate.hashes = self.get_hashes(candidate)
+
+        with ThreadPoolExecutor() as executor:
+            executor.map(do_fetch, candidates)

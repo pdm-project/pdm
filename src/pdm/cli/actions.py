@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import contextlib
-import dataclasses
 import datetime
 import hashlib
 import inspect
@@ -11,15 +10,13 @@ import sys
 import textwrap
 from typing import TYPE_CHECKING, Collection, Iterable, cast
 
-from resolvelib.reporters import BaseReporter
-from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep, Resolver
+from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
 from pdm import termui
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
 from pdm.cli.utils import (
     check_project_file,
-    fetch_hashes,
     find_importable_files,
     format_resolution_impossible,
     get_pep582_path,
@@ -28,19 +25,16 @@ from pdm.cli.utils import (
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.candidates import Candidate
-from pdm.models.markers import EnvSpec, get_marker
-from pdm.models.repositories import LockedRepository
-from pdm.models.specifiers import PySpecSet
+from pdm.models.markers import EnvSpec
+from pdm.models.repositories import LockedRepository, Package
 from pdm.project import Project
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
-from pdm.resolver import resolve
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
 from pdm.resolver.reporters import RichLockReporter
 from pdm.termui import logger
 from pdm.utils import deprecation_warning
 
 if TYPE_CHECKING:
     from pdm.models.requirements import Requirement
-    from pdm.resolver.providers import BaseProvider
 
 
 def do_lock(
@@ -59,8 +53,6 @@ def do_lock(
     """Performs the locking process and update lockfile."""
     hooks = hooks or HookManager(project)
     check_project_file(project)
-    if not project.config["strategy.inherit_metadata"]:
-        project.lockfile.default_strategies.remove(FLAG_INHERIT_METADATA)
     lock_strategy = project.lockfile.apply_strategy_change(strategy_change or [])
     if FLAG_CROSS_PLATFORM in lock_strategy:  # pragma: no cover
         project.core.ui.deprecated(
@@ -79,7 +71,7 @@ def do_lock(
                 candidates = [entry.candidate for entry in locked_repo.packages.values()]
                 for c in candidates:
                     c.hashes.clear()
-                fetch_hashes(repo, candidates)
+                repo.fetch_hashes(candidates)
             lockfile = locked_repo.format_lockfile(groups=project.lockfile.groups, strategy=lock_strategy)
         project.write_lockfile(lockfile)
         return locked_repo.all_candidates
@@ -123,31 +115,25 @@ def do_lock(
     with ui.logging("lock"):
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
+        resolver_class = project.get_resolver()
         with RichLockReporter(requirements, ui) as reporter:
             try:
                 for target in targets:
-                    if supports_env_spec:
-                        provider = project.get_provider(
-                            strategy,
-                            tracked_names,
-                            direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
-                            env_spec=target,
-                            locked_repository=locked_repo,
-                        )
-                    else:  # pragma: no cover
-                        provider = project.get_provider(
-                            strategy,
-                            tracked_names,
-                            direct_minimal_versions=FLAG_DIRECT_MINIMAL_VERSIONS in lock_strategy,
-                            ignore_compatibility=target.is_allow_all(),
-                        )
-                    provider.repository.reporter = reporter
-                    mapping = _lock_for_env(
-                        project, target, provider, reporter, requirements, lock_strategy, resolve_max_rounds
+                    resolver = resolver_class(
+                        environment=project.environment,
+                        requirements=[r for r in requirements if not r.marker or r.marker.matches(target)],
+                        update_strategy=strategy,
+                        strategies=lock_strategy,
+                        target=target,
+                        tracked_names=list(tracked_names or ()),
+                        locked_repository=locked_repo,
+                        reporter=reporter,
                     )
-                    locked_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
+                    reporter.update(f"Resolve for environment {target}")
+                    resolved, collected_groups = resolver.resolve()
+                    locked_repo.merge_result(target, resolved)
                     if result_repo is not locked_repo:
-                        result_repo.merge_result(target, mapping.values(), provider.fetched_dependencies)
+                        result_repo.merge_result(target, resolved)
             except ResolutionTooDeep:
                 reporter.update(f"{termui.Emoji.LOCK} Lock failed.", info="", completed=1)
                 ui.echo(
@@ -163,8 +149,7 @@ def do_lock(
                 ui.error(format_resolution_impossible(err))
                 raise ResolutionImpossible("Unable to find a resolution") from None
             else:
-                groups = list(set(groups) | provider.repository.collected_groups)
-                provider.repository.collected_groups.clear()
+                groups = list(set(groups) | collected_groups)
                 data = result_repo.format_lockfile(groups=groups, strategy=lock_strategy)
                 if project.enable_write_lockfile:
                     reporter.update(f"{termui.Emoji.LOCK} Lock successful.", info="", completed=1)
@@ -174,56 +159,24 @@ def do_lock(
     return result_repo.all_candidates
 
 
-def _lock_for_env(
-    project: Project,
-    env_spec: EnvSpec,
-    provider: BaseProvider,
-    reporter: RichLockReporter,
-    requirements: list[Requirement],
-    lock_strategy: set[str],
-    max_rounds: int,
-) -> dict[str, Candidate]:
-    reporter.update(f"Resolve for environment {env_spec}")
-    requirements = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
-    resolver: Resolver = project.core.resolver_class(provider, reporter)
-    mapping, *_ = resolve(
-        resolver,
-        requirements,
-        max_rounds=max_rounds,
-        inherit_metadata=FLAG_INHERIT_METADATA in lock_strategy,
-    )
-    if project.enable_write_lockfile:
-        reporter.update(info="Fetching hashes for resolved packages")
-        fetch_hashes(provider.repository, mapping.values())
-    if not (env_python := PySpecSet(env_spec.requires_python)).is_superset(project.environment.python_requires):
-        python_marker = get_marker(env_python.as_marker_string())
-        for candidate in mapping.values():
-            marker = candidate.req.marker or get_marker("")
-            candidate.req = dataclasses.replace(candidate.req, marker=marker & python_marker)
-    return mapping
-
-
-def resolve_candidates_from_lockfile(
+def resolve_from_lockfile(
     project: Project,
     requirements: Iterable[Requirement],
-    cross_platform: bool | None = None,
     groups: Collection[str] | None = None,
     env_spec: EnvSpec | None = None,
-) -> dict[str, Candidate]:
+) -> Iterable[Package]:
     from dep_logic.tags import EnvCompatibility
 
+    from pdm.resolver.resolvelib import RLResolver
+
     ui = project.core.ui
-    resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
-    if cross_platform is not None:  # pragma: no cover
-        deprecation_warning("cross_platform argument is deprecated", stacklevel=2)
+
     if env_spec is None:
         # Resolve for the current environment by default
         env_spec = project.environment.spec
     reqs = [req for req in requirements if not req.marker or req.marker.matches(env_spec)]
-    with ui.open_spinner("Resolving packages from lockfile...") as spinner:
-        reporter = BaseReporter()
-        provider = project.get_provider(for_install=True, env_spec=env_spec)
-        locked_repo = cast("LockedRepository", provider.repository)
+    with ui.open_spinner("Resolving packages from lockfile..."):
+        locked_repo = project.get_locked_repository(env_spec)
         lock_targets = locked_repo.targets
         if env_spec not in lock_targets:
             compatibilities = [target.compare(env_spec) for target in lock_targets]
@@ -246,25 +199,41 @@ def resolve_candidates_from_lockfile(
                     raise PdmException("No compatible lock target found")
 
         with ui.logging("install-resolve"):
-            if FLAG_INHERIT_METADATA in project.lockfile.strategy and groups is not None:
+            strategies = project.lockfile.strategy.copy()
+            if FLAG_INHERIT_METADATA in strategies and groups is not None:
                 return locked_repo.evaluate_candidates(groups)
-            resolver: Resolver = project.core.resolver_class(provider, reporter)
+            strategies.update((FLAG_STATIC_URLS, FLAG_INHERIT_METADATA))
+            resolver = project.get_resolver()(
+                environment=project.environment,
+                requirements=reqs,
+                update_strategy="reuse",
+                strategies=strategies,
+                target=env_spec,
+                tracked_names=(),
+                locked_repository=locked_repo,
+            )
+            if isinstance(resolver, RLResolver):  # resolve from lock file
+                resolver.provider.repository = locked_repo
             try:
-                mapping, *_ = resolve(
-                    resolver,
-                    reqs,
-                    max_rounds=resolve_max_rounds,
-                    inherit_metadata=True,
-                )
+                return resolver.resolve().packages
             except ResolutionImpossible as e:
                 logger.exception("Broken lockfile")
                 raise PdmException(
                     "Resolving from lockfile failed. You may fix the lockfile by `pdm lock --update-reuse` and retry."
                 ) from e
-            else:
-                spinner.update("Fetching hashes for resolved packages...")
-                fetch_hashes(provider.repository, mapping.values())
-                return mapping
+
+
+def resolve_candidates_from_lockfile(
+    project: Project,
+    requirements: Iterable[Requirement],
+    cross_platform: bool | None = None,
+    groups: Collection[str] | None = None,
+    env_spec: EnvSpec | None = None,
+) -> dict[str, Candidate]:
+    if cross_platform is not None:  # pragma: no cover
+        deprecation_warning("cross_platform argument is deprecated", stacklevel=2)
+    packages = resolve_from_lockfile(project, requirements, groups, env_spec)
+    return {p.candidate.identify(): p.candidate for p in packages}
 
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:
@@ -312,11 +281,10 @@ def do_sync(
         selection.validate()
         for group in selection:
             requirements.extend(project.get_dependencies(group))
-    candidates = resolve_candidates_from_lockfile(project, requirements, groups=list(selection))
+    packages = resolve_from_lockfile(project, requirements, groups=list(selection))
     if tracked_names and dry_run:
-        candidates = {name: c for name, c in candidates.items() if name in tracked_names}
-    synchronizer = project.core.synchronizer_class(
-        candidates,
+        packages = [p for p in packages if p.candidate.identify() in tracked_names]
+    synchronizer = project.get_synchronizer()(
         project.environment,
         clean=clean,
         dry_run=dry_run,
@@ -325,11 +293,13 @@ def do_sync(
         reinstall=reinstall,
         only_keep=only_keep,
         fail_fast=fail_fast,
+        packages=packages,
+        requirements=requirements,
     )
     with project.core.ui.logging("install"):
-        hooks.try_emit("pre_install", candidates=candidates, dry_run=dry_run)
+        hooks.try_emit("pre_install", packages=packages, dry_run=dry_run)
         synchronizer.synchronize()
-        hooks.try_emit("post_install", candidates=candidates, dry_run=dry_run)
+        hooks.try_emit("post_install", packages=packages, dry_run=dry_run)
 
 
 def ask_for_import(project: Project) -> None:
