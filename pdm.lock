@@ -575,7 +575,7 @@ files = [
 
 [[package]]
 name = "dep-logic"
-version = "0.4.6"
+version = "0.4.8"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
 groups = ["default"]
@@ -583,8 +583,8 @@ dependencies = [
     "packaging>=22",
 ]
 files = [
-    {file = "dep_logic-0.4.6-py3-none-any.whl", hash = "sha256:837a890bff8c8eeef0aa54ece388d423a83f48e8697f25b74549d90f65f7da72"},
-    {file = "dep_logic-0.4.6.tar.gz", hash = "sha256:673d45402e9f11c4e501b08ebaea1efaa5e9bc6f69410684a9e448f8f5b26d6a"},
+    {file = "dep_logic-0.4.8-py3-none-any.whl", hash = "sha256:0d436d493bbe6bec45588d8c432e318bd388a67a0965f7b527b2721f5c70b01b"},
+    {file = "dep_logic-0.4.8.tar.gz", hash = "sha256:6be51b8a51893e67961a5c10ed7b8dd95fffe3ee42982fbb99f68218221a6ad2"},
 ]
 
 [[package]]

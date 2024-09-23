@@ -63,12 +63,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: |
-            3.7
             3.8
             3.9
             3.10
             3.11
             3.12
+            3.13
+          allow-prereleases: true
         if: matrix.os != 'macos-latest'
       - name: Setup Python Versions
         uses: actions/setup-python@v5
@@ -77,6 +78,8 @@ jobs:
             3.10
             3.11
             3.12
+            3.13
+          allow-prereleases: true
         if: matrix.os == 'macos-latest'
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

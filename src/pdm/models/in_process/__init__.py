@@ -9,6 +9,7 @@ import functools
 import json
 import os
 import subprocess
+import sysconfig
 import tempfile
 from typing import Any, Generator
 
@@ -47,5 +48,6 @@ def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
 @functools.lru_cache
 def get_env_spec(executable: str) -> EnvSpec:
     """Get the environment spec of the python interpreter"""
+    shared_lib = sysconfig.get_path("purelib")
     with _in_process_script("env_spec.py") as script:
-        return EnvSpec.from_spec(**json.loads(subprocess.check_output([executable, "-Es", script])))
+        return EnvSpec.from_spec(**json.loads(subprocess.check_output([executable, "-EsS", script, shared_lib])))
