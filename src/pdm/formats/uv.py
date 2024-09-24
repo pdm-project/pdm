@@ -58,7 +58,7 @@ class _UvFileBuilder:
             data.setdefault("tool", {}).setdefault("uv", {}).setdefault("sources", {}).update(sources)
 
         path = self._enter_path(self.project.root / "pyproject.toml")
-        with path.open("w", newline="") as f:
+        with path.open("w", newline="", encoding="utf-8") as f:
             tomlkit.dump(data, f)
         return path
 
@@ -109,7 +109,7 @@ class _UvFileBuilder:
         if packages:
             data["package"] = packages
         path = self.project.root / "uv.lock"
-        with path.open("w", newline="") as f:
+        with path.open("w", newline="", encoding="utf-8") as f:
             tomlkit.dump(data, f)
         return path
 
