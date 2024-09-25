@@ -189,7 +189,7 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
 === "Bash"
 
     ```bash
-    pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
+    echo '. <(pdm completion bash)' >> ~/.bashrc
     ```
 
 === "Zsh"
