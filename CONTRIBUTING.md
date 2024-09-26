@@ -146,10 +146,9 @@ mood that describes your changes. (e.g., `Deduplicate the plugins list.` ) See e
 
 ### Preview the documentation
 
-PDM docs development requires a few dependencies. Install them as:
+PDM docs development requires a few additional dependencies. Install them as:
 
 ```bash
-sudo apt install mkdocs # Or equivalent with the package manager of your choice
 sudo apt install libffi-dev # Or equivalent with the package manager of your choice
 ```
 
