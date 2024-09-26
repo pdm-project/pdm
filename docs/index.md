@@ -189,7 +189,8 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
 === "Bash"
 
     ```bash
-    echo '. <(pdm completion bash)' >> ~/.bashrc
+    pdm completion bash > /etc/bash_completion.d/pdm.bash-completion # Requires root (sudo). For an alternative, see next
+    pdm completion bash > ~/.bash_completion # Does not require root (sudo). Installed only for your user account
     ```
 
 === "Zsh"
