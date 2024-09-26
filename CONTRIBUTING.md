@@ -146,7 +146,13 @@ mood that describes your changes. (e.g., `Deduplicate the plugins list.` ) See e
 
 ### Preview the documentation
 
-If you make some changes to the `docs/` and you want to preview the build result, simply do:
+PDM docs development requires a few additional dependencies. Install them as:
+
+```bash
+sudo apt install libffi-dev # Or equivalent with the package manager of your choice
+```
+
+Now, whenever you make some changes to the `docs/` and you want to preview the build result, simply do:
 
 ```bash
 pdm run doc
