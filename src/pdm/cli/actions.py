@@ -281,7 +281,7 @@ def do_sync(
         selection.validate()
         for group in selection:
             requirements.extend(project.get_dependencies(group))
-    packages = resolve_from_lockfile(project, requirements, groups=list(selection))
+    packages = list(resolve_from_lockfile(project, requirements, groups=list(selection)))
     if tracked_names and dry_run:
         packages = [p for p in packages if p.candidate.identify() in tracked_names]
     synchronizer = project.get_synchronizer()(
