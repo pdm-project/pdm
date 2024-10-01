@@ -189,11 +189,11 @@ class _UvFileBuilder:
 
     def _make_dependency(self, candidate: Candidate, req: Requirement) -> dict[str, Any] | None:
         locked_repo = self.locked_repository
-        parent_marker = (req.marker or get_marker("")) & (candidate.req.marker or get_marker(""))
+        parent_marker = (req.marker or get_marker("")) and (candidate.req.marker or get_marker(""))
         matching_entries = [e for k, e in locked_repo.packages.items() if k[0] == req.key]
 
         def marker_match(marker: Marker | None) -> bool:
-            return not (parent_marker & (marker or get_marker("")).is_empty())
+            return not (parent_marker and (marker or get_marker("")).is_empty())
 
         if not matching_entries:
             return None
