@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
@@ -64,7 +65,8 @@ class _UvFileBuilder:
 
     def _enter_path(self, path: Path) -> Path:
         if path.exists():
-            backup = path.rename(path.with_name(f"{path.name}.bak"))
+            name = tempfile.mktemp(dir=path.parent, prefix=path.name)
+            backup = path.rename(name)
 
             @self.stack.callback
             def restore() -> None:
