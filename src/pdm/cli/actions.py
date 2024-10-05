@@ -253,7 +253,7 @@ def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None
         project.core.ui.warn("Lockfile is generated on an older version of PDM")
     elif compat == Compatibility.FORWARD:
         project.core.ui.warn("Lockfile is generated on a newer version of PDM")
-    elif not project.is_lockfile_hash_match():
+    if not project.is_lockfile_hash_match():
         project.core.ui.warn("Lockfile hash doesn't match pyproject.toml, packages may be outdated")
         return "reuse"
     return None
