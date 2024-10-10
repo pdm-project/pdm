@@ -195,7 +195,7 @@ class _UvFileBuilder:
         matching_entries = [e for k, e in locked_repo.packages.items() if k[0] == req.key]
 
         def marker_match(marker: Marker | None) -> bool:
-            return not (parent_marker & (marker or get_marker("")).is_empty())
+            return not (parent_marker & (marker or get_marker(""))).is_empty()
 
         if not matching_entries:
             return None
