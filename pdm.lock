@@ -1373,13 +1373,13 @@ files = [
 
 [[package]]
 name = "pbs-installer"
-version = "2024.9.9"
+version = "2024.10.10"
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
 groups = ["default"]
 files = [
-    {file = "pbs_installer-2024.9.9-py3-none-any.whl", hash = "sha256:0c5846d3327cb09ea2bcbbc5521f5f45fd4f0021e78e57ca670e9d251085830b"},
-    {file = "pbs_installer-2024.9.9.tar.gz", hash = "sha256:bed162d05ef71c53a0e5e5c6349bab1b07a3d0e5af1800d619a4414a1fda309a"},
+    {file = "pbs_installer-2024.10.10-py3-none-any.whl", hash = "sha256:b82fb5c96a4ca2a8c2ea2521268fa83fa18c1bfa32decfb3d77139a07c13f90c"},
+    {file = "pbs_installer-2024.10.10.tar.gz", hash = "sha256:228bba8e78134c407ee6637da6a5a16479aaa702332bfb1b95d873fc00802305"},
 ]
 
 [[package]]
