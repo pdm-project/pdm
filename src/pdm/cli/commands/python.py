@@ -135,20 +135,26 @@ class InstallCommand(BaseCommand):
         arch = "x86" if arch == "32" else (arch or THIS_ARCH)
 
         ver, python_file = get_download_link(version, implementation=implementation, arch=arch, build_dir=False)
-        with ui.open_spinner(f"Downloading [success]{ver}[/]") as spinner:
-            destination = root / str(ver)
-            interpreter = destination / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
-            logger.debug("Installing %s to %s", ver, destination)
+        ver_str = f'{ver}{"t" if request.endswith("t") else ""}'
+        with ui.open_spinner(f"Downloading [success]{ver_str}[/]") as spinner:
+            destination = root / ver_str
+            logger.debug("Installing %s to %s", ver_str, destination)
             env = BareEnvironment(project)
+            install_root = destination
+            if install_root.joinpath("install").exists():
+                install_root = install_root.joinpath("install")
+            interpreter = install_root / "bin" / "python3" if sys.platform != "win32" else destination / "python.exe"
             if not destination.exists() or not interpreter.exists():
                 shutil.rmtree(destination, ignore_errors=True)
                 destination.mkdir(parents=True, exist_ok=True)
                 with tempfile.NamedTemporaryFile() as tf:
                     tf.close()
                     original_filename = download(python_file, tf.name, env.session)
-                    spinner.update(f"Installing [success]{ver}[/]")
+                    spinner.update(f"Installing [success]{ver_str}[/]")
                     install_file(tf.name, destination, original_filename)
-
+        if destination.joinpath("install").exists():
+            install_root = destination.joinpath("install")
+            interpreter = install_root / "bin" / "python3" if sys.platform != "win32" else install_root / "python.exe"
         if not interpreter.exists():
             raise InstallationError("Installation failed, please try again.")
 

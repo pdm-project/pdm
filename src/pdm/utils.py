@@ -554,7 +554,7 @@ def get_all_installable_python_versions(build_dir: bool = False) -> list[PythonV
     from pbs_installer._versions import PYTHON_VERSIONS
 
     arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
-    matches = [v for v, u in PYTHON_VERSIONS.items() if u.get((THIS_PLATFORM, arch, not build_dir))]
+    matches = [v for v, u in PYTHON_VERSIONS.items() if any(k[:2] == (THIS_PLATFORM, arch) for k in u)]
     return matches
 
 
