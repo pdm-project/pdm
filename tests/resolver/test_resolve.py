@@ -120,6 +120,11 @@ def test_resolve_allow_prereleases(resolve, repository):
         resolve(["bar"], allow_prereleases=False)
 
 
+def test_resolve_prereleases_if_disabled_by_project(resolve):
+    result = resolve(["urllib3==1.23b0"], allow_prereleases=False)
+    assert result["urllib3"].version == "1.23b0"
+
+
 def test_resolve_with_extras(resolve):
     result = resolve(["requests[socks]"])
     assert result["pysocks"].version == "1.5.6"

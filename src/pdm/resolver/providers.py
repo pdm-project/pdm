@@ -184,6 +184,8 @@ class BaseProvider(AbstractProvider):
             return [can]
         else:
             prerelease = requirement.prerelease
+            if prerelease is None and requirement.is_pinned and requirement.specifier.prereleases:
+                prerelease = True
             if prerelease is None and (key := requirement.identify()) in self.locked_candidates:
                 # keep the prerelease if it is locked
                 candidates = self.locked_candidates[key]
@@ -265,8 +267,10 @@ class BaseProvider(AbstractProvider):
             # This should be a URL candidate or self package, consider it to be matching
             return True
         # Allow prereleases if: 1) it is not specified in the tool settings or
-        # 2) the candidate doesn't come from PyPI index.
-        allow_prereleases = self.allow_prereleases in (True, None) or not candidate.req.is_named
+        # 2) the candidate doesn't come from PyPI index or 3) the requirement is pinned
+        allow_prereleases = (
+            self.allow_prereleases in (True, None) or not candidate.req.is_named or requirement.is_pinned
+        )
         return requirement.specifier.contains(version, allow_prereleases)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
