@@ -1,3 +1,23 @@
+## Release v2.19.2 (2024-10-11)
+
+
+### Features & Improvements
+
+- Support installing free-threaded Python interpreters with the `t` suffix. ([#3201](https://github.com/pdm-project/pdm/issues/3201))
+
+### Bug Fixes
+
+- `use_uv` fails to lock when there are non-ascii characters in pyproject.toml on Windows. ([#3181](https://github.com/pdm-project/pdm/issues/3181))
+- Fix the `pre_install` and `post_install` signals receiving an exhausted generator, instead of a list of packages. ([#3190](https://github.com/pdm-project/pdm/issues/3190))
+- Create backup file with random filename to avoid conflicts. ([#3193](https://github.com/pdm-project/pdm/issues/3193))
+- Fix the logic error in the `uv` format marker matching. ([#3197](https://github.com/pdm-project/pdm/issues/3197))
+- `pdm lock --check` on a lockfile generated with older PDM version has a 0 exit code when there's a change in `pyproject.toml`. ([#3199](https://github.com/pdm-project/pdm/issues/3199))
+
+### Documentation
+
+- Fixed *Bash Completion* suggestion so it doesn't require root privileges ([#3183](https://github.com/pdm-project/pdm/issues/3183))
+
+
 ## Release v2.19.1 (2024-09-23)
 
 
