@@ -177,7 +177,15 @@ class UvBackend(VirtualenvBackend):
 
     def perform_create(self, location: Path, args: tuple[str, ...], prompt: str | None = None) -> None:
         prompt_option = (f"--prompt={prompt}",) if prompt else ()
-        cmd = [*self.project.core.uv_cmd, "venv", *prompt_option, *args, str(location)]
+        cmd = [
+            *self.project.core.uv_cmd,
+            "venv",
+            "-p",
+            str(self._resolved_interpreter.executable),
+            *prompt_option,
+            *args,
+            str(location),
+        ]
         self.subprocess_call(cmd)
 
 
