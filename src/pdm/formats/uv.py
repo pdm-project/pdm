@@ -65,7 +65,7 @@ class _UvFileBuilder:
 
     def _enter_path(self, path: Path) -> Path:
         if path.exists():
-            name = tempfile.mktemp(dir=path.parent, prefix=path.name)
+            name = tempfile.mktemp(dir=path.parent, prefix=f"{path.name}.")
             backup = path.rename(name)
 
             @self.stack.callback
