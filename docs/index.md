@@ -178,6 +178,16 @@ You can either pass the options after the script or set the env var value.
 pdm self update
 ```
 
+### Uninstallation
+
+If you need to remove PDM from your system, you can use the following script:
+
+```bash
+curl -sSL https://pdm-project.org/install-pdm.py | python3 - --remove
+```
+
+If you installed PDM using a third-party package management tool like Homebrew, you can also uninstall PDM using the tool's uninstall method, such as `brew uninstall pdm`.
+
 ## Packaging Status
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
