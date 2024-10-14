@@ -182,9 +182,17 @@ pdm self update
 
 If you need to remove PDM from your system, you can use the following script:
 
-```bash
-curl -sSL https://pdm-project.org/install-pdm.py | python3 - --remove
-```
+=== "Linux/Mac"
+
+    ```bash
+    curl -sSL https://pdm-project.org/install-pdm.py | python3 - --remove
+    ```
+
+=== "Windows"
+
+    ```powershell
+    powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install-pdm.py | py - --remove"
+    ```
 
 If you installed PDM using a third-party package management tool like Homebrew, you can also uninstall PDM using the tool's uninstall method, such as `brew uninstall pdm`.
 
