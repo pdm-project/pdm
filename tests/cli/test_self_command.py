@@ -98,11 +98,11 @@ def test_self_remove(pdm, mock_pip, mocker, monkeypatch):
 @pytest.mark.parametrize(
     "args,expected",
     [
-        (["self", "update"], ["install", "--upgrade", "pdm==99.0.0"]),
-        (["self", "update", "--pre"], ["install", "--upgrade", "pdm==99.0.1b1"]),
+        (["self", "update"], ["install", "--upgrade", "--upgrade-strategy", "eager", "pdm[locked]==99.0.0"]),
+        (["self", "update", "--pre"], ["install", "--upgrade", "--upgrade-strategy", "eager", "pdm[locked]==99.0.1b1"]),
         (
             ["self", "update", "--head"],
-            ["install", "--upgrade", f"pdm @ git+{self_cmd.PDM_REPO}@main"],
+            ["install", "--upgrade", "--upgrade-strategy", "eager", f"pdm[locked] @ git+{self_cmd.PDM_REPO}@main"],
         ),
     ],
 )
