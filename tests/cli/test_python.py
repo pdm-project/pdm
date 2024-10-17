@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from pbs_installer import PythonVersion
 
+from pdm.models.python import PythonInfo
 from pdm.utils import parse_version
 
 
@@ -155,3 +156,33 @@ def test_use_auto_install_strategy_min(project, pdm, mock_install, mocker):
     mock_find_interpreters.assert_not_called()
     mock_best_match.assert_called_once_with(True)
     assert len(list(root.iterdir())) == 1
+
+
+def test_link_python(project, pdm):
+    root = Path(project.config["python.install_root"])
+    pdm(["python", "link", sys.executable], obj=project, strict=True)
+    python_info = PythonInfo.from_path(sys.executable)
+    link_name = f"{python_info.implementation}@{python_info.identifier}"
+    assert (root / link_name).resolve() == Path(sys.prefix).resolve()
+
+    pdm(["python", "remove", link_name], obj=project, strict=True)
+    assert not (root / link_name).exists()
+
+    pdm(["python", "link", sys.executable, "--name", "foo"], obj=project, strict=True)
+    assert (root / "foo").resolve() == Path(sys.prefix).resolve()
+
+    pdm(["python", "remove", "foo"], obj=project, strict=True)
+    assert not (root / "foo").exists()
+
+
+def test_link_python_invalid_interpreter(project, pdm):
+    result = pdm(["python", "link", "/path/to/invalid/python"], obj=project)
+    assert result.exit_code != 0
+    assert "Invalid Python interpreter" in result.stderr
+
+    root = Path(project.config["python.install_root"])
+    root.mkdir(parents=True, exist_ok=True)
+    root.joinpath("foo").touch()
+    result = pdm(["python", "link", sys.executable, "--name", "foo"], obj=project)
+    assert result.exit_code != 0
+    assert "Link foo already exists" in result.stderr
