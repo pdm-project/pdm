@@ -189,6 +189,7 @@ class Installer:
     additional_deps: Sequence[str] = ()
     skip_add_to_path: bool = False
     output_path: str | None = None
+    frozen_deps: bool = True
 
     def __post_init__(self):
         self._path = self._decide_path()
@@ -290,19 +291,20 @@ class Installer:
             pass
         _call_subprocess([str(venv_python), "-m", "pip", "install", "-IU", "pip"])
 
+        locked = "[locked]" if self.frozen_deps else ""
         if self.version:
             if self.version.upper() == "HEAD":
-                req = f"pdm[locked] @ git+{REPO}.git@main"
+                req = f"pdm{locked} @ git+{REPO}.git@main"
             else:
                 try:
                     parsed = tuple(map(int, self.version.split(".")))
                 except ValueError:
                     extra = ""
                 else:
-                    extra = "[locked]" if parsed >= (2, 17) else ""
+                    extra = locked if parsed >= (2, 17) else ""
                 req = f"pdm{extra}=={self.version}"
         else:
-            req = "pdm[locked]"
+            req = f"pdm{locked}"
         args = [req] + [d for d in self.additional_deps if d]
         pip_cmd = [str(venv_python), "-Im", "pip", "install", *args]
         _call_subprocess(pip_cmd)
@@ -418,6 +420,13 @@ def main():
         default=os.getenv("PDM_PRERELEASE"),
     )
     parser.add_argument(
+        "--no-frozen-deps",
+        action="store_false",
+        dest="frozen_deps",
+        default=not bool(os.getenv("PDM_NO_FROZEN_DEPS")),
+        help="Do not install frozen dependency versions",
+    )
+    parser.add_argument(
         "--remove",
         action="store_true",
         help="Remove the PDM installation",
@@ -452,6 +461,7 @@ def main():
         additional_deps=options.dep,
         skip_add_to_path=options.skip_add_to_path,
         output_path=options.output,
+        frozen_deps=options.frozen_deps,
     )
     if options.remove:
         installer.uninstall()
