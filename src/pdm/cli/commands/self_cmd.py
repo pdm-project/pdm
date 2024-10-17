@@ -33,6 +33,7 @@ def list_distributions(plugin_only: bool = False) -> list[Distribution]:
 def run_pip(project: Project, args: list[str]) -> subprocess.CompletedProcess[str]:
     if project.config["use_uv"]:
         if "--upgrade-strategy" in args:
+            # uv doesn't support this option
             args[(i := args.index("--upgrade-strategy")) : i + 2] = []
         run_args = [*project.core.uv_cmd, "pip", *args, "--python", sys.executable]
     else:
