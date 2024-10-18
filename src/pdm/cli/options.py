@@ -513,7 +513,7 @@ install_group.options.append(config_setting_option)
 
 override_option = Option(
     "--override",
-    default=os.getenv("PDM_OVERRIDE"),
+    default=[env] if (env := os.getenv("PDM_OVERRIDE")) else None,
     action="append",
     help="Use the constraint file in pip-requirements format for overriding. [env var: PDM_OVERRIDE] "
     "This option can be used multiple times. "
