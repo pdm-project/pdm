@@ -92,10 +92,9 @@ class _UvFileBuilder:
             this_package = {"name": normalize_name(name), "version": version, "source": {"editable": "."}}
             dependencies: list[dict[str, Any]] = []
             optional_dependencies: dict[str, list[dict[str, Any]]] = {}
-            this_candidate = self.project.make_self_candidate(True)
             for req in self.requirements:
                 group = req.groups[0]
-                if (dep := self._make_dependency(this_candidate, req)) is None:
+                if (dep := self._make_dependency(None, req)) is None:
                     continue
                 if group == "default":
                     dependencies.append(dep)
@@ -189,9 +188,11 @@ class _UvFileBuilder:
             result["optional-dependencies"] = optional_dependencies
         return result
 
-    def _make_dependency(self, candidate: Candidate, req: Requirement) -> dict[str, Any] | None:
+    def _make_dependency(self, parent: Candidate | None, req: Requirement) -> dict[str, Any] | None:
         locked_repo = self.locked_repository
-        parent_marker = (req.marker or get_marker("")) & (candidate.req.marker or get_marker(""))
+        parent_marker = req.marker or get_marker("")
+        if parent is not None:
+            parent_marker &= parent.req.marker or get_marker("")
         matching_entries = [e for k, e in locked_repo.packages.items() if k[0] == req.key]
 
         def marker_match(marker: Marker | None) -> bool:
