@@ -35,7 +35,7 @@ class UvSynchronizer(BaseSynchronizer):
             self.environment.project, str(self.environment.python_requires), self.requirements, self.locked_repo
         ) as builder:
             builder.build_pyproject_toml()
-            builder.build_uv_lock()
+            builder.build_uv_lock(include_self=self.install_self)
             cmd = self._get_sync_command()
             self.environment.project.core.ui.echo(f"Running uv sync command: {cmd}", verbosity=Verbosity.DETAIL)
             subprocess.run(cmd, check=True, cwd=self.environment.project.root)
