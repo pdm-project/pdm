@@ -73,7 +73,7 @@ class RichLockReporter(LockReporter):
 
     @contextmanager
     def make_candidate_reporter(self, candidate: Candidate) -> Generator[CandidateReporter]:
-        task_id = self.progress.add_task(f"Resolving {candidate.format()}", text="")
+        task_id = self.progress.add_task(f"Resolving {candidate.format()}", text="", total=None)
         try:
             yield RichProgressReporter(self.progress, task_id)
         finally:
