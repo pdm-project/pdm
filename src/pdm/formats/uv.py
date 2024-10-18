@@ -76,7 +76,7 @@ class _UvFileBuilder:
             self.stack.callback(path.unlink, True)
         return path
 
-    def build_uv_lock(self) -> Path:
+    def build_uv_lock(self, include_self: bool = False) -> Path:
         locked_repo = self.locked_repository
         packages: list[dict[str, Any]] = []
         for key in locked_repo.packages:
@@ -89,7 +89,11 @@ class _UvFileBuilder:
             packages.append(self._build_lock_entry(related_packages))
         if name := self.project.name:
             version = self.project.pyproject.metadata.get("version", "0.0.0")
-            this_package = {"name": normalize_name(name), "version": version, "source": {"editable": "."}}
+            this_package = {
+                "name": normalize_name(name),
+                "version": version,
+                "source": {"editable" if include_self else "virtual": "."},
+            }
             dependencies: list[dict[str, Any]] = []
             optional_dependencies: dict[str, list[dict[str, Any]]] = {}
             for req in self.requirements:
