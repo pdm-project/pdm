@@ -1,3 +1,24 @@
+## Release v2.19.3 (2024-10-19)
+
+### Features & Improvements
+
+- Allow linking existing Python interpreters to PDM's managed location. ([#3215](https://github.com/pdm-project/pdm/issues/3215))
+
+### Bug Fixes
+
+- Fix a bug that overrides provided by environment variables do not work. ([#3182](https://github.com/pdm-project/pdm/issues/3182))
+- Allow prereleases when the requirement is pinned even if disabled by project ([#3202](https://github.com/pdm-project/pdm/issues/3202))
+- Pass the python path to the uv venv command. ([#3204](https://github.com/pdm-project/pdm/issues/3204))
+- Fix the infinite loop when running in uv mode if the current project has dynamic metadata. ([#3207](https://github.com/pdm-project/pdm/issues/3207))
+- Add `--no-frozen-deps` option to `install-pdm.py` script to allow installing newer versions of dependencies. ([#3213](https://github.com/pdm-project/pdm/issues/3213))
+- `pdm self update` now prefers the locked dependencies unless `--no-frozen-deps` is specified. ([#3216](https://github.com/pdm-project/pdm/issues/3216))
+- By default, `pdm outdated` will only list direct dependencies. This can be changed by adding the `--include-sub` option. ([#3218](https://github.com/pdm-project/pdm/issues/3218))
+
+### Documentation
+
+- Show users the way to uninstall pdm in a more obvious way ([#2470](https://github.com/pdm-project/pdm/issues/2470))
+
+
 ## Release v2.19.2 (2024-10-11)
 
 
