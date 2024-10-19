@@ -20,6 +20,7 @@ A modern Python package and dependency manager supporting the latest PEP standar
 <a href="https://trackgit.com">
 <img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/l4eztudjnh9bfay668fl" alt="trackgit-views" />
 </a>
+[![](https://img.shields.io/badge/Gurubase-Ask%20PDM%20Guru-006BFF)](https://gurubase.io/g/pdm)
 
 [![asciicast](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB.svg)](https://asciinema.org/a/jnifN30pjfXbO9We2KqOdXEhB)
 
