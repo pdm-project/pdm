@@ -79,7 +79,7 @@ class GroupSelection:
             dev = True
         project = self.project
         optional_groups = set(project.pyproject.metadata.get("optional-dependencies", {}))
-        dev_groups = set(project.pyproject.settings.get("dev-dependencies", {}))
+        dev_groups = set(project.pyproject.dev_dependencies)
         groups_set = set(groups)
         if groups_set & dev_groups:
             if not dev:

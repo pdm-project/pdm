@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
@@ -82,7 +82,6 @@ class Command(BaseCommand):
         hooks: HookManager | None = None,
     ) -> None:
         """Remove packages from working set and pyproject.toml"""
-        from tomlkit.items import Array
 
         from pdm.cli.actions import do_lock, do_sync
         from pdm.cli.utils import check_project_file
@@ -111,7 +110,7 @@ class Command(BaseCommand):
                 for i in matched_indexes:
                     del deps[i]
                 tracked_names.add(normalize_name(name))
-        setter(cast(Array, deps).multiline(True))
+        setter(deps)
 
         if not dry_run:
             project.pyproject.write()

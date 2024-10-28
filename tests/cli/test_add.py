@@ -12,11 +12,7 @@ from tests import FIXTURES
 
 def test_add_package(project, working_set, dev_option, pdm):
     pdm(["add", *dev_option, "requests"], obj=project, strict=True)
-    group = (
-        project.pyproject.settings["dev-dependencies"]["dev"]
-        if dev_option
-        else project.pyproject.metadata["dependencies"]
-    )
+    group = project.pyproject.dependency_groups["dev"] if dev_option else project.pyproject.metadata["dependencies"]
 
     assert group[0] == "requests>=2.19.1"
     locked_candidates = project.get_locked_repository().candidates
@@ -27,11 +23,7 @@ def test_add_package(project, working_set, dev_option, pdm):
 
 def test_add_package_no_lock(project, working_set, dev_option, pdm):
     pdm(["add", *dev_option, "--frozen-lockfile", "-v", "requests"], obj=project, strict=True)
-    group = (
-        project.pyproject.settings["dev-dependencies"]["dev"]
-        if dev_option
-        else project.pyproject.metadata["dependencies"]
-    )
+    group = project.pyproject.dependency_groups["dev"] if dev_option else project.pyproject.metadata["dependencies"]
 
     assert group[0] == "requests>=2.19.1"
     assert not project.lockfile.exists()
@@ -58,7 +50,7 @@ def test_add_package_to_custom_group(project, working_set, pdm):
 def test_add_package_to_custom_dev_group(project, working_set, pdm):
     pdm(["add", "requests", "--group", "test", "--dev"], obj=project, strict=True)
 
-    dependencies = project.pyproject.settings["dev-dependencies"]["test"]
+    dependencies = project.pyproject.dependency_groups["test"]
     assert "requests" in dependencies[0]
     locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["idna"].version == "2.7"
@@ -73,8 +65,9 @@ def test_add_editable_package(project, working_set, pdm):
     pdm(["add", "--dev", "demo"], obj=project, strict=True)
     pdm(["add", "-de", "git+https://github.com/test-root/demo.git#egg=demo"], obj=project, strict=True)
 
-    group = project.pyproject.settings["dev-dependencies"]["dev"]
+    group = project.pyproject.dev_dependencies["dev"]
     assert group == ["-e git+https://github.com/test-root/demo.git#egg=demo"]
+    assert not project.pyproject.dependency_groups
     locked_candidates = project.get_locked_repository().candidates
     assert locked_candidates["demo"].prepare(project.environment).revision == "1234567890abcdef"
     assert working_set["demo"].link_file
@@ -108,11 +101,7 @@ def test_add_remote_package_url(project, dev_option, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     url = "http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
     pdm(["add", *dev_option, url], obj=project, strict=True)
-    group = (
-        project.pyproject.settings["dev-dependencies"]["dev"]
-        if dev_option
-        else project.pyproject.metadata["dependencies"]
-    )
+    group = project.pyproject.dependency_groups["dev"] if dev_option else project.pyproject.metadata["dependencies"]
     assert group[0] == f"demo @ {url}"
 
 

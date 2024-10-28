@@ -137,7 +137,7 @@ pdm add -dG test pytest
 This will result in a pyproject.toml as following:
 
 ```toml
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 test = ["pytest"]
 ```
 
@@ -145,7 +145,7 @@ You can have several groups of development only dependencies. Unlike `optional-d
 The package index won't be aware of these dependencies. The schema is similar to that of `optional-dependencies`, except that it is in `tool.pdm` table.
 
 ```toml
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 lint = [
     "flake8",
     "black"
@@ -154,10 +154,10 @@ test = ["pytest", "pytest-cov"]
 doc = ["mkdocs"]
 ```
 
-For backward-compatibility, if only `-d` or `--dev` is specified, dependencies will go to `dev` group under `[tool.pdm.dev-dependencies]` by default.
+For backward-compatibility, if only `-d` or `--dev` is specified, dependencies will go to `dev` group under `[dependency-groups]` by default.
 
 !!! NOTE
-    The same group name MUST NOT appear in both `[tool.pdm.dev-dependencies]` and `[project.optional-dependencies]`.
+    The same group name MUST NOT appear in both `[dependency-groups]` and `[project.optional-dependencies]`.
 
 ### Editable dependencies
 
@@ -258,7 +258,7 @@ To remove existing dependencies from project file and the library directory:
 pdm remove requests
 # Remove h11 from the 'web' group of optional-dependencies
 pdm remove -G web h11
-# Remove pytest-cov from the `test` group of dev-dependencies
+# Remove pytest-cov from the `test` group of dependency-groups
 pdm remove -dG test pytest-cov
 ```
 
@@ -290,7 +290,7 @@ dependencies = ["requests"]
 extra1 = ["flask"]
 extra2 = ["django"]
 
-[tool.pdm.dev-dependencies]  # This is dev dependencies
+[dependency-groups]  # This is dev dependencies
 dev1 = ["pytest"]
 dev2 = ["mkdocs"]
 ```

@@ -15,9 +15,9 @@ def test_remove_editable_packages_while_keeping_normal(project, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
     pdm(["add", "demo"], obj=project, strict=True)
     pdm(["add", "-d", "-e", "git+https://github.com/test-root/demo.git#egg=demo"], obj=project, strict=True)
-    dev_group = project.pyproject.settings["dev-dependencies"]["dev"]
-    default_group = project.pyproject.metadata["dependencies"]
     pdm(["remove", "-d", "demo"], obj=project, strict=True)
+    default_group = project.pyproject.metadata["dependencies"]
+    dev_group = project.pyproject.dev_dependencies.get("dev")
     assert not dev_group
     assert len(default_group) == 1
     assert not project.get_locked_repository().candidates["demo"].req.editable
@@ -69,7 +69,7 @@ def test_remove_package_exist_in_multi_groups(project, working_set, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
     pdm(["add", "--dev", "urllib3"], obj=project, strict=True)
     pdm(["remove", "--dev", "urllib3"], obj=project, strict=True)
-    assert "dev-dependencies" not in project.pyproject.settings
+    assert "dependency-groups" not in project.pyproject._data
     assert "urllib3" in working_set
     assert "requests" in working_set
 

@@ -30,17 +30,10 @@ GIT_URL = re.compile(r"(?P<repo>[^:/]+://[^\?#]+)(?:\?rev=(?P<ref>[^#]+?))?(?:#(
 @dataclass
 class UvResolver(Resolver):
     def __post_init__(self) -> None:
+        super().__post_init__()
         self.default_source = self.project.sources[0].url
         if self.locked_repository is None:
             self.locked_repository = self.project.get_locked_repository()
-        self.requested_groups = {g for r in self.requirements for g in r.groups}
-        for r in self.requirements:
-            if self.project.name and r.key == normalize_name(self.project.name):
-                groups = r.extras or ["default"]
-                for group in groups:
-                    if group not in self.requested_groups:
-                        self.requirements.extend(self.project.get_dependencies(group))
-                        self.requested_groups.add(group)
         if self.update_strategy not in {"reuse", "all"}:
             self.project.core.ui.warn(
                 f"{self.update_strategy} update strategy is not supported by uv, using 'reuse' instead"

@@ -72,8 +72,6 @@ class BaseRepository:
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
         self.has_warnings = False
-        self.collected_groups: set[str] = set()
-        self.find_dependencies_from_local = True
         if ignore_compatibility is not NotSet:  # pragma: no cover
             deprecation_warning(
                 "The ignore_compatibility argument is deprecated and will be removed in the future. "
@@ -283,26 +281,6 @@ class BaseRepository:
             requires_python = candidate.requires_python
             summary = prepared.metadata.metadata.get("Summary", "")
         return CandidateMetadata(deps, requires_python, summary)
-
-    def _get_dependencies_from_local_package(self, candidate: Candidate) -> CandidateMetadata:
-        """Adds the local package as a candidate only if the candidate
-        name is the same as the local package."""
-        project = self.environment.project
-        if not project.is_distribution or candidate.name != project.name:
-            raise CandidateInfoNotFound(candidate) from None
-
-        reqs: list[Requirement] = []
-        if candidate.req.extras is not None:
-            all_groups = set(project.iter_groups())
-            for extra in candidate.req.extras:
-                if extra in all_groups:
-                    reqs.extend(project.get_dependencies(extra))
-                    self.collected_groups.add(extra)
-        return CandidateMetadata(
-            reqs,
-            str(self.environment.python_requires),
-            project.pyproject.metadata.get("description", "UNKNOWN"),
-        )
 
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         """Get hashes of all possible installable candidates

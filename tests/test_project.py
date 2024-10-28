@@ -11,7 +11,7 @@ from pbs_installer import PythonVersion
 from pytest_httpserver import HTTPServer
 
 from pdm.environments import PythonEnvironment
-from pdm.exceptions import PdmException
+from pdm.exceptions import PdmException, ProjectError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
@@ -180,22 +180,40 @@ def test_select_dependencies(project):
         "security": ["cryptography"],
         "venv": ["virtualenv"],
     }
-    project.pyproject.settings["dev-dependencies"] = {
-        "test": ["pytest"],
-        "doc": ["mkdocs"],
-    }
+    project.pyproject.dependency_groups.update(
+        {
+            "test": ["pytest"],
+            "doc": ["mkdocs"],
+            "all": [{"include-group": "test"}, {"include-group": "doc"}],
+        }
+    )
     assert sorted([r.key for r in project.get_dependencies()]) == ["requests"]
-
     assert sorted([r.key for r in project.get_dependencies("security")]) == ["cryptography"]
     assert sorted([r.key for r in project.get_dependencies("test")]) == ["pytest"]
-
+    assert sorted([r.key for r in project.get_dependencies("all")]) == ["mkdocs", "pytest"]
     assert sorted(project.iter_groups()) == [
+        "all",
         "default",
         "doc",
         "security",
         "test",
         "venv",
     ]
+
+
+def test_invalid_dependency_group(project):
+    project.pyproject.dependency_groups.update(
+        {
+            "invalid": [{"invalid-key": True}],
+            "missing": [{"include-group": "missing-group"}],
+            "doc": ["mkdocs"],
+        }
+    )
+    assert sorted([r.key for r in project.get_dependencies("doc")]) == ["mkdocs"]
+    with pytest.raises(ProjectError, match="Invalid dependency group item"):
+        project.get_dependencies("invalid")
+    with pytest.raises(ProjectError, match="Dependency group 'missing-group' not found"):
+        project.get_dependencies("missing")
 
 
 @pytest.mark.path
