@@ -148,7 +148,7 @@ class Command(BaseCommand):
             project.global_config.get_repository_config(repository, "repository")
         )
         if config is None:
-                raise PdmUsageError(f"Missing repository config of {repository}")
+            raise PdmUsageError(f"Missing repository config of {repository}")
         assert config.url is not None
         if username is not None:
             config.username = username
