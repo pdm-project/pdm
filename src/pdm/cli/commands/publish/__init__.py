@@ -143,9 +143,12 @@ class Command(BaseCommand):
         password = options.password or os.getenv("PDM_PUBLISH_PASSWORD")
         ca_certs = options.ca_certs or os.getenv("PDM_PUBLISH_CA_CERTS")
 
-        config = project.global_config.get_repository_config(repository, "repository")
+        config = (
+            project.project_config.get_repository_config(repository, "repository") or
+            project.global_config.get_repository_config(repository, "repository")
+        )
         if config is None:
-            raise PdmUsageError(f"Missing repository config of {repository}")
+                raise PdmUsageError(f"Missing repository config of {repository}")
         assert config.url is not None
         if username is not None:
             config.username = username
