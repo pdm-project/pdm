@@ -98,6 +98,7 @@ def test_default_repository_setting(project):
     repository = project.global_config.get_repository_config("nonexist", "repository")
     assert repository is None
 
+
 def test_repository_global_config_key_short(project):
     with pytest.raises(PdmUsageError):
         project.global_config["repository.test"] = {"url": "https://example.org/simple"}
@@ -107,6 +108,7 @@ def test_repository_global_config_key_short(project):
 
     with pytest.raises(PdmUsageError):
         del project.global_config["repository"]
+
 
 def test_repository_project_config_key_short(project):
     with pytest.raises(PdmUsageError):
@@ -130,6 +132,7 @@ def test_repository_global_config_overwrite_default(project):
     project.global_config["repository.pypi.url"] = "https://example.pypi.org/legacy/"
     repository = project.global_config.get_repository_config("pypi", "repository")
     assert repository.url == "https://example.pypi.org/legacy/"
+
 
 def test_repository_project_config_overwrite_default(project):
     project.project_config["repository.pypi.username"] = "foo"
@@ -183,6 +186,7 @@ def test_config_get_repository_global_config(project, pdm):
     result = pdm(["config", "repository.pypi.url"], obj=project, strict=True)
     assert result.stdout.strip() == "https://upload.pypi.org/legacy/"
 
+
 def test_config_get_repository_project_config(project, pdm):
     config = project.project_config["repository.pypi"]
     assert config == project.project_config.get_repository_config("pypi", "repository")
@@ -199,6 +203,7 @@ def test_config_get_repository_project_config(project, pdm):
     result = pdm(["config", "repository.pypi.url"], obj=project, strict=True)
     assert result.stdout.strip() == "https://upload.pypi.org/legacy/"
 
+
 def test_config_set_repository_global_config(project):
     project.global_config["repository.pypi.url"] = "https://example.pypi.org/legacy/"
     project.global_config["repository.pypi.username"] = "foo"
@@ -206,6 +211,7 @@ def test_config_set_repository_global_config(project):
     assert project.global_config["repository.pypi.username"] == "foo"
     del project.global_config["repository.pypi.username"]
     assert project.global_config["repository.pypi.username"] is None
+
 
 def test_config_set_repository_project_config(project):
     project.project_config["repository.pypi.url"] = "https://example.pypi.org/legacy/"
@@ -215,12 +221,14 @@ def test_config_set_repository_project_config(project):
     del project.project_config["repository.pypi.username"]
     assert project.project_config["repository.pypi.username"] is None
 
+
 def test_config_del_repository_global_config(project):
     project.global_config["repository.test.url"] = "https://example.org/simple"
     assert project.global_config.get_repository_config("test", "repository") is not None
 
     del project.global_config["repository.test"]
     assert project.global_config.get_repository_config("test", "repository") is None
+
 
 def test_config_del_repository_project_config(project):
     project.project_config["repository.test.url"] = "https://example.org/simple"
