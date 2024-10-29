@@ -5,8 +5,8 @@ import os
 import shutil
 import tarfile
 import tempfile
-from typing import Mapping
 from pathlib import Path
+from typing import Mapping
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
@@ -89,10 +89,10 @@ class Command(BaseCommand):
                 dest_dir = Path(dest).absolute()
                 if dest_dir.exists():
                     shutil.rmtree(dest_dir, ignore_errors=True)
-                (dist_dir / ".gitignore").unlink(missing_ok=True)
 
                 subprocess.call(["uv", "build"])
 
+                (dist_dir / ".gitignore").unlink(missing_ok=True)
                 if dest != "dist":
                     shutil.move(dist_dir, dest_dir)
                 for sdist_file in dest_dir.glob("*.tar.gz"):
@@ -100,7 +100,7 @@ class Command(BaseCommand):
                         sdist_file.unlink(missing_ok=True)
                     else:
                         artifacts.append(str(sdist_file))
-                
+
                 for whl_file in dest_dir.glob("*.whl"):
                     if wheel is False:
                         whl_file.unlink(missing_ok=True)
