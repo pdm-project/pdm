@@ -6,6 +6,7 @@ import shutil
 import tarfile
 import tempfile
 from typing import Mapping
+from pathlib import Path
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
@@ -57,29 +58,55 @@ class Command(BaseCommand):
         hooks.try_emit("pre_build", dest=dest, config_settings=config_settings)
         artifacts: list[str] = []
         with project.core.ui.logging("build"):
-            if sdist:
-                project.core.ui.echo("[info]Building sdist...")
-                sdist_file = SdistBuilder(project.root, project.environment).build(dest)
-                project.core.ui.echo(f"[info]Built sdist at {sdist_file}")
-                artifacts.append(sdist_file)
-            if wheel:
+            if not project.config["use_uv"]:
                 if sdist:
-                    project.core.ui.echo("[info]Building wheel from sdist...")
-                    sdist_out = tempfile.mkdtemp(prefix="pdm-build-via-sdist-")
-                    try:
-                        with tarfile.open(sdist_file, "r:gz") as tf:
-                            tf.extractall(sdist_out)
-                            sdist_name = os.path.basename(sdist_file)[: -len(".tar.gz")]
-                            whl = WheelBuilder(os.path.join(sdist_out, sdist_name), project.environment).build(dest)
-                            project.core.ui.echo(f"[info]Built wheel at {whl}")
-                            artifacts.append(whl)
-                    finally:
-                        shutil.rmtree(sdist_out, ignore_errors=True)
-                else:
-                    project.core.ui.echo("[info]Building wheel...")
-                    whl = WheelBuilder(project.root, project.environment).build(dest)
-                    project.core.ui.echo(f"[info]Built wheel at {whl}")
-                    artifacts.append(whl)
+                    project.core.ui.echo("[info]Building sdist...")
+                    sdist_file = SdistBuilder(project.root, project.environment).build(dest)
+                    project.core.ui.echo(f"[info]Built sdist at {sdist_file}")
+                    artifacts.append(sdist_file)
+                if wheel:
+                    if sdist:
+                        project.core.ui.echo("[info]Building wheel from sdist...")
+                        sdist_out = tempfile.mkdtemp(prefix="pdm-build-via-sdist-")
+                        try:
+                            with tarfile.open(sdist_file, "r:gz") as tf:
+                                tf.extractall(sdist_out)
+                                sdist_name = os.path.basename(sdist_file)[: -len(".tar.gz")]
+                                whl = WheelBuilder(os.path.join(sdist_out, sdist_name), project.environment).build(dest)
+                                project.core.ui.echo(f"[info]Built wheel at {whl}")
+                                artifacts.append(whl)
+                        finally:
+                            shutil.rmtree(sdist_out, ignore_errors=True)
+                    else:
+                        project.core.ui.echo("[info]Building wheel...")
+                        whl = WheelBuilder(project.root, project.environment).build(dest)
+                        project.core.ui.echo(f"[info]Built wheel at {whl}")
+                        artifacts.append(whl)
+            else:
+                import subprocess
+
+                dist_dir = project.root / "dist"
+                dest_dir = Path(dest).absolute()
+                if dest_dir.exists():
+                    shutil.rmtree(dest_dir, ignore_errors=True)
+                (dist_dir / ".gitignore").unlink(missing_ok=True)
+
+                subprocess.call(["uv", "build"])
+
+                if dest != "dist":
+                    shutil.move(dist_dir, dest_dir)
+                for sdist_file in dest_dir.glob("*.tar.gz"):
+                    if sdist is False:
+                        sdist_file.unlink(missing_ok=True)
+                    else:
+                        artifacts.append(str(sdist_file))
+                
+                for whl_file in dest_dir.glob("*.whl"):
+                    if wheel is False:
+                        whl_file.unlink(missing_ok=True)
+                    else:
+                        artifacts.append(str(whl_file))
+
         hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
