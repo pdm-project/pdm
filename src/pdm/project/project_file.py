@@ -7,7 +7,9 @@ from typing import Any, Mapping
 from tomlkit import TOMLDocument, items
 
 from pdm import termui
+from pdm.exceptions import ProjectError
 from pdm.project.toml_file import TOMLBase
+from pdm.utils import normalize_name
 
 
 def _remove_empty_tables(doc: dict) -> None:
@@ -40,6 +42,8 @@ class PyProject(TOMLBase):
         """Write the TOMLDocument to the file."""
         _remove_empty_tables(self._data.get("project", {}))
         _remove_empty_tables(self._data.get("tool", {}).get("pdm", {}))
+        if "dependency-groups" in self._data and not self.dependency_groups:
+            del self._data["dependency-groups"]
         super().write()
         if show_message:
             self.ui.echo("Changes are written to [success]pyproject.toml[/].", verbosity=termui.Verbosity.NORMAL)
@@ -51,6 +55,23 @@ class PyProject(TOMLBase):
     @property
     def metadata(self) -> items.Table:
         return self._data.setdefault("project", {})
+
+    @property
+    def dependency_groups(self) -> items.Table:
+        return self._data.setdefault("dependency-groups", {})
+
+    @property
+    def dev_dependencies(self) -> dict[str, list[Any]]:
+        groups: dict[str, list[Any]] = {}
+        for group, deps in self._data.get("dependency-groups", {}).items():
+            group = normalize_name(group)
+            if group in groups:
+                raise ProjectError(f"The group {group} is duplicated in dependency-groups")
+            groups[group] = deps.unwrap() if hasattr(deps, "unwrap") else deps
+        for group, deps in self.settings.get("dev-dependencies", {}).items():
+            group = normalize_name(group)
+            groups.setdefault(group, []).extend(deps.unwrap() if hasattr(deps, "unwrap") else deps)
+        return groups
 
     @property
     def settings(self) -> items.Table:
@@ -78,7 +99,7 @@ class PyProject(TOMLBase):
         dump_data = {
             "sources": self.settings.get("source", []),
             "dependencies": self.metadata.get("dependencies", []),
-            "dev-dependencies": self.settings.get("dev-dependencies", {}),
+            "dev-dependencies": self.dev_dependencies,
             "optional-dependencies": self.metadata.get("optional-dependencies", {}),
             "requires-python": self.metadata.get("requires-python", ""),
             "resolution": self.resolution,

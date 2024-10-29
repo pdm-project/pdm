@@ -52,6 +52,11 @@ class Resolver(abc.ABC):
     """The repository with all locked dependencies."""
     reporter: BaseReporter = field(default_factory=BaseReporter)
     """The reporter to use."""
+    requested_groups: set[str] = field(default_factory=set, init=False)
+    """The list of requested groups."""
+
+    def __post_init__(self) -> None:
+        self.requested_groups = {g for r in self.requirements for g in r.groups}
 
     @abc.abstractmethod
     def resolve(self) -> Resolution:

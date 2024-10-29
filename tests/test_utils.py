@@ -431,7 +431,7 @@ def setup_dependencies(project):
             "optional-dependencies": {"web": ["flask"], "auth": ["passlib"]},
         }
     )
-    project.pyproject.settings.update({"dev-dependencies": {"test": ["pytest"], "doc": ["mkdocs"]}})
+    project.pyproject.dependency_groups.update({"test": ["pytest"], "doc": ["mkdocs"]})
     project.pyproject.write()
 
 
