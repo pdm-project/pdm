@@ -202,15 +202,16 @@ class Project:
     @property
     def lockfile(self) -> Lockfile:
         if self._lockfile is None:
-            self._lockfile = Lockfile(self.root / self.LOCKFILE_FILENAME, ui=self.core.ui)
-            if self.config.get("use_uv"):
-                self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
-            if not self.config["strategy.inherit_metadata"]:
-                self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
+            self.set_lockfile(self.root / self.LOCKFILE_FILENAME)
+            assert self._lockfile is not None
         return self._lockfile
 
     def set_lockfile(self, path: str | Path) -> None:
         self._lockfile = Lockfile(path, ui=self.core.ui)
+        if self.config.get("use_uv"):
+            self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
+        if not self.config["strategy.inherit_metadata"]:
+            self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
 
     @cached_property
     def config(self) -> Mapping[str, Any]:
