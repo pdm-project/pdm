@@ -116,7 +116,11 @@ class UvResolver(Resolver):
             return req.as_line()
 
         for package in data["package"]:
-            if self.project.name and package["name"] == normalize_name(self.project.name) and not self.keep_self:
+            if (
+                self.project.name
+                and package["name"] == normalize_name(self.project.name)
+                and (not self.keep_self or package["source"].get("virtual"))
+            ):
                 continue
             req: Requirement
             if url := package["source"].get("url"):

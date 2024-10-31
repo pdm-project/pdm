@@ -293,6 +293,7 @@ class EnvBuilder:
             ws = WorkingSet(libs)
             for req in reqs:
                 parsed_req = parse_requirement(req)
+                parsed_req.groups = ["default"]
                 if parsed_req.marker and not parsed_req.marker.matches(self._env.spec):
                     logger.debug(
                         "Skipping requirement %s: mismatching marker %s",
