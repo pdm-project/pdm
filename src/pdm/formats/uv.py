@@ -38,7 +38,6 @@ class _UvFileBuilder:
         data.setdefault("project", {})["requires-python"] = self.requires_python
         data.setdefault("project", {})["dependencies"] = []
         data.pop("dependency-groups", None)
-        data.pop("build-system", None)
         data.setdefault("project", {}).pop("optional-dependencies", None)
         sources = {}
         collected_deps: dict[str, list[str]] = {}
