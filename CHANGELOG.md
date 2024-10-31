@@ -1,3 +1,19 @@
+## Release v2.20.0 (2024-10-31)
+
+### Features & Improvements
+
+- Support dependency groups as standardized by [PEP 735](https://peps.python.org/pep-0735/). By default, dev dependencies will be written to `[dependency-groups]` table. ([#3230](https://github.com/pdm-project/pdm/issues/3230))
+
+### Bug Fixes
+
+- Fix a bug that `strategy.inherit_metadata` config is not honored when using `--lockfile` option. ([#3232](https://github.com/pdm-project/pdm/issues/3232))
+- Always perform install-time resolution when `use_uv` is on. ([#3233](https://github.com/pdm-project/pdm/issues/3233))
+
+### Miscellany
+
+- Update `resolvelib` to 1.1.0. ([#3235](https://github.com/pdm-project/pdm/issues/3235))
+
+
 ## Release v2.19.3 (2024-10-19)
 
 ### Features & Improvements
