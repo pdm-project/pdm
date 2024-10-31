@@ -87,19 +87,18 @@ class Command(BaseCommand):
 
                 dist_dir = project.root / "dist"
                 dest_dir = Path(dest).absolute()
-                if dest_dir.exists():
-                    shutil.rmtree(dest_dir, ignore_errors=True)
 
                 subprocess.call(["uv", "build"])
 
                 (dist_dir / ".gitignore").unlink(missing_ok=True)
-                if dest != "dist":
-                    shutil.move(dist_dir, dest_dir)
-                for sdist_file in dest_dir.glob("*.tar.gz"):
+                if dest_dir != dist_dir:
+                    shutil.copytree(dist_dir, dest_dir, dirs_exist_ok=True)
+                    shutil.rmtree(dist_dir, ignore_errors=True)
+                for sdist_fp in dest_dir.glob("*.tar.gz"):
                     if sdist is False:
-                        sdist_file.unlink(missing_ok=True)
+                        sdist_fp.unlink(missing_ok=True)
                     else:
-                        artifacts.append(str(sdist_file))
+                        artifacts.append(str(sdist_fp))
 
                 for whl_file in dest_dir.glob("*.whl"):
                     if wheel is False:
