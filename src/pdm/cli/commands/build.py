@@ -86,20 +86,17 @@ class Command(BaseCommand):
             else:
                 import subprocess
 
-                dist_dir = project.root / "dist"
                 dest_dir = Path(dest).absolute()
 
-                uv_build_cmd = ["uv", "build"]
+                uv_build_cmd = [*project.core.uv_cmd, "build", "--out-dir", str(dest_dir)]
                 if verbose == -1:
                     uv_build_cmd.append("-q")
                 elif verbose > 0:
                     uv_build_cmd.append(f"-{'v'*verbose}")
-                subprocess.call(uv_build_cmd)
+                subprocess.run(uv_build_cmd, check=True)
 
-                (dist_dir / ".gitignore").unlink(missing_ok=True)
-                if dest_dir != dist_dir:
-                    shutil.copytree(dist_dir, dest_dir, dirs_exist_ok=True)
-                    shutil.rmtree(dist_dir, ignore_errors=True)
+                # pdm build doesn't include .gitignore, and pdm publish would fail with .gitignore
+                (dest_dir / ".gitignore").unlink(missing_ok=True)
                 for sdist_fp in dest_dir.glob("*.tar.gz"):
                     if sdist is False:
                         sdist_fp.unlink(missing_ok=True)
