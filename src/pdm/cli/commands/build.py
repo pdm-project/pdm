@@ -5,6 +5,7 @@ import os
 import shutil
 import tarfile
 import tempfile
+from pathlib import Path
 from typing import Mapping
 
 from pdm.cli.commands.base import BaseCommand
@@ -32,6 +33,7 @@ class Command(BaseCommand):
         wheel: bool = True,
         dest: str = "dist",
         clean: bool = True,
+        verbose: int = 0,
         config_settings: Mapping[str, str] | None = None,
         hooks: HookManager | None = None,
     ) -> None:
@@ -57,29 +59,56 @@ class Command(BaseCommand):
         hooks.try_emit("pre_build", dest=dest, config_settings=config_settings)
         artifacts: list[str] = []
         with project.core.ui.logging("build"):
-            if sdist:
-                project.core.ui.echo("[info]Building sdist...")
-                sdist_file = SdistBuilder(project.root, project.environment).build(dest)
-                project.core.ui.echo(f"[info]Built sdist at {sdist_file}")
-                artifacts.append(sdist_file)
-            if wheel:
+            if not project.config["use_uv"]:
                 if sdist:
-                    project.core.ui.echo("[info]Building wheel from sdist...")
-                    sdist_out = tempfile.mkdtemp(prefix="pdm-build-via-sdist-")
-                    try:
-                        with tarfile.open(sdist_file, "r:gz") as tf:
-                            tf.extractall(sdist_out)
-                            sdist_name = os.path.basename(sdist_file)[: -len(".tar.gz")]
-                            whl = WheelBuilder(os.path.join(sdist_out, sdist_name), project.environment).build(dest)
-                            project.core.ui.echo(f"[info]Built wheel at {whl}")
-                            artifacts.append(whl)
-                    finally:
-                        shutil.rmtree(sdist_out, ignore_errors=True)
-                else:
-                    project.core.ui.echo("[info]Building wheel...")
-                    whl = WheelBuilder(project.root, project.environment).build(dest)
-                    project.core.ui.echo(f"[info]Built wheel at {whl}")
-                    artifacts.append(whl)
+                    project.core.ui.echo("[info]Building sdist...")
+                    sdist_file = SdistBuilder(project.root, project.environment).build(dest)
+                    project.core.ui.echo(f"[info]Built sdist at {sdist_file}")
+                    artifacts.append(sdist_file)
+                if wheel:
+                    if sdist:
+                        project.core.ui.echo("[info]Building wheel from sdist...")
+                        sdist_out = tempfile.mkdtemp(prefix="pdm-build-via-sdist-")
+                        try:
+                            with tarfile.open(sdist_file, "r:gz") as tf:
+                                tf.extractall(sdist_out)
+                                sdist_name = os.path.basename(sdist_file)[: -len(".tar.gz")]
+                                whl = WheelBuilder(os.path.join(sdist_out, sdist_name), project.environment).build(dest)
+                                project.core.ui.echo(f"[info]Built wheel at {whl}")
+                                artifacts.append(whl)
+                        finally:
+                            shutil.rmtree(sdist_out, ignore_errors=True)
+                    else:
+                        project.core.ui.echo("[info]Building wheel...")
+                        whl = WheelBuilder(project.root, project.environment).build(dest)
+                        project.core.ui.echo(f"[info]Built wheel at {whl}")
+                        artifacts.append(whl)
+            else:
+                import subprocess
+
+                dest_dir = Path(dest).absolute()
+
+                uv_build_cmd = [*project.core.uv_cmd, "build", "--out-dir", str(dest_dir)]
+                if verbose == -1:
+                    uv_build_cmd.append("-q")
+                elif verbose > 0:
+                    uv_build_cmd.append(f"-{'v'*verbose}")
+                subprocess.run(uv_build_cmd, check=True)
+
+                # pdm build doesn't include .gitignore, and pdm publish would fail with .gitignore
+                (dest_dir / ".gitignore").unlink(missing_ok=True)
+                for sdist_fp in dest_dir.glob("*.tar.gz"):
+                    if sdist is False:
+                        sdist_fp.unlink(missing_ok=True)
+                    else:
+                        artifacts.append(str(sdist_fp))
+
+                for whl_file in dest_dir.glob("*.whl"):
+                    if wheel is False:
+                        whl_file.unlink(missing_ok=True)
+                    else:
+                        artifacts.append(str(whl_file))
+
         hooks.try_emit("post_build", artifacts=artifacts, config_settings=config_settings)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
@@ -113,5 +142,6 @@ class Command(BaseCommand):
             wheel=options.wheel,
             dest=options.dest,
             clean=options.clean,
+            verbose=options.verbose,
             hooks=HookManager(project, options.skip),
         )
