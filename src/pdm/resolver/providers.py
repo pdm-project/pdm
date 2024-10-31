@@ -46,7 +46,7 @@ def register_provider(strategy: str) -> Callable[[ProviderT], ProviderT]:
 
 
 @register_provider("all")
-class BaseProvider(AbstractProvider):
+class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
     def __init__(
         self,
         repository: BaseRepository,
@@ -71,7 +71,6 @@ class BaseProvider(AbstractProvider):
         self.excludes = {normalize_name(k) for k in project.pyproject.resolution.get("excludes", [])}
         self.direct_minimal_versions = direct_minimal_versions
         self.locked_candidates = locked_candidates
-        self._known_depth: dict[str, int] = {}
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
@@ -102,14 +101,6 @@ class BaseProvider(AbstractProvider):
         backtrack_identifiers = {req.identify() for req, _ in backtrack_causes} | {
             parent.identify() for _, parent in backtrack_causes if parent is not None
         }
-        if is_top:
-            dep_depth = 1
-        else:
-            parent_depths = (
-                self._known_depth[parent.identify()] if parent is not None else 0
-                for _, parent in information[identifier]
-            )
-            dep_depth = min(parent_depths, default=0) + 1
         # Use the REAL identifier as it may be updated after candidate preparation.
         deps: list[Requirement] = []
         for candidate in candidates[identifier]:
@@ -118,7 +109,6 @@ class BaseProvider(AbstractProvider):
             except RequirementsConflicted:
                 continue
             break
-        self._known_depth[self.identify(candidate)] = dep_depth
         is_backtrack_cause = any(dep.identify() in backtrack_identifiers for dep in deps)
         is_file_or_url = any(not requirement.is_named for requirement, _ in information[identifier])
         operators = [spec.operator for req, _ in information[identifier] for spec in req.specifier]
@@ -131,7 +121,6 @@ class BaseProvider(AbstractProvider):
             not is_file_or_url,
             not is_pinned,
             not is_backtrack_cause,
-            dep_depth,
             -constraints,
             identifier,
         )
