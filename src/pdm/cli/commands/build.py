@@ -33,6 +33,7 @@ class Command(BaseCommand):
         wheel: bool = True,
         dest: str = "dist",
         clean: bool = True,
+        verbose: int = 0,
         config_settings: Mapping[str, str] | None = None,
         hooks: HookManager | None = None,
     ) -> None:
@@ -88,7 +89,12 @@ class Command(BaseCommand):
                 dist_dir = project.root / "dist"
                 dest_dir = Path(dest).absolute()
 
-                subprocess.call(["uv", "build"])
+                uv_build_cmd = ["uv", "build"]
+                if verbose == -1:
+                    uv_build_cmd.append("-q")
+                elif verbose > 0:
+                    uv_build_cmd.append(f"-{'v'*verbose}")
+                subprocess.call(uv_build_cmd)
 
                 (dist_dir / ".gitignore").unlink(missing_ok=True)
                 if dest_dir != dist_dir:
@@ -139,5 +145,6 @@ class Command(BaseCommand):
             wheel=options.wheel,
             dest=options.dest,
             clean=options.clean,
+            verbose=options.verbose,
             hooks=HookManager(project, options.skip),
         )
