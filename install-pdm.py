@@ -202,7 +202,7 @@ class Installer:
         metadata = json.load(resp)
 
         def version_okay(v: str) -> bool:
-            return self.prerelease or all(p.isdigit() for p in v.split("."))
+            return self.prerelease or re.match(r"^(\d+)\.(\d+)\.(\d+)(\.(post\d+))?", v)
 
         def sort_version(v: str) -> tuple:
             parts = []
