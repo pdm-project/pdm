@@ -25,11 +25,11 @@ class GroupSelection:
         excluded_groups: Sequence[str] = (),
     ):
         self.project = project
-        self.groups = [normalize_name(g) for g in groups]
-        self.group = normalize_name(group) if group else None
+        self.groups = groups
+        self.group = group
         self.default = default
         self.dev = dev
-        self.excluded_groups = [normalize_name(g) for g in excluded_groups]
+        self.excluded_groups = excluded_groups
 
     @classmethod
     def from_options(cls, project: Project, options: argparse.Namespace) -> GroupSelection:
@@ -81,7 +81,7 @@ class GroupSelection:
         project = self.project
         optional_groups = {normalize_name(g) for g in project.pyproject.metadata.get("optional-dependencies", {})}
         dev_groups = set(project.pyproject.dev_dependencies)
-        groups_set = {normalize_name(g) for g in groups}
+        groups_set = {normalize_name(g) if g != ":all" else g for g in groups}
         if groups_set & dev_groups:
             if not dev:
                 raise PdmUsageError("--prod is not allowed with dev groups and should be left")
@@ -92,7 +92,7 @@ class GroupSelection:
             groups_set.update(optional_groups)
         if default:
             groups_set.add("default")
-        groups_set -= set(self.excluded_groups)
+        groups_set -= {normalize_name(g) for g in self.excluded_groups}
 
         invalid_groups = groups_set - {normalize_name(g) for g in project.iter_groups()}
         if invalid_groups:
