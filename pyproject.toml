@@ -37,6 +37,8 @@ dependencies = [
     "pbs-installer>=2024.4.18",
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
+    "httpcore>=1.0.6",
+    "certifi>=2024.8.30",
 ]
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]
@@ -106,7 +108,7 @@ doc = {cmd = "mkdocs serve", help = "Start the dev server for docs preview"}
 lint = "pre-commit run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 test = [
     "pdm[pytest]",
     "pytest-cov",
