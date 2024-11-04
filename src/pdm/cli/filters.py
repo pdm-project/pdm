@@ -5,6 +5,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING
 
 from pdm.exceptions import PdmUsageError
+from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
     from typing import Iterator, Sequence
@@ -24,11 +25,11 @@ class GroupSelection:
         excluded_groups: Sequence[str] = (),
     ):
         self.project = project
-        self.groups = groups
-        self.group = group
+        self.groups = [normalize_name(g) for g in groups]
+        self.group = normalize_name(group) if group else None
         self.default = default
         self.dev = dev
-        self.excluded_groups = excluded_groups
+        self.excluded_groups = [normalize_name(g) for g in excluded_groups]
 
     @classmethod
     def from_options(cls, project: Project, options: argparse.Namespace) -> GroupSelection:
@@ -78,9 +79,9 @@ class GroupSelection:
         if dev is None:  # --prod is not set, include dev-dependencies
             dev = True
         project = self.project
-        optional_groups = set(project.pyproject.metadata.get("optional-dependencies", {}))
+        optional_groups = {normalize_name(g) for g in project.pyproject.metadata.get("optional-dependencies", {})}
         dev_groups = set(project.pyproject.dev_dependencies)
-        groups_set = set(groups)
+        groups_set = {normalize_name(g) for g in groups}
         if groups_set & dev_groups:
             if not dev:
                 raise PdmUsageError("--prod is not allowed with dev groups and should be left")
@@ -93,7 +94,7 @@ class GroupSelection:
             groups_set.add("default")
         groups_set -= set(self.excluded_groups)
 
-        invalid_groups = groups_set - set(project.iter_groups())
+        invalid_groups = groups_set - {normalize_name(g) for g in project.iter_groups()}
         if invalid_groups:
             project.core.ui.echo(
                 "[d]Ignoring non-existing groups: [success]" f"{', '.join(invalid_groups)}[/]",
