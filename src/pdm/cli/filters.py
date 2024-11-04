@@ -5,6 +5,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING
 
 from pdm.exceptions import PdmUsageError
+from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
     from typing import Iterator, Sequence
@@ -78,9 +79,9 @@ class GroupSelection:
         if dev is None:  # --prod is not set, include dev-dependencies
             dev = True
         project = self.project
-        optional_groups = set(project.pyproject.metadata.get("optional-dependencies", {}))
+        optional_groups = {normalize_name(g) for g in project.pyproject.metadata.get("optional-dependencies", {})}
         dev_groups = set(project.pyproject.dev_dependencies)
-        groups_set = set(groups)
+        groups_set = {normalize_name(g) if g != ":all" else g for g in groups}
         if groups_set & dev_groups:
             if not dev:
                 raise PdmUsageError("--prod is not allowed with dev groups and should be left")
@@ -91,9 +92,9 @@ class GroupSelection:
             groups_set.update(optional_groups)
         if default:
             groups_set.add("default")
-        groups_set -= set(self.excluded_groups)
+        groups_set -= {normalize_name(g) for g in self.excluded_groups}
 
-        invalid_groups = groups_set - set(project.iter_groups())
+        invalid_groups = groups_set - {normalize_name(g) for g in project.iter_groups()}
         if invalid_groups:
             project.core.ui.echo(
                 "[d]Ignoring non-existing groups: [success]" f"{', '.join(invalid_groups)}[/]",

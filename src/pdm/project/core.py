@@ -442,7 +442,8 @@ class Project:
         groups = {"default"}
         if self.pyproject.metadata.get("optional-dependencies"):
             groups.update(self.pyproject.metadata["optional-dependencies"].keys())
-        groups.update(self.pyproject.dev_dependencies.keys())
+        groups.update(self.pyproject._data.get("dependency-groups", {}).keys())
+        groups.update(self.pyproject.settings.get("dev-dependencies", {}).keys())
         return groups
 
     @property
@@ -662,6 +663,8 @@ class Project:
         metadata, settings = self.pyproject.metadata, self.pyproject.settings
         if group == "default":
             return metadata.get("dependencies", tomlkit.array()), lambda x: metadata.__setitem__("dependencies", x)
+        dev_dependencies = self.pyproject._data.get("dependency-groups", {})
+        dev_dependencies.update(self.pyproject.settings.get("dev-dependencies", {}))
         deps_setter = [
             (
                 metadata.get("optional-dependencies", {}),
@@ -669,11 +672,15 @@ class Project:
                 if x
                 else metadata.setdefault("optional-dependencies", {}).pop(group, None),
             ),
-            (self.pyproject.dev_dependencies, update_dev_dependencies),
+            (dev_dependencies, update_dev_dependencies),
         ]
+        normalized_group = normalize_name(group)
         for deps, setter in deps_setter:
+            normalized_groups = {normalize_name(g) for g in deps}
             if group in deps:
                 return make_array(deps[group], True), setter
+            if normalized_group in normalized_groups:
+                raise PdmUsageError(f"Group {group} already exists in another non-normalized form")
         # If not found, return an empty list and a setter to add the group
         return tomlkit.array(), deps_setter[int(dev)][1]
 

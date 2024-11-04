@@ -327,3 +327,15 @@ def test_add_dependency_with_direct_minimal_versions(project, pdm, repository):
     assert "django>=1.11.8" in project.pyproject.metadata["dependencies"]
     assert all_candidates["django"].version == "1.11.8"
     assert all_candidates["pytz"].version == "2019.6"
+
+
+def test_add_group_with_normalized_name(project, pdm, working_set):
+    project.pyproject.dependency_groups.update({"foo_bar": ["requests"]})
+    project.pyproject.write()
+    pdm(["lock"], obj=project, strict=True)
+    assert "foo-bar" in project.lockfile.groups
+    pdm(["sync", "-G", "foo.bar"], obj=project, strict=True)
+    assert "requests" in working_set
+    result = pdm(["add", "-G", "foo-bar", "pytz"], obj=project)
+    assert result.exit_code != 0
+    assert "Group foo-bar already exists in another non-normalized form" in result.stderr
