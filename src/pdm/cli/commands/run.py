@@ -292,11 +292,11 @@ class TaskRunner:
 
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
         handle_int = signal.signal(signal.SIGINT, forward_signal)
-        process = subprocess.Popen(process_cmd, cwd=cwd, shell=shell, bufsize=0)
-        process.wait()
+        process = subprocess.Popen(process_cmd, cwd=cwd, shell=shell, bufsize=0, close_fds=False)
+        retcode = process.wait()
         signal.signal(signal.SIGTERM, handle_term)
         signal.signal(signal.SIGINT, handle_int)
-        return process.returncode
+        return retcode
 
     def run_task(
         self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None, seen: set[str] | None = None
