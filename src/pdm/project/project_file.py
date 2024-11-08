@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 from tomlkit import TOMLDocument, items
 
@@ -41,7 +41,14 @@ class PyProject(TOMLBase):
     def write(self, show_message: bool = True) -> None:
         """Write the TOMLDocument to the file."""
         _remove_empty_tables(self._data.get("project", {}))
-        _remove_empty_tables(self._data.get("tool", {}).get("pdm", {}))
+        if "tool" in self._data:
+            tool_table = cast(dict, self._data["tool"])
+            _remove_empty_tables(tool_table.get("pdm", {}))
+            if "pdm" in tool_table and not tool_table["pdm"]:
+                del tool_table["pdm"]
+            if not tool_table:
+                del self._data["tool"]
+
         if "dependency-groups" in self._data and not self.dependency_groups:
             del self._data["dependency-groups"]
         super().write()

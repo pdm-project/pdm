@@ -638,8 +638,8 @@ class Project:
         def update_dev_dependencies(deps: list[str]) -> None:
             from tomlkit.container import OutOfOrderTableProxy
 
-            dependency_groups: list[str | dict[str, str]] = []
-            dev_dependencies: list[str] = []
+            dependency_groups: list[str | dict[str, str]] = tomlkit.array().multiline(True)
+            dev_dependencies: list[str] = tomlkit.array().multiline(True)
             for dep in deps:
                 if dep.startswith("-e"):
                     dev_dependencies.append(dep)
@@ -682,7 +682,7 @@ class Project:
             if normalized_group in normalized_groups:
                 raise PdmUsageError(f"Group {group} already exists in another non-normalized form")
         # If not found, return an empty list and a setter to add the group
-        return tomlkit.array(), deps_setter[int(dev)][1]
+        return tomlkit.array().multiline(True), deps_setter[int(dev)][1]
 
     def add_dependencies(
         self,
