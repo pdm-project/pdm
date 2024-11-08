@@ -354,8 +354,9 @@ class Core:
         else:
             return [sys.executable, "-m", "uv"]
         # Try to find it in the typical place:
-        if (uv_path := Path.home() / ".cargo/bin/uv").exists():
-            return [str(uv_path)]
+        for bin_dir in [".local/bin", ".cargo/bin"]:
+            if (uv_path := Path.home() / bin_dir / "uv").exists():
+                return [str(uv_path)]
         # If not found, try to find it in PATH
         import shutil
 
