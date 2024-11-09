@@ -164,10 +164,10 @@ class ErrorArgumentParser(ArgumentParser):
     """
 
     def _parse_known_args(
-        self, arg_strings: list[str], namespace: argparse.Namespace
+        self, arg_strings: list[str], namespace: argparse.Namespace, *args: Any, **kwargs: Any
     ) -> tuple[argparse.Namespace, list[str]]:
         try:
-            return super()._parse_known_args(arg_strings, namespace)
+            return super()._parse_known_args(arg_strings, namespace, *args, **kwargs)
         except argparse.ArgumentError as e:
             # We raise a dedicated error to avoid being caught by the caller
             raise PdmArgumentError(e) from e
