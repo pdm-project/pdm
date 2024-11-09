@@ -1,3 +1,19 @@
+## Release v2.20.1 (2024-11-09)
+
+### Features & Improvements
+
+- Add a fixer to remove the deprecated `cross_platform` strategy from lock file. ([#3259](https://github.com/pdm-project/pdm/issues/3259))
+
+### Bug Fixes
+
+- Fix the bug that `pdm build` would fail when `use_uv` is true. ([#3231](https://github.com/pdm-project/pdm/issues/3231))
+- Fix group name normalization when comparing groups. ([#3247](https://github.com/pdm-project/pdm/issues/3247))
+- Inherit file descriptors instead of closing when running child processes in `pdm run`. ([#3252](https://github.com/pdm-project/pdm/issues/3252))
+- Fix using `no_proxy` when `all_proxy` is set. ([#3254](https://github.com/pdm-project/pdm/issues/3254))
+- Preserve multiline arrays and don't add empty tool.pdm table header when updating the pyproject.toml. ([#3258](https://github.com/pdm-project/pdm/issues/3258))
+- Fix compatibility of `ErrorArgumentParser` for Python 3.12 and above. ([#3264](https://github.com/pdm-project/pdm/issues/3264))
+
+
 ## Release v2.20.0 (2024-10-31)
 
 ### Features & Improvements
