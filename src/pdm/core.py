@@ -27,7 +27,7 @@ import tomlkit.exceptions
 from pdm import termui
 from pdm.__version__ import __version__
 from pdm.cli.options import ignore_python_option, no_cache_option, non_interactive_option, pep582_option, verbose_option
-from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
+from pdm.cli.utils import ArgumentParser, ErrorArgumentParser, ArgumentParserSimilarComandUtil
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager
@@ -70,6 +70,7 @@ class Core:
     project_class = Project
     repository_class: type[BaseRepository] = PyPIRepository
     install_manager_class = InstallManager
+    commands: list[str] = []
 
     def __init__(self) -> None:
         self.version = __version__
@@ -256,7 +257,10 @@ class Core:
 
         project = self.ensure_project(options, obj)
         if root_script and root_script not in project.scripts:
-            self.parser.error(f"Script unknown: {root_script}")
+            message = ArgumentParserSimilarComandUtil.format_similar_command(
+                root_script, self.commands, project.scripts
+            )
+            self.parser.error(message)
 
         try:
             self.handle(project, options)
@@ -289,6 +293,7 @@ class Core:
                 is used
         """
         assert self.subparsers
+        self.commands.append(name)
         command.register_to(self.subparsers, name)
 
     @staticmethod
