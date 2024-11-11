@@ -157,25 +157,25 @@ def find_similar_text(origin_name: str, target_names: list[str], ratio: float = 
     return [name for name, _ in sorted(results, key=lambda x: x[1], reverse=True)]
 
 
-class ArgumentParserSimilarComandUtil:
-    color: ClassVar[dict[str, str]] = {
-        "red": "\033[91m",
-        "green": "\033[92m",
-        "yellow": "\033[93m",
-    }
-
-    @classmethod
-    def format_similar_command(cls, root_command: str, commands: list[str], script_commands: list[str]) -> str:
-        similar_commands = find_similar_text(root_command, commands)
-        similar_script_commands = find_similar_text(root_command, script_commands)
-        message = f"""{cls.color['red']}Command not found: {root_command}
-    {cls.color['green']}Did you mean one of these command?
-        {cls.color['green']}{similar_commands}
-
-    {cls.color['yellow']}Or one of these script command?
-        {cls.color['yellow']}{similar_script_commands}
-        """
-        return message
+def format_similar_command(root_command: str, commands: list[str], script_commands: list[str]) -> str:
+    similar_commands = find_similar_text(root_command, commands)
+    similar_script_commands = find_similar_text(root_command, script_commands)
+    commands_text = "\n".join([f"    - {cmd}" for cmd in similar_commands])
+    script_commands_text = "\n".join([f"    - {cmd}" for cmd in similar_script_commands])
+    message = f"""[red]Command not found: {root_command}[/]
+    """
+    if commands_text:
+        message += f"""
+[green]Did you mean one of these command?
+{commands_text}[/]
+"""
+        
+    if script_commands_text:
+        message += f"""
+[yellow]Or one of these script command?
+{script_commands_text}[/]
+"""     
+    return message
 
 
 class ErrorArgumentParser(ArgumentParser):

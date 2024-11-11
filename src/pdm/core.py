@@ -27,7 +27,7 @@ import tomlkit.exceptions
 from pdm import termui
 from pdm.__version__ import __version__
 from pdm.cli.options import ignore_python_option, no_cache_option, non_interactive_option, pep582_option, verbose_option
-from pdm.cli.utils import ArgumentParser, ArgumentParserSimilarComandUtil, ErrorArgumentParser
+from pdm.cli.utils import ArgumentParser, ErrorArgumentParser, format_similar_command
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager
@@ -257,9 +257,10 @@ class Core:
 
         project = self.ensure_project(options, obj)
         if root_script and root_script not in project.scripts:
-            message = ArgumentParserSimilarComandUtil.format_similar_command(
+            message = format_similar_command(
                 root_script, self.commands, list(project.scripts.keys())
             )
+            message = termui.style(message)
             self.parser.error(message)
 
         try:
