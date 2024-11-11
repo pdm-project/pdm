@@ -12,7 +12,7 @@ from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Mapping, MutableMapping, cast, no_type_check
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast, no_type_check
 
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
@@ -169,12 +169,12 @@ def format_similar_command(root_command: str, commands: list[str], script_comman
 [green]Did you mean one of these command?
 {commands_text}[/]
 """
-        
+
     if script_commands_text:
         message += f"""
 [yellow]Or one of these script command?
 {script_commands_text}[/]
-"""     
+"""
     return message
 
 

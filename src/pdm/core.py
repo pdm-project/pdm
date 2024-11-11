@@ -257,9 +257,7 @@ class Core:
 
         project = self.ensure_project(options, obj)
         if root_script and root_script not in project.scripts:
-            message = format_similar_command(
-                root_script, self.commands, list(project.scripts.keys())
-            )
+            message = format_similar_command(root_script, self.commands, list(project.scripts.keys()))
             message = termui.style(message)
             self.parser.error(message)
 
