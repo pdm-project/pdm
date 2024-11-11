@@ -20,7 +20,7 @@ from datetime import datetime
 from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, ClassVar
 
 import tomlkit.exceptions
 
@@ -70,7 +70,7 @@ class Core:
     project_class = Project
     repository_class: type[BaseRepository] = PyPIRepository
     install_manager_class = InstallManager
-    commands: list[str] = []
+    commands: ClassVar[list[str]] = []
 
     def __init__(self) -> None:
         self.version = __version__

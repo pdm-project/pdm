@@ -12,16 +12,7 @@ from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterable,
-    Mapping,
-    MutableMapping,
-    cast,
-    no_type_check,
-)
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast, no_type_check, ClassVar
 
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
@@ -167,7 +158,7 @@ def find_similar_text(origin_name: str, target_names: list[str], ratio: float = 
 
 
 class ArgumentParserSimilarComandUtil:
-    color = {
+    color: ClassVar[dict[str, str]] = {
         "red": "\033[91m",
         "green": "\033[92m",
         "yellow": "\033[93m",
@@ -180,7 +171,7 @@ class ArgumentParserSimilarComandUtil:
         message = f"""{cls.color['red']}Command not found: {root_command}
     {cls.color['green']}Did you mean one of these command?
         {cls.color['green']}{similar_commands}
-    
+
     {cls.color['yellow']}Or one of these script command?
         {cls.color['yellow']}{similar_script_commands}
         """
