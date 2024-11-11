@@ -7,6 +7,7 @@ import os
 import re
 import sys
 from collections import OrderedDict
+from difflib import SequenceMatcher
 from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
@@ -154,6 +155,36 @@ class ArgumentParser(argparse.ArgumentParser):
             msg = _("unrecognized arguments: %s")
             self.error(msg % " ".join(argv))
         return args, argv
+
+
+def find_similar_text(origin_name: str, target_names: list[str], ratio: float = 0.5) -> list[str]:
+    results = []
+    for name in target_names:
+        ratio = SequenceMatcher(None, origin_name, name).ratio()
+        if ratio > 0.4:
+            results.append((name, ratio))
+    return [name for name, _ in sorted(results, key=lambda x: x[1], reverse=True)]
+
+
+class ArgumentParserSimilarComandUtil:
+    color = {
+        "red": "\033[91m",
+        "green": "\033[92m",
+        "yellow": "\033[93m",
+    }
+
+    @classmethod
+    def format_similar_command(cls, root_command: str, commands: list[str], script_commands: list[str]) -> str:
+        similar_commands = find_similar_text(root_command, commands)
+        similar_script_commands = find_similar_text(root_command, script_commands)
+        message = f"""{cls.color['red']}Command not found: {root_command}
+    {cls.color['green']}Did you mean one of these command?
+        {cls.color['green']}{similar_commands}
+    
+    {cls.color['yellow']}Or one of these script command?
+        {cls.color['yellow']}{similar_script_commands}
+        """
+        return message
 
 
 class ErrorArgumentParser(ArgumentParser):
