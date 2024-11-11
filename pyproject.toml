@@ -220,7 +220,7 @@ testpaths = [
 ]
 
 [tool.codespell]
-ignore-words-list = "ba,overriden,te"
+ignore-words-list = "ba,overriden,te,instal"
 
 [tool.coverage.run]
 branch = true
