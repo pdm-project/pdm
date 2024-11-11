@@ -400,8 +400,8 @@ class Project:
 
     def get_dependencies(self, group: str | None = None) -> Sequence[Requirement]:
         metadata = self.pyproject.metadata
-        group = group or "default"
-        optional_dependencies = metadata.get("optional-dependencies", {})
+        group = normalize_name(group or "default")
+        optional_dependencies = {normalize_name(k): v for k, v in metadata.get("optional-dependencies", {}).items()}
         dev_dependencies = self.pyproject.dev_dependencies
         in_metadata = group == "default" or group in optional_dependencies
         referred_groups: dict[str, set[str]] = {}
