@@ -20,7 +20,7 @@ from datetime import datetime
 from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast, ClassVar
+from typing import TYPE_CHECKING, ClassVar, cast
 
 import tomlkit.exceptions
 

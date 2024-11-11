@@ -12,7 +12,7 @@ from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast, no_type_check, ClassVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable, Mapping, MutableMapping, cast, no_type_check
 
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
