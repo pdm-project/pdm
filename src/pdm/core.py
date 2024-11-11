@@ -258,7 +258,7 @@ class Core:
         project = self.ensure_project(options, obj)
         if root_script and root_script not in project.scripts:
             message = ArgumentParserSimilarComandUtil.format_similar_command(
-                root_script, self.commands, project.scripts
+                root_script, self.commands, list(project.scripts.keys())
             )
             self.parser.error(message)
 
@@ -293,7 +293,8 @@ class Core:
                 is used
         """
         assert self.subparsers
-        self.commands.append(name)
+        if name:
+            self.commands.append(name)
         command.register_to(self.subparsers, name)
 
     @staticmethod
