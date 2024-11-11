@@ -27,7 +27,7 @@ import tomlkit.exceptions
 from pdm import termui
 from pdm.__version__ import __version__
 from pdm.cli.options import ignore_python_option, no_cache_option, non_interactive_option, pep582_option, verbose_option
-from pdm.cli.utils import ArgumentParser, ErrorArgumentParser, ArgumentParserSimilarComandUtil
+from pdm.cli.utils import ArgumentParser, ArgumentParserSimilarComandUtil, ErrorArgumentParser
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager
