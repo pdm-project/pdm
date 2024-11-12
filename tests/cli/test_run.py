@@ -923,7 +923,7 @@ def test_run_shortcuts_dont_override_commands(project, pdm, capfd, mocker):
 def test_run_shortcut_fail_with_usage_if_script_not_found(project, pdm):
     result = pdm(["whatever"], obj=project)
     assert result.exit_code != 0
-    assert "Script unknown: whatever" in result.stderr
+    assert "Command not found: whatever" in result.stderr
     assert "Usage" in result.stderr
 
 
