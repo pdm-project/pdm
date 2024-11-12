@@ -37,6 +37,7 @@ class _UvFileBuilder:
         data = self.project.pyproject._data.unwrap()
         data.setdefault("project", {})["requires-python"] = self.requires_python
         data.setdefault("project", {})["dependencies"] = []
+        data.pop("dependency-groups", None)
         data.setdefault("project", {}).pop("optional-dependencies", None)
         sources = {}
         collected_deps: dict[str, list[str]] = {}
@@ -47,7 +48,9 @@ class _UvFileBuilder:
             else:
                 entry = dep.as_line()
             for group in dep.groups:
-                collected_deps.setdefault(group, []).append(entry)
+                collected = collected_deps.setdefault(group, [])
+                if entry not in collected:
+                    collected.append(entry)
 
         for group, deps in collected_deps.items():
             if group == "default":
@@ -97,13 +100,15 @@ class _UvFileBuilder:
             dependencies: list[dict[str, Any]] = []
             optional_dependencies: dict[str, list[dict[str, Any]]] = {}
             for req in self.requirements:
-                group = req.groups[0]
                 if (dep := self._make_dependency(None, req)) is None:
                     continue
-                if group == "default":
-                    dependencies.append(dep)
-                else:
-                    optional_dependencies.setdefault(group, []).append(dep)
+                for group in req.groups:
+                    if group == "default":
+                        target_group = dependencies
+                    else:
+                        target_group = optional_dependencies.setdefault(group, [])
+                    if dep not in target_group:
+                        target_group.append(dep)
             if dependencies:
                 this_package["dependencies"] = dependencies  # type: ignore[assignment]
             if optional_dependencies:

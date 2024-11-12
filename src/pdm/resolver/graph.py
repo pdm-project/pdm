@@ -111,7 +111,7 @@ def _build_marker(
             parent_marker = resolved[_identify_parent(parent)]
         merged = this_marker & parent_marker
         # Use 'or' to connect metasets inherited from different parents.
-        marker = marker | merged if marker is not None else merged
+        marker = (marker | merged) if marker is not None else merged  # type: ignore[operator]
     return marker if marker is not None else get_marker("")
 
 

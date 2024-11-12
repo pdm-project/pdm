@@ -164,7 +164,11 @@ class TaskRunner:
         tool_config = metadata.pop("tool", {})
         script_project = self.project.core.create_project()
         script_project.pyproject.set_data({"project": metadata, "tool": tool_config})
-        venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8")).hexdigest()
+        md5_kwargs = {}
+        # for python >= 3.9, indicate that md5 is not used in a security context
+        if sys.version_info >= (3, 9):
+            md5_kwargs = {"usedforsecurity": False}
+        venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8"), **md5_kwargs).hexdigest()
         venv_backend = BACKENDS[script_project.config["venv.backend"]](script_project, None)
         venv = venv_backend.get_location(None, venv_name)
         if venv.exists() and not self.recreate_env:
@@ -290,11 +294,11 @@ class TaskRunner:
         process_env.update({"PDM_RUN_CWD": str(Path.cwd())})
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
         handle_int = signal.signal(signal.SIGINT, forward_signal)
-        process = subprocess.Popen(process_cmd, cwd=cwd, shell=shell, bufsize=0, env=process_env)
-        process.wait()
+        process = subprocess.Popen(process_cmd, cwd=cwd, shell=shell, bufsize=0, close_fds=False, env=process_env)
+        retcode = process.wait()
         signal.signal(signal.SIGTERM, handle_term)
         signal.signal(signal.SIGINT, handle_int)
-        return process.returncode
+        return retcode
 
     def run_task(
         self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None, seen: set[str] | None = None
@@ -341,9 +345,9 @@ class TaskRunner:
             assert isinstance(value, list)
 
         self.project.core.ui.echo(
-            f"Running {task}: [success]{args}[/]",
+            f"Running {task}: [success]{args}[/]\n",
             err=True,
-            verbosity=termui.Verbosity.DETAIL,
+            verbosity=termui.Verbosity.NORMAL,
         )
         if kind == "composite":
             args = list(args)

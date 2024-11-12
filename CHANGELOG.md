@@ -1,3 +1,35 @@
+## Release v2.20.1 (2024-11-09)
+
+### Features & Improvements
+
+- Add a fixer to remove the deprecated `cross_platform` strategy from lock file. ([#3259](https://github.com/pdm-project/pdm/issues/3259))
+
+### Bug Fixes
+
+- Fix the bug that `pdm build` would fail when `use_uv` is true. ([#3231](https://github.com/pdm-project/pdm/issues/3231))
+- Fix group name normalization when comparing groups. ([#3247](https://github.com/pdm-project/pdm/issues/3247))
+- Inherit file descriptors instead of closing when running child processes in `pdm run`. ([#3252](https://github.com/pdm-project/pdm/issues/3252))
+- Fix using `no_proxy` when `all_proxy` is set. ([#3254](https://github.com/pdm-project/pdm/issues/3254))
+- Preserve multiline arrays and don't add empty tool.pdm table header when updating the pyproject.toml. ([#3258](https://github.com/pdm-project/pdm/issues/3258))
+- Fix compatibility of `ErrorArgumentParser` for Python 3.12 and above. ([#3264](https://github.com/pdm-project/pdm/issues/3264))
+
+
+## Release v2.20.0 (2024-10-31)
+
+### Features & Improvements
+
+- Support dependency groups as standardized by [PEP 735](https://peps.python.org/pep-0735/). By default, dev dependencies will be written to `[dependency-groups]` table. ([#3230](https://github.com/pdm-project/pdm/issues/3230))
+
+### Bug Fixes
+
+- Fix a bug that `strategy.inherit_metadata` config is not honored when using `--lockfile` option. ([#3232](https://github.com/pdm-project/pdm/issues/3232))
+- Always perform install-time resolution when `use_uv` is on. ([#3233](https://github.com/pdm-project/pdm/issues/3233))
+
+### Miscellany
+
+- Update `resolvelib` to 1.1.0. ([#3235](https://github.com/pdm-project/pdm/issues/3235))
+
+
 ## Release v2.19.3 (2024-10-19)
 
 ### Features & Improvements

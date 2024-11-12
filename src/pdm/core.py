@@ -20,14 +20,14 @@ from datetime import datetime
 from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 import tomlkit.exceptions
 
 from pdm import termui
 from pdm.__version__ import __version__
 from pdm.cli.options import ignore_python_option, no_cache_option, non_interactive_option, pep582_option, verbose_option
-from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
+from pdm.cli.utils import ArgumentParser, ErrorArgumentParser, format_similar_command
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
 from pdm.installers import InstallManager
@@ -70,6 +70,7 @@ class Core:
     project_class = Project
     repository_class: type[BaseRepository] = PyPIRepository
     install_manager_class = InstallManager
+    commands: ClassVar[list[str]] = []
 
     def __init__(self) -> None:
         self.version = __version__
@@ -256,7 +257,9 @@ class Core:
 
         project = self.ensure_project(options, obj)
         if root_script and root_script not in project.scripts:
-            self.parser.error(f"Script unknown: {root_script}")
+            message = format_similar_command(root_script, self.commands, list(project.scripts.keys()))
+            message = termui.style(message)
+            self.parser.error(message)
 
         try:
             self.handle(project, options)
@@ -289,6 +292,8 @@ class Core:
                 is used
         """
         assert self.subparsers
+        if name:
+            self.commands.append(name)
         command.register_to(self.subparsers, name)
 
     @staticmethod
@@ -354,8 +359,9 @@ class Core:
         else:
             return [sys.executable, "-m", "uv"]
         # Try to find it in the typical place:
-        if (uv_path := Path.home() / ".cargo/bin/uv").exists():
-            return [str(uv_path)]
+        for bin_dir in [".local/bin", ".cargo/bin"]:
+            if (uv_path := Path.home() / bin_dir / "uv").exists():
+                return [str(uv_path)]
         # If not found, try to find it in PATH
         import shutil
 

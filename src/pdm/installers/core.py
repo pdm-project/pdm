@@ -5,7 +5,6 @@ from typing import Iterable
 from pdm.environments import BaseEnvironment
 from pdm.models.requirements import Requirement
 from pdm.resolver.reporters import LockReporter
-from pdm.resolver.resolvelib import RLResolver
 
 
 def install_requirements(
@@ -29,8 +28,6 @@ def install_requirements(
         keep_self=True,
         reporter=reporter,
     )
-    if isinstance(resolver, RLResolver):
-        resolver.provider.repository.find_dependencies_from_local = False
     resolved = resolver.resolve().packages
     syncer = environment.project.get_synchronizer(quiet=True)(
         environment,

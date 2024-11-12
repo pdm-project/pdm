@@ -186,7 +186,6 @@ class TestRepository(BaseRepository):
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
         return (
             self._get_dependencies_from_cache,
-            self._get_dependencies_from_local_package,
             self._get_dependencies_from_fixture,
             self._get_dependencies_from_metadata,
         )

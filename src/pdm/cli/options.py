@@ -256,7 +256,7 @@ groups_group.add_argument(
     metavar="GROUP",
     action=split_lists(","),
     help="Select group of optional-dependencies separated by comma "
-    "or dev-dependencies (with `-d`). Can be supplied multiple times, "
+    "or dependency-groups (with `-d`). Can be supplied multiple times, "
     'use ":all" to include all groups under the same species.',
     default=[],
 )
@@ -265,7 +265,7 @@ groups_group.add_argument(
     dest="excluded_groups",
     metavar="",
     action=split_lists(","),
-    help="Exclude groups of optional-dependencies or dev-dependencies",
+    help="Exclude groups of optional-dependencies or dependency-groups",
     default=[],
 )
 groups_group.add_argument(

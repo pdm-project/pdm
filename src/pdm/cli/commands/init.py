@@ -24,7 +24,12 @@ if TYPE_CHECKING:
 
 
 class Command(BaseCommand):
-    """Initialize a pyproject.toml for PDM"""
+    """Initialize a pyproject.toml for PDM.
+
+    Built-in templates:
+    - default: `pdm init`, A simple template with a basic structure.
+    - minimal: `pdm init minimal`, A minimal template with only `pyproject.toml`.
+    """
 
     def __init__(self) -> None:
         self.interactive = True

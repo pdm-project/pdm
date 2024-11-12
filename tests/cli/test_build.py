@@ -30,6 +30,7 @@ def test_build_command(project, pdm, mocker):
         wheel=True,
         dest=mock.ANY,
         clean=True,
+        verbose=0,
         hooks=mock.ANY,
     )
     assert project.core.state.config_settings == {"a": "1", "b": "2"}

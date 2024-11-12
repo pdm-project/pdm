@@ -7,20 +7,12 @@ import os
 import re
 import sys
 from collections import OrderedDict
+from difflib import SequenceMatcher
 from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterable,
-    Mapping,
-    MutableMapping,
-    cast,
-    no_type_check,
-)
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast, no_type_check
 
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
@@ -156,6 +148,36 @@ class ArgumentParser(argparse.ArgumentParser):
         return args, argv
 
 
+def find_similar_text(origin_name: str, target_names: list[str], ratio: float = 0.5) -> list[str]:
+    results = []
+    for name in target_names:
+        ratio = SequenceMatcher(None, origin_name, name).ratio()
+        if ratio > 0.4:
+            results.append((name, ratio))
+    return [name for name, _ in sorted(results, key=lambda x: x[1], reverse=True)]
+
+
+def format_similar_command(root_command: str, commands: list[str], script_commands: list[str]) -> str:
+    similar_commands = find_similar_text(root_command, commands)
+    similar_script_commands = find_similar_text(root_command, script_commands)
+    commands_text = "\n".join([f"    - {cmd}" for cmd in similar_commands])
+    script_commands_text = "\n".join([f"    - {cmd}" for cmd in similar_script_commands])
+    message = f"""[red]Command not found: {root_command}[/]
+    """
+    if commands_text:
+        message += f"""
+[green]Did you mean one of these command?
+{commands_text}[/]
+"""
+
+    if script_commands_text:
+        message += f"""
+[yellow]Or one of these script command?
+{script_commands_text}[/]
+"""
+    return message
+
+
 class ErrorArgumentParser(ArgumentParser):
     """A subclass of argparse.ArgumentParser that raises
     parsing error rather than exiting.
@@ -164,10 +186,10 @@ class ErrorArgumentParser(ArgumentParser):
     """
 
     def _parse_known_args(
-        self, arg_strings: list[str], namespace: argparse.Namespace
+        self, arg_strings: list[str], namespace: argparse.Namespace, *args: Any, **kwargs: Any
     ) -> tuple[argparse.Namespace, list[str]]:
         try:
-            return super()._parse_known_args(arg_strings, namespace)
+            return super()._parse_known_args(arg_strings, namespace, *args, **kwargs)
         except argparse.ArgumentError as e:
             # We raise a dedicated error to avoid being caught by the caller
             raise PdmArgumentError(e) from e

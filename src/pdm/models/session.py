@@ -152,8 +152,9 @@ class PDMPyPIClient(PyPIClient):
         mounts: dict[str, httpx.BaseTransport] = {"file://": LocalFSTransport()}
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
         self._proxy_map = {
-            URLPattern(key): proxy for key, proxy in sorted(self._get_proxy_map(None, allow_env_proxies=True).items())
+            URLPattern(key): proxy for key, proxy in self._get_proxy_map(None, allow_env_proxies=True).items()
         }
+        self._proxy_map = dict(sorted(self._proxy_map.items()))
         for s in sources:
             assert s.url is not None
             url = httpx.URL(s.url)

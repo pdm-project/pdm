@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence, ca
 
 import tomlkit
 from pbs_installer import PythonVersion
-from tomlkit.items import Array
 
 from pdm._types import NotSet, NotSetType, RepositoryConfig
 from pdm.compat import CompatibleSequence
@@ -39,6 +38,7 @@ from pdm.utils import (
     is_conda_base,
     is_conda_base_python,
     is_path_relative_to,
+    normalize_name,
     path_to_url,
 )
 
@@ -56,6 +56,81 @@ if TYPE_CHECKING:
 
 
 PYENV_ROOT = os.path.expanduser(os.getenv("PYENV_ROOT", "~/.pyenv"))
+
+
+def _resolve_dependency_group(
+    project_name: str | None,
+    dependency_groups: dict[str, list[str]],
+    group: str,
+    past_groups: tuple[str, ...] = (),
+    optional_dependencies: dict[str, list[str]] | None = None,
+    allow_optional: bool = False,
+) -> tuple[list[str], dict[str, set[str]]]:
+    optional_dependencies = optional_dependencies or {}
+    if group in past_groups:
+        raise ProjectError(f"Cyclic dependency group include: {group} -> {past_groups}")
+
+    if group in dependency_groups:
+        raw_group = dependency_groups[group]
+        # dependency groups are allowed to refer to other dependency groups
+        child_dependencies = dependency_groups
+    elif allow_optional and group in optional_dependencies:
+        raw_group = optional_dependencies[group]
+        # optional dependencies are not allowed to refer to dependency groups
+        child_dependencies = optional_dependencies
+    else:
+        raise ProjectError(f"Dependency group '{group}' not found")
+
+    if not isinstance(raw_group, list):
+        raise ProjectError(f"Dependency group '{group}' is not a list")
+
+    realized_group: list[str] = []
+    referred_groups: dict[str, set[str]] = {}
+    for item in raw_group:
+        if isinstance(item, str):
+            try:
+                req, extras = strip_extras(item)
+            except AssertionError:
+                pass
+            else:
+                if normalize_name(req) == project_name:
+                    for extra in extras or ():
+                        resolved, referred = _resolve_dependency_group(
+                            project_name,
+                            child_dependencies,
+                            extra,
+                            (*past_groups, group),
+                            optional_dependencies,
+                            # `self[extra]` is allowed to refer to optional dependency groups
+                            allow_optional=True,
+                        )
+                        realized_group.extend(resolved)
+                        for k, v in referred.items():
+                            referred_groups.setdefault(k, {group}).update(v)
+                    continue
+            realized_group.append(item)
+            referred_groups.setdefault(item, {group})
+        elif isinstance(item, dict):
+            if tuple(item.keys()) != ("include-group",):
+                raise ProjectError(f"Invalid dependency group item: {item}")
+
+            include_group = normalize_name(next(iter(item.values())))
+            resolved, referred = _resolve_dependency_group(
+                project_name,
+                child_dependencies,
+                include_group,
+                (*past_groups, group),
+                optional_dependencies,
+                # `include-group` is not allowed to refer to optional dependency groups
+                allow_optional=False,
+            )
+            realized_group.extend(resolved)
+            for k, v in referred.items():
+                referred_groups.setdefault(k, {group}).update(v)
+        else:
+            raise ProjectError(f"Invalid dependency group item: {item}")
+
+    return realized_group, referred_groups
 
 
 class Project:
@@ -127,15 +202,16 @@ class Project:
     @property
     def lockfile(self) -> Lockfile:
         if self._lockfile is None:
-            self._lockfile = Lockfile(self.root / self.LOCKFILE_FILENAME, ui=self.core.ui)
-            if self.config.get("use_uv"):
-                self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
-            if not self.config["strategy.inherit_metadata"]:
-                self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
+            self.set_lockfile(self.root / self.LOCKFILE_FILENAME)
+            assert self._lockfile is not None
         return self._lockfile
 
     def set_lockfile(self, path: str | Path) -> None:
         self._lockfile = Lockfile(path, ui=self.core.ui)
+        if self.config.get("use_uv"):
+            self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
+        if not self.config["strategy.inherit_metadata"]:
+            self._lockfile.default_strategies.discard(FLAG_INHERIT_METADATA)
 
     @cached_property
     def config(self) -> Mapping[str, Any]:
@@ -324,22 +400,26 @@ class Project:
 
     def get_dependencies(self, group: str | None = None) -> Sequence[Requirement]:
         metadata = self.pyproject.metadata
-        group = group or "default"
-        optional_dependencies = metadata.get("optional-dependencies", {})
-        dev_dependencies = self.pyproject.settings.get("dev-dependencies", {})
+        group = normalize_name(group or "default")
+        optional_dependencies = {normalize_name(k): v for k, v in metadata.get("optional-dependencies", {}).items()}
+        dev_dependencies = self.pyproject.dev_dependencies
         in_metadata = group == "default" or group in optional_dependencies
+        referred_groups: dict[str, set[str]] = {}
+        project_name = normalize_name(self.name) if self.name else None
         if group == "default":
             deps = metadata.get("dependencies", [])
         else:
             if group in optional_dependencies and group in dev_dependencies:
                 self.core.ui.info(
                     f"The {group} group exists in both \\[optional-dependencies] "
-                    "and \\[dev-dependencies], the former is taken."
+                    "and \\[dependency-groups], the former is taken."
                 )
             if group in optional_dependencies:
-                deps = optional_dependencies[group]
+                deps, referred_groups = _resolve_dependency_group(project_name, optional_dependencies, group, ())
             elif group in dev_dependencies:
-                deps = dev_dependencies[group]
+                deps, referred_groups = _resolve_dependency_group(
+                    project_name, dev_dependencies, group, (), optional_dependencies
+                )
             else:
                 raise PdmUsageError(f"Non-exist group {group}")
         result = []
@@ -353,7 +433,7 @@ class Project:
                     )
                     continue
                 req = parse_line(line)
-                req.groups = [group]
+                req.groups = list(referred_groups.get(line, [group]))
                 # make editable packages behind normal ones to override correctly.
                 result.append(req)
         return CompatibleSequence(result)
@@ -362,8 +442,8 @@ class Project:
         groups = {"default"}
         if self.pyproject.metadata.get("optional-dependencies"):
             groups.update(self.pyproject.metadata["optional-dependencies"].keys())
-        if self.pyproject.settings.get("dev-dependencies"):
-            groups.update(self.pyproject.settings["dev-dependencies"].keys())
+        groups.update(self.pyproject._data.get("dependency-groups", {}).keys())
+        groups.update(self.pyproject.settings.get("dev-dependencies", {}).keys())
         return groups
 
     @property
@@ -553,12 +633,24 @@ class Project:
         Return a tuple of two elements, the first is the dependencies array,
         and the second value is a callable to set the dependencies array back.
         """
+        from pdm.formats.base import make_array
 
         def update_dev_dependencies(deps: list[str]) -> None:
             from tomlkit.container import OutOfOrderTableProxy
 
-            if deps:
-                settings.setdefault("dev-dependencies", {})[group] = deps
+            dependency_groups: list[str | dict[str, str]] = tomlkit.array().multiline(True)
+            dev_dependencies: list[str] = tomlkit.array().multiline(True)
+            for dep in deps:
+                if dep.startswith("-e"):
+                    dev_dependencies.append(dep)
+                    continue
+                dependency_groups.append(dep)
+            if dependency_groups:
+                self.pyproject.dependency_groups[group] = dependency_groups
+            else:
+                self.pyproject.dependency_groups.pop(group, None)
+            if dev_dependencies:
+                settings.setdefault("dev-dependencies", {})[group] = dev_dependencies
             else:
                 settings.setdefault("dev-dependencies", {}).pop(group, None)
             if isinstance(self.pyproject._data["tool"], OutOfOrderTableProxy):
@@ -571,6 +663,8 @@ class Project:
         metadata, settings = self.pyproject.metadata, self.pyproject.settings
         if group == "default":
             return metadata.get("dependencies", tomlkit.array()), lambda x: metadata.__setitem__("dependencies", x)
+        dev_dependencies = self.pyproject._data.get("dependency-groups", {})
+        dev_dependencies.update(self.pyproject.settings.get("dev-dependencies", {}))
         deps_setter = [
             (
                 metadata.get("optional-dependencies", {}),
@@ -578,13 +672,17 @@ class Project:
                 if x
                 else metadata.setdefault("optional-dependencies", {}).pop(group, None),
             ),
-            (settings.get("dev-dependencies", {}), update_dev_dependencies),
+            (dev_dependencies, update_dev_dependencies),
         ]
+        normalized_group = normalize_name(group)
         for deps, setter in deps_setter:
+            normalized_groups = {normalize_name(g) for g in deps}
             if group in deps:
-                return deps[group], setter
+                return make_array(deps[group], True), setter
+            if normalized_group in normalized_groups:
+                raise PdmUsageError(f"Group {group} already exists in another non-normalized form")
         # If not found, return an empty list and a setter to add the group
-        return tomlkit.array(), deps_setter[int(dev)][1]
+        return tomlkit.array().multiline(True), deps_setter[int(dev)][1]
 
     def add_dependencies(
         self,
@@ -622,7 +720,7 @@ class Project:
                     deps[matched_index] = dep
                     parsed_deps[matched_index] = req
                     updated_indices.add(matched_index)
-        setter(cast(Array, deps).multiline(True))
+        setter(deps)
         if write:
             self.pyproject.write(show_message)
         for r in parsed_deps:

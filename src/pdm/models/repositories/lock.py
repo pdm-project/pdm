@@ -136,10 +136,7 @@ class LockedRepository(BaseRepository):
         return CandidateMetadata(deps, candidate.requires_python, entry.summary)
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
-        return (
-            self._get_dependencies_from_local_package,
-            self._get_dependencies_from_lockfile,
-        )
+        return (self._get_dependencies_from_lockfile,)
 
     def _matching_entries(self, requirement: Requirement) -> Iterable[Package]:
         for key, entry in self.packages.items():

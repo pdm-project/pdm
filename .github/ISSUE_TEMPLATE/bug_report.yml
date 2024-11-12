@@ -1,0 +1,62 @@
+name: "Bug report"
+description: Create a report to help us improve
+labels: ['🐛 bug']
+body:
+  - type: markdown
+    attributes:
+      value: "Thank you for taking the time to report a bug. Please provide as much information as possible to help us understand and resolve the issue."
+  - type: textarea
+    id: describe-bug
+    attributes:
+      label: Describe the bug
+      description: "A clear and concise description of what the bug is."
+      placeholder: "Describe the bug..."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce-bug
+    attributes:
+      label: To reproduce
+      description: "Steps to reproduce the behavior."
+      placeholder: "Steps to reproduce the behavior..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: "A clear and concise description of what you expected to happen."
+      placeholder: "Explain what you expected to happen..."
+    validations:
+      required: true
+  - type: textarea
+    id: "environment-info"
+    attributes:
+      label: Environment Information
+      description: "Paste the output of `pdm info && pdm info --env`"
+      placeholder: "Paste the output of `pdm info && pdm info --env`"
+    validations:
+      required: true
+  - type: textarea
+    id: "pdm-debug-output"
+    attributes:
+      label: "pdm -v output"
+      description: "Please provide the output of `pdm -v`."
+      placeholder: "Add the output of `pdm -v`..."
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: "Add any other context about the problem here."
+      placeholder: "Additional details..."
+    validations:
+      required: false
+  - type: checkboxes
+    id: willing-to-submit-pr
+    attributes:
+      label: "Are you willing to submit a PR to fix this bug?"
+      description: "Let us know if you are willing to contribute a fix by submitting a Pull Request."
+      options:
+        - label: "Yes, I would like to submit a PR."

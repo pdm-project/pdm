@@ -22,6 +22,7 @@ from pdm.utils import normalize_name
 @dataclass
 class RLResolver(Resolver):
     def __post_init__(self) -> None:
+        super().__post_init__()
         if self.locked_repository is None:
             self.locked_repository = self.project.get_locked_repository()
         supports_env_spec = "env_spec" in inspect.signature(self.project.get_provider).parameters
@@ -72,7 +73,7 @@ class RLResolver(Resolver):
                         r.url = backend.relative_path_to_url(r.path.as_posix())
                 deps.append(r.as_line())
             packages.append(Package(candidate, deps, candidate.summary))
-        return Resolution(packages, self.provider.repository.collected_groups)
+        return Resolution(packages, self.requested_groups)
 
     def _do_resolve(self) -> dict[str, Candidate]:
         from resolvelib import Resolver as _Resolver
