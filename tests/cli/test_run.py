@@ -995,3 +995,36 @@ def test_run_script_with_inline_metadata(project, pdm, local_finder, local_finde
     with cd(project.root):
         result = pdm(["run", "test_script.py"], obj=project)
         assert result.exit_code == 0
+
+
+def test_run_script_pass_run_cwd(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "test_script": [
+            "python",
+            "-c",
+            "import os;print(os.getenv('PDM_RUN_CWD'))",
+        ]
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert Path(out.strip()) == Path.cwd()
+
+
+def test_run_script_pass_run_cwd_to_original_working_dir_when_working_dir_of_script_is_changed(project, pdm, capfd):
+    project.root.joinpath("subdir").mkdir()
+    project.root.joinpath("subdir", "test_script.py").write_text(
+        textwrap.dedent("""\
+           import os
+           print(os.getenv('PDM_RUN_CWD', ''))
+        """)
+    )
+    project.pyproject.settings["scripts"] = {
+        "test_script": {"working_dir": "subdir", "cmd": "python test_script.py"},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "test_script"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == str(Path.cwd())
