@@ -343,9 +343,9 @@ class TaskRunner:
             assert isinstance(value, list)
 
         self.project.core.ui.echo(
-            f"Running {task}: [success]{args}[/]",
+            f"Running {task}: [success]{args}[/]\n",
             err=True,
-            verbosity=termui.Verbosity.DETAIL,
+            verbosity=termui.Verbosity.NORMAL,
         )
         if kind == "composite":
             args = list(args)
