@@ -15,6 +15,7 @@ T = TypeVar("T")
 
 class OrderedSet(AbstractSet[T]):
     """Set with deterministic ordering."""
+
     __slots__ = "_data"
 
     def __init__(self, iterable: Iterable[T] = ()) -> None:
