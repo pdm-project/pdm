@@ -284,6 +284,10 @@ start.working_dir = "subdir"
 
 Relative paths are resolved against the project root.
 
++++ 2.20.2
+
+To identify the original calling working directory, each script gets the environment variable `PDM_RUN_CWD` injected.
+
 ### `site_packages`
 
 To make sure the running environment is properly isolated from the outer Python interpreter,

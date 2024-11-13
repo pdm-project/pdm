@@ -290,9 +290,11 @@ class TaskRunner:
                 signum = signal.SIGTERM
             process.send_signal(signum)
 
+        process_env = os.environ.copy()
+        process_env.update({"PDM_RUN_CWD": str(Path.cwd())})
         handle_term = signal.signal(signal.SIGTERM, forward_signal)
         handle_int = signal.signal(signal.SIGINT, forward_signal)
-        process = subprocess.Popen(process_cmd, cwd=cwd, shell=shell, bufsize=0, close_fds=False)
+        process = subprocess.Popen(process_cmd, cwd=cwd, shell=shell, bufsize=0, close_fds=False, env=process_env)
         retcode = process.wait()
         signal.signal(signal.SIGTERM, handle_term)
         signal.signal(signal.SIGINT, handle_int)
