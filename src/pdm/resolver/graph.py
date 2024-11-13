@@ -16,8 +16,10 @@ T = TypeVar("T")
 class OrderedSet(AbstractSet[T]):
     """Set with deterministic ordering."""
 
+    __slots__ = "_data"
+
     def __init__(self, iterable: Iterable[T] = ()) -> None:
-        self._data = list(dict.fromkeys(iterable))
+        self._data = dict.fromkeys(iterable)
 
     def __hash__(self) -> int:
         return self._hash()
@@ -63,7 +65,7 @@ def merge_markers(result: Result[Requirement, Candidate, str]) -> dict[str, Mark
         new_markers: dict[str, Marker] = {}
         for k in unresolved:
             crit = result.criteria[k]
-            keep_unresolved = circular.get(k, OrderedSet())
+            keep_unresolved = circular.get(k) or OrderedSet()
             # All parents must be resolved first
             if any(p and _identify_parent(p) in (unresolved - keep_unresolved) for p in crit.iter_parent()):
                 continue
