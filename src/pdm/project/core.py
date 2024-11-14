@@ -941,22 +941,22 @@ class Project:
     def lock_targets(self) -> list[EnvSpec]:
         return [self.environment.allow_all_spec]
 
-    def get_resolver(self) -> type[Resolver]:
+    def get_resolver(self, allow_uv: bool = True) -> type[Resolver]:
         """Get the resolver class to use for the project."""
         from pdm.resolver.resolvelib import RLResolver
         from pdm.resolver.uv import UvResolver
 
-        if self.config.get("use_uv"):
+        if allow_uv and self.config.get("use_uv"):
             return UvResolver
         else:
             return RLResolver
 
-    def get_synchronizer(self, quiet: bool = False) -> type[BaseSynchronizer]:
+    def get_synchronizer(self, quiet: bool = False, allow_uv: bool = True) -> type[BaseSynchronizer]:
         """Get the synchronizer class to use for the project."""
         from pdm.installers import BaseSynchronizer, Synchronizer, UvSynchronizer
         from pdm.installers.uv import QuietUvSynchronizer
 
-        if self.config.get("use_uv"):
+        if allow_uv and self.config.get("use_uv"):
             return QuietUvSynchronizer if quiet else UvSynchronizer
         if quiet:
             return BaseSynchronizer
