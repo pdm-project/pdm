@@ -320,7 +320,7 @@ class EnvBuilder:
         assert self._prefix is not None
         path = self._prefix.shared if shared else self._prefix.overlay
         env = PythonEnvironment(self._env.project, python=str(self._env.interpreter.path), prefix=path)
-        install_requirements(missing, env)
+        install_requirements(missing, env, allow_uv=False)
 
         if shared:
             # The shared env is prepared and is safe to be cached now. This is to make

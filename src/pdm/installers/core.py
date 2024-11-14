@@ -8,7 +8,11 @@ from pdm.resolver.reporters import LockReporter
 
 
 def install_requirements(
-    reqs: Iterable[Requirement], environment: BaseEnvironment, clean: bool = False, use_install_cache: bool = False
+    reqs: Iterable[Requirement],
+    environment: BaseEnvironment,
+    clean: bool = False,
+    use_install_cache: bool = False,
+    allow_uv: bool = True,
 ) -> None:  # pragma: no cover
     """Resolve and install the given requirements into the environment."""
     reqs = [req for req in reqs if not req.marker or req.marker.matches(environment.spec)]
@@ -18,7 +22,7 @@ def install_requirements(
     for req in reqs:
         if req.is_file_or_url:
             req.relocate(backend)  # type: ignore[attr-defined]
-    resolver = project.get_resolver()(
+    resolver = project.get_resolver(allow_uv=allow_uv)(
         environment=environment,
         requirements=reqs,
         update_strategy="all",
@@ -29,7 +33,7 @@ def install_requirements(
         reporter=reporter,
     )
     resolved = resolver.resolve().packages
-    syncer = environment.project.get_synchronizer(quiet=True)(
+    syncer = environment.project.get_synchronizer(quiet=True, allow_uv=allow_uv)(
         environment,
         clean=clean,
         retry_times=0,

@@ -59,7 +59,7 @@ class Command(BaseCommand):
         with project.core.ui.open_spinner("[success]Installing plugins...[/]"):
             with project.core.ui.logging("install-plugins"):
                 install_requirements(
-                    plugins, environment, clean=True, use_install_cache=project.config["install.cache"]
+                    plugins, environment, clean=True, use_install_cache=project.config["install.cache"], allow_uv=False
                 )
             if not plugin_root.joinpath(".gitignore").exists():
                 plugin_root.mkdir(exist_ok=True)
