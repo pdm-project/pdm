@@ -187,7 +187,6 @@ class Command(BaseCommand):
                 hooks=hooks,
                 groups=locked_groups,
             )
-        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         if unconstrained:
             # Need to update version constraints
             save_version_specifiers(chain.from_iterable(updated_deps.values()), resolved, save)
@@ -196,6 +195,7 @@ class Command(BaseCommand):
                 for group, deps in updated_deps.items():
                     project.add_dependencies(deps, group, selection.dev or False)
             project.write_lockfile(project.lockfile._data, False)
+        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         if sync or dry_run:
             do_sync(
                 project,
