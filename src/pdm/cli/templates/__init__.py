@@ -112,7 +112,6 @@ class ProjectTemplate:
 
     @staticmethod
     def _copy_package_file(src: Traversable, dst: Path) -> Path:
-
         with importlib.resources.as_file(src) as f:
             return shutil.copyfile(f, dst)
 

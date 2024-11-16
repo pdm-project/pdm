@@ -47,7 +47,6 @@ else:
     import importlib_metadata
 
 
-
 Distribution = importlib_metadata.Distribution
 
 
