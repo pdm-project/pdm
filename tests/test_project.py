@@ -544,7 +544,7 @@ def test_project_best_match_max(project, mocker):
 
 
 def test_project_best_match_min(project, mocker):
-    expected = PythonVersion("cpython", 3, 8, 0)
+    expected = PythonVersion("cpython", 3, 9, 0)
     mocker.patch(
         "pdm.project.core.get_all_installable_python_versions",
         return_value=get_python_versions(),
