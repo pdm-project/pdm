@@ -977,7 +977,7 @@ def test_run_script_with_inline_metadata(project, pdm, local_finder, local_finde
     project.root.joinpath("test_script.py").write_text(
         textwrap.dedent(f"""\
         # /// script
-        # requires-python = ">=3.8"
+        # requires-python = ">=3.9"
         # dependencies = [
         #   "first",
         # ]

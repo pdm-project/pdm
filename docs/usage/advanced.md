@@ -115,7 +115,7 @@ Testing:
   runs-on: ${{ matrix.os }}
   strategy:
     matrix:
-      python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+      python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
       os: [ubuntu-latest, macOS-latest, windows-latest]
 
   steps:

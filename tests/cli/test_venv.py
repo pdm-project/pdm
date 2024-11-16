@@ -307,7 +307,7 @@ def test_conda_backend_create(project, mocker, with_pip):
             "--yes",
             "--prefix",
             str(location),
-            "python=3.8",
+            "python=3.9",
             *pip_args,
         ],
         stdout=ANY,

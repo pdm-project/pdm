@@ -9,7 +9,7 @@ However, there are times when this approach may not work. For example, your proj
 ```toml
 [project]
 name = "myproject"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "numpy<1.25; python_version < '3.9'",
     "numpy>=1.25; python_version >= '3.9'",
@@ -17,13 +17,13 @@ dependencies = [
 ]
 ```
 
-In this case, it's almost impossible to get a single resolution for each package on all platforms and Python versions(`>=3.8`). You should, instead, make lock files for specific platforms or Python versions.
+In this case, it's almost impossible to get a single resolution for each package on all platforms and Python versions(`>=3.9`). You should, instead, make lock files for specific platforms or Python versions.
 
 ## Specify lock target when generating lock file
 
 PDM supports specifying one or more environment criteria when generating a lock file. These criteria include:
 
-- `--python=<PYTHON_RANGE>`: A [PEP 440](https://www.python.org/dev/peps/pep-0440/) compatible Python version specifier. For example, `--python=">=3.8,<3.10"` will generate a lock file for Python versions `>=3.8` and `<3.10`. For convenience, `--python=3.10` is equivalent to `--python=">=3.10"`, meaning to resolve for Python 3.10 and above.
+- `--python=<PYTHON_RANGE>`: A [PEP 440](https://www.python.org/dev/peps/pep-0440/) compatible Python version specifier. For example, `--python=">=3.9,<3.10"` will generate a lock file for Python versions `>=3.9` and `<3.10`. For convenience, `--python=3.10` is equivalent to `--python=">=3.10"`, meaning to resolve for Python 3.10 and above.
 - `--platform=<PLATFORM>`: A platform specifier. For example, `pdm lock --platform=linux` will generate a lock file for Linux x86_64 platform. Available options are:
     * `linux`
     * `windows`
@@ -46,7 +46,7 @@ You can ignore some of the criteria, for example, by specifying only `--platform
 
 !!! note "`python` criterion and `requires-python`"
 
-    `--python` option, or `requires-python` criterion in the lock target is still limited by the `requires-python` in `pyproject.toml`. For example, if `requires-python` is `>=3.8` and you specified `--python="<3.11"`, the lock target will be `>=3.8,<3.11`.
+    `--python` option, or `requires-python` criterion in the lock target is still limited by the `requires-python` in `pyproject.toml`. For example, if `requires-python` is `>=3.9` and you specified `--python="<3.11"`, the lock target will be `>=3.9,<3.11`.
 
 ## Separate lock files or merge into one
 
@@ -55,11 +55,11 @@ If you need more than one lock targets, you can either create separate lock file
 To create separate lock file with a specific target:
 
 ```bash
-# Generate a lock file for Linux platform and Python 3.8, write the result to py38-linux.lock
-pdm lock --platform=linux --python="==3.8.*" --lockfile=py38-linux.lock
+# Generate a lock file for Linux platform and Python 3.9, write the result to py38-linux.lock
+pdm lock --platform=linux --python="==3.9.*" --lockfile=py38-linux.lock
 ```
 
-When you install dependencies on Linux and Python 3.8, you can use this lock file:
+When you install dependencies on Linux and Python 3.9, you can use this lock file:
 
 ```bash
 pdm install --lockfile=py38-linux.lock
@@ -70,8 +70,8 @@ Additionally, you can also select a subset of dependency groups for the lock fil
 If you would like to use the same lock file for multiple targets, add `--append` to the `pdm lock` command:
 
 ```bash
-# Generate a lock file for Linux platform and Python 3.8, append the result to pdm.lock
-pdm lock --platform=linux --python="==3.8.*" --append
+# Generate a lock file for Linux platform and Python 3.9, append the result to pdm.lock
+pdm lock --platform=linux --python="==3.9.*" --append
 ```
 
 The advantages of using a single lock file are you don't need to manage multiple lock files when updating dependencies. However, you can't specify different lock strategies for different targets in a single lock file. And the time cost of updating the locks is expected to be higher.
@@ -85,10 +85,10 @@ Here is the `pyproject.toml` content:
 ```toml
 [project]
 name = "myproject"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
-    "numpy<1.25; python_version < '3.9'",
-    "numpy>=1.25; python_version >= '3.9'",
+    "numpy<1.25; python_version < '3.10'",
+    "numpy>=1.25; python_version >= '3.10'",
     "pandas"
 ]
 
@@ -97,17 +97,17 @@ windows = ["pywin32"]
 macos = ["pyobjc"]
 ```
 
-In the above example, we have conditional dependency versions for `numpy` and platform-specific optional dependencies for Windows and MacOS. We want to generate lock files for Linux, Windows, and MacOS platforms, and Python 3.8 and 3.9.
+In the above example, we have conditional dependency versions for `numpy` and platform-specific optional dependencies for Windows and MacOS. We want to generate lock files for Linux, Windows, and MacOS platforms, and Python 3.9 and 3.10.
 
 ```bash
-pdm lock --python=">=3.9"
-pdm lock --python="<3.9" --append
+pdm lock --python=">=3.10"
+pdm lock --python="<3.10" --append
 
-pdm lock --platform=windows --python=">=3.9" --lockfile=py39-windows.lock --with windows
-pdm lock --platform=macos --python=">=3.9" --lockfile=py39-macos.lock --with macos
+pdm lock --platform=windows --python=">=3.10" --lockfile=py310-windows.lock --with windows
+pdm lock --platform=macos --python=">=3.10" --lockfile=py310-macos.lock --with macos
 ```
 Run the above commands in order, and you will get 3 lockfiles:
 
-- `pdm.lock`: the default main lock file, which works on all platforms and Python versions in `>=3.8`. No platform specific dependencies are included. In this lock file, there are two versions of `numpy`, suitable for Python 3.9 and above and below respectively. The PDM installer will choose the correct version according to the Python version.
-- `py39-windows.lock`: lock file for Windows platform and Python 3.9 above, including the optional dependencies for Windows.
-- `py39-macos.lock`: lock file for MacOS platform and Python 3.9 above, including the optional dependencies for MacOS.
+- `pdm.lock`: the default main lock file, which works on all platforms and Python versions in `>=3.9`. No platform specific dependencies are included. In this lock file, there are two versions of `numpy`, suitable for Python 3.10 and above and below respectively. The PDM installer will choose the correct version according to the Python version.
+- `py39-windows.lock`: lock file for Windows platform and Python 3.10 above, including the optional dependencies for Windows.
+- `py39-macos.lock`: lock file for MacOS platform and Python 3.10 above, including the optional dependencies for MacOS.

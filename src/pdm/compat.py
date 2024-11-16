@@ -21,7 +21,7 @@ else:
 T = TypeVar("T", bound="SupportsIdentify")
 
 if (
-    sys.version_info >= (3, 9) and not (sys.version_info[:2] == (3, 9) and sys.platform == "win32")
+    not (sys.version_info[:2] == (3, 9) and sys.platform == "win32")
     # a bug on windows+py39 that zipfile path is not normalized
 ):
 
@@ -46,11 +46,6 @@ if sys.version_info >= (3, 10):
 else:
     import importlib_metadata
 
-
-if sys.version_info >= (3, 9):
-    import importlib.resources as importlib_resources
-else:
-    import importlib_resources
 
 
 Distribution = importlib_metadata.Distribution
@@ -108,4 +103,4 @@ class CompatibleSequence(Sequence[T]):  # pragma: no cover
             yield r.identify(), r
 
 
-__all__ = ["tomllib", "importlib_metadata", "Distribution", "importlib_resources", "CompatibleSequence"]
+__all__ = ["tomllib", "importlib_metadata", "Distribution", "CompatibleSequence"]
