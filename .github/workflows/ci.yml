@@ -43,13 +43,6 @@ jobs:
           - python-version: "3.11"
             os: ubuntu-latest
             install-via: script
-          - python-version: "3.9"
-            os: macos-13
-            install-via: pip
-        exclude:
-          - python-version: "3.9"
-            os: macos-latest
-            install-via: pip
     steps:
       - uses: actions/checkout@v4
 
