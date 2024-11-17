@@ -320,7 +320,7 @@ class Core:
         scheme_names = sysconfig.get_scheme_names()
         if os.name == "nt":
             scheme = "nt"
-        elif sys.platform == "darwin" and "osx_framework_library" in scheme_names:
+        elif (sys.version_info < (3, 10)) or (sys.platform == "darwin" and "osx_framework_library" in scheme_names):
             scheme = "posix_prefix"
         else:
             scheme = sysconfig.get_default_scheme()
