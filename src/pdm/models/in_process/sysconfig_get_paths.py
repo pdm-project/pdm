@@ -36,7 +36,7 @@ def get_paths(kind="default", vars=None):
             raise ValueError(f"{scheme} is not a valid scheme on the system, or user site may be disabled.")
         return sysconfig.get_paths(scheme, vars=vars)
     else:
-        if os.name != "nt" and kind == "prefix":
+        if sys.platform == "darwin" and "osx_framework_library" in scheme_names and kind == "prefix":
             return sysconfig.get_paths("posix_prefix", vars=vars)
         return sysconfig.get_paths(vars=vars)
 
