@@ -182,7 +182,7 @@ def test_update_transitive(project, repository, pdm):
 
 
 @pytest.mark.usefixtures("working_set")
-def test_update_transitive_nonexistant_dependencies(project, pdm):
+def test_update_transitive_nonexistent_dependencies(project, pdm):
     pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
     result = pdm(["update", "numpy"], obj=project)
     assert "ProjectError" in result.stderr

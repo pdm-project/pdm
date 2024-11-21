@@ -112,7 +112,7 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm venv` do
     Additionally, if the project interpreter is a venv Python, you can omit the name argument following activate.
 
 !!! NOTE
-    `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the forementioned purpose, use the `pdm use` command.
+    `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the aforementioned purpose, use the `pdm use` command.
 
 For more CLI usage, see the [`pdm venv`](../reference/cli.md#venv) documentation.
 

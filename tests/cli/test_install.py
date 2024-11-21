@@ -126,7 +126,7 @@ def test_sync_with_index_change(project, index, pdm):
     assert [e["hash"] for e in file_hashes] == [
         "sha256:90e49598b553d8746c4dc7d9442e0359d038c3039d802c91c0a55505da318c63"
     ]
-    # Mimic the CDN inconsistences of PyPI simple index. See issues/596.
+    # Mimic the CDN inconsistencies of PyPI simple index. See issues/596.
     del index["/simple/future-fstrings/"]
     pdm(["sync", "--no-self"], obj=project, strict=True)
 

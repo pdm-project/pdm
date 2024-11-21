@@ -105,7 +105,7 @@ class Command(BaseCommand):
         if options.exclude_newer:
             strategy = "all"
             if strategy != options.update_strategy:
-                project.core.ui.info("--exclue-newer is set, forcing --update-all")
+                project.core.ui.info("--exclude-newer is set, forcing --update-all")
         project.core.state.exclude_newer = options.exclude_newer
         env_spec: EnvSpec | None = None
         if any([options.python, options.platform, options.implementation]):

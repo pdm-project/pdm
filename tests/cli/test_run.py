@@ -648,15 +648,15 @@ def test_composite_inherit_env(project, pdm, capfd, _echo):
             "cmd": "python echo.py Third VAR",
             "env": {"VAR": "42"},
         },
-        "test": {"composite": ["first", "second", "nested"], "env": {"VAR": "overriden"}},
+        "test": {"composite": ["first", "second", "nested"], "env": {"VAR": "overridden"}},
     }
     project.pyproject.write()
     capfd.readouterr()
     pdm(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "First CALLED with VAR=overriden" in out
-    assert "Second CALLED with VAR=overriden" in out
-    assert "Third CALLED with VAR=overriden" in out
+    assert "First CALLED with VAR=overridden" in out
+    assert "Second CALLED with VAR=overridden" in out
+    assert "Third CALLED with VAR=overridden" in out
 
 
 def test_composite_fail_on_first_missing_task(project, pdm, capfd, _echo):
@@ -811,15 +811,15 @@ def test_composite_hooks_inherit_env(project, pdm, capfd, _echo):
         "pre_task": {"cmd": "python echo.py Pre-Task VAR", "env": {"VAR": "42"}},
         "task": "python echo.py Task",
         "post_task": {"cmd": "python echo.py Post-Task VAR", "env": {"VAR": "42"}},
-        "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
+        "test": {"composite": ["task"], "env": {"VAR": "overridden"}},
     }
     project.pyproject.write()
     capfd.readouterr()
     pdm(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "Pre-Task CALLED with VAR=overriden" in out
+    assert "Pre-Task CALLED with VAR=overridden" in out
     assert "Task CALLED" in out
-    assert "Post-Task CALLED with VAR=overriden" in out
+    assert "Post-Task CALLED with VAR=overridden" in out
 
 
 def test_composite_inherit_env_in_cascade(project, pdm, capfd, _echo):
@@ -837,20 +837,20 @@ def test_composite_inherit_env_in_cascade(project, pdm, capfd, _echo):
             "cmd": "python echo.py Post-Task VAR FOO TIK",
             "env": {"VAR": "42", "FOO": "foobar"},
         },
-        "test": {"composite": ["task"], "env": {"VAR": "overriden"}},
+        "test": {"composite": ["task"], "env": {"VAR": "overridden"}},
     }
     project.pyproject.write()
     capfd.readouterr()
     pdm(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "Pre-Task CALLED with VAR=overriden FOO=foobar TIK=TOK" in out
-    assert "Task CALLED with VAR=overriden FOO=foobar TIK=TOK" in out
-    assert "Post-Task CALLED with VAR=overriden FOO=foobar TIK=TOK" in out
+    assert "Pre-Task CALLED with VAR=overridden FOO=foobar TIK=TOK" in out
+    assert "Task CALLED with VAR=overridden FOO=foobar TIK=TOK" in out
+    assert "Post-Task CALLED with VAR=overridden FOO=foobar TIK=TOK" in out
 
 
 def test_composite_inherit_dotfile(project, pdm, capfd, _echo):
     (project.root / ".env").write_text("VAR=42")
-    (project.root / "override.env").write_text("VAR=overriden")
+    (project.root / "override.env").write_text("VAR=overridden")
     project.pyproject.settings["scripts"] = {
         "pre_task": {"cmd": "python echo.py Pre-Task VAR", "env_file": ".env"},
         "task": {"cmd": "python echo.py Task VAR", "env_file": ".env"},
@@ -861,9 +861,9 @@ def test_composite_inherit_dotfile(project, pdm, capfd, _echo):
     capfd.readouterr()
     pdm(["run", "test"], strict=True, obj=project)
     out, _ = capfd.readouterr()
-    assert "Pre-Task CALLED with VAR=overriden" in out
-    assert "Task CALLED with VAR=overriden" in out
-    assert "Post-Task CALLED with VAR=overriden" in out
+    assert "Pre-Task CALLED with VAR=overridden" in out
+    assert "Task CALLED with VAR=overridden" in out
+    assert "Post-Task CALLED with VAR=overridden" in out
 
 
 def test_resolve_env_vars_in_dotfile(project, pdm, capfd, _echo):
@@ -934,7 +934,7 @@ def test_run_shortcut_fail_with_usage_if_script_not_found(project, pdm):
         pytest.param(["pip", "--version"], id="not an user script"),
     ],
 )
-def test_empty_positionnal_args_still_display_usage(project, pdm, args):
+def test_empty_positional_args_still_display_usage(project, pdm, args):
     result = pdm(args, obj=project)
     assert result.exit_code != 0
     assert "Usage" in result.stderr

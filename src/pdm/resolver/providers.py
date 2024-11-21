@@ -30,16 +30,16 @@ if TYPE_CHECKING:
     ProviderT = TypeVar("ProviderT", bound="type[BaseProvider]")
 
 
-_PROVIDER_REGISTORY: dict[str, type[BaseProvider]] = {}
+_PROVIDER_REGISTRY: dict[str, type[BaseProvider]] = {}
 
 
 def get_provider(strategy: str) -> type[BaseProvider]:
-    return _PROVIDER_REGISTORY[strategy]
+    return _PROVIDER_REGISTRY[strategy]
 
 
 def register_provider(strategy: str) -> Callable[[ProviderT], ProviderT]:
     def wrapper(cls: ProviderT) -> ProviderT:
-        _PROVIDER_REGISTORY[strategy] = cls
+        _PROVIDER_REGISTRY[strategy] = cls
         return cls
 
     return wrapper
@@ -75,7 +75,7 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
     def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
 
-        - Editable requirements are preferered.
+        - Editable requirements are preferred.
         - File links are preferred.
         - The one with narrower specifierset is preferred.
         """

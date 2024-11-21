@@ -122,7 +122,7 @@ class Command(BaseCommand):
 
         # Freeze.
         if options.freeze:
-            self.hande_freeze(project, options)
+            self.handle_freeze(project, options)
             return
 
         # Map dependency groups to requirements.
@@ -182,7 +182,7 @@ class Command(BaseCommand):
             )
             self.handle_list(packages, name_to_groups, project, options)
 
-    def hande_freeze(self, project: Project, options: argparse.Namespace) -> None:
+    def handle_freeze(self, project: Project, options: argparse.Namespace) -> None:
         if options.tree:
             raise PdmUsageError("--tree cannot be used with --freeze")
         if options.reverse:
