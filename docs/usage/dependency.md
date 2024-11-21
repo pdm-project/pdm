@@ -134,15 +134,15 @@ so using `optional-dependencies` is probably not a good idea. We can define them
 pdm add -dG test pytest
 ```
 
-This will result in a pyproject.toml as following:
+This will result in a `pyproject.toml` as following:
 
 ```toml
 [dependency-groups]
 test = ["pytest"]
 ```
 
-You can have several groups of development only dependencies. Unlike `optional-dependencies`, they won't appear in the package distribution metadata such as `PKG-INFO` or `METADATA`.
-The package index won't be aware of these dependencies. The schema is similar to that of `optional-dependencies`, except that it is in `tool.pdm` table.
+You can have several groups of development only dependencies. Unlike `optional-dependencies`, they won't appear in the package distribution metadata such as `PKG-INFO` or `METADATA`,
+which means the package index won't be aware of these dependencies. The schema is similar to that of `optional-dependencies`.
 
 ```toml
 [dependency-groups]
