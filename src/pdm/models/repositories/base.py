@@ -311,7 +311,7 @@ class BaseRepository:
                 links = [package.link for package in finder.find_matches(req.as_line())]
         for link in links:
             if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
-                # The links found can still be a local directory or vcs, skippping it.
+                # The links found can still be a local directory or vcs, skipping it.
                 continue
             if not logged:
                 termui.logger.info("Fetching hashes for %s", candidate)

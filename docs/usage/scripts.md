@@ -371,7 +371,7 @@ $ pdm run test
 
 !!! note
     `call` scripts don't support the `{args}` placeholder as they have
-    access to `sys.argv` directly to handle such complexe cases and more.
+    access to `sys.argv` directly to handle such complex cases and more.
 
 ### `{pdm}` placeholder
 
