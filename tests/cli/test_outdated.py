@@ -29,13 +29,19 @@ def test_outdated(project, pdm, index):
 """
 
     result = pdm(["outdated"], obj=project, strict=True, cleanup=False)
-    assert "| requests | 2.19.1    | 2.19.1 | 2.20.0 |" in result.stdout
+    assert "| requests | default | 2.19.1    | 2.19.1 | 2.20.0 |" in result.stdout
 
     result = pdm(["outdated", "re*"], obj=project, strict=True, cleanup=False)
-    assert "| requests | 2.19.1    | 2.19.1 | 2.20.0 |" in result.stdout
+    assert "| requests | default | 2.19.1    | 2.19.1 | 2.20.0 |" in result.stdout
 
     result = pdm(["outdated", "--json"], obj=project, strict=True, cleanup=False)
     json_output = json.loads(result.stdout)
     assert json_output == [
-        {"package": "requests", "installed_version": "2.19.1", "pinned_version": "2.19.1", "latest_version": "2.20.0"}
+        {
+            "package": "requests",
+            "groups": ["default"],
+            "installed_version": "2.19.1",
+            "pinned_version": "2.19.1",
+            "latest_version": "2.20.0",
+        }
     ]

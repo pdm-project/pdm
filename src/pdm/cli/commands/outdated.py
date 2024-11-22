@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from fnmatch import fnmatch
 from itertools import zip_longest
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.utils import normalize_pattern
@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 @dataclass
 class ListPackage:
     package: str
+    groups: list[str]
     installed_version: str
     pinned_version: str
     latest_version: str = ""
@@ -46,6 +47,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--json", action="store_const", const="json", dest="format", default="table", help="Output in JSON format"
         )
+        parser.add_argument("--include-sub", action="store_true", help="Include sub-dependencies")
         parser.add_argument("patterns", nargs="*", help="The packages to check", type=normalize_pattern)
 
     @staticmethod
@@ -92,21 +94,31 @@ class Command(BaseCommand):
         resolved = {strip_extras(k)[0]: v for k, v in project.get_locked_repository().candidates.items()}
 
         collected: list[ListPackage] = []
+        project_dependencies: dict[str, list[str]] = {}
+        for group, dependencies in project.all_dependencies.items():
+            for dep in dependencies:
+                project_dependencies.setdefault(cast(str, dep.key), []).append(group)
 
         for name, distribution in installed.items():
             if not self._match_pattern(name, options.patterns):
                 continue
-            if name == normalize_name(project.name):
+            if project.name and name == normalize_name(project.name):
                 continue
             constrained_version = resolved.pop(name).version or "" if name in resolved else ""
-            collected.append(ListPackage(name, distribution.version or "", constrained_version))
+            if not options.include_sub and name not in project_dependencies:
+                continue
+            groups = project_dependencies.get(name, [])
+            collected.append(ListPackage(name, groups, distribution.version or "", constrained_version))
 
         for name, candidate in resolved.items():
             if not self._match_pattern(name, options.patterns):
                 continue
             if candidate.req.marker and not candidate.req.marker.matches(environment.spec):
                 continue
-            collected.append(ListPackage(name, "", candidate.version or ""))
+            if not options.include_sub and name not in project_dependencies:
+                continue
+            groups = project_dependencies.get(name, [])
+            collected.append(ListPackage(name, groups, "", candidate.version or ""))
 
         with environment.get_finder() as finder, ThreadPoolExecutor() as executor:
             for package in collected:
@@ -121,11 +133,12 @@ class Command(BaseCommand):
         else:
             rows = [
                 (
-                    package.package,
+                    f"[bold]{package.package}[/]",
+                    ", ".join(package.groups),
                     package.installed_version,
                     self._render_version(package.pinned_version, package.installed_version),
                     self._render_version(package.latest_version, package.installed_version),
                 )
                 for package in collected
             ]
-            project.core.ui.display_columns(rows, header=["Package", "Installed", "Pinned", "Latest"])
+            project.core.ui.display_columns(rows, header=["Package", "Groups", "Installed", "Pinned", "Latest"])

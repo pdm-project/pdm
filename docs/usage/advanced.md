@@ -115,13 +115,13 @@ Testing:
   runs-on: ${{ matrix.os }}
   strategy:
     matrix:
-      python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+      python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
       os: [ubuntu-latest, macOS-latest, windows-latest]
 
   steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up PDM
-      uses: pdm-project/setup-pdm@v3
+      uses: pdm-project/setup-pdm@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -186,7 +186,7 @@ With PDM, you can have multiple sub-packages within a single project, each with 
 `project/pyproject.toml`:
 
 ```toml
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 dev = [
     "-e file:///${PROJECT_ROOT}/packages/foo-core",
     "-e file:///${PROJECT_ROOT}/packages/foo-cli",
@@ -244,7 +244,7 @@ This hook wraps the command `pdm lock --check` along with any valid argument. It
 
 ### Sync current working set with `pdm.lock`
 
-This hook wraps the command `pdm sync` along with any valid argument. It can be used as a hook to ensure that your current working set is synced with `pdm.lock` whenever you checkout or merge a branch. Add *keyring* to `additional_dependencies` if you want to use your systems credential store.
+This hook wraps the command `pdm sync` along with any valid argument. It can be used as a hook to ensure that your current working set is synced with `pdm.lock` whenever you checkout or merge a branch. Add _keyring_ to `additional_dependencies` if you want to use your systems credential store.
 
 ```yaml
 - repo: https://github.com/pdm-project/pdm

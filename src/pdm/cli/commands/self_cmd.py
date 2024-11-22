@@ -10,7 +10,7 @@ from pdm import termui
 from pdm.cli.actions import get_latest_pdm_version_from_pypi
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.cli.utils import Package, build_dependency_graph
+from pdm.cli.utils import PackageNode, build_dependency_graph
 from pdm.compat import Distribution
 from pdm.environments import BareEnvironment
 from pdm.models.markers import EnvSpec
@@ -31,9 +31,15 @@ def list_distributions(plugin_only: bool = False) -> list[Distribution]:
 
 
 def run_pip(project: Project, args: list[str]) -> subprocess.CompletedProcess[str]:
-    env = BareEnvironment(project)
-    project.environment = env
-    run_args = env.pip_command + args
+    if project.config["use_uv"]:
+        if "--upgrade-strategy" in args:
+            # uv doesn't support this option
+            args[(i := args.index("--upgrade-strategy")) : i + 2] = []
+        run_args = [*project.core.uv_cmd, "pip", *args, "--python", sys.executable]
+    else:
+        env = BareEnvironment(project)
+        project.environment = env
+        run_args = [*env.pip_command, *args]
     project.core.ui.echo(f"Running pip command: {run_args}", verbosity=termui.Verbosity.DETAIL)
 
     result = subprocess.run(
@@ -161,12 +167,12 @@ class RemoveCommand(BaseCommand):
         ws = WorkingSet()
         graph = build_dependency_graph(ws, env_spec=EnvSpec.current())
         while to_resolve:
-            temp: list[Package] = []
+            temp: list[PackageNode] = []
             for name in to_resolve:
                 key = normalize_name(name)
                 if key in ws:
                     result.add(key)
-                package = Package(key, "0.0.0", {})
+                package = PackageNode(key, "0.0.0", {})
                 if package not in graph:
                     continue
                 for dep in graph.iter_children(package):
@@ -217,6 +223,13 @@ class UpdateCommand(BaseCommand):
             action="store_true",
         )
         parser.add_argument(
+            "--no-frozen-deps",
+            action="store_false",
+            dest="frozen_deps",
+            default=True,
+            help="Do not install frozen dependency versions",
+        )
+        parser.add_argument(
             "--pip-args",
             help="Additional arguments that will be passed to pip install",
             default="",
@@ -225,8 +238,10 @@ class UpdateCommand(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         from pdm.__version__ import __version__, read_version
 
+        locked = "[locked]" if options.frozen_deps else ""
+
         if options.head:
-            package = f"pdm @ git+{PDM_REPO}@main"
+            package = f"pdm{locked} @ git+{PDM_REPO}@main"
             version: str | None = "HEAD"
         else:
             version = get_latest_pdm_version_from_pypi(project, options.pre)
@@ -234,8 +249,8 @@ class UpdateCommand(BaseCommand):
             if parse_version(__version__) >= parse_version(version):
                 project.core.ui.echo(f"Already up-to-date: [primary]{__version__}[/]")
                 return
-            package = f"pdm=={version}"
-        pip_args = ["install", "--upgrade", *shlex.split(options.pip_args), package]
+            package = f"pdm{locked}=={version}"
+        pip_args = ["install", "--upgrade", "--upgrade-strategy", "eager", *shlex.split(options.pip_args), package]
         try:
             with project.core.ui.open_spinner(f"Updating pdm to version [primary]{version}[/]"):
                 run_pip(project, pip_args)

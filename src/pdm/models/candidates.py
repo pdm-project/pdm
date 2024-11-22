@@ -18,7 +18,7 @@ from pdm.builders import EditableBuilder, WheelBuilder
 from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning, RequirementError
 from pdm.models.backends import get_backend, get_backend_by_spec
-from pdm.models.reporter import BaseReporter
+from pdm.models.reporter import CandidateReporter
 from pdm.models.requirements import (
     FileRequirement,
     Requirement,
@@ -129,6 +129,7 @@ class Candidate:
         "_prepared",
         "_requires_python",
         "_preferred",
+        "_revision",
     )
 
     def __init__(
@@ -155,6 +156,7 @@ class Candidate:
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None
+        self._revision = getattr(req, "revision", None)
 
     def identify(self) -> str:
         return self.req.identify()
@@ -165,6 +167,7 @@ class Candidate:
         can.hashes = self.hashes
         can._requires_python = self._requires_python
         can._prepared = self._prepared
+        can._revision = self._revision
         if can._prepared:
             can._prepared.req = requirement
         return can
@@ -192,6 +195,8 @@ class Candidate:
     def get_revision(self) -> str:
         if not self.req.is_vcs:
             raise AttributeError("Non-VCS candidate doesn't have revision attribute")
+        if self._revision:
+            return self._revision
         if self.req.revision:  # type: ignore[attr-defined]
             return self.req.revision  # type: ignore[attr-defined]
         return self._prepared.revision if self._prepared else "unknown"
@@ -280,10 +285,10 @@ class Candidate:
         """Format for output."""
         return f"[req]{self.name}[/] [warning]{self.version}[/]"
 
-    def prepare(self, environment: BaseEnvironment, reporter: BaseReporter | None = None) -> PreparedCandidate:
+    def prepare(self, environment: BaseEnvironment, reporter: CandidateReporter | None = None) -> PreparedCandidate:
         """Prepare the candidate for installation."""
         if self._prepared is None:
-            self._prepared = PreparedCandidate(self, environment, reporter=reporter or BaseReporter())
+            self._prepared = PreparedCandidate(self, environment, reporter=reporter or CandidateReporter())
         else:
             self._prepared.environment = environment
             if reporter is not None:
@@ -299,7 +304,7 @@ class PreparedCandidate:
 
     candidate: Candidate
     environment: BaseEnvironment
-    reporter: BaseReporter = dataclasses.field(default_factory=BaseReporter)
+    reporter: CandidateReporter = dataclasses.field(default_factory=CandidateReporter)
 
     def __post_init__(self) -> None:
         self.req = self.candidate.req
@@ -598,7 +603,7 @@ class PreparedCandidate:
             result = self.prepare_metadata()
             if not self.candidate.name:
                 self.req.name = self.candidate.name = cast(str, result.metadata.get("Name"))
-            if not self.candidate.version:
+            if not self.candidate.version and result.metadata.get("Version"):
                 self.candidate.version = result.version
             if not self.candidate.requires_python:
                 self.candidate.requires_python = result.metadata.get("Requires-Python", "")

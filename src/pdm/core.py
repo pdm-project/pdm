@@ -17,19 +17,20 @@ import os
 import pkgutil
 import sys
 from datetime import datetime
+from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
-from resolvelib import Resolver
+import tomlkit.exceptions
 
 from pdm import termui
 from pdm.__version__ import __version__
 from pdm.cli.options import ignore_python_option, no_cache_option, non_interactive_option, pep582_option, verbose_option
-from pdm.cli.utils import ArgumentParser, ErrorArgumentParser
+from pdm.cli.utils import ArgumentParser, ErrorArgumentParser, format_similar_command
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PdmArgumentError, PdmUsageError
-from pdm.installers import InstallManager, Synchronizer
+from pdm.installers import InstallManager
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config
@@ -68,9 +69,8 @@ class Core:
 
     project_class = Project
     repository_class: type[BaseRepository] = PyPIRepository
-    resolver_class = Resolver
-    synchronizer_class = Synchronizer
     install_manager_class = InstallManager
+    commands: ClassVar[list[str]] = []
 
     def __init__(self) -> None:
         self.version = __version__
@@ -217,7 +217,11 @@ class Core:
         project = self.create_project(is_global=False) if obj is None else obj
         if project.is_global:
             return args
-        config = project.pyproject.settings.get("options", {})
+        try:
+            config = project.pyproject.settings.get("options", {})
+        except tomlkit.exceptions.TOMLKitError as e:  # pragma: no cover
+            self.ui.error(f"Failed to parse pyproject.toml: {e}")
+            config = {}
         (pos, command) = self.get_command(args)
         if command and command in config:
             # add args after the command
@@ -253,7 +257,9 @@ class Core:
 
         project = self.ensure_project(options, obj)
         if root_script and root_script not in project.scripts:
-            self.parser.error(f"Script unknown: {root_script}")
+            message = format_similar_command(root_script, self.commands, list(project.scripts.keys()))
+            message = termui.style(message)
+            self.parser.error(message)
 
         try:
             self.handle(project, options)
@@ -286,6 +292,8 @@ class Core:
                 is used
         """
         assert self.subparsers
+        if name:
+            self.commands.append(name)
         command.register_to(self.subparsers, name)
 
     @staticmethod
@@ -337,6 +345,36 @@ class Core:
                 self.ui.error(
                     f"Failed to load plugin {plugin.name}={plugin.value}: {e}",
                 )
+
+    @cached_property
+    def uv_cmd(self) -> list[str]:
+        from pdm.compat import importlib_metadata
+
+        self.ui.info("Using uv is experimental and might break due to uv updates.")
+        # First, try to find uv in Python modules
+        try:
+            importlib_metadata.distribution("uv")
+        except ModuleNotFoundError:
+            pass
+        else:
+            return [sys.executable, "-m", "uv"]
+        # Try to find it in the typical place:
+        for bin_dir in [".local/bin", ".cargo/bin"]:
+            if (uv_path := Path.home() / bin_dir / "uv").exists():
+                return [str(uv_path)]
+        # If not found, try to find it in PATH
+        import shutil
+
+        path = shutil.which("uv")
+        if path:
+            return [path]
+        # If not found, try to find in the bin dir:
+        if (uv_path := Path(sys.argv[0]).with_name("uv")).exists():
+            return [str(uv_path)]
+        raise PdmUsageError(
+            "use_uv is enabled but can't find uv, please install it first: "
+            "https://docs.astral.sh/uv/getting-started/installation/"
+        )
 
 
 def main(args: list[str] | None = None) -> None:

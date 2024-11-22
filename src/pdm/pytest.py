@@ -186,7 +186,6 @@ class TestRepository(BaseRepository):
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
         return (
             self._get_dependencies_from_cache,
-            self._get_dependencies_from_local_package,
             self._get_dependencies_from_fixture,
             self._get_dependencies_from_metadata,
         )
@@ -307,7 +306,7 @@ def build_env_wheels() -> Iterable[Path]:
 
 
 @pytest.fixture(autouse=True)
-def temp_env() -> Generator[MutableMapping[str, str], None, None]:
+def temp_env() -> Generator[MutableMapping[str, str]]:
     old_env = os.environ.copy()
     try:
         yield os.environ
@@ -639,6 +638,7 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
         args = args.split() if isinstance(args, str) else args
 
         with monkeypatch.context() as m:
+            old_env = os.environ.copy()
             m.setattr("sys.stdin", stdin)
             m.setattr("sys.stdout", stdout)
             m.setattr("sys.stderr", stderr)
@@ -652,6 +652,8 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
                 exit_code = 1
                 exception = e
             finally:
+                os.environ.clear()
+                os.environ.update(old_env)
                 if cleanup:
                     core.exit_stack.close()
 

@@ -72,7 +72,7 @@ def test_plugin_replace_command(pdm, mocker, project, core):
     assert result.output.strip() == "Hello, Frost"
 
 
-def test_load_multiple_plugings(pdm, mocker, core):
+def test_load_multiple_plugins(pdm, mocker, core):
     mocker.patch.object(
         importlib_metadata,
         "entry_points",

@@ -136,6 +136,7 @@ def test_venv_activate(pdm, mocker, project):
         assert result.output.strip("'\"\n").endswith("activate")
         if platform.system() == "Windows":
             assert not result.output.startswith("source")
+            assert not result.output.startswith("'")
         else:
             assert result.output.startswith("source")
 
@@ -192,6 +193,7 @@ def test_venv_activate_no_shell(pdm, mocker, project):
         assert result.output.strip("'\"\n").endswith("activate")
         if platform.system() == "Windows":
             assert not result.output.startswith("source")
+            assert not result.output.startswith("'")
         else:
             assert result.output.startswith("source")
 
@@ -293,8 +295,8 @@ def test_venv_backend_create(project, mocker, with_pip):
 
 def test_conda_backend_create(project, mocker, with_pip):
     assert project.python
-    backend = backends.CondaBackend(project, "3.8")
-    assert backend.ident == "3.8"
+    backend = backends.CondaBackend(project, "3.9")
+    assert backend.ident == "3.9"
     mock_call = mocker.patch("subprocess.check_call")
     location = backend.create(with_pip=with_pip)
     pip_args = ["pip"] if with_pip else []
@@ -305,7 +307,7 @@ def test_conda_backend_create(project, mocker, with_pip):
             "--yes",
             "--prefix",
             str(location),
-            "python=3.8",
+            "python=3.9",
             *pip_args,
         ],
         stdout=ANY,

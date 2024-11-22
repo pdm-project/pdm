@@ -76,8 +76,12 @@ Read the [specification](https://packaging.python.org/en/latest/specifications/i
 
 PDM also supports custom script shortcuts in the optional `[tool.pdm.scripts]` section of `pyproject.toml`.
 
-!!! NOTE
-  The `[tool.pdm.scripts]` directory must not be confused with `[project.scripts]`. The latter is used to install a command as part of your package, as explained [here](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#creating-executable-scripts).
+!!! NOTE "Confuse with `[project.scripts]`?"
+    There is another field `[project.scripts]` in `pyproject.toml`, and the scripts can also be invoked with `pdm run`. It's used to define the console script entry points to be installed with the package. Therefore, the executables can only be run after the project itself is installed into the environment. That is to say, you must have `distribution = true`.
+
+    In contrast, `[tool.pdm.scripts]` defines some tasks to be run in your project. It works for projects regardless of whether the `distribution` is `true` or `false`. The tasks are primarily for development and testing purposes and support more types and settings, as will be shown later., you can regard it as a replacement for `Makefile`. It doesn't require the project to be installed but requires the existence of a `pyproject.toml` file.
+
+    See more explanations about `[project.scripts]` [here](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#creating-executable-scripts).
 
 You can then run `pdm run <script_name>` to invoke the script in the context of your PDM project. For example:
 
@@ -247,8 +251,24 @@ start.cmd = "flask run -p 54321"
 start.env_file.override = ".env"
 ```
 
-!!! note
+!!! note "Environment variable loading order"
+    Env vars loaded from different sources are loaded in the following order:
+
+    1. OS environment variables
+    2. Project environments such as `PDM_PROJECT_ROOT`, `PATH`, `VIRTUAL_ENV`, etc
+    3. Dotenv file specified by `env_file`
+    4. Env vars mapping specified by `env`
+
+    Env vars from the latter sources will override those from the former sources.
     A dotenv file specified on a composite task level will override those defined by called tasks.
+
+    An env var can contain a reference to another env var from the sources loaded before, for example:
+
+    ```
+    VAR=42
+    FOO=hello-${VAR}
+    ```
+    will result in `FOO=hello-42`. The reference can also contain a default value with the syntax `${VAR:-default}`.
 
 ### `working_dir`
 
@@ -263,6 +283,10 @@ start.working_dir = "subdir"
 ```
 
 Relative paths are resolved against the project root.
+
++++ 2.20.2
+
+To identify the original calling working directory, each script gets the environment variable `PDM_RUN_CWD` injected.
 
 ### `site_packages`
 
@@ -347,7 +371,7 @@ $ pdm run test
 
 !!! note
     `call` scripts don't support the `{args}` placeholder as they have
-    access to `sys.argv` directly to handle such complexe cases and more.
+    access to `sys.argv` directly to handle such complex cases and more.
 
 ### `{pdm}` placeholder
 

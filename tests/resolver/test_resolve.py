@@ -1,13 +1,13 @@
 import pytest
-from resolvelib.resolvers import ResolutionImpossible, Resolver
+from resolvelib.resolvers import ResolutionImpossible
 
 from pdm.cli.actions import resolve_candidates_from_lockfile
 from pdm.exceptions import PackageWarning
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.resolver import resolve as _resolve
-from pdm.resolver.reporters import SpinnerReporter
+from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
+from pdm.resolver.reporters import LockReporter
 from tests import FIXTURES
 
 
@@ -38,16 +38,25 @@ def resolve(project, repository):
                 requirements.append(parse_requirement(line[3:], True))
             else:
                 requirements.append(parse_requirement(line))
-        provider = project.get_provider(
-            strategy, tracked_names, direct_minimal_versions=direct_minimal_versions, env_spec=env_spec
-        )
 
         ui = project.core.ui
-        with ui.open_spinner("Resolving dependencies") as spin, ui.logging("lock"):
-            reporter = SpinnerReporter(spin, requirements)
-            resolver = Resolver(provider, reporter)
-            mapping, *_ = _resolve(resolver, requirements, inherit_metadata=inherit_metadata)
-            return mapping
+        strategies = project.lockfile.default_strategies.copy()
+        if inherit_metadata:
+            strategies.add(FLAG_INHERIT_METADATA)
+        if direct_minimal_versions:
+            strategies.add(FLAG_DIRECT_MINIMAL_VERSIONS)
+
+        with ui.logging("lock"):
+            resolver = project.get_resolver()(
+                environment=project.environment,
+                requirements=requirements,
+                update_strategy=strategy,
+                strategies=strategies,
+                target=env_spec,
+                tracked_names=tracked_names,
+                reporter=LockReporter(),
+            )
+            return resolver.resolve().candidates
 
     return resolve_func
 
@@ -109,6 +118,11 @@ def test_resolve_allow_prereleases(resolve, repository):
 
     with pytest.raises(ResolutionImpossible):
         resolve(["bar"], allow_prereleases=False)
+
+
+def test_resolve_prereleases_if_disabled_by_project(resolve):
+    result = resolve(["urllib3==1.23b0"], allow_prereleases=False)
+    assert result["urllib3"].version == "1.23b0"
 
 
 def test_resolve_with_extras(resolve):

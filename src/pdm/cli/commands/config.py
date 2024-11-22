@@ -148,10 +148,10 @@ class Command(BaseCommand):
 
     def _list_config(self, project: Project, options: argparse.Namespace) -> None:
         assert Config.site is not None
-        self.ui.echo(
-            f"Site/default configuration ([success]{Config.site.config_file}[/]):",
-            style="bold",
-        )
+        site_title = "Site/default configuration"
+        if Config.site.config_file.exists():
+            site_title += f" ([success]{Config.site.config_file}[/])"
+        self.ui.echo(site_title, style="bold")
         self._show_config(
             Config.get_defaults(),
             {**project.global_config.self_data, **project.project_config.self_data},

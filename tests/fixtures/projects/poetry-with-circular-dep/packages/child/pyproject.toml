@@ -7,7 +7,7 @@ license = "Apache-2.0"
 packages = [{include = "child"}]
 
 [tool.poetry.dependencies]
-python = "^3.8.1"
+python = "^3.9.1"
 
 [tool.poetry.group.dev.dependencies]
 parent = {path = "../..", develop = true}

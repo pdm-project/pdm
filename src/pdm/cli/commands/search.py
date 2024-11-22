@@ -6,7 +6,7 @@ import textwrap
 from shutil import get_terminal_size
 
 from pdm import termui
-from pdm._types import SearchResult
+from pdm._types import SearchResults
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.environments import BareEnvironment
@@ -17,7 +17,7 @@ from pdm.utils import normalize_name
 
 def print_results(
     ui: termui.UI,
-    hits: SearchResult,
+    hits: SearchResults,
     working_set: WorkingSet,
     terminal_width: int | None = None,
 ) -> None:
@@ -42,10 +42,10 @@ def print_results(
             if normalize_name(name) in working_set:
                 dist = working_set[normalize_name(name)]
                 if dist.version == latest:
-                    ui.echo("  INSTALLED: %s (latest)" % dist.version)
+                    ui.echo(f"  INSTALLED: {dist.version} (latest)")
                 else:
-                    ui.echo("  INSTALLED: %s" % dist.version)
-                    ui.echo("  LATEST:    %s" % latest)
+                    ui.echo(f"  INSTALLED: {dist.version}")
+                    ui.echo(f"  LATEST:    {latest}")
         except UnicodeEncodeError:
             pass
 

@@ -122,11 +122,7 @@ class Command(BaseCommand):
             if project.enable_write_lockfile:
                 project.core.ui.info(f"Adding group [success]{group}[/] to lockfile")
             lock_groups.append(group)
-        if (
-            group == "default"
-            or not selection.dev
-            and group not in project.pyproject.settings.get("dev-dependencies", {})
-        ):
+        if group == "default" or not selection.dev and normalize_name(group) not in project.pyproject.dev_dependencies:
             if editables:
                 raise PdmUsageError("Cannot add editables to the default or optional dependency group")
         for r in [parse_requirement(line, True) for line in editables] + [parse_requirement(line) for line in packages]:
@@ -154,7 +150,7 @@ class Command(BaseCommand):
             for req in group_deps:
                 req.specifier = get_specifier("")
 
-        reqs = [r for g, deps in all_dependencies.items() if lock_groups is None or g in lock_groups for r in deps]
+        reqs = [r for g, deps in all_dependencies.items() for r in deps if lock_groups is None or g in lock_groups]
         with hooks.skipping("post_lock"):
             resolved = do_lock(
                 project,
@@ -169,10 +165,10 @@ class Command(BaseCommand):
         # Update dependency specifiers and lockfile hash.
         deps_to_update = group_deps if unconstrained else requirements
         save_version_specifiers(deps_to_update, resolved, save)
-        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         if not dry_run:
             project.add_dependencies(deps_to_update, group, selection.dev or False)
             project.write_lockfile(project.lockfile._data, False)
+        hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         if sync:
             do_sync(
                 project,

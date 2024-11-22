@@ -241,6 +241,7 @@ class UI:
         else:
             if self.log_dir and not os.path.exists(self.log_dir):
                 os.makedirs(self.log_dir, exist_ok=True)
+            self._clean_logs()
             log_file = tempfile.mktemp(".log", f"pdm-{type_}-", self.log_dir)
             handler = logging.FileHandler(log_file, encoding="utf-8")
             handler.setLevel(logging.DEBUG)
@@ -299,3 +300,15 @@ class UI:
     def error(self, message: str, verbosity: Verbosity = Verbosity.QUIET) -> None:
         """Print a message to stdout."""
         self.echo(f"[error]ERROR:[/] {message}", err=True, verbosity=verbosity)
+
+    def _clean_logs(self) -> None:
+        import time
+        from pathlib import Path
+
+        if self.log_dir is None:
+            return
+        for file in Path(self.log_dir).iterdir():
+            if not file.is_file():
+                continue
+            if file.stat().st_ctime < time.time() - 7 * 24 * 60 * 60:  # 7 days
+                file.unlink()

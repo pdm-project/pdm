@@ -24,14 +24,14 @@ PDM, as described, is a modern Python package and dependency manager supporting 
 
 ## Installation
 
-PDM requires Python 3.8+ to be installed. It works on multiple platforms including Windows, Linux and macOS.
+PDM requires Python 3.9+ to be installed. It works on multiple platforms including Windows, Linux and macOS.
 
 !!! note
     You can still have your project working on lower Python versions, read how to do it [here](usage/project.md#working-with-python-37).
 
 ### Recommended installation method
 
-PDM requires python version 3.8 or higher.
+PDM requires python version 3.9 or higher.
 
 Like Pip, PDM provides an installation script that will install PDM into an isolated environment.
 
@@ -44,11 +44,11 @@ Like Pip, PDM provides an installation script that will install PDM into an isol
 === "Windows"
 
     ```powershell
-    (Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | py -
+    powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install-pdm.py | py -"
     ```
 
 !!! note
-    On Windows, if you do not have the optional ``py`` launcher installed (including if you installed Python through the Microsoft store), replace ``py`` with ``python``.
+    On Windows, if you do not have the optional `py` launcher installed (including if you installed Python through the Microsoft store), replace `py` with `python`.
 
 For security reasons, you should verify the checksum of `install-pdm.py`.
 It can be downloaded from [install-pdm.py.sha256](https://pdm-project.org/install-pdm.py.sha256).
@@ -178,6 +178,24 @@ You can either pass the options after the script or set the env var value.
 pdm self update
 ```
 
+### Uninstallation
+
+If you need to remove PDM from your system, you can use the following script:
+
+=== "Linux/Mac"
+
+    ```bash
+    curl -sSL https://pdm-project.org/install-pdm.py | python3 - --remove
+    ```
+
+=== "Windows"
+
+    ```powershell
+    powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install-pdm.py | py - --remove"
+    ```
+
+If you installed PDM using a third-party package management tool like Homebrew, you can also uninstall PDM using the tool's uninstall method, such as `brew uninstall pdm`.
+
 ## Packaging Status
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
@@ -189,7 +207,8 @@ PDM supports generating completion scripts for Bash, Zsh, Fish or Powershell. He
 === "Bash"
 
     ```bash
-    pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
+    pdm completion bash > /etc/bash_completion.d/pdm.bash-completion # Requires root (sudo). For an alternative, see next
+    pdm completion bash > ~/.bash_completion # Does not require root (sudo). Installed only for your user account
     ```
 
 === "Zsh"

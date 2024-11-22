@@ -18,7 +18,7 @@ will be stored in `.pdm-python` and used by subsequent commands. You can also ch
 Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
 !!! warning "Using an existing environment"
-    If you choose to use an existing environment, such as reusing an environment created by `conda`, please note that PDM will *remove* dependencies not listed in `pyproject.toml` or `pdm.lock` when running `pdm sync --clean` or `pdm remove`. This may lead to destructive consequences. Therefore, try not to share environment among multiple projects.
+If you choose to use an existing environment, such as reusing an environment created by `conda`, please note that PDM will _remove_ dependencies not listed in `pyproject.toml` or `pdm.lock` when running `pdm sync --clean` or `pdm remove`. This may lead to destructive consequences. Therefore, try not to share environment among multiple projects.
 
 ### Install Python interpreters with PDM
 
@@ -45,6 +45,12 @@ Remove an installed Python interpreter:
 
 ```bash
 pdm python remove 3.9.8
+```
+
+Install a free-threaded Python interpreter:
+
+```bash
+pdm python install 3.13t
 ```
 
 !!! TIP "Share installations with Rye"
@@ -99,7 +105,7 @@ In `pyproject.toml`, there is a field `distribution` under the `[tool.pdm]` tabl
 
 ## Specify `requires-python`
 
-You need to set an appropriate `requires-python` value for your project. This is an important property that affects how dependencies are resolved. Basically, each package's `requires-python` must *cover* the project's `requires-python` range. For example, consider the following setup:
+You need to set an appropriate `requires-python` value for your project. This is an important property that affects how dependencies are resolved. Basically, each package's `requires-python` must _cover_ the project's `requires-python` range. For example, consider the following setup:
 
 - Project: `requires-python = ">=3.9"`
 - Package `foo`: `requires-python = ">=3.7,<3.11"`
@@ -111,7 +117,7 @@ Unable to find a resolution because the following dependencies don't work
 on all Python versions defined by the project's `requires-python`
 ```
 
-Because the dependency's `requires-python` is `>=3.7,<3.11`, it *doesn't* cover the project's `requires-python` range of `>=3.9`. In other words, the project promises to work on Python 3.9, 3.10, 3.11 (and so on), but the dependency doesn't support Python 3.11 (or any higher). Since PDM creates a cross-platform lockfile that should work on all Python versions within the `requires-python` range, it can't find a valid resolution.
+Because the dependency's `requires-python` is `>=3.7,<3.11`, it _doesn't_ cover the project's `requires-python` range of `>=3.9`. In other words, the project promises to work on Python 3.9, 3.10, 3.11 (and so on), but the dependency doesn't support Python 3.11 (or any higher). Since PDM creates a cross-platform lockfile that should work on all Python versions within the `requires-python` range, it can't find a valid resolution.
 To fix this, you need add a maximum version to `requires-python`, like `>=3.9,<3.11`.
 
 The value of `requires-python` is a [version specifier as defined in PEP 440](https://peps.python.org/pep-0440/#version-specifiers). Here are some examples:
@@ -124,7 +130,11 @@ The value of `requires-python` is a [version specifier as defined in PEP 440](ht
 
 ## Working with older Python versions
 
-Although PDM run on Python 3.8 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-backend` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
+--- 2.21.0
+
+    PDM now supports 3.9 and above as the python version of projects.
+
+Although PDM run on Python 3.9 and above, you can still have lower Python versions for your **working project**. But remember, if your project is a library, which needs to be built, published or installed, you make sure the PEP 517 build backend being used supports the lowest Python version you need. For instance, the default backend `pdm-backend` only works on Python 3.7+, so if you run [`pdm build`](../reference/cli.md#build) on a project with Python 3.6, you will get an error. Most modern build backends have dropped the support for Python 3.6 and lower, so it is highly recommended to upgrade the Python version to 3.7+. Here are the supported Python range for some commonly used build backends, we only list those that support PEP 621 since otherwise PDM can't work with them.
 
 | Backend               | Supported Python | Support PEP 621 |
 | --------------------- | ---------------- | --------------- |
@@ -151,7 +161,7 @@ PDM provides `import` command so that you don't have to initialize the project m
 Also, when you are executing [`pdm init`](../reference/cli.md#init) or [`pdm install`](../reference/cli.md#install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
 
 !!! info
-    Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
+Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
 
 ## Working with version control
 
@@ -185,15 +195,15 @@ Project Packages:
 $ pdm info --env
 {
   "implementation_name": "cpython",
-  "implementation_version": "3.8.0",
+  "implementation_version": "3.9.0",
   "os_name": "nt",
   "platform_machine": "AMD64",
   "platform_release": "10",
   "platform_system": "Windows",
   "platform_version": "10.0.18362",
-  "python_full_version": "3.8.0",
+  "python_full_version": "3.9.0",
   "platform_python_implementation": "CPython",
-  "python_version": "3.8",
+  "python_version": "3.9",
   "sys_platform": "win32"
 }
 ```

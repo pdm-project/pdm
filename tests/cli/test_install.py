@@ -126,7 +126,7 @@ def test_sync_with_index_change(project, index, pdm):
     assert [e["hash"] for e in file_hashes] == [
         "sha256:90e49598b553d8746c4dc7d9442e0359d038c3039d802c91c0a55505da318c63"
     ]
-    # Mimic the CDN inconsistences of PyPI simple index. See issues/596.
+    # Mimic the CDN inconsistencies of PyPI simple index. See issues/596.
     del index["/simple/future-fstrings/"]
     pdm(["sync", "--no-self"], obj=project, strict=True)
 
@@ -247,23 +247,16 @@ def test_install_retry(project, pdm, mocker):
 
 @pytest.mark.usefixtures("repository")
 def test_install_fail_fast(project, pdm, mocker):
-    project.project_config["install.parallel"] = True
+    project.project_config["install.parallel"] = False
     pdm(["add", "certifi", "chardet", "pytz", "--no-sync"], obj=project)
 
     handler = mocker.patch(
         "pdm.installers.synchronizers.Synchronizer.install_candidate",
         side_effect=RuntimeError,
     )
-    mocker.patch("multiprocessing.cpu_count", return_value=1)
     result = pdm(["install", "--fail-fast"], obj=project)
     assert result.exit_code == 1
-    handler.assert_has_calls(
-        [
-            mocker.call("certifi", mocker.ANY),
-            mocker.call("chardet", mocker.ANY),
-        ],
-        any_order=True,
-    )
+    assert handler.call_count == 1
 
 
 @pytest.mark.usefixtures("working_set")
@@ -426,3 +419,23 @@ def test_install_from_lock_with_incompatible_targets(project, pdm, python, platf
     result = pdm(["install"], obj=project)
     assert result.exit_code == 1
     assert "No compatible lock target found" in result.stderr
+
+
+@pytest.mark.network
+def test_uv_install(project, pdm):
+    project.project_config.update({"use_uv": True, "python.use_venv": True})
+    project._saved_python = None
+    pdm(["add", "requests"], obj=project, strict=True)
+    working_set = project.environment.get_working_set()
+    assert "requests" in working_set
+    assert "urllib3" in working_set
+    assert "idna" in working_set
+
+
+@pytest.mark.network
+def test_uv_install_pep582_not_allowed(project, pdm):
+    project.project_config.update({"use_uv": True})
+    pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
+    result = pdm(["sync"], obj=project)
+    assert result.exit_code == 1
+    assert "doesn't support PEP 582 local packages" in result.stderr

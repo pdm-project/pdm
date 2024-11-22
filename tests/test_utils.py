@@ -217,11 +217,11 @@ def test_expand_env_vars(given, expected, monkeypatch):
         ("https://example.org/path?arg=1", "https://example.org/path?arg=1"),
         (
             "https://${FOO}@example.org/path?arg=1",
-            "https://hello@example.org/path?arg=1",
+            "https://token%3Aoidc%2F1@example.org/path?arg=1",
         ),
         (
             "https://${FOO}:${BAR}@example.org/path?arg=1",
-            "https://hello:wo%3Arld@example.org/path?arg=1",
+            "https://token%3Aoidc%2F1:p%40ssword@example.org/path?arg=1",
         ),
         (
             "https://${FOOBAR}@example.org/path?arg=1",
@@ -230,8 +230,8 @@ def test_expand_env_vars(given, expected, monkeypatch):
     ],
 )
 def test_expand_env_vars_in_auth(given, expected, monkeypatch):
-    monkeypatch.setenv("FOO", "hello")
-    monkeypatch.setenv("BAR", "wo:rld")
+    monkeypatch.setenv("FOO", "token:oidc/1")
+    monkeypatch.setenv("BAR", "p@ssword")
     assert utils.expand_env_vars_in_auth(given) == expected
 
 
@@ -431,7 +431,7 @@ def setup_dependencies(project):
             "optional-dependencies": {"web": ["flask"], "auth": ["passlib"]},
         }
     )
-    project.pyproject.settings.update({"dev-dependencies": {"test": ["pytest"], "doc": ["mkdocs"]}})
+    project.pyproject.dependency_groups.update({"test": ["pytest"], "doc": ["mkdocs"]})
     project.pyproject.write()
 
 

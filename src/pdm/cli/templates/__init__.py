@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.resources
 import os
 import re
 import shutil
@@ -111,9 +112,7 @@ class ProjectTemplate:
 
     @staticmethod
     def _copy_package_file(src: Traversable, dst: Path) -> Path:
-        from pdm.compat import importlib_resources
-
-        with importlib_resources.as_file(src) as f:
+        with importlib.resources.as_file(src) as f:
             return shutil.copyfile(f, dst)
 
     def _generate_pyproject(self, path: Path, metadata: dict[str, Any]) -> None:
@@ -144,9 +143,7 @@ class ProjectTemplate:
             fp.write(tomlkit.dumps(content))
 
     def _prepare_package_template(self, import_name: str) -> None:
-        from pdm.compat import importlib_resources
-
-        files = importlib_resources.files(import_name)
+        files = importlib.resources.files(import_name)
 
         self.mirror(files, self._path, skip=[files / "__init__.py"], copyfunc=self._copy_package_file)
 

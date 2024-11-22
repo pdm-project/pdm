@@ -1,3 +1,5 @@
-from pdm.resolver.core import resolve
+from .base import Resolver
+from .resolvelib import RLResolver
+from .uv import UvResolver
 
-__all__ = ["resolve"]
+__all__ = ["Resolver", "RLResolver", "UvResolver"]

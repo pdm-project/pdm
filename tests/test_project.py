@@ -11,7 +11,7 @@ from pbs_installer import PythonVersion
 from pytest_httpserver import HTTPServer
 
 from pdm.environments import PythonEnvironment
-from pdm.exceptions import PdmException
+from pdm.exceptions import PdmException, ProjectError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from pdm.project.core import Project
     from pdm.pytest import PDMCallable
 
-PYTHON_VERSIONS = ["3.8.7", "3.10.12", "3.10.11", "3.8.0", "3.10.13", "3.9.12"]
+PYTHON_VERSIONS = ["3.9.7", "3.10.12", "3.10.11", "3.9.0", "3.10.13", "3.9.12"]
 
 
 def get_python_versions() -> list[PythonVersion]:
@@ -44,7 +44,7 @@ def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
     pyenv_python.touch()
     mocker.patch(
         "findpython.python.PythonVersion._get_version",
-        return_value=parse_version("3.8.0"),
+        return_value=parse_version("3.9.0"),
     )
     mocker.patch("findpython.python.PythonVersion._get_interpreter", return_value=sys.executable)
     assert Path(project.python.path) == pyenv_python
@@ -180,22 +180,40 @@ def test_select_dependencies(project):
         "security": ["cryptography"],
         "venv": ["virtualenv"],
     }
-    project.pyproject.settings["dev-dependencies"] = {
-        "test": ["pytest"],
-        "doc": ["mkdocs"],
-    }
+    project.pyproject.dependency_groups.update(
+        {
+            "test": ["pytest"],
+            "doc": ["mkdocs"],
+            "all": [{"include-group": "test"}, {"include-group": "doc"}],
+        }
+    )
     assert sorted([r.key for r in project.get_dependencies()]) == ["requests"]
-
     assert sorted([r.key for r in project.get_dependencies("security")]) == ["cryptography"]
     assert sorted([r.key for r in project.get_dependencies("test")]) == ["pytest"]
-
+    assert sorted([r.key for r in project.get_dependencies("all")]) == ["mkdocs", "pytest"]
     assert sorted(project.iter_groups()) == [
+        "all",
         "default",
         "doc",
         "security",
         "test",
         "venv",
     ]
+
+
+def test_invalid_dependency_group(project):
+    project.pyproject.dependency_groups.update(
+        {
+            "invalid": [{"invalid-key": True}],
+            "missing": [{"include-group": "missing-group"}],
+            "doc": ["mkdocs"],
+        }
+    )
+    assert sorted([r.key for r in project.get_dependencies("doc")]) == ["mkdocs"]
+    with pytest.raises(ProjectError, match="Invalid dependency group item"):
+        project.get_dependencies("invalid")
+    with pytest.raises(ProjectError, match="Dependency group 'missing-group' not found"):
+        project.get_dependencies("missing")
 
 
 @pytest.mark.path
@@ -415,7 +433,7 @@ def test_preserve_log_file(project, pdm, tmp_path, mocker):
     all_logs = list(tmp_path.joinpath("logs").iterdir())
     assert len(all_logs) == 0
 
-    mocker.patch.object(project.core.synchronizer_class, "synchronize", side_effect=Exception)
+    mocker.patch("pdm.installers.Synchronizer.synchronize", side_effect=Exception)
     result = pdm(["add", "pytz"], obj=project)
     assert result.exit_code != 0
     install_log = next(tmp_path.joinpath("logs").glob("pdm-install-*.log"))
@@ -526,7 +544,7 @@ def test_project_best_match_max(project, mocker):
 
 
 def test_project_best_match_min(project, mocker):
-    expected = PythonVersion("cpython", 3, 8, 0)
+    expected = PythonVersion("cpython", 3, 9, 0)
     mocker.patch(
         "pdm.project.core.get_all_installable_python_versions",
         return_value=get_python_versions(),

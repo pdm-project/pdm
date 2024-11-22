@@ -33,9 +33,9 @@ def test_use_python_by_version(project, pdm):
 
 @pytest.mark.skipif(os.name != "posix", reason="Run on POSIX platforms only")
 def test_use_wrapper_python(project):
-    wrapper_script = """#!/bin/bash
-exec "{}" "$@"
-""".format(sys.executable)
+    wrapper_script = f"""#!/bin/bash
+exec "{sys.executable}" "$@"
+"""
     shim_path = project.root.joinpath("python_shim.sh")
     shim_path.write_text(wrapper_script)
     shim_path.chmod(0o755)

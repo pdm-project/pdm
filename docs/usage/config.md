@@ -116,13 +116,22 @@ The available configuration options are:
 ??? note "About the source types"
     By default, all sources are [PEP 503](https://www.python.org/dev/peps/pep-0503/) style "indexes" like pip's `--index-url` and `--extra-index-url`, however, you can set the type to `find_links` which contains files or links to be looked for directly. See [this answer](https://stackoverflow.com/a/46651848) for the difference between the two types.
 
+    For example, to use a local directory as a source:
+
+    ```toml
+    [[tool.pdm.source]]
+    name = "local"
+    url = "file:///${PROJECT_ROOT}/packages"
+    type = "find_links"
+    ```
+
 These configurations are read in the following order to build the final source list:
 
 - `pypi.url`, if `pypi` doesn't appear in the `name` field of any source in `pyproject.toml`
 - Sources in `pyproject.toml`
 - `pypi.<name>.url` in PDM config.
 
-You can set `pypi.ignore_stored_index` to `true` to disable all indexes from the PDM config and only use those specified in `pyproject.toml`.
+You can set `pypi.ignore_stored_index` to `true` to disable all additional indexes from the PDM config and only use those specified in `pyproject.toml`.
 
 !!! TIP "Disable the default PyPI index"
     If you want to omit the default PyPI index, just set the source name to `pypi` and that source will **replace** it.
@@ -143,12 +152,22 @@ You can set `pypi.ignore_stored_index` to `true` to disable all indexes from the
 
 By default, all sources are considered equal, packages from them are sorted by the version and wheel tags, the most matching one with the highest version is selected.
 
-In some cases you may want to return packages from the preferred source, and search for others if they are missing from the former source. PDM supports this by reading the configuration `respect-source-order`:
+In some cases you may want to return packages from the preferred source, and search for others if they are missing from the former source. PDM supports this by reading the configuration `respect-source-order`. For example:
 
 ```toml
 [tool.pdm.resolution]
 respect-source-order = true
+
+[[tool.pdm.source]]
+name = "private"
+url = "https://private.pypi.org/simple"
+
+[[tool.pdm.source]]
+name = "pypi"
+url = "https://pypi.org/simple"
 ```
+
+A package will be searched from the `private` index first, and only if no matching version is found there, it will be searched from the `pypi` index.
 
 ### Specify index for individual packages
 
@@ -192,6 +211,8 @@ To use `truststore`, you need Python 3.10 or newer and install `truststore` into
 ```bash
 pdm self add truststore
 ```
+
+In addition, CA certificates specified by env vars `REQUESTS_CA_BUNDLE` and `CURL_CA_BUNDLE` will be used if they are set.
 
 ### Index configuration merging
 

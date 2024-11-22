@@ -65,7 +65,7 @@ PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从�
 
 ## 安装
 
-PDM 需要 Python 3.8 或更高版本。
+PDM 需要 Python 3.9 或更高版本。
 
 ### 通过安装脚本
 
@@ -80,7 +80,7 @@ curl -sSL https://pdm-project.org/install-pdm.py | python3 -
 **Windows 安装命令**
 
 ```powershell
-(Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | py -
+powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install-pdm.py | py -"
 ```
 
 为安全起见，你应该检查 `install-pdm.py` 文件的正确性。
@@ -166,12 +166,10 @@ pdm add requests flask
 在 README.md 中加入以下 Markdown 代码，向大家展示项目正在使用 PDM:
 
 ```markdown
-[![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json
-)](https://pdm-project.org)
+[![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
 ```
 
-[![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json
-)](https://pdm-project.org)
+[![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
 
 ## 打包状态
 

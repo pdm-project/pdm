@@ -13,7 +13,7 @@ class HookManager:
         self.skip = skip or []
 
     @contextlib.contextmanager
-    def skipping(self, *names: str) -> Generator[None, None, None]:
+    def skipping(self, *names: str) -> Generator[None]:
         """
         Temporarily skip some hooks.
         """

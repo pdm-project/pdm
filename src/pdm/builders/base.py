@@ -293,6 +293,7 @@ class EnvBuilder:
             ws = WorkingSet(libs)
             for req in reqs:
                 parsed_req = parse_requirement(req)
+                parsed_req.groups = ["default"]
                 if parsed_req.marker and not parsed_req.marker.matches(self._env.spec):
                     logger.debug(
                         "Skipping requirement %s: mismatching marker %s",
@@ -319,7 +320,7 @@ class EnvBuilder:
         assert self._prefix is not None
         path = self._prefix.shared if shared else self._prefix.overlay
         env = PythonEnvironment(self._env.project, python=str(self._env.interpreter.path), prefix=path)
-        install_requirements(missing, env)
+        install_requirements(missing, env, allow_uv=False)
 
         if shared:
             # The shared env is prepared and is safe to be cached now. This is to make

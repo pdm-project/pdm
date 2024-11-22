@@ -24,7 +24,12 @@ if TYPE_CHECKING:
 
 
 class Command(BaseCommand):
-    """Initialize a pyproject.toml for PDM"""
+    """Initialize a pyproject.toml for PDM.
+
+    Built-in templates:
+    - default: `pdm init`, A simple template with a basic structure.
+    - minimal: `pdm init minimal`, A minimal template with only `pyproject.toml`.
+    """
 
     def __init__(self) -> None:
         self.interactive = True
@@ -226,6 +231,7 @@ class Command(BaseCommand):
         if python_info.get_venv() is None:
             project.core.ui.info(
                 "You are using the PEP 582 mode, no virtualenv is created.\n"
+                "You can change configuration with `pdm config python.use_venv True`.\n"
                 "For more info, please visit https://peps.python.org/pep-0582/"
             )
         project.python = python_info

@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 
-def _parse_setup_cfg(path: str) -> Dict[str, Any]:
+def _parse_setup_cfg(path: str) -> dict[str, Any]:
     import configparser
 
     setup_cfg = configparser.ConfigParser()
     setup_cfg.read(path, encoding="utf-8")
 
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     if not setup_cfg.has_section("metadata"):
         return result
 
@@ -115,7 +117,7 @@ def fake_setup(**kwargs):
     setup_kwargs.update((k, v) for k, v in kwargs.items() if k in SUPPORTED_ARGS)
 
 
-def clean_metadata(metadata: Dict[str, Any]) -> None:
+def clean_metadata(metadata: dict[str, Any]) -> None:
     author = {}
     if "author" in metadata:
         author["name"] = metadata.pop("author")
@@ -162,10 +164,10 @@ def clean_metadata(metadata: Dict[str, Any]) -> None:
             metadata["entry_points"] = dict(sorted(entry_points.items()))
 
 
-def parse_setup(path: str) -> Dict[str, Any]:
+def parse_setup(path: str) -> dict[str, Any]:
     import tokenize
 
-    parsed: Dict[str, Any] = {}
+    parsed: dict[str, Any] = {}
     path = os.path.abspath(path)
     os.chdir(path)
     if os.path.exists("setup.cfg"):

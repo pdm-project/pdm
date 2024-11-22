@@ -244,7 +244,7 @@ def expand_env_vars(credential: str, quote: bool = False, env: Mapping[str, str]
 
     def replace_func(match: Match) -> str:
         rv = env.get(match.group(1), match.group(0))
-        return parse.quote(rv) if quote else rv
+        return parse.quote(rv, "") if quote else rv
 
     return re.sub(r"\$\{(.+?)\}", replace_func, credential)
 
@@ -350,7 +350,7 @@ def normalize_name(name: str, lowercase: bool = True) -> str:
 
 def comparable_version(version: str) -> Version:
     """Normalize a version to make it valid in a specifier."""
-    parsed = parse_version(version)
+    parsed = parse_version(version or "0.0.0")
     if parsed.local is not None:
         # strip the local part
         parsed._version = parsed._version._replace(local=None)
@@ -394,7 +394,7 @@ def pdm_scheme(base: str) -> dict[str, str]:
             "purelib": "{pep582_base}/lib",
             "platlib": "{pep582_base}/lib",
             "include": "{pep582_base}/include",
-            "scripts": "{pep582_base}/%s" % bin_prefix,
+            "scripts": f"{{pep582_base}}/{bin_prefix}",
             "data": "{pep582_base}",
             "prefix": "{pep582_base}",
             "headers": "{pep582_base}/include",
@@ -554,7 +554,7 @@ def get_all_installable_python_versions(build_dir: bool = False) -> list[PythonV
     from pbs_installer._versions import PYTHON_VERSIONS
 
     arch = "x86" if THIS_ARCH == "32" else THIS_ARCH
-    matches = [v for v, u in PYTHON_VERSIONS.items() if u.get((THIS_PLATFORM, arch, not build_dir))]
+    matches = [v for v, u in PYTHON_VERSIONS.items() if any(k[:2] == (THIS_PLATFORM, arch) for k in u)]
     return matches
 
 

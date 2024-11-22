@@ -142,8 +142,8 @@ def test_lock_selected_groups(project, pdm):
 
 
 @pytest.mark.usefixtures("repository")
-@pytest.mark.parametrize("to_dev", [False, True])
-def test_lock_self_referencing_groups(project, pdm, to_dev):
+@pytest.mark.parametrize("to_dev", [True, False])
+def test_lock_self_referencing_dev_groups(project, pdm, to_dev):
     name = project.name
     project.add_dependencies(["requests"], to_group="http", dev=to_dev)
     project.add_dependencies(
@@ -160,6 +160,46 @@ def test_lock_self_referencing_groups(project, pdm, to_dev):
     assert requests["groups"] == ["dev", "http"]
     idna = next(p for p in packages if p["name"] == "idna")
     assert idna["groups"] == ["dev", "http"]
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_self_referencing_optional_groups(project, pdm):
+    name = project.name
+    project.add_dependencies(["requests"], to_group="http")
+    project.add_dependencies(
+        {"pytz": parse_requirement("pytz"), f"{name}[http]": parse_requirement(f"{name}[http]")},
+        to_group="all",
+    )
+    pdm(["lock", "-G", "all"], obj=project, strict=True)
+    assert project.lockfile.groups == ["default", "all", "http"]
+    packages = project.lockfile["package"]
+    pytz = next(p for p in packages if p["name"] == "pytz")
+    assert pytz["groups"] == ["all"]
+    requests = next(p for p in packages if p["name"] == "requests")
+    assert requests["groups"] == ["all", "http"]
+    idna = next(p for p in packages if p["name"] == "idna")
+    assert idna["groups"] == ["all", "http"]
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_include_groups_not_allowed(project, pdm):
+    project.pyproject.metadata["optional-dependencies"] = {"http": ["requests"]}
+    project.pyproject.dependency_groups.update({"dev": ["pytest", {"include-group": "http"}]})
+    project.pyproject.write()
+    result = pdm(["lock", "-G", "all"], obj=project)
+    assert result.exit_code != 0
+    assert "Dependency group 'http' not found" in result.stderr
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_optional_referencing_dev_group_not_allowed(project, pdm):
+    name = project.name
+    project.pyproject.metadata["optional-dependencies"] = {"http": ["requests", f"{name}[dev]"]}
+    project.pyproject.dependency_groups.update({"dev": ["pytest"]})
+    project.pyproject.write()
+    result = pdm(["lock", "-G", "http"], obj=project)
+    assert result.exit_code != 0
+    assert "Dependency group 'dev' not found" in result.stderr
 
 
 @pytest.mark.usefixtures("local_finder")
@@ -261,7 +301,7 @@ def test_lock_default_inherit_metadata(project, pdm, mocker, working_set):
     packages = project.lockfile["package"]
     assert all(package["groups"] == ["default"] for package in packages)
 
-    resolver = mocker.patch("pdm.cli.actions.resolve")
+    resolver = mocker.patch.object(project, "get_resolver")
     pdm(["sync"], obj=project, strict=True)
     resolver.assert_not_called()
     for key in ("requests", "idna", "chardet", "urllib3"):
@@ -275,7 +315,7 @@ def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
     packages = project.lockfile["package"]
     assert all(package["groups"] == ["default"] for package in packages)
 
-    resolver = mocker.patch("pdm.cli.actions.resolve")
+    resolver = mocker.patch.object(project, "get_resolver")
     pdm(["sync"], obj=project, strict=True)
     resolver.assert_not_called()
     for key in ("requests", "idna", "chardet", "urllib3"):

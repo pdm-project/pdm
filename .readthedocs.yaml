@@ -9,17 +9,12 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.12"
-  apt_packages:
-    - python3-venv
   jobs:
-    post_system_dependencies:
-      # Install PDM
-      - asdf plugin add pdm
-      - asdf install pdm latest
-      - asdf global pdm latest
-      - pdm --version
-    pre_install:
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH pdm install -dG doc
+    post_create_environment:
+      - python install-pdm.py --path ~/.local/pdm
+      - ~/.local/pdm/bin/pdm --version
+    post_install:
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH ~/.local/pdm/bin/pdm install -dG doc
 
 mkdocs:
   configuration: mkdocs.yml

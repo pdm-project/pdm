@@ -47,5 +47,10 @@ def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
 @functools.lru_cache
 def get_env_spec(executable: str) -> EnvSpec:
     """Get the environment spec of the python interpreter"""
+    from pdm.core import importlib_metadata
+
+    required_libs = ["dep_logic", "packaging"]
+    shared_libs = {str(importlib_metadata.distribution(lib).locate_file("")) for lib in required_libs}
+
     with _in_process_script("env_spec.py") as script:
-        return EnvSpec.from_spec(**json.loads(subprocess.check_output([executable, "-Es", script])))
+        return EnvSpec.from_spec(**json.loads(subprocess.check_output([executable, "-EsS", script, *shared_libs])))

@@ -256,7 +256,7 @@ groups_group.add_argument(
     metavar="GROUP",
     action=split_lists(","),
     help="Select group of optional-dependencies separated by comma "
-    "or dev-dependencies (with `-d`). Can be supplied multiple times, "
+    "or dependency-groups (with `-d`). Can be supplied multiple times, "
     'use ":all" to include all groups under the same species.',
     default=[],
 )
@@ -265,7 +265,7 @@ groups_group.add_argument(
     dest="excluded_groups",
     metavar="",
     action=split_lists(","),
-    help="Exclude groups of optional-dependencies or dev-dependencies",
+    help="Exclude groups of optional-dependencies or dependency-groups",
     default=[],
 )
 groups_group.add_argument(
@@ -513,7 +513,7 @@ install_group.options.append(config_setting_option)
 
 override_option = Option(
     "--override",
-    default=os.getenv("PDM_OVERRIDE"),
+    default=[env] if (env := os.getenv("PDM_OVERRIDE")) else None,
     action="append",
     help="Use the constraint file in pip-requirements format for overriding. [env var: PDM_OVERRIDE] "
     "This option can be used multiple times. "

@@ -1,3 +1,192 @@
+## Release v2.20.1 (2024-11-09)
+
+### Features & Improvements
+
+- Add a fixer to remove the deprecated `cross_platform` strategy from lock file. ([#3259](https://github.com/pdm-project/pdm/issues/3259))
+
+### Bug Fixes
+
+- Fix the bug that `pdm build` would fail when `use_uv` is true. ([#3231](https://github.com/pdm-project/pdm/issues/3231))
+- Fix group name normalization when comparing groups. ([#3247](https://github.com/pdm-project/pdm/issues/3247))
+- Inherit file descriptors instead of closing when running child processes in `pdm run`. ([#3252](https://github.com/pdm-project/pdm/issues/3252))
+- Fix using `no_proxy` when `all_proxy` is set. ([#3254](https://github.com/pdm-project/pdm/issues/3254))
+- Preserve multiline arrays and don't add empty tool.pdm table header when updating the pyproject.toml. ([#3258](https://github.com/pdm-project/pdm/issues/3258))
+- Fix compatibility of `ErrorArgumentParser` for Python 3.12 and above. ([#3264](https://github.com/pdm-project/pdm/issues/3264))
+
+
+## Release v2.20.0 (2024-10-31)
+
+### Features & Improvements
+
+- Support dependency groups as standardized by [PEP 735](https://peps.python.org/pep-0735/). By default, dev dependencies will be written to `[dependency-groups]` table. ([#3230](https://github.com/pdm-project/pdm/issues/3230))
+
+### Bug Fixes
+
+- Fix a bug that `strategy.inherit_metadata` config is not honored when using `--lockfile` option. ([#3232](https://github.com/pdm-project/pdm/issues/3232))
+- Always perform install-time resolution when `use_uv` is on. ([#3233](https://github.com/pdm-project/pdm/issues/3233))
+
+### Miscellany
+
+- Update `resolvelib` to 1.1.0. ([#3235](https://github.com/pdm-project/pdm/issues/3235))
+
+
+## Release v2.19.3 (2024-10-19)
+
+### Features & Improvements
+
+- Allow linking existing Python interpreters to PDM's managed location. ([#3215](https://github.com/pdm-project/pdm/issues/3215))
+
+### Bug Fixes
+
+- Fix a bug that overrides provided by environment variables do not work. ([#3182](https://github.com/pdm-project/pdm/issues/3182))
+- Allow prereleases when the requirement is pinned even if disabled by project ([#3202](https://github.com/pdm-project/pdm/issues/3202))
+- Pass the python path to the uv venv command. ([#3204](https://github.com/pdm-project/pdm/issues/3204))
+- Fix the infinite loop when running in uv mode if the current project has dynamic metadata. ([#3207](https://github.com/pdm-project/pdm/issues/3207))
+- Add `--no-frozen-deps` option to `install-pdm.py` script to allow installing newer versions of dependencies. ([#3213](https://github.com/pdm-project/pdm/issues/3213))
+- `pdm self update` now prefers the locked dependencies unless `--no-frozen-deps` is specified. ([#3216](https://github.com/pdm-project/pdm/issues/3216))
+- By default, `pdm outdated` will only list direct dependencies. This can be changed by adding the `--include-sub` option. ([#3218](https://github.com/pdm-project/pdm/issues/3218))
+
+### Documentation
+
+- Show users the way to uninstall pdm in a more obvious way ([#2470](https://github.com/pdm-project/pdm/issues/2470))
+
+
+## Release v2.19.2 (2024-10-11)
+
+
+### Features & Improvements
+
+- Support installing free-threaded Python interpreters with the `t` suffix. ([#3201](https://github.com/pdm-project/pdm/issues/3201))
+
+### Bug Fixes
+
+- `use_uv` fails to lock when there are non-ascii characters in pyproject.toml on Windows. ([#3181](https://github.com/pdm-project/pdm/issues/3181))
+- Fix the `pre_install` and `post_install` signals receiving an exhausted generator, instead of a list of packages. ([#3190](https://github.com/pdm-project/pdm/issues/3190))
+- Create backup file with random filename to avoid conflicts. ([#3193](https://github.com/pdm-project/pdm/issues/3193))
+- Fix the logic error in the `uv` format marker matching. ([#3197](https://github.com/pdm-project/pdm/issues/3197))
+- `pdm lock --check` on a lockfile generated with older PDM version has a 0 exit code when there's a change in `pyproject.toml`. ([#3199](https://github.com/pdm-project/pdm/issues/3199))
+
+### Documentation
+
+- Fixed *Bash Completion* suggestion so it doesn't require root privileges ([#3183](https://github.com/pdm-project/pdm/issues/3183))
+
+
+## Release v2.19.1 (2024-09-23)
+
+
+### Bug Fixes
+
+- PDM libraries are not loaded correctly for in-process scripts when installed in the user site. ([#3178](https://github.com/pdm-project/pdm/issues/3178))
+
+
+## Release v2.19.0 (2024-09-23)
+
+### Breaking Changes
+
+- The minimum supported Python version of projects using PDM has been bumped to 3.8. ([#3176](https://github.com/pdm-project/pdm/issues/3176))
+
+
+### Bug Fixes
+
+- Fallback version to 0.0.0 when the version is not specified or empty. This can avoid crash when building such project. ([#3163](https://github.com/pdm-project/pdm/issues/3163))
+- Ensures that  `/` is URL encoded in sources URL environment variables. ([#3169](https://github.com/pdm-project/pdm/issues/3169))
+- Call functions from shared library in the in-process `env_spec.py` script. ([#3176](https://github.com/pdm-project/pdm/issues/3176))
+
+### Removals and Deprecations
+
+- PDM no longer falls back to `setuptools-pep660` when the build backend doesn't support PEP 660. ([#3159](https://github.com/pdm-project/pdm/issues/3159))
+
+### Miscellany
+
+- Change the project structure to a normal package from a namespace package. ([#3155](https://github.com/pdm-project/pdm/issues/3155))
+
+
+## Release v2.18.2 (2024-09-10)
+
+### Bug Fixes
+
+- Respect the `excludes` and `overrides` settings when installing packages. ([#3113](https://github.com/pdm-project/pdm/issues/3113))
+- Fix a bug of export command that packages with extras are included twice. ([#3123](https://github.com/pdm-project/pdm/issues/3123))
+- Remove empty groups when removing packages with `pdm remove`. ([#3133](https://github.com/pdm-project/pdm/issues/3133))
+- When running `pdm venv purge`, if the current project's python version had been referencing the removed venv then clear it out. ([#3137](https://github.com/pdm-project/pdm/issues/3137))
+- Fix command `pdm config` to not show site configuration file path if it doesn't exist. ([#3149](https://github.com/pdm-project/pdm/issues/3149))
+- Now when `--no-markers` is used, the exported requirements can only work on the current platform. ([#3152](https://github.com/pdm-project/pdm/issues/3152))
+
+### Miscellany
+
+- Skip tests related to python installation on non-standard platforms. ([#3053](https://github.com/pdm-project/pdm/issues/3053))
+
+## Release v2.19.0a0 (2024-09-05)
+
+### Breaking Changes
+
+- `pre_install` and `post_install` signals now receive the list of packages to be installed, instead of a candidate mapping. ([#3144](https://github.com/pdm-project/pdm/issues/3144))
+
+### Features & Improvements
+
+- Deprecate `Core.synchronizer_class` attribute. To get the synchronizer class, use `Project.get_synchronizer` method instead.
+  Deprecate `Core.resolver_class` attribute. To get the resolver class, use `Project.get_resolver` method instead. ([#3144](https://github.com/pdm-project/pdm/issues/3144))
+- Add experimental support for `uv` as the resolver and installer. One can opt in by setting `use_uv` to `true` using `pdm config` command. ([#3144](https://github.com/pdm-project/pdm/issues/3144))
+
+
+## Release v2.18.1 (2024-08-16)
+
+
+### Bug Fixes
+
+- Skip checking `project.name` if it is absent when running `pdm outdated`. ([#3095](https://github.com/pdm-project/pdm/issues/3095))
+- Don't remove the `cross_platform` strategy from old lock files. ([#3105](https://github.com/pdm-project/pdm/issues/3105))
+- Fix a bug that the VCS revision is lost if the candidate metadata is cached during resolution. ([#3107](https://github.com/pdm-project/pdm/issues/3107))
+- Fix a bug that PDM can't delete source password when saved in keyring. ([#3108](https://github.com/pdm-project/pdm/issues/3108))
+
+
+## Release v2.18.0 (2024-08-14)
+
+
+### Features & Improvements
+
+- Respect certificates in env vars `REQUESTS_CA_BUNDLE` and `CURL_CA_BUNDLE` when verifying SSL certificates. ([#3076](https://github.com/pdm-project/pdm/issues/3076))
+- Allow pypi.verify_ssl to be configured via PDM_PYPI_VERIFY_SSL environmental variable. ([#3081](https://github.com/pdm-project/pdm/issues/3081))
+- Clean logs older than 7 days. ([#3091](https://github.com/pdm-project/pdm/issues/3091))
+- Polish the UI looking of locking packages to display the progress. ([#3100](https://github.com/pdm-project/pdm/issues/3100))
+
+### Bug Fixes
+
+- Fixed `pdm venv activate` to remove quotes such that `iex (pdm venv activate)` works correctly ([#2895](https://github.com/pdm-project/pdm/issues/2895))
+- Don't crash if the version can't be resolved from the self project. ([#3077](https://github.com/pdm-project/pdm/issues/3077))
+- Don't fail `install-pdm.py` if there is an invalid `pyproject.toml` file under the current directory. ([#3085](https://github.com/pdm-project/pdm/issues/3085))
+- Make it able to expand env vars in the the dotenv file. Expose `PDM_PROJECT_ROOT` to the dotenv file for expansion. ([#3087](https://github.com/pdm-project/pdm/issues/3087))
+- Fix a bug that Python markers from the existing locked packages are considered when locking with `--append` option. ([#3089](https://github.com/pdm-project/pdm/issues/3089))
+- Backfill urls from configured indexed when exporting to requirements.txt. ([#3094](https://github.com/pdm-project/pdm/issues/3094))
+- Consider the auto-selected Python range when installing from requirements.txt. ([#3095](https://github.com/pdm-project/pdm/issues/3095))
+- Fix a bug that env vars do not override project config correctly. ([#3099](https://github.com/pdm-project/pdm/issues/3099))
+
+
+## Release v2.17.3 (2024-08-01)
+
+
+### Bug Fixes
+
+- Fix a crash issue when `requires-python` is absent in the project metadata. ([#3062](https://github.com/pdm-project/pdm/issues/3062))
+- Now correctly sets related config for PDM_IGNORE_SAVED_PYTHON when it is set to "false", "no", "0". ([#3064](https://github.com/pdm-project/pdm/issues/3064))
+- Fix a bug that PDM plugins installed from project-root cannot be loaded, if they have dependencies. ([#3067](https://github.com/pdm-project/pdm/issues/3067))
+
+
+## Release v2.17.2 (2024-07-31)
+
+
+### Features & Improvements
+
+- Improve the installation progress output to show the time elapsed. ([#3051](https://github.com/pdm-project/pdm/issues/3051))
+- The effect of `pypi.ignore_stored_index` changes a bit. Now even if it is true, index configurations in the config will still be loaded if the index is listed in the `pyproject.toml`. ([#3052](https://github.com/pdm-project/pdm/issues/3052))
+
+### Bug Fixes
+
+- Ignore invalid requires-python values from index. ([#3038](https://github.com/pdm-project/pdm/issues/3038))
+- Fix the group selection logic, to make `--without GROUP` work as expected. ([#3045](https://github.com/pdm-project/pdm/issues/3045))
+- Suppress outputs for `pdm python install --quiet`. ([#3049](https://github.com/pdm-project/pdm/issues/3049))
+
+
 ## Release v2.17.1 (2024-07-19)
 
 
@@ -220,7 +409,7 @@
 
 ### Documentation
 
-- Fixed a small non-code typo in docs and prodivded better wording. [#2740](https://github.com/pdm-project/pdm/issues/2740)
+- Fixed a small non-code typo in docs and provided better wording. [#2740](https://github.com/pdm-project/pdm/issues/2740)
 
 ## Release v2.13.1 (2024-03-29)
 
@@ -245,7 +434,7 @@
 - Add `--config-setting` option to `add/install/sync/update/remove/export` commands, the config settings dictionary will be shared by all packages. [#2636](https://github.com/pdm-project/pdm/issues/2636)
 - Cache the decompressed contents of wheels for faster access. [#2660](https://github.com/pdm-project/pdm/issues/2660)
 - Add configuration for timeout for network requests. [#2680](https://github.com/pdm-project/pdm/issues/2680)
-- Reuse the request sesison within the environment. [#2697](https://github.com/pdm-project/pdm/issues/2697)
+- Reuse the request session within the environment. [#2697](https://github.com/pdm-project/pdm/issues/2697)
 - Caches can be disabled by using the `--no-cache` option or setting the `PDM_NO_CACHE` environment variable. [#2702](https://github.com/pdm-project/pdm/issues/2702)
 - Switch to `httpx.Client` for HTTP requests, drop `requests` dependency. [#2709](https://github.com/pdm-project/pdm/issues/2709)
 - We have timemachine now! You can exclude packages published newer than a certain date via `pdm lock --exclude-newer=<date>`, allowing reproduction of resolutions regardless of new package releases. [#2712](https://github.com/pdm-project/pdm/issues/2712)
@@ -552,7 +741,7 @@ Release v2.9.0 (2023-08-31)
 - Fix a bug that `@ file://` dependencies can not be updated. [#2169](https://github.com/pdm-project/pdm/issues/2169)
 - Fix a bug that dependencies requested out of the range of `requires-python` cause PDM to crash. [#2175](https://github.com/pdm-project/pdm/issues/2175)
 - Fix the compatibility issue with copier 8.0+. [#2177](https://github.com/pdm-project/pdm/issues/2177)
-- Makes `comarable_version("1.2.3+local1") == Version("1.2.3")`. [#2182](https://github.com/pdm-project/pdm/issues/2182)
+- Makes `comparable_version("1.2.3+local1") == Version("1.2.3")`. [#2182](https://github.com/pdm-project/pdm/issues/2182)
 - Default behavior for pdm venv activate when shell detection fails. [#2187](https://github.com/pdm-project/pdm/issues/2187)
 - Handle parsing errors when converting from poetry-style metadata. [#2203](https://github.com/pdm-project/pdm/issues/2203)
 - Don't copy .pyc files from the template directory. [#2213](https://github.com/pdm-project/pdm/issues/2213)
@@ -965,7 +1154,7 @@ Release v2.4.3 (2023-02-06)
 
 ### Features & Improvements
 
-- Allow creating venv in project forcely if it already exists. [#1666](https://github.com/pdm-project/pdm/issues/1666)
+- Allow creating venv in project forcibly if it already exists. [#1666](https://github.com/pdm-project/pdm/issues/1666)
 - Always ignore remembered selection in pdm init. [#1672](https://github.com/pdm-project/pdm/issues/1672)
 
 ### Bug Fixes
@@ -997,7 +1186,7 @@ Release v2.4.1 (2023-01-28)
 
 ### Bug Fixes
 
-- Ignore the python requirement for overriden packages. [#1575](https://github.com/pdm-project/pdm/issues/1575)
+- Ignore the python requirement for overridden packages. [#1575](https://github.com/pdm-project/pdm/issues/1575)
 - Fix the wildcards in requirement specifiers to make it pass the new parser of `packaging>=22`. [#1619](https://github.com/pdm-project/pdm/issues/1619)
 - Add the missing `subdirectory` attribute to the lockfile entry. [#1630](https://github.com/pdm-project/pdm/issues/1630)
 - Fix a bug that VCS locks don't update when the rev part changes. [#1640](https://github.com/pdm-project/pdm/issues/1640)
@@ -1272,7 +1461,7 @@ Release v2.0.3 (2022-07-22)
 - Support Conda environments when detecting the project environment. [#1253](https://github.com/pdm-project/pdm/issues/1253)
 - Fix the interpreter resolution to first try `python` executable in the `PATH`. [#1255](https://github.com/pdm-project/pdm/issues/1255)
 - Stabilize sorting of URLs in `metadata.files` in `pdm.lock`. [#1256](https://github.com/pdm-project/pdm/issues/1256)
-- Don't expand credentials in the file URLs in the `[metada.files]` table of the lock file. [#1259](https://github.com/pdm-project/pdm/issues/1259)
+- Don't expand credentials in the file URLs in the `[metadata.files]` table of the lock file. [#1259](https://github.com/pdm-project/pdm/issues/1259)
 
 
 Release v2.0.2 (2022-07-20)
@@ -1799,7 +1988,7 @@ Release v1.11.1 (2021-12-08)
 
 ### Features & Improvements
 
-- Support `--pre/--prelease` option for `pdm add` and `pdm update`. It will allow prereleases to be pinned. [#774](https://github.com/pdm-project/pdm/issues/774)
+- Support `--pre/--prerelease` option for `pdm add` and `pdm update`. It will allow prereleases to be pinned. [#774](https://github.com/pdm-project/pdm/issues/774)
 - Improve the error message when python is found but not meeting the python requirement. [#777](https://github.com/pdm-project/pdm/issues/777)
 
 ### Bug Fixes
@@ -2067,7 +2256,7 @@ Release v1.6.4 (2021-06-23)
 ### Features & Improvements
 
 - Extract package name from egg-info in filename when eligible. Remove the patching code of resolvelib's inner class. [#441](https://github.com/pdm-project/pdm/issues/441)
-- Support installing packages from subdiretories of VCS repository. [#507](https://github.com/pdm-project/pdm/issues/507)
+- Support installing packages from subdirectories of VCS repository. [#507](https://github.com/pdm-project/pdm/issues/507)
 - Add an install script to bootstrap PDM quickly without help of other tools. Modify docs to recommend this installation method. [#508](https://github.com/pdm-project/pdm/issues/508)
 - Add a new subcommand `plugin` to manage pdm plugins, including `add`, `remove` and `list` commands. [#510](https://github.com/pdm-project/pdm/issues/510)
 
@@ -2214,7 +2403,7 @@ Release v1.5.0 (2021-04-20)
 
 - Enquote executable path to ensure generating valid scripts. [#387](https://github.com/pdm-project/pdm/issues/387)
 - Consider hashes when fetching artifact link for build. [#389](https://github.com/pdm-project/pdm/issues/389)
-- Considier the sources settings when building. [#399](https://github.com/pdm-project/pdm/issues/399)
+- Consider the sources settings when building. [#399](https://github.com/pdm-project/pdm/issues/399)
 
 ### Improved Documentation
 
@@ -2264,7 +2453,7 @@ Release v1.5.0b0 (2021-04-03)
 - Add hand-written zsh completion script. [#188](https://github.com/pdm-project/pdm/issues/188)
 - Add a special value `:all` given to `-s/--section` to refer to all sections under the same species.
   Adjust `add`, `sync`, `install`, `remove` and `update` to support the new `dev-dependencies` groups. Old behavior will be kept the same. [#351](https://github.com/pdm-project/pdm/issues/351)
-- `dev-dependencies` is now a table of dependencies groups, where key is the group name and value is an array of dependencies. These dependencies won't appear in the distribution's metadata. `dev-depedencies` of the old format will turn into `dev` group under `dev-dependencies`. [#351](https://github.com/pdm-project/pdm/issues/351)
+- `dev-dependencies` is now a table of dependencies groups, where key is the group name and value is an array of dependencies. These dependencies won't appear in the distribution's metadata. `dev-dependencies` of the old format will turn into `dev` group under `dev-dependencies`. [#351](https://github.com/pdm-project/pdm/issues/351)
 - Move `dev-dependencies`, `includes`, `excludes` and `package-dir` out from `[project]` table to `[tool.pdm]` table. The migration will be done automatically if old format is detected. [#351](https://github.com/pdm-project/pdm/issues/351)
 - Throws an error with meaningful message when no candidate is found for one requirement. [#357](https://github.com/pdm-project/pdm/issues/357)
 - Support `--dry-run` option for `update` command to display packages that need update, install or removal. Add `--top` option to limit to top level packages only. [#358](https://github.com/pdm-project/pdm/issues/358)
@@ -2365,7 +2554,7 @@ Release v1.4.2 (2021-03-18)
 
 ### Bug Fixes
 
-- Fix a bug that get_dependencies() returns error when the `setup.py` has no `intall_requires` key. [#299](https://github.com/pdm-project/pdm/issues/299)
+- Fix a bug that get_dependencies() returns error when the `setup.py` has no `install_requires` key. [#299](https://github.com/pdm-project/pdm/issues/299)
 - Pin the VCS revision for non-editable VCS candidates in the lock file. [#305](https://github.com/pdm-project/pdm/issues/305)
 - Fix a bug that editable build hits the cached wheel unexpectedly. [#307](https://github.com/pdm-project/pdm/issues/307)
 
@@ -3040,7 +3229,7 @@ Release v0.2.1 (2020-02-18)
 ### Bug Fixes
 
 - Fix a bug that short python_version markers can't be parsed correctly. [#38](https://github.com/pdm-project/pdm/issues/38)
-- Make `_editable_intall.py` compatible with Py2.
+- Make `_editable_install.py` compatible with Py2.
 
 
 Release v0.2.0 (2020-02-14)

@@ -405,10 +405,14 @@ class SetupDistribution(Distribution):
     @property
     def metadata(self) -> dict[str, Any]:  # type: ignore[override]
         return {
-            "Name": self._data.name,
-            "Version": self._data.version,
-            "Summary": self._data.summary,
-            "Requires-Python": self._data.python_requires,
+            k: v
+            for k, v in {
+                "Name": self._data.name,
+                "Version": self._data.version,
+                "Summary": self._data.summary,
+                "Requires-Python": self._data.python_requires,
+            }.items()
+            if v is not None
         }
 
     @property

@@ -124,6 +124,13 @@ class Config(MutableMapping[str, str]):
         "request_timeout": ConfigItem(
             "The timeout for network requests in seconds", 15, True, "PDM_REQUEST_TIMEOUT", coerce=int
         ),
+        "use_uv": ConfigItem(
+            "Use uv for faster resolution and installation",
+            False,
+            False,
+            "PDM_USE_UV",
+            ensure_boolean,
+        ),
         "global_project.fallback": ConfigItem(
             "Use the global project implicitly if no local project is found",
             False,
@@ -185,14 +192,19 @@ class Config(MutableMapping[str, str]):
             DEFAULT_PYPI_INDEX,
             env_var="PDM_PYPI_URL",
         ),
-        "pypi.verify_ssl": ConfigItem("Verify SSL certificate when query PyPI", True, coerce=ensure_boolean),
+        "pypi.verify_ssl": ConfigItem(
+            "Verify SSL certificate when query PyPI",
+            True,
+            env_var="PDM_PYPI_VERIFY_SSL",
+            coerce=ensure_boolean,
+        ),
         "pypi.username": ConfigItem("The username to access PyPI", env_var="PDM_PYPI_USERNAME"),
         "pypi.password": ConfigItem("The password to access PyPI", env_var="PDM_PYPI_PASSWORD"),
         "pypi.ca_certs": ConfigItem(
             "Path to a CA certificate bundle used for verifying the identity of the PyPI server", global_only=True
         ),
         "pypi.ignore_stored_index": ConfigItem(
-            "Ignore the configured indexes",
+            "Don't add the indexes from the config that is not listed in project",
             False,
             env_var="PDM_IGNORE_STORED_INDEX",
             coerce=ensure_boolean,
@@ -265,7 +277,7 @@ class Config(MutableMapping[str, str]):
         self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
         self._data = collections.ChainMap(
-            cast(MutableMapping[str, Any], self.env_map) if is_global else {},
+            cast(MutableMapping[str, Any], self.env_map) if not is_global else {},
             self._file_data,
             self.get_defaults() if is_global else {},
         )
@@ -335,7 +347,12 @@ class Config(MutableMapping[str, str]):
             index_key = ".".join(parts[:2])
             username = self._data.get(index_key, {}).get("username")  # type: ignore[call-overload]
             service = f'pdm-{index_key.replace(".", "-")}'
-            if parts[2] == "password" and self.is_global and keyring.save_auth_info(service, username, value):
+            if (
+                parts[2] == "password"
+                and self.is_global
+                and username
+                and keyring.save_auth_info(service, username, value)
+            ):
                 return
             if parts[2] == "verify_ssl":
                 value = ensure_boolean(value)
@@ -370,15 +387,24 @@ class Config(MutableMapping[str, str]):
         return iter(keys)
 
     def __delitem__(self, key: str) -> None:
+        from pdm.models.auth import keyring
+
         parts = key.split(".")
         if parts[0] in (REPOSITORY, SOURCE) and key not in self._config_map:
             if len(parts) < 2:
                 raise PdmUsageError(f"Should specify the name of {parts[0]}")
+            index_key = ".".join(parts[:2])
+            username = self._data.get(index_key, {}).get("username")  # type: ignore[call-overload]
+            service = f'pdm-{index_key.replace(".", "-")}'
             if len(parts) >= 3:
                 index_key, attr = key.rsplit(".", 1)
-                del self._file_data.get(index_key, {})[attr]
+                if attr == "password" and username:
+                    keyring.delete_auth_info(service, username)
+                self._file_data.get(index_key, {}).pop(attr, None)
             else:
                 del self._file_data[key]
+                if username:
+                    keyring.delete_auth_info(service, username)
             self._save_config()
             return
 

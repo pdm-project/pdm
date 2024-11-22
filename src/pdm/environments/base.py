@@ -109,7 +109,7 @@ class BaseEnvironment(abc.ABC):
         ignore_compatibility: bool | NotSetType = NotSet,
         minimal_version: bool = False,
         env_spec: EnvSpec | None = None,
-    ) -> Generator[unearth.PackageFinder, None, None]:
+    ) -> Generator[unearth.PackageFinder]:
         """Return the package finder of given index sources.
 
         :param sources: a list of sources the finder should search in.

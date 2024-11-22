@@ -77,7 +77,7 @@ Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users h
 
 ## Installation
 
-PDM requires python version 3.8 or higher.
+PDM requires python version 3.9 or higher.
 
 ### Via Install Script
 
@@ -92,7 +92,7 @@ curl -sSL https://pdm-project.org/install-pdm.py | python3 -
 **For Windows**
 
 ```powershell
-(Invoke-WebRequest -Uri https://pdm-project.org/install-pdm.py -UseBasicParsing).Content | py -
+powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install-pdm.py | py -"
 ```
 
 For security reasons, you should verify the checksum of `install-pdm.py`.
@@ -182,7 +182,6 @@ Tell people you are using PDM in your project by including the markdown code in 
 ```
 
 [![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
-
 
 ## Packaging Status
 

@@ -4,6 +4,9 @@ When you run [`pdm init`](../reference/cli.md#init) command, PDM will [ask for t
 
 Compared to [PEP 582](https://www.python.org/dev/peps/pep-0582/), virtual environments are considered more mature and have better support in the Python ecosystem as well as IDEs. Therefore, virtualenv is the default mode if not configured otherwise.
 
+!!! NOTE "Configure pdm to use virtual environment or PEP 582"
+    By default pdm is configured to use virtual environment instead of PEP 582. But this behavior can be changed with `pdm config python.use_venv False` config variable.
+
 **Virtual environments will be used if the project interpreter (the interpreter stored in `.pdm-python`, which can be checked by `pdm info`) is from a virtualenv.**
 
 ## Virtualenv auto-creation
@@ -27,12 +30,12 @@ You can change it by `pdm config venv.backend [virtualenv|venv|conda]`.
 You can create more than one virtualenvs with whatever Python version you want.
 
 ```bash
-# Create a virtualenv based on 3.8 interpreter
-pdm venv create 3.8
+# Create a virtualenv based on 3.9 interpreter
+pdm venv create 3.9
 # Assign a different name other than the version string
-pdm venv create --name for-test 3.8
+pdm venv create --name for-test 3.9
 # Use venv as the backend to create, support 3 backends: virtualenv(default), venv, conda
-pdm venv create --with venv 3.9
+pdm venv create --with venv 3.10
 ```
 
 ## The location of virtualenvs
@@ -109,7 +112,7 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm venv` do
     Additionally, if the project interpreter is a venv Python, you can omit the name argument following activate.
 
 !!! NOTE
-    `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the forementioned purpose, use the `pdm use` command.
+    `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the aforementioned purpose, use the `pdm use` command.
 
 For more CLI usage, see the [`pdm venv`](../reference/cli.md#venv) documentation.
 

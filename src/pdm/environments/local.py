@@ -42,7 +42,7 @@ def _is_console_script(content: bytes) -> bool:
 
 
 def _replace_shebang(path: Path, new_executable: bytes) -> None:
-    """Replace the python executable from the shebeng line, which can be in two forms:
+    """Replace the python executable from the shebang line, which can be in two forms:
 
     1. #!python_executable
     2. #!/bin/sh

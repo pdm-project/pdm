@@ -15,14 +15,14 @@ from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import Requirement, parse_line
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import filtered_sources, normalize_name
+from pdm.utils import deprecation_warning, filtered_sources, normalize_name
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable
 
     from unearth import Link
 
-    from pdm._types import FileHash, RepositoryConfig, SearchResult
+    from pdm._types import FileHash, RepositoryConfig, SearchResults
     from pdm.environments import BaseEnvironment
 
 
@@ -65,17 +65,17 @@ class BaseRepository:
             the current environment.
         :param env_spec: the environment specifier to filter the candidates.
         """
+        from pdm.resolver.reporters import LockReporter
+
         self.sources = sources
         self.environment = environment
         self._candidate_info_cache = environment.project.make_candidate_info_cache()
         self._hash_cache = environment.project.make_hash_cache()
         self.has_warnings = False
-        self.collected_groups: set[str] = set()
         if ignore_compatibility is not NotSet:  # pragma: no cover
-            warnings.warn(
+            deprecation_warning(
                 "The ignore_compatibility argument is deprecated and will be removed in the future. "
                 "Pass in env_set instead. This repository doesn't support lock targets.",
-                DeprecationWarning,
                 stacklevel=2,
             )
         else:
@@ -86,6 +86,7 @@ class BaseRepository:
             else:
                 env_spec = environment.spec
         self.env_spec = env_spec
+        self.reporter = LockReporter()
 
     def get_filtered_sources(self, req: Requirement) -> list[RepositoryConfig]:
         """Get matching sources based on the index attribute."""
@@ -138,7 +139,8 @@ class BaseRepository:
         project = self.environment.project
         link = Link.from_path(project.root)
         candidate = Candidate(requirement, project.name, link=link)
-        candidate.prepare(self.environment).metadata
+        with self.reporter.make_candidate_reporter(candidate) as reporter:
+            candidate.prepare(self.environment, reporter=reporter).metadata
         return candidate
 
     def _should_ignore_package_warning(self, requirement: Requirement) -> bool:
@@ -180,7 +182,7 @@ class BaseRepository:
             if requirement.specifier.contains(c.version, allow_prereleases)  # type: ignore[arg-type, union-attr]
         )
 
-        def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate, None, None]:
+        def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate]:
             env_requires_python = PySpecSet(self.env_spec.requires_python)
             if ignore_requires_python:
                 yield from candidates
@@ -268,35 +270,17 @@ class BaseRepository:
         deps: list[Requirement] = []
         for line in info[0]:
             deps.append(parse_line(line))
+        termui.logger.debug("Using cached metadata for %s", candidate)
         return CandidateMetadata(deps, info[1], info[2])
 
     @cache_result
     def _get_dependencies_from_metadata(self, candidate: Candidate) -> CandidateMetadata:
-        prepared = candidate.prepare(self.environment)
-        deps = prepared.get_dependencies_from_metadata()
-        requires_python = candidate.requires_python
-        summary = prepared.metadata.metadata.get("Summary", "")
+        with self.reporter.make_candidate_reporter(candidate) as reporter:
+            prepared = candidate.prepare(self.environment, reporter=reporter)
+            deps = prepared.get_dependencies_from_metadata()
+            requires_python = candidate.requires_python
+            summary = prepared.metadata.metadata.get("Summary", "")
         return CandidateMetadata(deps, requires_python, summary)
-
-    def _get_dependencies_from_local_package(self, candidate: Candidate) -> CandidateMetadata:
-        """Adds the local package as a candidate only if the candidate
-        name is the same as the local package."""
-        project = self.environment.project
-        if not project.is_distribution or candidate.name != project.name:
-            raise CandidateInfoNotFound(candidate) from None
-
-        reqs: list[Requirement] = []
-        if candidate.req.extras is not None:
-            all_groups = set(project.iter_groups())
-            for extra in candidate.req.extras:
-                if extra in all_groups:
-                    reqs.extend(project.get_dependencies(extra))
-                    self.collected_groups.add(extra)
-        return CandidateMetadata(
-            reqs,
-            str(self.environment.python_requires),
-            project.pyproject.metadata.get("description", "UNKNOWN"),
-        )
 
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         """Get hashes of all possible installable candidates
@@ -327,7 +311,7 @@ class BaseRepository:
                 links = [package.link for package in finder.find_matches(req.as_line())]
         for link in links:
             if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
-                # The links found can still be a local directory or vcs, skippping it.
+                # The links found can still be a local directory or vcs, skipping it.
                 continue
             if not logged:
                 termui.logger.info("Fetching hashes for %s", candidate)
@@ -347,10 +331,20 @@ class BaseRepository:
         """
         raise NotImplementedError
 
-    def search(self, query: str) -> SearchResult:
+    def search(self, query: str) -> SearchResults:
         """Search package by name or summary.
 
         :param query: query string
         :returns: search result, a dictionary of name: package metadata
         """
         raise NotImplementedError
+
+    def fetch_hashes(self, candidates: Iterable[Candidate]) -> None:
+        """Fetch hashes for candidates in parallel"""
+        from concurrent.futures import ThreadPoolExecutor
+
+        def do_fetch(candidate: Candidate) -> None:
+            candidate.hashes = self.get_hashes(candidate)
+
+        with ThreadPoolExecutor() as executor:
+            executor.map(do_fetch, candidates)

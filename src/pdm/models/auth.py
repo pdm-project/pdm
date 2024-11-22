@@ -93,5 +93,18 @@ class Keyring:
             self.enabled = False
             return False
 
+    def delete_auth_info(self, url: str, username: str) -> bool:
+        """Delete the password for the given url and username.
+        Returns whether the operation is successful.
+        """
+        if self.provider is None or not self.enabled:
+            return False
+        try:
+            self.provider.delete_auth_info(url, username)
+            return True
+        except Exception:
+            self.enabled = False
+            return False
+
 
 keyring = Keyring()

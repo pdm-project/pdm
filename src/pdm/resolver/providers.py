@@ -30,23 +30,23 @@ if TYPE_CHECKING:
     ProviderT = TypeVar("ProviderT", bound="type[BaseProvider]")
 
 
-_PROVIDER_REGISTORY: dict[str, type[BaseProvider]] = {}
+_PROVIDER_REGISTRY: dict[str, type[BaseProvider]] = {}
 
 
 def get_provider(strategy: str) -> type[BaseProvider]:
-    return _PROVIDER_REGISTORY[strategy]
+    return _PROVIDER_REGISTRY[strategy]
 
 
 def register_provider(strategy: str) -> Callable[[ProviderT], ProviderT]:
     def wrapper(cls: ProviderT) -> ProviderT:
-        _PROVIDER_REGISTORY[strategy] = cls
+        _PROVIDER_REGISTRY[strategy] = cls
         return cls
 
     return wrapper
 
 
 @register_provider("all")
-class BaseProvider(AbstractProvider):
+class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
     def __init__(
         self,
         repository: BaseRepository,
@@ -71,12 +71,11 @@ class BaseProvider(AbstractProvider):
         self.excludes = {normalize_name(k) for k in project.pyproject.resolution.get("excludes", [])}
         self.direct_minimal_versions = direct_minimal_versions
         self.locked_candidates = locked_candidates
-        self._known_depth: dict[str, int] = {}
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
 
-        - Editable requirements are preferered.
+        - Editable requirements are preferred.
         - File links are preferred.
         - The one with narrower specifierset is preferred.
         """
@@ -102,14 +101,6 @@ class BaseProvider(AbstractProvider):
         backtrack_identifiers = {req.identify() for req, _ in backtrack_causes} | {
             parent.identify() for _, parent in backtrack_causes if parent is not None
         }
-        if is_top:
-            dep_depth = 1
-        else:
-            parent_depths = (
-                self._known_depth[parent.identify()] if parent is not None else 0
-                for _, parent in information[identifier]
-            )
-            dep_depth = min(parent_depths, default=0) + 1
         # Use the REAL identifier as it may be updated after candidate preparation.
         deps: list[Requirement] = []
         for candidate in candidates[identifier]:
@@ -118,7 +109,6 @@ class BaseProvider(AbstractProvider):
             except RequirementsConflicted:
                 continue
             break
-        self._known_depth[self.identify(candidate)] = dep_depth
         is_backtrack_cause = any(dep.identify() in backtrack_identifiers for dep in deps)
         is_file_or_url = any(not requirement.is_named for requirement, _ in information[identifier])
         operators = [spec.operator for req, _ in information[identifier] for spec in req.specifier]
@@ -131,7 +121,6 @@ class BaseProvider(AbstractProvider):
             not is_file_or_url,
             not is_pinned,
             not is_backtrack_cause,
-            dep_depth,
             -constraints,
             identifier,
         )
@@ -160,7 +149,7 @@ class BaseProvider(AbstractProvider):
             requirements[r.identify()] = r
 
         # Read from --override files
-        parser = RequirementParser(self.repository.environment)
+        parser = RequirementParser(self.repository.environment.session)
         for override_file in self.repository.environment.project.core.state.overrides:
             parser.parse_file(override_file)
         for r in parser.requirements:
@@ -184,6 +173,8 @@ class BaseProvider(AbstractProvider):
             return [can]
         else:
             prerelease = requirement.prerelease
+            if prerelease is None and requirement.is_pinned and requirement.specifier.prereleases:
+                prerelease = True
             if prerelease is None and (key := requirement.identify()) in self.locked_candidates:
                 # keep the prerelease if it is locked
                 candidates = self.locked_candidates[key]
@@ -218,15 +209,15 @@ class BaseProvider(AbstractProvider):
                 return iter(self._find_candidates(self.overrides[identifier]))
             elif (name := strip_extras(identifier)[0]) in self.overrides:
                 return iter(self._find_candidates(self.overrides[name]))
-            reqs = sorted(requirements[identifier], key=self.requirement_preference)
+            reqs = list(requirements[identifier])
             if not reqs:
                 return iter(())
-            original_req = reqs[0]
+            original_req = min(reqs, key=self.requirement_preference)
             bare_name, extras = strip_extras(identifier)
             if extras and bare_name in requirements:
                 # We should consider the requirements for both foo and foo[extra]
                 reqs.extend(requirements[bare_name])
-                reqs.sort(key=self.requirement_preference)
+            reqs.sort(key=self.requirement_preference)
             candidates = self._find_candidates(reqs[0])
             return (
                 # In some cases we will use candidates from the bare requirement,
@@ -265,8 +256,10 @@ class BaseProvider(AbstractProvider):
             # This should be a URL candidate or self package, consider it to be matching
             return True
         # Allow prereleases if: 1) it is not specified in the tool settings or
-        # 2) the candidate doesn't come from PyPI index.
-        allow_prereleases = self.allow_prereleases in (True, None) or not candidate.req.is_named
+        # 2) the candidate doesn't come from PyPI index or 3) the requirement is pinned
+        allow_prereleases = (
+            self.allow_prereleases in (True, None) or not candidate.req.is_named or requirement.is_pinned
+        )
         return requirement.specifier.contains(version, allow_prereleases)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
@@ -330,7 +323,7 @@ class ReusePinProvider(BaseProvider):
         bare_name = strip_extras(identifier)[0]
         if bare_name in self.tracked_names or identifier not in self.locked_candidates:
             return []
-        return self.locked_candidates[identifier]
+        return sorted(self.locked_candidates[identifier], key=lambda c: c.version or "", reverse=True)
 
     def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
         deprecation_warning(
@@ -349,6 +342,7 @@ class ReusePinProvider(BaseProvider):
         def matches_gen() -> Iterator[Candidate]:
             requested_req = next(filter(lambda r: r.is_named, requirements[identifier]), None)
             for pin in self.iter_reuse_candidates(identifier, requested_req):
+                pin = pin.copy_with(min(requirements[identifier], key=self.requirement_preference))
                 incompat = list(incompatibilities[identifier])
                 pin._preferred = True  # type: ignore[attr-defined]
                 if pin not in incompat and all(self.is_satisfied_by(r, pin) for r in requirements[identifier]):
@@ -371,11 +365,11 @@ class EagerUpdateProvider(ReusePinProvider):
     specified packages to upgrade, and free their pins when it has a chance.
     """
 
-    def get_reuse_candidate(self, identifier: str, requirement: Requirement | None) -> Candidate | None:
+    def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
         if identifier in self.tracked_names:
             # If this is a tracked package, don't reuse its pinned version, so it can be upgraded.
-            return None
-        return super().get_reuse_candidate(identifier, requirement)
+            return []
+        return super().iter_reuse_candidates(identifier, requirement)
 
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         # If this package is being tracked for upgrade, remove pins of its

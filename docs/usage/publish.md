@@ -23,6 +23,11 @@ You can configure trusted publishers for PyPI so that you don't need to expose t
 [the guide](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) to add a publisher and write the GitHub Actions workflow as below:
 
 ```yaml
+on:
+  release:
+    types: [published]
+
+
 jobs:
   pypi-publish:
     name: upload release to PyPI
@@ -33,9 +38,9 @@ jobs:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: pdm-project/setup-pdm@v3
+      - uses: pdm-project/setup-pdm@v4
 
       - name: Publish package distributions to PyPI
         run: pdm publish

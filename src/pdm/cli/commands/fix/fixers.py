@@ -2,7 +2,9 @@ import abc
 import re
 
 from pdm.project import Config, Project
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM
 from pdm.termui import Verbosity
+from pdm.utils import parse_version
 
 
 class BaseFixer(abc.ABC):
@@ -97,3 +99,22 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
 
         # Write the updated settings back to the project
         self.project.pyproject.write(False)
+
+
+class LockStrategyFixer(BaseFixer):
+    identifier = "deprecated-cross-platform"
+
+    def get_message(self) -> str:
+        return "Lock strategy [success]`cross_platform`[/] has been deprecated in favor of lock targets."
+
+    def check(self) -> bool:
+        lockfile_version = self.project.lockfile.file_version
+        if not lockfile_version or parse_version(lockfile_version) < parse_version("4.5.0"):
+            return False
+        return FLAG_CROSS_PLATFORM in self.project.lockfile.strategy
+
+    def fix(self) -> None:
+        strategies = self.project.lockfile.strategy - {FLAG_CROSS_PLATFORM}
+        self.project.lockfile._data["metadata"]["strategy"] = sorted(strategies)
+        self.project.lockfile.write(False)
+        self.log("Lock strategy [success]`cross_platform` has been removed.", verbosity=Verbosity.DETAIL)

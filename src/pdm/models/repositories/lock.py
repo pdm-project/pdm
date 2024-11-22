@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import dataclasses
-import os
 import posixpath
 from functools import cached_property
-from pathlib import Path
 from typing import TYPE_CHECKING, Collection, NamedTuple, cast
 
 from pdm.exceptions import CandidateNotFound, PdmException
@@ -25,7 +23,7 @@ if TYPE_CHECKING:
     CandidateKey = tuple[str, str | None, str | None, bool]
 
 
-class PackageEntry(NamedTuple):
+class Package(NamedTuple):
     candidate: Candidate
     dependencies: list[str]
     summary: str
@@ -40,9 +38,12 @@ class LockedRepository(BaseRepository):
         env_spec: EnvSpec | None = None,
     ) -> None:
         super().__init__(sources, environment, env_spec=env_spec or environment.spec)
-        self.packages: dict[CandidateKey, PackageEntry] = {}
+        self.packages: dict[CandidateKey, Package] = {}
         self.targets: list[EnvSpec] = []
         self._read_lockfile(lockfile)
+
+    def add_package(self, package: Package) -> None:
+        self.packages[self._identify_candidate(package.candidate)] = package
 
     @cached_property
     def all_candidates(self) -> dict[str, list[Candidate]]:
@@ -97,7 +98,7 @@ class LockedRepository(BaseRepository):
                     )
                 can_id = self._identify_candidate(can)
                 can.requires_python = package.get("requires_python", "")
-                entry = PackageEntry(
+                entry = Package(
                     can,
                     package.get("dependencies", []),
                     package.get("summary", ""),
@@ -135,14 +136,9 @@ class LockedRepository(BaseRepository):
         return CandidateMetadata(deps, candidate.requires_python, entry.summary)
 
     def dependency_generators(self) -> Iterable[Callable[[Candidate], CandidateMetadata]]:
-        return (
-            self._get_dependencies_from_local_package,
-            self._get_dependencies_from_lockfile,
-        )
+        return (self._get_dependencies_from_lockfile,)
 
-    def _matching_entries(self, requirement: Requirement) -> Iterable[PackageEntry]:
-        from pdm.models.requirements import FileRequirement
-
+    def _matching_entries(self, requirement: Requirement) -> Iterable[Package]:
         for key, entry in self.packages.items():
             can_req = entry.candidate.req
             if requirement.name:
@@ -182,61 +178,42 @@ class LockedRepository(BaseRepository):
     def get_hashes(self, candidate: Candidate) -> list[FileHash]:
         return candidate.hashes
 
-    def evaluate_candidates(self, groups: Collection[str]) -> dict[str, Candidate]:
-        all_candidates = self.candidates
-        result: dict[str, Candidate] = {}
-        for key, can in all_candidates.items():
+    def evaluate_candidates(self, groups: Collection[str]) -> Iterable[Package]:
+        for package in self.packages.values():
+            can = package.candidate
+            if can.req.marker and not can.req.marker.matches(self.env_spec):
+                continue
             if not any(g in can.req.groups for g in groups):
                 continue
-            result[key] = can
-        return result
+            yield package
 
-    def merge_result(
-        self,
-        env_spec: EnvSpec,
-        result: Iterable[Candidate],
-        fetched_dependencies: dict[tuple[str, str | None], list[Requirement]],
-    ) -> None:
-        project = self.environment.project
-        backend = project.backend
+    def merge_result(self, env_spec: EnvSpec, result: Iterable[Package]) -> None:
         if env_spec not in self.targets:
             self.targets.append(env_spec)
-        for candidate in result:
-            key = self._identify_candidate(candidate)
+        for entry in result:
+            key = self._identify_candidate(entry.candidate)
             existing = self.packages.get(key)
             if existing is None:
-                deps: list[str] = []
-                for r in fetched_dependencies[candidate.dep_key]:
-                    # Try to convert to relative paths to make it portable
-                    if isinstance(r, FileRequirement) and r.path:
-                        try:
-                            if r.path.is_absolute():
-                                r.path = Path(os.path.normpath(r.path)).relative_to(os.path.normpath(project.root))
-                        except ValueError:
-                            pass
-                        else:
-                            r.url = backend.relative_path_to_url(r.path.as_posix())
-                    deps.append(r.as_line())
-                self.packages[key] = PackageEntry(candidate, deps, candidate.summary)
+                self.packages[key] = entry
             else:
                 # merge markers
                 old_marker = existing.candidate.req.marker
-                if old_marker is None or candidate.req.marker is None:
+                if old_marker is None or entry.candidate.req.marker is None:
                     new_marker = None
                 else:
-                    new_marker = old_marker | candidate.req.marker
+                    new_marker = old_marker | entry.candidate.req.marker
                     bare_marker, py_spec = new_marker.split_pyspec()
                     if py_spec.is_superset(self.environment.python_requires):
                         new_marker = bare_marker
                     if new_marker.is_any():
                         new_marker = None
                 # merge groups
-                new_groups = list(set(existing.candidate.req.groups) | set(candidate.req.groups))
+                new_groups = list(set(existing.candidate.req.groups) | set(entry.candidate.req.groups))
                 existing.candidate.req = dataclasses.replace(
                     existing.candidate.req, marker=new_marker, groups=new_groups
                 )
                 # merge file hashes
-                for file in candidate.hashes:
+                for file in entry.candidate.hashes:
                     if file not in existing.candidate.hashes:
                         existing.candidate.hashes.append(file)
         # clear caches
@@ -284,7 +261,6 @@ class LockedRepository(BaseRepository):
         metadata = tomlkit.table()
         if groups is None:
             groups = list(project.iter_groups())
-        strategy.discard(FLAG_CROSS_PLATFORM)
         metadata.update(
             {
                 "groups": sorted(groups, key=_group_sort_key),
