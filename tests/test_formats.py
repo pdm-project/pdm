@@ -230,7 +230,7 @@ def test_convert_setup_py_project(project):
         "license": {"text": "MIT"},
         "classifiers": ["Framework :: Django", "Programming Language :: Python :: 3"],
         "requires-python": ">=3.5",
-        "dependencies": ['importlib-metadata; python_version<"3.8"', "requests"],
+        "dependencies": ['importlib-metadata; python_version<"3.10"', "requests"],
         "scripts": {"mycli": "mymodule:main"},
     }
     assert settings == {"package-dir": "src"}

@@ -164,10 +164,7 @@ class TaskRunner:
         tool_config = metadata.pop("tool", {})
         script_project = self.project.core.create_project()
         script_project.pyproject.set_data({"project": metadata, "tool": tool_config})
-        md5_kwargs = {}
-        # for python >= 3.9, indicate that md5 is not used in a security context
-        if sys.version_info >= (3, 9):
-            md5_kwargs = {"usedforsecurity": False}
+        md5_kwargs = {"usedforsecurity": False}
         venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8"), **md5_kwargs).hexdigest()
         venv_backend = BACKENDS[script_project.config["venv.backend"]](script_project, None)
         venv = venv_backend.get_location(None, venv_name)

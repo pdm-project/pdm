@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from pdm.project.core import Project
     from pdm.pytest import PDMCallable
 
-PYTHON_VERSIONS = ["3.8.7", "3.10.12", "3.10.11", "3.8.0", "3.10.13", "3.9.12"]
+PYTHON_VERSIONS = ["3.9.7", "3.10.12", "3.10.11", "3.9.0", "3.10.13", "3.9.12"]
 
 
 def get_python_versions() -> list[PythonVersion]:
@@ -44,7 +44,7 @@ def test_project_python_with_pyenv_support(project, mocker, monkeypatch):
     pyenv_python.touch()
     mocker.patch(
         "findpython.python.PythonVersion._get_version",
-        return_value=parse_version("3.8.0"),
+        return_value=parse_version("3.9.0"),
     )
     mocker.patch("findpython.python.PythonVersion._get_interpreter", return_value=sys.executable)
     assert Path(project.python.path) == pyenv_python
@@ -544,7 +544,7 @@ def test_project_best_match_max(project, mocker):
 
 
 def test_project_best_match_min(project, mocker):
-    expected = PythonVersion("cpython", 3, 8, 0)
+    expected = PythonVersion("cpython", 3, 9, 0)
     mocker.patch(
         "pdm.project.core.get_all_installable_python_versions",
         return_value=get_python_versions(),

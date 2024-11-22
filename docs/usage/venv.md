@@ -30,12 +30,12 @@ You can change it by `pdm config venv.backend [virtualenv|venv|conda]`.
 You can create more than one virtualenvs with whatever Python version you want.
 
 ```bash
-# Create a virtualenv based on 3.8 interpreter
-pdm venv create 3.8
+# Create a virtualenv based on 3.9 interpreter
+pdm venv create 3.9
 # Assign a different name other than the version string
-pdm venv create --name for-test 3.8
+pdm venv create --name for-test 3.9
 # Use venv as the backend to create, support 3 backends: virtualenv(default), venv, conda
-pdm venv create --with venv 3.9
+pdm venv create --with venv 3.10
 ```
 
 ## The location of virtualenvs

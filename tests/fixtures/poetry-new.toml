@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "test_poetry"}]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 httpx = "*"
 pendulum = "*"
 
