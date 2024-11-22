@@ -4,7 +4,7 @@ import inspect
 import os
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Dict, cast
+from typing import cast
 
 from pdm import termui
 from pdm.models.candidates import Candidate
@@ -95,7 +95,7 @@ class RLResolver(Resolver):
                 verbosity=termui.Verbosity.NORMAL,
             )
 
-        mapping = cast(Dict[str, Candidate], result.mapping)
+        mapping = cast(dict[str, Candidate], result.mapping)
         mapping.pop("python", None)
 
         local_name = normalize_name(self.project.name) if self.project.is_distribution else None
