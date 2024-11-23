@@ -304,6 +304,8 @@ class Project:
             python = PythonInfo.from_path(saved_path)
             if match_version(python):
                 return python
+            elif not python.valid:
+                note("The saved Python interpreter does not exist or broken. Trying to find another one.")
             else:
                 note(
                     "The saved Python interpreter doesn't match the project's requirement. "
