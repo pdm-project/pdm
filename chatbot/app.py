@@ -21,7 +21,7 @@ st.info(
 Settings.llm = AzureOpenAI(
     api_key=st.secrets.get("aoai_key"),
     azure_endpoint=st.secrets.get("aoai_endpoint"),
-    engine="gpt-35-turbo",
+    engine="gpt-4o-mini",
     api_version="2024-02-15-preview",
     temperature=0.5,
     system_prompt="You are an expert on PDM and your job is to answer technical questions. "
