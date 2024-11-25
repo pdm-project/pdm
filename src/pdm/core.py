@@ -318,10 +318,11 @@ class Core:
         replace_vars = {"base": base, "platbase": base}
 
         scheme_names = sysconfig.get_scheme_names()
-        if os.name == "nt":
-            scheme = "nt"
-        elif (sys.version_info < (3, 10)) or (sys.platform == "darwin" and "osx_framework_library" in scheme_names):
+        if (sys.platform == "darwin" and "osx_framework_library" in scheme_names) or sys.platform == "linux":
             scheme = "posix_prefix"
+        # sysconfig._get_default_scheme is a private function in 3.8 & 3.9
+        elif sys.version_info < (3, 10):
+            scheme = "nt" if os.name == "nt" else "posix_prefix"
         else:
             scheme = sysconfig.get_default_scheme()
         purelib = sysconfig.get_path("purelib", scheme, replace_vars)
