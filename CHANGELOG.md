@@ -1,3 +1,22 @@
+## Release v2.21.0 (2024-11-25)
+
+### Features & Improvements
+
+- Pass original working directory as env variable to pdm scripts ([#3179](https://github.com/pdm-project/pdm/issues/3179))
+- Output similar commands or script command when the input command is not correct ([#3270](https://github.com/pdm-project/pdm/issues/3270))
+- improve readability of Python interpreter validation message ([#3276](https://github.com/pdm-project/pdm/issues/3276))
+- Print task name by default when using `pdm run` ([#3277](https://github.com/pdm-project/pdm/issues/3277))
+- Make `OrderedSet.__contains__` run in O(1) ([#3280](https://github.com/pdm-project/pdm/issues/3280))
+- Emit `post_lock` after writing pyproject.toml and pdm.lock in add/update ([#3285](https://github.com/pdm-project/pdm/issues/3285))
+- Drop support of Python 3.8 ([#3298](https://github.com/pdm-project/pdm/issues/3298))
+
+### Bug Fixes
+
+- Fix the name normalization issue for optional dependency groups. ([#3271](https://github.com/pdm-project/pdm/issues/3271))
+- Don't use uv when installing plugins in project. ([#3283](https://github.com/pdm-project/pdm/issues/3283))
+- Fix the bug that pdm plugins are invalid after installation on ubuntu system python. ([#3289](https://github.com/pdm-project/pdm/issues/3289))
+
+
 ## Release v2.20.1 (2024-11-09)
 
 ### Features & Improvements
