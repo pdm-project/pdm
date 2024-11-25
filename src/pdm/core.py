@@ -316,7 +316,15 @@ class Core:
 
         base = str(project.root / ".pdm-plugins")
         replace_vars = {"base": base, "platbase": base}
-        scheme = "nt" if os.name == "nt" else "posix_prefix"
+
+        scheme_names = sysconfig.get_scheme_names()
+        if (sys.platform == "darwin" and "osx_framework_library" in scheme_names) or sys.platform == "linux":
+            scheme = "posix_prefix"
+        # sysconfig._get_default_scheme is a private function in 3.8 & 3.9
+        elif sys.version_info < (3, 10):
+            scheme = "nt" if os.name == "nt" else "posix_prefix"
+        else:
+            scheme = sysconfig.get_default_scheme()
         purelib = sysconfig.get_path("purelib", scheme, replace_vars)
         scripts = sysconfig.get_path("scripts", scheme, replace_vars)
         site.addsitedir(purelib)
