@@ -29,6 +29,14 @@ def test_update_ignore_constraints(project, repository, pdm):
     assert project.pyproject.metadata["dependencies"] == ["pytz~=2020.2"]
     assert project.get_locked_repository().candidates["pytz"].version == "2020.2"
 
+    pdm(["add", "chardet"], obj=project, strict=True)
+    assert "chardet~=3.0" in project.pyproject.metadata["dependencies"]
+    assert project.get_locked_repository().candidates["chardet"].version == "3.0.4"
+    repository.add_candidate("chardet", "3.0.6")
+
+    pdm(["update", "chardet", "--unconstrained", "--save-safe-compatible"], obj=project, strict=True)
+    assert "chardet~=3.0.6" in project.pyproject.metadata["dependencies"]
+
 
 @pytest.mark.usefixtures("working_set")
 @pytest.mark.parametrize("strategy", ["reuse", "all"])

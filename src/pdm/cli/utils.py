@@ -548,7 +548,7 @@ def save_version_specifiers(
 
     :param requirements: the requirements to be updated
     :param resolved: the resolved mapping
-    :param save_strategy: compatible/wildcard/exact
+    :param save_strategy: compatible/safe_compatible/wildcard/exact
     """
 
     def candidate_version(candidates: list[Candidate]) -> Version | None:
@@ -566,11 +566,14 @@ def save_version_specifiers(
                 continue
             if save_strategy == "exact":
                 r.specifier = get_specifier(f"=={version}")
-            elif save_strategy == "compatible":
+            elif save_strategy in ["compatible", "safe_compatible"]:
                 if version.is_prerelease or version.is_devrelease:
                     r.specifier = get_specifier(f">={version},<{version.major + 1}")
                 else:
-                    r.specifier = get_specifier(f"~={version.major}.{version.minor}")
+                    if save_strategy == "compatible":
+                        r.specifier = get_specifier(f"~={version.major}.{version.minor}")
+                    else:
+                        r.specifier = get_specifier(f"~={version}")
             elif save_strategy == "minimum":
                 r.specifier = get_specifier(f">={version}")
 
