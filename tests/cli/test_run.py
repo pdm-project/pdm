@@ -1028,3 +1028,109 @@ def test_run_script_pass_run_cwd_to_original_working_dir_when_working_dir_of_scr
     capfd.readouterr()
     pdm(["run", "test_script"], obj=project, strict=True)
     assert capfd.readouterr()[0].strip() == str(Path.cwd())
+
+
+def test_run_script_default_verbosity(project, pdm):
+    project.pyproject.settings["scripts"] = {"test": {"cmd": "python -V", "help": "help"}}
+    project.pyproject.write()
+
+    result = pdm(["run", "test"], strict=True, obj=project)
+
+    assert "task test" not in result.stderr
+    assert "['python', '-V']" not in result.stderr
+    assert "help" not in result.stderr
+
+
+def test_run_script_default_verbosity_with_show_header(project, pdm):
+    project.project_config.update({"scripts.show_header": True})
+    project.pyproject.settings["scripts"] = {"test": {"cmd": "python -V", "help": "help"}}
+    project.pyproject.write()
+
+    result = pdm(["run", "test"], strict=True, obj=project)
+
+    assert "task test" in result.stderr
+    assert "['python', '-V']" not in result.stderr
+    assert "python -V" not in result.stderr
+    assert "help" in result.stderr
+
+
+def test_run_script_default_verbosity_with_show_header_no_help(project, pdm):
+    project.project_config.update({"scripts.show_header": True})
+    project.pyproject.settings["scripts"] = {"test": {"cmd": "python -V"}}
+    project.pyproject.write()
+
+    result = pdm(["run", "test"], strict=True, obj=project)
+
+    assert "task test" in result.stderr
+    assert "python -V" in result.stderr
+    assert "['python', '-V']" not in result.stderr
+
+
+def test_run_script_verbose(project, pdm):
+    project.pyproject.settings["scripts"] = {"test": {"cmd": "python -V", "help": "help"}}
+    project.pyproject.write()
+
+    result = pdm(["run", "-v", "test"], strict=True, obj=project)
+
+    assert "task test" in result.stderr
+    assert "['python', '-V']" in result.stderr
+    assert "python -V" not in result.stderr
+    assert "help" not in result.stderr
+
+
+def test_run_composite_script_default_verbosity_with_show_header(project, pdm):
+    project.project_config.update({"scripts.show_header": True})
+    project.pyproject.settings["scripts"] = {
+        "test": {"cmd": "python -V", "help": "help"},
+        "parent": {"composite": ["test", "test"]},
+    }
+    project.pyproject.write()
+
+    result = pdm(["run", "parent"], strict=True, obj=project)
+
+    assert "task parent" in result.stderr
+    assert f"test {termui.Emoji.ARROW_SEPARATOR} test" in result.stderr
+    assert "['test', 'test']" not in result.stderr
+    assert "task test" in result.stderr
+    assert "python -V" not in result.stderr
+    assert "['python', '-V']" not in result.stderr
+    assert "help" in result.stderr
+
+
+def test_run_composite_script_default_verbosity_with_show_header_and_help(project, pdm):
+    project.project_config.update({"scripts.show_header": True})
+    project.pyproject.settings["scripts"] = {
+        "test": {"cmd": "python -V", "help": "help"},
+        "parent": {"composite": ["test", "test"], "help": "composite"},
+    }
+    project.pyproject.write()
+
+    result = pdm(["run", "parent"], strict=True, obj=project)
+
+    assert "task parent" in result.stderr
+    assert "composite" in result.stderr
+    assert f"test {termui.Emoji.ARROW_SEPARATOR} test" not in result.stderr
+    assert "['test', 'test']" not in result.stderr
+    assert "task test" in result.stderr
+    assert "['python', '-V']" not in result.stderr
+    assert "python -V" not in result.stderr
+    assert "help" in result.stderr
+
+
+def test_run_composite_script_verbose(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "test": {"cmd": "python -V", "help": "help"},
+        "parent": {"composite": ["test", "test"], "help": "composite"},
+    }
+    project.pyproject.write()
+
+    result = pdm(["run", "-v", "parent"], strict=True, obj=project)
+
+    assert "task parent" in result.stderr
+    assert "composite" not in result.stderr
+    assert f"test {termui.Emoji.ARROW_SEPARATOR} test" not in result.stderr
+    assert "['test', 'test']" in result.stderr
+    assert "task test" in result.stderr
+    assert "['python', '-V']" in result.stderr
+    assert "python -V" not in result.stderr
+    assert "help" not in result.stderr
