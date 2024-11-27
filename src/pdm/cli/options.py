@@ -304,6 +304,13 @@ _save_sub_group.add_argument(
     help="Save compatible version specifiers",
 )
 _save_sub_group.add_argument(
+    "--save-safe-compatible",
+    action="store_const",
+    dest="save_strategy",
+    const="safe_compatible",
+    help="Save safe compatible version specifiers",
+)
+_save_sub_group.add_argument(
     "--save-wildcard",
     action="store_const",
     dest="save_strategy",
