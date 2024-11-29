@@ -188,11 +188,17 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                             if parsed_version.is_prerelease:
                                 prerelease = True
                                 break
-            return self.repository.find_candidates(
-                requirement,
-                self.allow_prereleases if prerelease is None else prerelease,
-                minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
+            candidates = list(
+                self.repository.find_candidates(
+                    requirement,
+                    self.allow_prereleases if prerelease is None else prerelease,
+                    minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
+                )
             )
+            wheel_candidates = [c for c in candidates if c.link and c.link.is_wheel]
+            if wheel_candidates:  # Return wheels only for resolution to speed up.
+                return wheel_candidates
+            return candidates
 
     def find_matches(
         self,
