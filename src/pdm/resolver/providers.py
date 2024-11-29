@@ -196,7 +196,9 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                 )
             )
             wheel_candidates = [c for c in candidates if c.link and c.link.is_wheel]
-            if wheel_candidates:  # Return wheels only for resolution to speed up.
+            if wheel_candidates:
+                # Return wheels only for resolution to speed up.
+                # When none of the wheels satisfies, no need to try the sdists.
                 return wheel_candidates
             return candidates
 
