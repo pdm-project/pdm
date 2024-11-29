@@ -172,7 +172,7 @@ class EnvBuilder:
 
     DEFAULT_BACKEND: ClassVar[dict[str, Any]] = {
         "build-backend": "setuptools.build_meta:__legacy__",
-        "requires": ["setuptools >= 40.8.0", "wheel"],
+        "requires": ["setuptools>=61"],
     }
 
     _shared_envs: ClassVar[dict[int, str]] = {}

@@ -45,7 +45,7 @@ class SetuptoolsBackend(BuildBackend):
     @classmethod
     def build_system(cls) -> BuildSystem:
         return {
-            "requires": ["setuptools>=61", "wheel"],
+            "requires": ["setuptools>=61"],
             "build-backend": "setuptools.build_meta",
         }
 
