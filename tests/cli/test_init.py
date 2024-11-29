@@ -71,7 +71,7 @@ def test_init_command_library(project_no_init, pdm, mocker):
             "readme": "README.md",
             "version": "0.1.0",
         },
-        "build-system": {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61", "wheel"]},
+        "build-system": {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]},
         "tool": {"pdm": {"distribution": True}},
     }
 
