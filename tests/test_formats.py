@@ -216,8 +216,10 @@ def test_export_replace_project_root(project):
     assert "${PROJECT_ROOT}" not in result
 
 
-def test_convert_setup_py_project(project):
+@pytest.mark.usefixtures("local_finder")
+def test_convert_setup_py_project(project, pdm):
     golden_file = FIXTURES / "projects/test-setuptools/setup.py"
+    pdm(["add", "setuptools"], obj=project)
     assert setup_py.check_fingerprint(project, golden_file)
     result, settings = setup_py.convert(project, golden_file, ns())
     assert result == {
