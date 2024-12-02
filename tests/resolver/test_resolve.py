@@ -8,6 +8,7 @@ from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver.reporters import LockReporter
+from pdm.utils import get_requirement_from_override
 from tests import FIXTURES
 
 
@@ -426,3 +427,16 @@ def test_resolve_record_markers(resolve, repository, project):
         str(result["b"].req.marker) == 'os_name == "posix" or (os_name == "posix" or os_name == "nt") and '
         'platform_machine == "x86_64" and python_version < "3.8"'
     )
+
+
+@pytest.mark.parametrize(
+    "name,value,output",
+    [
+        ("foo", "1.0", "foo==1.0"),
+        ("foo", "==1.0", "foo==1.0"),
+        ("foo", ">=1.0", "foo>=1.0"),
+        ("foo", "http://foobar.com", "foo @ http://foobar.com"),
+    ],
+)
+def test_requirement_from_override(name, value, output):
+    assert get_requirement_from_override(name, value) == output

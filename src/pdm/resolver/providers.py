@@ -4,7 +4,7 @@ import os
 from functools import cached_property
 from typing import TYPE_CHECKING, Callable
 
-from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.specifiers import InvalidSpecifier
 from packaging.version import InvalidVersion
 from resolvelib import AbstractProvider, RequirementsConflicted
 from resolvelib.resolvers import Criterion
@@ -16,7 +16,13 @@ from pdm.models.requirements import FileRequirement, Requirement, parse_requirem
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver.python import PythonCandidate, PythonRequirement, find_python_matches, is_python_satisfied_by
 from pdm.termui import logger
-from pdm.utils import deprecation_warning, is_url, normalize_name, parse_version, url_without_fragments
+from pdm.utils import (
+    deprecation_warning,
+    get_requirement_from_override,
+    normalize_name,
+    parse_version,
+    url_without_fragments,
+)
 
 if TYPE_CHECKING:
     from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeVar
@@ -136,15 +142,7 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         }
         requirements: dict[str, Requirement] = {}
         for name, value in project_overrides.items():
-            if is_url(value):
-                req = f"{name} @ {value}"
-            else:
-                try:
-                    SpecifierSet(value)
-                except InvalidSpecifier:
-                    req = f"{name}=={value}"
-                else:
-                    req = f"{name}{value}"
+            req = get_requirement_from_override(name, value)
             r = parse_requirement(req)
             requirements[r.identify()] = r
 

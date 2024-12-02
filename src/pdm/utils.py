@@ -23,6 +23,7 @@ from os import name as os_name
 from pathlib import Path
 from typing import TYPE_CHECKING, Mapping
 
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version, _cmpkey
 from pbs_installer import PythonVersion
 
@@ -568,3 +569,16 @@ def get_class_init_params(klass: type) -> set[str]:
         if not any(p.kind in (p.VAR_POSITIONAL, p.VAR_KEYWORD) for p in params.values()):
             break
     return arguments
+
+
+def get_requirement_from_override(name: str, value: str) -> str:
+    if is_url(value):
+        req = f"{name} @ {value}"
+    else:
+        try:
+            SpecifierSet(value)
+        except InvalidSpecifier:
+            req = f"{name}=={value}"
+        else:
+            req = f"{name}{value}"
+    return req

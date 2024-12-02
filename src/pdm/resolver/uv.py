@@ -92,9 +92,6 @@ class UvResolver(Resolver):
         if dt := self.project.core.state.exclude_newer:
             cmd.extend(["--exclude-newer", dt.isoformat()])
 
-        if self.project.core.state.overrides or self.project.pyproject.resolution.get("overrides", {}):
-            self.project.core.ui.warn("PDM overrides are not supported by uv resolver, they will be ignored")
-
         return cmd
 
     def _parse_uv_lock(self, path: Path) -> Resolution:
