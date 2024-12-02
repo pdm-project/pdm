@@ -378,6 +378,15 @@ class Installer:
         self._post_install(venv, bin_dir)
 
     def uninstall(self) -> None:
+        venv_path = self._path / "venv"
+        if not venv_path.exists():
+            _echo(
+                "{} is not currently installed.".format(
+                    colored("green", "PDM", bold=True),
+                )
+            )
+            return
+
         _echo(
             "Uninstalling {}: {}".format(
                 colored("green", "PDM", bold=True),
@@ -395,7 +404,7 @@ class Installer:
         else:
             script = bin_path / "pdm"
 
-        shutil.rmtree(self._path / "venv")
+        shutil.rmtree(venv_path)
         script.unlink()
 
         if WINDOWS:
