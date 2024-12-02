@@ -294,7 +294,6 @@ def do_sync(
         only_keep=only_keep,
         fail_fast=fail_fast,
         packages=packages,
-        requirements=requirements,
     )
     with project.core.ui.logging("install"):
         hooks.try_emit("pre_install", packages=packages, dry_run=dry_run)
