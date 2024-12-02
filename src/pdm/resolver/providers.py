@@ -170,7 +170,7 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
             can = Candidate(requirement)
             if not can.name:
                 can.prepare(self.repository.environment).metadata
-            return [can]
+            yield can
         else:
             prerelease = requirement.prerelease
             if prerelease is None and requirement.is_pinned and requirement.specifier.prereleases:
@@ -188,19 +188,37 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                             if parsed_version.is_prerelease:
                                 prerelease = True
                                 break
-            candidates = list(
-                self.repository.find_candidates(
-                    requirement,
-                    self.allow_prereleases if prerelease is None else prerelease,
-                    minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
-                )
+            found = self.repository.find_candidates(
+                requirement,
+                self.allow_prereleases if prerelease is None else prerelease,
+                minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
             )
-            wheel_candidates = [c for c in candidates if c.link and c.link.is_wheel]
-            if wheel_candidates:
-                # Return wheels only for resolution to speed up.
-                # When none of the wheels satisfies, no need to try the sdists.
-                return wheel_candidates
-            return candidates
+
+            current_version: str | None = None
+            collected_wheels: list[Candidate] = []
+            collected_others: list[Candidate] = []
+            for candidate in found:
+                assert candidate.version is not None
+                if current_version is None:
+                    current_version = candidate.version
+                if candidate.version != current_version:
+                    # If there are wheels for the given version, we should only return wheels
+                    # to avoid build steps.
+                    if collected_wheels:
+                        yield from collected_wheels
+                    else:
+                        yield from collected_others
+                    current_version = candidate.version
+                    collected_wheels.clear()
+                    collected_others.clear()
+                if candidate.link and candidate.link.is_wheel:
+                    collected_wheels.append(candidate)
+                else:
+                    collected_others.append(candidate)
+            if collected_wheels:
+                yield from collected_wheels
+            else:
+                yield from collected_others
 
     def find_matches(
         self,
