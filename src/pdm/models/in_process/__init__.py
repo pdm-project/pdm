@@ -38,7 +38,7 @@ def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
     """Parse setup.py and return the kwargs"""
     with _in_process_script("parse_setup.py") as script:
         _, outfile = tempfile.mkstemp(suffix=".json")
-        cmd = [executable, "-Es", script, path, outfile]
+        cmd = [executable, script, path, outfile]
         subprocess.check_call(cmd)
         with open(outfile, "rb") as fp:
             return json.load(fp)

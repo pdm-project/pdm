@@ -218,8 +218,10 @@ def test_export_replace_project_root(project):
 
 @pytest.mark.usefixtures("local_finder")
 def test_convert_setup_py_project(project, pdm):
-    golden_file = FIXTURES / "projects/test-setuptools/setup.py"
+    project._saved_python = None
+    project.project_config["python.use_venv"] = True
     pdm(["add", "setuptools"], obj=project)
+    golden_file = FIXTURES / "projects/test-setuptools/setup.py"
     assert setup_py.check_fingerprint(project, golden_file)
     result, settings = setup_py.convert(project, golden_file, ns())
     assert result == {
