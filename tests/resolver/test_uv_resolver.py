@@ -3,7 +3,7 @@ import pytest
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
 
-pytestmark = pytest.mark.network
+pytestmark = [pytest.mark.network, pytest.mark.uv]
 
 
 def resolve(environment, requirements, target=None):

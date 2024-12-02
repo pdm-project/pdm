@@ -52,6 +52,11 @@ def pypi_indexes(index) -> IndexesDefinition:
     }
 
 
+def pytest_runtest_setup(item):
+    if "uv" in item.keywords and not shutil.which("uv"):
+        pytest.skip("uv command not found")
+
+
 class MockGit(Git):
     def fetch_new(self, location, url, rev, args):
         path = os.path.splitext(os.path.basename(unquote(urlparse(str(url)).path)))[0]

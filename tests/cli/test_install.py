@@ -422,6 +422,7 @@ def test_install_from_lock_with_incompatible_targets(project, pdm, python, platf
 
 
 @pytest.mark.network
+@pytest.mark.uv
 def test_uv_install(project, pdm):
     project.project_config.update({"use_uv": True, "python.use_venv": True})
     project._saved_python = None
@@ -433,6 +434,7 @@ def test_uv_install(project, pdm):
 
 
 @pytest.mark.network
+@pytest.mark.uv
 def test_uv_install_pep582_not_allowed(project, pdm):
     project.project_config.update({"use_uv": True})
     pdm(["add", "requests", "--no-sync"], obj=project, strict=True)
