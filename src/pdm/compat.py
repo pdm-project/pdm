@@ -102,4 +102,4 @@ class CompatibleSequence(Sequence[T]):  # pragma: no cover
             yield r.identify(), r
 
 
-__all__ = ["tomllib", "importlib_metadata", "Distribution", "CompatibleSequence"]
+__all__ = ["CompatibleSequence", "Distribution", "importlib_metadata", "tomllib"]

@@ -208,8 +208,7 @@ class Synchronizer(BaseSynchronizer):
                 if (
                     state.mark_failed
                     or i == self.retry_times
-                    or not state.sequential_failed
-                    and not state.parallel_failed
+                    or (not state.sequential_failed and not state.parallel_failed)
                 ):
                     break
                 sequential_jobs, state.sequential_failed = state.sequential_failed, []

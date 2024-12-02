@@ -102,7 +102,7 @@ class Requirement:
             return False
 
         sp = next(iter(self.specifier))
-        return sp.operator == "===" or sp.operator == "==" and "*" not in sp.version
+        return sp.operator == "===" or (sp.operator == "==" and "*" not in sp.version)
 
     def as_pinned_version(self: T, other_version: str | None) -> T:
         """Return a new requirement with the given pinned version."""
@@ -204,11 +204,8 @@ class Requirement:
         is the same requirement as this one.
         """
         req = parse_line(line)
-        return (
-            self.key == req.key
-            or isinstance(self, FileRequirement)
-            and isinstance(req, FileRequirement)
-            and self.url == req.url
+        return self.key == req.key or (
+            isinstance(self, FileRequirement) and isinstance(req, FileRequirement) and self.url == req.url
         )
 
     @classmethod
@@ -517,7 +514,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             r.path = Path(get_relative_path(r.url) or "")
 
     if editable:
-        if r.is_vcs or r.is_file_or_url and r.is_local_dir:  # type: ignore[attr-defined]
+        if r.is_vcs or (r.is_file_or_url and r.is_local_dir):  # type: ignore[attr-defined]
             assert isinstance(r, FileRequirement)
             r.editable = True
         else:

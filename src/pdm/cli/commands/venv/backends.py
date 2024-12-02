@@ -39,10 +39,8 @@ class Backend(abc.ABC):
                 return project_python
 
         def match_func(py_version: PythonInfo) -> bool:
-            return (
-                bool(self.python)
-                or py_version.valid
-                and self.project.python_requires.contains(py_version.version, True)
+            return bool(self.python) or (
+                py_version.valid and self.project.python_requires.contains(py_version.version, True)
             )
 
         for py_version in self.project.iter_interpreters(self.python, search_venv=False, filter_func=match_func):
