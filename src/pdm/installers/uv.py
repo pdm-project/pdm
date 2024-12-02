@@ -21,6 +21,8 @@ class UvSynchronizer(BaseSynchronizer):
         self.locked_repo = locked_repo
 
     def synchronize(self) -> None:
+        from itertools import chain
+
         from pdm.formats.uv import uv_file_builder
 
         if isinstance(self.environment, PythonLocalEnvironment):
@@ -31,8 +33,12 @@ class UvSynchronizer(BaseSynchronizer):
         if self.dry_run:
             self.environment.project.core.ui.echo("[warning]uv doesn't support dry run mode, skipping installation")
             return
+        if self.requirements is not None:
+            requirements = list(self.requirements)
+        else:
+            requirements = list(chain.from_iterable(self.environment.project.all_dependencies.values()))
         with uv_file_builder(
-            self.environment.project, str(self.environment.python_requires), self.requirements, self.locked_repo
+            self.environment.project, str(self.environment.python_requires), requirements, self.locked_repo
         ) as builder:
             builder.build_pyproject_toml()
             builder.build_uv_lock(include_self=self.install_self)

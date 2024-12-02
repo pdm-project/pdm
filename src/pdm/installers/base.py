@@ -55,7 +55,7 @@ class BaseSynchronizer:
         fail_fast: bool = False,
         use_install_cache: bool | None = None,
         packages: Iterable[Package] = (),
-        requirements: Iterable[Requirement] = (),
+        requirements: Iterable[Requirement] | None = None,
     ) -> None:
         if candidates:  # pragma: no cover
             self.requested_candidates = candidates
@@ -79,7 +79,7 @@ class BaseSynchronizer:
         self.ui = environment.project.core.ui
         self._manager: InstallManager | None = None
         self.packages = packages
-        self.requirements = list(requirements)
+        self.requirements = requirements
 
     @cached_property
     def self_candidate(self) -> Candidate:
@@ -181,7 +181,7 @@ class BaseSynchronizer:
                     else:
                         to_add.add(key)
             elif (
-                (self.only_keep or self.clean and key not in all_candidate_keys)
+                (self.only_keep or (self.clean and key not in all_candidate_keys))
                 and key not in self.SEQUENTIAL_PACKAGES
                 and working_set.is_owned(key)
             ):
