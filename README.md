@@ -77,6 +77,10 @@ Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users h
 
 ## Installation
 
+<a href="https://repology.org/project/pdm/versions">
+    <img src="https://repology.org/badge/vertical-allrepos/pdm.svg" alt="Packaging status" align="right">
+</a>
+
 PDM requires python version 3.9 or higher.
 
 ### Via Install Script
@@ -182,10 +186,6 @@ Tell people you are using PDM in your project by including the markdown code in 
 ```
 
 [![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
-
-## Packaging Status
-
-[![Packaging status](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
 
 ## PDM Eco-system
 

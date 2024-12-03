@@ -65,6 +65,10 @@ PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从�
 
 ## 安装
 
+<a href="https://repology.org/project/pdm/versions">
+    <img src="https://repology.org/badge/vertical-allrepos/pdm.svg" alt="Packaging status" align="right">
+</a>
+
 PDM 需要 Python 3.9 或更高版本。
 
 ### 通过安装脚本
@@ -170,10 +174,6 @@ pdm add requests flask
 ```
 
 [![pdm-managed](https://img.shields.io/endpoint?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fpdm-project%2F.github%2Fbadge.json)](https://pdm-project.org)
-
-## 打包状态
-
-[![打包状态](https://repology.org/badge/vertical-allrepos/pdm.svg)](https://repology.org/project/pdm/versions)
 
 ## PDM 生态
 
