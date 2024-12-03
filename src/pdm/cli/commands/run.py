@@ -341,11 +341,8 @@ class TaskRunner:
         elif kind == "composite":
             assert isinstance(value, list)
 
-        self.project.core.ui.echo(
-            f"Running {task}: [success]{args}[/]\n",
-            err=True,
-            verbosity=termui.Verbosity.NORMAL,
-        )
+        self.display_task(task, args)
+
         if kind == "composite":
             args = list(args)
             should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
@@ -365,6 +362,19 @@ class TaskRunner:
                     composite_code = code
             return composite_code
         return self._run_process(args, chdir=True, shell=shell, **merge_options(self.global_options, options, opts))  # type: ignore[misc]
+
+    def display_task(self, task: Task, args: Sequence[str]) -> None:
+        """Display a task given current verbosity and settings"""
+        is_verbose = self.project.core.ui.verbosity >= termui.Verbosity.DETAIL
+        if not (is_verbose or self.project.config.get("scripts.show_header")):
+            return
+        args = task.args if task.kind == "composite" else args
+        content = args if is_verbose else task.short_description
+        self.project.core.ui.echo(
+            f"Running {task}: [success]{content}[/]",
+            err=True,
+            verbosity=termui.Verbosity.NORMAL,
+        )
 
     def run(
         self,

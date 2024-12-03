@@ -217,6 +217,12 @@ class Config(MutableMapping[str, str]):
             env_var="PDM_PYPI_JSON_API",
             coerce=ensure_boolean,
         ),
+        "scripts.show_header": ConfigItem(
+            "Display script name and help before running",
+            default=False,
+            env_var="PDM_SCRIPTS_SHOW_HEADER",
+            coerce=ensure_boolean,
+        ),
         "venv.location": ConfigItem(
             "Parent directory for virtualenvs",
             os.path.join(platformdirs.user_data_dir("pdm"), "venvs"),
