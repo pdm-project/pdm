@@ -74,7 +74,7 @@ class PySpecSet(SpecifierSet):
     PY_MAX_MINOR_VERSION = _read_max_versions()
     MAX_MAJOR_VERSION = max(PY_MAX_MINOR_VERSION)[:1].bump()
 
-    __slots__ = ("_specs", "_logic", "_prereleases")
+    __slots__ = ("_logic", "_prereleases", "_specs")
 
     def __init__(self, spec: str | VersionSpecifier = "") -> None:
         if spec == "<empty>":

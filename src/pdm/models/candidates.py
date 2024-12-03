@@ -120,16 +120,16 @@ class Candidate:
     """
 
     __slots__ = (
-        "req",
-        "name",
-        "version",
-        "link",
-        "summary",
-        "hashes",
+        "_preferred",
         "_prepared",
         "_requires_python",
-        "_preferred",
         "_revision",
+        "hashes",
+        "link",
+        "name",
+        "req",
+        "summary",
+        "version",
     )
 
     def __init__(
@@ -427,7 +427,7 @@ class PreparedCandidate:
         sources = filtered_sources(self.environment.project.sources, self.req.key)
         env_spec = self.environment.allow_all_spec if allow_all else self.environment.spec
         with self.environment.get_finder(sources, env_spec=env_spec) as finder:
-            if not self.link or self.link.is_wheel and not self._wheel_compatible(self.link.filename, allow_all):
+            if not self.link or (self.link.is_wheel and not self._wheel_compatible(self.link.filename, allow_all)):
                 if self.req.is_file_or_url:
                     raise CandidateNotFound(f"The URL requirement {self.req.as_line()} is a wheel but incompatible")
                 self.link = self._cached = None  # reset the incompatible wheel

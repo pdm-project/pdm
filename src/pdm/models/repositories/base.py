@@ -287,7 +287,7 @@ class BaseRepository:
         of a given package version.
         """
         if (
-            candidate.req.is_vcs or candidate.req.is_file_or_url and candidate.req.is_local_dir  # type: ignore[attr-defined]
+            candidate.req.is_vcs or (candidate.req.is_file_or_url and candidate.req.is_local_dir)  # type: ignore[attr-defined]
         ):
             return []
         if candidate.hashes:
@@ -310,7 +310,7 @@ class BaseRepository:
             with self.environment.get_finder(sources, env_spec=self.env_spec) as finder:
                 links = [package.link for package in finder.find_matches(req.as_line())]
         for link in links:
-            if not link or link.is_vcs or link.is_file and link.file_path.is_dir():
+            if not link or link.is_vcs or (link.is_file and link.file_path.is_dir()):
                 # The links found can still be a local directory or vcs, skipping it.
                 continue
             if not logged:

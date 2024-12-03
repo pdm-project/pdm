@@ -75,19 +75,19 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
 
         # no help; start on same line and add a final newline
         if not action.help:
-            tup = self._current_indent, "", action_header
-            action_header = "%*s%s\n" % tup
+            tup = "", self._current_indent, action_header
+            action_header = "{0:>{1}}{2}\n".format(*tup)
 
         # short action name; start on the same line and pad two spaces
         elif len(action_header) <= action_width:
-            tup = self._current_indent, "", action_width, action_header  # type: ignore[assignment]
-            action_header = "%*s%-*s  " % tup  # type: ignore[str-format]
+            tup = "", self._current_indent, action_header, action_width  # type: ignore[assignment]
+            action_header = "{0:>{1}}{2:<{3}}  ".format(*tup)
             indent_first = 0
 
         # long action name; start on the next line
         else:
-            tup = self._current_indent, "", action_header
-            action_header = "%*s%s\n" % tup
+            tup = "", self._current_indent, action_header
+            action_header = "{0:>{1}}{2}\n".format(*tup)
             indent_first = help_position
 
         # Special format for empty action_header
@@ -105,9 +105,9 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
         if action.help:
             help_text = self._expand_help(action)
             help_lines = self._split_lines(help_text, help_width)
-            parts.append("%*s%s\n" % (indent_first, "", help_lines[0]))
+            parts.append("{:>{}}{}\n".format("", indent_first, help_lines[0]))
             for line in help_lines[1:]:
-                parts.append("%*s%s\n" % (help_position, "", line))
+                parts.append("{:>{}}{}\n".format("", help_position, line))
 
         # or add a newline if the description doesn't end with one
         elif not action_header.endswith("\n"):

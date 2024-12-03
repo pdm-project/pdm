@@ -3,8 +3,8 @@ from pdm.environments.local import PythonLocalEnvironment
 from pdm.environments.python import PythonEnvironment
 
 __all__ = [
-    "BaseEnvironment",
     "BareEnvironment",
+    "BaseEnvironment",
     "PythonEnvironment",
     "PythonLocalEnvironment",
 ]
