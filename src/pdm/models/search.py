@@ -58,6 +58,6 @@ class SearchResultParser(HTMLParser):
             return
         self._nest_anchors -= 1
         if self._nest_anchors == 0:
-            if self._current.name and self._current.version:
+            if self._current.name:
                 self.results.append(self._current.as_frozen())
             self._current = None

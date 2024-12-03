@@ -129,8 +129,7 @@ def test_import_requirement_no_overwrite(project, pdm, tmp_path):
 @pytest.mark.network
 def test_search_package(pdm, tmp_path):
     with cd(tmp_path):
-        result = pdm(["search", "requests"])
-    assert result.exit_code == 0
+        result = pdm(["search", "requests"], strict=True)
     assert len(result.output.splitlines()) > 0
     assert not tmp_path.joinpath("__pypackages__").exists()
     assert not tmp_path.joinpath(".pdm-python").exists()
