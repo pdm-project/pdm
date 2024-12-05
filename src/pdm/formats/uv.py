@@ -15,7 +15,7 @@ from pdm.models.markers import Marker, get_marker
 from pdm.models.repositories import LockedRepository, Package
 from pdm.models.requirements import FileRequirement, Requirement, VcsRequirement, parse_requirement, strip_extras
 from pdm.project.core import Project
-from pdm.utils import normalize_name
+from pdm.utils import get_requirement_from_override, normalize_name
 
 
 @dataclass
@@ -35,6 +35,18 @@ class _UvFileBuilder:
 
     def build_pyproject_toml(self) -> Path:
         data = self.project.pyproject._data.unwrap()
+
+        uv_overrides = []
+        for override_key, override_value in (
+            data.get("tool", {}).get("pdm", {}).get("resolution", {}).get("overrides", {}).items()
+        ):
+            uv_overrides.append(f"{get_requirement_from_override(override_key, override_value)}")
+
+        if uv_overrides:
+            data.setdefault("tool", {}).setdefault("uv", {}).setdefault("override-dependencies", []).extend(
+                uv_overrides
+            )
+
         data.setdefault("project", {})["requires-python"] = self.requires_python
         data.setdefault("project", {})["dependencies"] = []
         data.pop("dependency-groups", None)

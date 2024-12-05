@@ -68,3 +68,15 @@ def test_resolve_dependencies_with_nested_extras(project):
     assert resolution.collected_groups == {"default", "extra1", "extra2", "all"}
     mapping = {p.candidate.identify(): p.candidate for p in resolution.packages}
     assert set(mapping) == {"urllib3", "idna", "chardet"}
+
+
+@pytest.mark.parametrize("overrides", ("2.31.0", "==2.31.0"))
+def test_resolve_dependencies_with_overrides(project, overrides):
+    requirements = ["requests==2.32.0"]
+
+    project.pyproject.settings["resolution"] = {"overrides": {"requests": overrides}}
+
+    resolution = resolve(project.environment, requirements)
+
+    mapping = {p.candidate.identify(): p.candidate for p in resolution.packages}
+    assert mapping["requests"].version == "2.31.0"
