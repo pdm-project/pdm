@@ -427,8 +427,6 @@ class Config(MutableMapping[str, str]):
 
     def get_repository_config(self, name_or_url: str, prefix: str) -> RepositoryConfig | None:
         """Get a repository or source by name or url."""
-        if not self.is_global and prefix == REPOSITORY:  # pragma: no cover
-            raise NoConfigError(prefix)
         repositories: dict[str, RepositoryConfig] = {}
         for k, v in self._data.items():
             if not k.startswith(f"{prefix}.") or k in self._config_map:
