@@ -65,6 +65,7 @@ def _resolve_dependency_group(
     past_groups: tuple[str, ...] = (),
     optional_dependencies: dict[str, list[str]] | None = None,
     allow_optional: bool = False,
+    recursive_resolve: bool = True,
 ) -> tuple[list[str], dict[str, set[str]]]:
     optional_dependencies = optional_dependencies or {}
     if group in past_groups:
@@ -94,26 +95,28 @@ def _resolve_dependency_group(
                 pass
             else:
                 if normalize_name(req) == project_name:
-                    for extra in extras or ():
-                        resolved, referred = _resolve_dependency_group(
-                            project_name,
-                            child_dependencies,
-                            extra,
-                            (*past_groups, group),
-                            optional_dependencies,
-                            # `self[extra]` is allowed to refer to optional dependency groups
-                            allow_optional=True,
-                        )
-                        realized_group.extend(resolved)
-                        for k, v in referred.items():
-                            referred_groups.setdefault(k, {group}).update(v)
+                    if recursive_resolve:
+                        for extra in extras or ():
+                            resolved, referred = _resolve_dependency_group(
+                                project_name,
+                                child_dependencies,
+                                extra,
+                                (*past_groups, group),
+                                optional_dependencies,
+                                # `self[extra]` is allowed to refer to optional dependency groups
+                                allow_optional=True,
+                            )
+                            realized_group.extend(resolved)
+                            for k, v in referred.items():
+                                referred_groups.setdefault(k, {group}).update(v)
                     continue
             realized_group.append(item)
             referred_groups.setdefault(item, {group})
         elif isinstance(item, dict):
             if tuple(item.keys()) != ("include-group",):
                 raise ProjectError(f"Invalid dependency group item: {item}")
-
+            if not recursive_resolve:
+                continue
             include_group = normalize_name(next(iter(item.values())))
             resolved, referred = _resolve_dependency_group(
                 project_name,
@@ -400,7 +403,7 @@ class Project:
     def python_requires(self) -> PySpecSet:
         return PySpecSet(self.pyproject.metadata.get("requires-python", ""))
 
-    def get_dependencies(self, group: str | None = None) -> Sequence[Requirement]:
+    def get_dependencies(self, group: str | None = None, resolve_include: bool = True) -> Sequence[Requirement]:
         metadata = self.pyproject.metadata
         group = normalize_name(group or "default")
         optional_dependencies = {normalize_name(k): v for k, v in metadata.get("optional-dependencies", {}).items()}
@@ -417,10 +420,12 @@ class Project:
                     "and \\[dependency-groups], the former is taken."
                 )
             if group in optional_dependencies:
-                deps, referred_groups = _resolve_dependency_group(project_name, optional_dependencies, group, ())
+                deps, referred_groups = _resolve_dependency_group(
+                    project_name, optional_dependencies, group, (), recursive_resolve=resolve_include
+                )
             elif group in dev_dependencies:
                 deps, referred_groups = _resolve_dependency_group(
-                    project_name, dev_dependencies, group, (), optional_dependencies
+                    project_name, dev_dependencies, group, (), optional_dependencies, recursive_resolve=resolve_include
                 )
             else:
                 raise PdmUsageError(f"Non-exist group {group}")
@@ -450,7 +455,7 @@ class Project:
 
     @property
     def all_dependencies(self) -> dict[str, Sequence[Requirement]]:
-        return {group: self.get_dependencies(group) for group in self.iter_groups()}
+        return {group: self.get_dependencies(group, resolve_include=False) for group in self.iter_groups()}
 
     @property
     def default_source(self) -> RepositoryConfig:
@@ -643,10 +648,10 @@ class Project:
             dependency_groups: list[str | dict[str, str]] = tomlkit.array().multiline(True)
             dev_dependencies: list[str] = tomlkit.array().multiline(True)
             for dep in deps:
-                if dep.startswith("-e"):
+                if isinstance(dep, str) and dep.startswith("-e"):
                     dev_dependencies.append(dep)
-                    continue
-                dependency_groups.append(dep)
+                else:
+                    dependency_groups.append(dep)
             if dependency_groups:
                 self.pyproject.dependency_groups[group] = dependency_groups
             else:
@@ -704,13 +709,17 @@ class Project:
         updated_indices: set[int] = set()
 
         with cd(self.root):
-            parsed_deps = [parse_line(dep) for dep in deps]
+            parsed_deps = [(parse_line(dep) if isinstance(dep, str) else None) for dep in deps]
 
             for req in requirements:
                 if isinstance(req, str):
                     req = parse_line(req)
                 matched_index = next(
-                    (i for i, r in enumerate(deps) if req.matches(r) and i not in updated_indices),
+                    (
+                        i
+                        for i, r in enumerate(deps)
+                        if isinstance(r, str) and req.matches(r) and i not in updated_indices
+                    ),
                     None,
                 )
                 dep = req.as_line()
@@ -726,8 +735,9 @@ class Project:
         if write:
             self.pyproject.write(show_message)
         for r in parsed_deps:
-            r.groups = [to_group]
-        return parsed_deps
+            if r is not None:
+                r.groups = [to_group]
+        return [r for r in parsed_deps if r is not None]
 
     def init_global_project(self) -> None:
         if not self.is_global or not self.pyproject.empty():
