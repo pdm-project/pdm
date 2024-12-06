@@ -162,6 +162,7 @@ class Command(BaseCommand):
             config.ca_certs = ca_certs
         if options.verify_ssl is False:
             config.verify_ssl = options.verify_ssl
+        config.populate_auth()
         return Repository(project, config)
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
