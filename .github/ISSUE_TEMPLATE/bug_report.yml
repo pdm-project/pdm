@@ -40,9 +40,9 @@ body:
   - type: textarea
     id: "pdm-debug-output"
     attributes:
-      label: "pdm -v output"
-      description: "Please provide the output of `pdm -v`."
-      placeholder: "Add the output of `pdm -v`..."
+      label: "Verbose Command Output"
+      description: "Please provide the command output with `-v`."
+      placeholder: "Add the command output with `-v`..."
     validations:
       required: false
   - type: textarea
