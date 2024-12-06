@@ -26,6 +26,7 @@ wheel_file_re = re.compile(
         \.whl|\.dist-info)$""",
     re.VERBOSE,
 )
+UTF8_POLICY = email.policy.EmailPolicy(utf8=True)
 
 
 def parse_metadata(fp: IO[bytes]) -> email.message.Message:
@@ -33,7 +34,7 @@ def parse_metadata(fp: IO[bytes]) -> email.message.Message:
     Note that this function will close fp. See https://github.com/python/cpython/issues/65562.
     """
     with io.TextIOWrapper(fp, encoding="utf-8", errors="surrogateescape") as file:
-        return email.message_from_file(file)
+        return email.message_from_file(file, policy=UTF8_POLICY)
 
 
 @dataclass
