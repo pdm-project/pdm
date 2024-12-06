@@ -99,11 +99,6 @@ def test_default_repository_setting(project):
     assert repository is None
 
 
-def test_repository_config_not_available_on_project(project):
-    with pytest.raises(PdmUsageError):
-        project.project_config.get_repository_config("pypi", "repository")
-
-
 def test_repository_config_key_short(project):
     with pytest.raises(PdmUsageError):
         project.global_config["repository.test"] = {"url": "https://example.org/simple"}

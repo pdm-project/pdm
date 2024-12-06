@@ -442,7 +442,7 @@ class Config(MutableMapping[str, str]):
         else:
             config = repositories.get(name_or_url)
 
-        if prefix == SOURCE:
+        if prefix == SOURCE or not self.is_global:
             return config
 
         if name_or_url in DEFAULT_REPOSITORIES:
