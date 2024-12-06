@@ -339,3 +339,13 @@ def test_add_group_with_normalized_name(project, pdm, working_set):
     result = pdm(["add", "-G", "foo-bar", "pytz"], obj=project)
     assert result.exit_code != 0
     assert "Group foo-bar already exists in another non-normalized form" in result.stderr
+
+
+@pytest.mark.usefixtures("working_set")
+def test_add_to_dependency_group_with_include(project, pdm):
+    from pdm.formats.base import make_array
+
+    project.pyproject.dependency_groups.update({"tz": ["pytz"], "web": make_array([{"include-group": "tz"}])})
+    project.pyproject.write()
+    pdm(["add", "-Gweb", "requests"], obj=project, strict=True)
+    assert project.pyproject.dependency_groups["web"] == [{"include-group": "tz"}, "requests>=2.19.1"]

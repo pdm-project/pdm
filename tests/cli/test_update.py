@@ -323,3 +323,12 @@ def test_update_group_not_in_lockfile(project, working_set, pdm):
     result = pdm(["update", "--group", "extra"], obj=project)
     assert result.exit_code != 0
     assert "Requested groups not in lockfile: extra" in result.stderr
+
+
+@pytest.mark.usefixtures("working_set")
+def test_update_dependency_group_with_include(project, pdm):
+    from pdm.formats.base import make_array
+
+    project.pyproject.dependency_groups.update({"tz": ["pytz"], "web": make_array([{"include-group": "tz"}])})
+    project.pyproject.write()
+    pdm(["update", "-u"], obj=project, strict=True)
