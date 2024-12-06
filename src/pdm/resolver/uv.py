@@ -147,9 +147,8 @@ class UvResolver(Resolver):
                 def hash_maker(item: dict[str, Any]) -> FileHash:
                     return {"file": Link(item["url"]).filename, "hash": item["hash"]}
 
-            if not req.is_file_or_url:
-                for wheel in chain(package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []):
-                    candidate.hashes.append(hash_maker(wheel))
+            for wheel in chain(package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []):
+                candidate.hashes.append(hash_maker(wheel))
             entry = Package(candidate, [make_requirement(dep) for dep in package.get("dependencies", [])], "")
             packages.append(entry)
             if optional_dependencies := package.get("optional-dependencies"):
