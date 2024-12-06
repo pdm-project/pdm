@@ -13,7 +13,7 @@ def _normalize_pattern(pattern: str) -> str:
 
 
 @dc.dataclass
-class _RepositoryConfig:
+class RepositoryConfig:
     """Private dataclass to be subclassed"""
 
     config_prefix: str
@@ -21,7 +21,7 @@ class _RepositoryConfig:
 
     url: str | None = None
     username: str | None = None
-    _password: str | None = dc.field(default=None, repr=False)
+    password: str | None = dc.field(default=None, repr=False)
     verify_ssl: bool | None = None
     type: str | None = None
     ca_certs: str | None = None
@@ -34,26 +34,14 @@ class _RepositoryConfig:
         self.include_packages = [_normalize_pattern(p) for p in self.include_packages]
         self.exclude_packages = [_normalize_pattern(p) for p in self.exclude_packages]
 
-
-class RepositoryConfig(_RepositoryConfig):
-    def __init__(self, *args: Any, password: str | None = None, **kwargs: Any) -> None:
-        kwargs["_password"] = password
-        super().__init__(*args, **kwargs)
-
-    @property
-    def password(self) -> str | None:
-        if self._password is None:
+    def populate_auth(self) -> None:
+        if self.username is None or self.password is None:
             from pdm.models.auth import keyring
 
             service = f"pdm-{self.config_prefix}-{self.name}"
-            result = keyring.get_auth_info(service, self.username)
-            if result is not None:
-                self._password = result[1]
-        return self._password
-
-    @password.setter
-    def password(self, value: str) -> None:
-        self._password = value
+            auth = keyring.get_auth_info(service, self.username)
+            if auth is not None:
+                self.username, self.password = auth
 
     def passive_update(self, other: RepositoryConfig | None = None, **kwargs: Any) -> None:
         """An update method that prefers the existing value over the new one."""
