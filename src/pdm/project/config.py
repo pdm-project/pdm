@@ -326,9 +326,10 @@ class Config(MutableMapping[str, str]):
             repo = self.get_repository_config(parts[1], parts[0])
             if repo is None:
                 raise KeyError(f"No {parts[0]} named {parts[1]}")
-
-            value = getattr(repo, parts[2]) if len(parts) >= 3 else repo
-            return value
+            if len(parts) >= 3:
+                repo.populate_auth()
+                return getattr(repo, parts[2])
+            return repo
 
         if key not in self._config_map and key not in self.deprecated:
             raise NoConfigError(key)
