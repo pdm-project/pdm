@@ -57,6 +57,7 @@ class RepositoryConfig:
     def __rich__(self) -> str:
         config_prefix = f"{self.config_prefix}.{self.name}." if self.name else f"{self.config_prefix}."
         lines: list[str] = []
+        self.populate_auth()
         if self.url:
             lines.append(f"[primary]{config_prefix}url[/] = {self.url}")
         if self.username:
