@@ -84,7 +84,10 @@ class Command(BaseCommand):
 
     def _init_builtin(self, project: Project, options: argparse.Namespace) -> None:
         metadata = self.get_metadata_from_input(project, options)
-        with ProjectTemplate(options.template) as template:
+        template = options.template
+        if not template:
+            template = "default" if options.dist else "minimal"
+        with ProjectTemplate(template) as template:
             template.generate(project.root, metadata, options.overwrite)
         project.pyproject.reload()
 
@@ -119,6 +122,7 @@ class Command(BaseCommand):
                 "Do you want to build this project for distribution(such as wheel)?\n"
                 "If yes, it will be installed by default when running `pdm install`."
             )
+        options.dist = is_dist
         build_backend: type[BuildBackend] | None = None
         python = project.python
         if is_dist:

@@ -118,7 +118,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
 def test_init_auto_create_venv(project_no_init, pdm, mocker):
     mocker.patch("pdm.models.python.PythonInfo.get_venv", return_value=None)
     project_no_init.project_config["python.use_venv"] = True
-    result = pdm(["init"], input="\n\n\n\n\n\n\n\n", obj=project_no_init)
+    result = pdm(["init"], input="\ntest-project\n\ny\nTest Project\n1\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
     assert project_no_init.python.executable.parent.parent == project_no_init.root / ".venv"
     assert ".pdm-python" in (project_no_init.root / ".gitignore").read_text()
