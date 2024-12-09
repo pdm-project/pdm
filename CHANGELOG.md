@@ -1,3 +1,29 @@
+## Release v2.22.0 (2024-12-09)
+
+### Features & Improvements
+
+- Use minimal template if the project is an application. ([#3295](https://github.com/pdm-project/pdm/issues/3295))
+- Add one `safe_compatible` version specifiers saving strategy. ([#3301](https://github.com/pdm-project/pdm/issues/3301))
+- Allow customizing scripts display with `scripts.show_header` settings. ([#3313](https://github.com/pdm-project/pdm/issues/3313))
+- Speed up the resolution by only resolving wheel candidates if possible. ([#3319](https://github.com/pdm-project/pdm/issues/3319))
+- Drop version from the search result, following the change of warehouse. ([#3328](https://github.com/pdm-project/pdm/issues/3328))
+- Support `overrides` settings under `[tool.pdm.resolution]` with use_uv ([#3330](https://github.com/pdm-project/pdm/issues/3330))
+
+### Bug Fixes
+
+- No longer requires `wheel` to build a setuptools-backed package. ([#3320](https://github.com/pdm-project/pdm/issues/3320))
+- Fix an inconsistent behavior when running `pdm remove <package>` with uv enabled. ([#3323](https://github.com/pdm-project/pdm/issues/3323))
+- Fix: uninstallation error when pdm is not installed before. ([#3325](https://github.com/pdm-project/pdm/issues/3325))
+- Fix a bug in uv mode that direct URL dependencies can't be installed. ([#3332](https://github.com/pdm-project/pdm/issues/3332))
+- Fix a crash issue when rewriting dependency groups with `include-group` items. ([#3333](https://github.com/pdm-project/pdm/issues/3333))
+- Also read username from keyring if missing in source/repository config. ([#3334](https://github.com/pdm-project/pdm/issues/3334))
+- Allow configuring repositories in project. ([#3335](https://github.com/pdm-project/pdm/issues/3335))
+
+### Miscellany
+
+- Mark tests that require uv and skip them if uv is not found. ([#3324](https://github.com/pdm-project/pdm/issues/3324))
+
+
 ## Release v2.21.0 (2024-11-25)
 
 ### Features & Improvements
