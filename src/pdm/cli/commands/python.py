@@ -159,7 +159,14 @@ class InstallCommand(BaseCommand):
                     tf.close()
                     original_filename = download(python_file, tf.name, env.session)
                     spinner.update(f"Installing [success]{ver_str}[/]")
-                    install_file(tf.name, destination, original_filename)
+                    try:
+                        install_file(tf.name, destination, original_filename)
+                    except ModuleNotFoundError as e:
+                        if "zstandard is required" in str(e):
+                            raise InstallationError(
+                                "zstandard is required to install this Python version. "
+                                "Please install it with `pdm self add zstandard`."
+                            ) from None
         if destination.joinpath("install").exists():
             install_root = destination.joinpath("install")
             interpreter = install_root / "bin" / "python3" if sys.platform != "win32" else install_root / "python.exe"
