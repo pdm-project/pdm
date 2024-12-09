@@ -127,6 +127,7 @@ def test_import_requirement_no_overwrite(project, pdm, tmp_path):
 
 
 @pytest.mark.network
+@pytest.mark.xfail(reason="HTTP search risk controlled")
 def test_search_package(pdm, tmp_path):
     with cd(tmp_path):
         result = pdm(["search", "requests"], strict=True)
