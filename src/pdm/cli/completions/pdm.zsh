@@ -1,7 +1,6 @@
 #compdef pdm
 
 PDM_PYTHON="%{python_executable}"
-PDM_PYPI_URL=$(PDM_CHECK_UPDATE=0 "${PDM_PYTHON}" -m pdm config pypi.url)
 
 _pdm() {
   emulate -L zsh -o extended_glob
@@ -92,7 +91,6 @@ _pdm() {
         {-C,--config-setting}'[Pass options to the backend. options with a value must be specified after "=": "--config-setting=key(=value)" or "-Ckey(=value)"]:cs:'
         "--no-isolation[do not isolate the build in a clean environment]"
         "--dry-run[Show the difference only without modifying the lockfile content]"
-        '*:packages:_pdm_pip_packages'
       )
       ;;
     build)
@@ -307,14 +305,12 @@ _pdm() {
             add)
               arguments+=(
                 '--pip-args[Arguments that will be passed to pip install]:pip args:'
-                '*:packages:_pdm_pip_packages'
               )
               ;;
             remove)
               arguments+=(
                 '--pip-args[Arguments that will be passed to pip uninstall]:pip args:'
                 {-y,--yes}'[Answer yes on the question]'
-                '*:packages:_pdm_pip_packages'
               )
               ;;
             list)
@@ -670,37 +666,6 @@ _pdm_lock_platform() {
     "macos_x86_64"
   )
   _describe -t platform "platform" platforms
-}
-
-_pdm_caching_policy() {
-    [[ ! -f $1 && -n "$1"(Nm+28) ]]
-}
-
-_pdm_pip_packages_update() {
-  typeset -g _pdm_packages
-  if _cache_invalid pdm_packages || ! _retrieve_cache pdm_packages; then
-    local index
-    _pdm_packages+=($(command curl -sL $PDM_PYPI_URL | command sed -nE '/<a href/ s/.*>(.+)<.*/\1/p'))
-    _store_cache pdm_packages _pdm_packages
-  fi
-}
-
-_pdm_pip_packages() {
-  if (( ! $+commands[curl] || ! $+commands[sed] )); then
-    _message "package name"
-    return 1
-  fi
-
-  local update_policy
-  zstyle ":completion:${curcontext%:}:" use-cache on
-  zstyle -s ":completion:${curcontext%:}:" cache-policy update_policy
-  if [[ -z $update_policy ]]; then
-    zstyle ":completion:${curcontext%:}:" cache-policy _pdm_caching_policy
-  fi
-
-  local -a _pdm_packages
-  _pdm_pip_packages_update
-  compadd -X packages -a _pdm_packages
 }
 
 _pdm "$@"
