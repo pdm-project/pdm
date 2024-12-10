@@ -42,6 +42,16 @@ class UvResolver(Resolver):
         if FLAG_INHERIT_METADATA in self.strategies:
             self.project.core.ui.warn("inherit_metadata strategy is not supported by uv resolver, it will be ignored")
             self.strategies.discard(FLAG_INHERIT_METADATA)
+        this_spec = self.environment.spec
+        assert this_spec.platform is not None
+        if self.target.platform and (
+            self.target.platform.sys_platform != this_spec.platform.sys_platform
+            or self.target.platform.arch != this_spec.platform.arch
+        ):
+            self.project.core.ui.warn(
+                f"Resolving against target {self.target.platform} on {this_spec.platform} is not supported by uv mode, "
+                "the resolution may be inaccurate."
+            )
 
     def _build_lock_command(self) -> list[str]:
         cmd = [*self.project.core.uv_cmd, "lock", "-p", str(self.environment.interpreter.executable)]
