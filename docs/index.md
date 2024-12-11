@@ -138,8 +138,8 @@ You can either pass the options after the script or set the env var value.
     Assuming you have [asdf](https://asdf-vm.com/) installed.
     ```
     asdf plugin add pdm
+    asdf install pdm latest
     asdf local pdm latest
-    asdf install pdm
     ```
 
 === "inside project"
