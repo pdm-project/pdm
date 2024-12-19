@@ -21,6 +21,7 @@ from pdm.models.backends import get_backend, get_backend_by_spec
 from pdm.models.reporter import CandidateReporter
 from pdm.models.requirements import (
     FileRequirement,
+    NamedRequirement,
     Requirement,
     VcsRequirement,
     _egg_info_re,
@@ -45,6 +46,9 @@ if TYPE_CHECKING:
 
     from pdm._types import FileHash
     from pdm.environments import BaseEnvironment
+
+
+ALLOWED_HASHES = hashlib.algorithms_guaranteed - {"shake_128", "shake_256", "sha1", "md5"}
 
 
 def _dist_info_files(whl_zip: ZipFile) -> list[str]:
@@ -344,7 +348,9 @@ class PreparedCandidate:
         )
 
     def direct_url(self) -> dict[str, Any] | None:
-        """PEP 610 direct_url.json data"""
+        """PEP 610 direct_url.json data
+        https://peps.python.org/pep-0610/
+        """
         req = self.req
         if isinstance(req, VcsRequirement):
             if req.editable:
@@ -391,6 +397,24 @@ class PreparedCandidate:
             )
         else:
             return None
+
+    def provenance_url(self) -> dict[str, Any] | None:
+        """PEP 710 provenance_url.json data
+        https://peps.python.org/pep-0710/
+        """
+        req = self.req
+        if not isinstance(req, NamedRequirement):
+            return None
+        assert self.link is not None
+        hashes = {name: hashes[0] for name, hashes in (self.link.hash_option or {}).items() if name in ALLOWED_HASHES}
+        if not hashes:
+            hash_cache = self.environment.project.make_hash_cache()
+            hash_name, hash_value = hash_cache.get_hash(self.link, self.environment.session).split(":", 1)
+            hashes.update({hash_name: hash_value})
+        return {
+            "url": self.link.url_without_fragment,
+            "archive_info": {"hashes": hashes},
+        }
 
     def build(self) -> Path:
         """Call PEP 517 build hook to build the candidate into a wheel"""
