@@ -1,3 +1,15 @@
+## Release v2.22.1 (2024-12-19)
+
+### Bug Fixes
+
+- Fix zsh hanging issue by removing PyPI package completion. ([#3329](https://github.com/pdm-project/pdm/issues/3329))
+- Write dev dependencies to `dependency-groups` section when importing project from other package managers. ([#3354](https://github.com/pdm-project/pdm/issues/3354))
+
+### Miscellany
+
+- Show a warning when resolving against cross-platform targets under uv mode. ([#3341](https://github.com/pdm-project/pdm/issues/3341))
+
+
 ## Release v2.22.0 (2024-12-09)
 
 ### Features & Improvements
