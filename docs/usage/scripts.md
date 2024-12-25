@@ -232,7 +232,9 @@ Note how we use [TOML's syntax](https://github.com/toml-lang/toml) to define a c
 !!! note
     Environment variables specified on a composite task level will override those defined by called tasks.
 
-### `env_file`
+### Setup env vars from a file
+
+Note: **The env_file option will be deprecated in the future.**
 
 You can also store all environment variables in a dotenv file and let PDM read it:
 
@@ -251,12 +253,19 @@ start.cmd = "flask run -p 54321"
 start.env_file.override = ".env"
 ```
 
+After v2.23.0, we introduced a new way to specify the env file:
+
+1. We will default load the env file in the project under the name convention `.env.${environment}`. The `${environment}` is the value of the `PDM_ENVIRONMENT` environment variable(or You can set it by using `-e/--environment` command option). If the variable is not set, it will default to `local`.
+2. You can also specify the env file by using the `--env-file` command option.
+3. We will not override the other env vars loaded from the sources loaded before.
+
 !!! note "Environment variable loading order"
     Env vars loaded from different sources are loaded in the following order:
 
     1. OS environment variables
     2. Project environments such as `PDM_PROJECT_ROOT`, `PATH`, `VIRTUAL_ENV`, etc
     3. Dotenv file specified by `env_file`
+    4. Env file specified by `--env-file` CLI option or `.env.${environment}` file
     4. Env vars mapping specified by `env`
 
     Env vars from the latter sources will override those from the former sources.
