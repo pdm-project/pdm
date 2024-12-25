@@ -16,7 +16,7 @@ from rich import print_json
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
-from pdm.cli.options import skip_option, venv_option
+from pdm.cli.options import env_file_option, environment_option, skip_option, venv_option
 from pdm.cli.utils import check_project_file
 from pdm.exceptions import PdmUsageError
 from pdm.signals import pdm_signals
@@ -139,7 +139,7 @@ class TaskRunner:
     TYPES = ("cmd", "shell", "call", "composite")
     OPTIONS = ("env", "env_file", "help", "keep_going", "working_dir", "site_packages")
 
-    def __init__(self, project: Project, hooks: HookManager) -> None:
+    def __init__(self, project: Project, hooks: HookManager, options: argparse.Namespace | None = None) -> None:
         self.project = project
         global_options = cast(
             "TaskOptions",
@@ -148,6 +148,8 @@ class TaskRunner:
         self.global_options = global_options.copy()
         self.recreate_env = False
         self.hooks = hooks
+        self.environment = options.environment if options else ""
+        self.env_file = options.env_file if options else ""
 
     def _get_script_env(self, script_file: str) -> BaseEnvironment:
         import hashlib
@@ -240,6 +242,7 @@ class TaskRunner:
         this_path = project_env.get_paths()["scripts"]
         os.environ.update(project_env.process_env)
         if env_file is not None:
+            deprecation_warning("env_file option is deprecated, More Detail see.")
             if isinstance(env_file, str):
                 path = env_file
                 override = False
@@ -253,6 +256,12 @@ class TaskRunner:
                 verbosity=termui.Verbosity.DETAIL,
             )
             dotenv.load_dotenv(self.project.root / path, override=override)
+        env_file = ".env"
+        if self.environment != "":
+            env_file = f"{env_file}.{self.environment}"
+        if self.env_file != "":
+            env_file = self.env_file
+        dotenv.load_dotenv(self.project.root / env_file, override=False)
         if env:
             os.environ.update(resolve_variables(env.items(), override=True))
         if shell:
@@ -463,7 +472,7 @@ def _fix_env_file(data: dict[str, Any]) -> dict[str, Any]:
 class Command(BaseCommand):
     """Run commands or scripts with local packages loaded"""
 
-    arguments = (*BaseCommand.arguments, skip_option, venv_option)
+    arguments = (*BaseCommand.arguments, skip_option, venv_option, env_file_option, environment_option)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         action = parser.add_mutually_exclusive_group()
@@ -479,6 +488,7 @@ class Command(BaseCommand):
             action="store_true",
             help="Output all scripts infos in JSON",
         )
+
         exec = parser.add_argument_group("Execution parameters")
         exec.add_argument(
             "-s",
@@ -499,9 +509,9 @@ class Command(BaseCommand):
     def get_runner(self, project: Project, hooks: HookManager, options: argparse.Namespace) -> TaskRunner:
         if (runner_cls := getattr(self, "runner_cls", None)) is not None:  # pragma: no cover
             deprecation_warning("runner_cls attribute is deprecated, use get_runner method instead.")
-            runner = cast("type[TaskRunner]", runner_cls)(project, hooks)
+            runner = cast("type[TaskRunner]", runner_cls)(project, hooks, options)
         else:
-            runner = TaskRunner(project, hooks)
+            runner = TaskRunner(project, hooks, options)
         runner.recreate_env = options.recreate
         if options.site_packages:
             runner.global_options["site_packages"] = True
