@@ -128,6 +128,7 @@ class Candidate:
         "link",
         "name",
         "req",
+        "requested",
         "summary",
         "version",
     )
@@ -153,6 +154,7 @@ class Candidate:
         self.link = link
         self.summary = ""
         self.hashes: list[FileHash] = []
+        self.requested = False
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None
