@@ -154,6 +154,7 @@ def install_wheel(
     direct_url: dict[str, Any] | None = None,
     install_links: bool = False,
     rename_pth: bool = False,
+    requested: bool = False,
 ) -> str:
     """Only create .pth files referring to the cached package.
     If the cache doesn't exist, create one.
@@ -169,9 +170,11 @@ def install_wheel(
     else:
         link_method = _get_link_method(cache_method)
 
-    additional_metadata: dict[str, bytes] = {}
+    additional_metadata: dict[str, bytes] = {"INSTALLER": b"pdm"}
     if direct_url is not None:
         additional_metadata["direct_url.json"] = json.dumps(direct_url, indent=2).encode()
+    if requested:
+        additional_metadata["REQUESTED"] = b""
 
     destination = InstallDestination(
         scheme_dict=environment.get_paths(dist_name),

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from functools import cached_property
+from itertools import chain
 from typing import Collection, Iterable
 
 from pdm import termui
@@ -90,6 +91,10 @@ class BaseSynchronizer:
     def candidates(self) -> dict[str, Candidate]:
         """Return the candidates to be installed"""
         candidates = self.requested_candidates.copy()
+        requested = {
+            req.identify()
+            for req in (self.requirements or chain.from_iterable(self.environment.project.all_dependencies.values()))
+        }
         if isinstance(self.no_editable, Collection):
             keys = self.no_editable
         elif self.no_editable:
@@ -107,6 +112,9 @@ class BaseSynchronizer:
                 # Create a new candidate with editable=False
                 req = dataclasses.replace(candidate.req, editable=False)
                 candidates[key] = candidate.copy_with(req)
+        for key in requested:
+            if key in candidates:
+                candidates[key].requested = True
         return candidates
 
     def should_install_editables(self) -> bool:
