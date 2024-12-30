@@ -674,7 +674,8 @@ class Project:
         if group == "default":
             return metadata.get("dependencies", tomlkit.array()), lambda x: metadata.__setitem__("dependencies", x)
         dev_dependencies = self.pyproject._data.get("dependency-groups", {})
-        dev_dependencies.update(self.pyproject.settings.get("dev-dependencies", {}))
+        for group, items in self.pyproject.settings.get("dev-dependencies", {}).items():
+            dev_dependencies.setdefault(group, []).extend(items)
         deps_setter = [
             (
                 metadata.get("optional-dependencies", {}),

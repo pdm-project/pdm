@@ -96,6 +96,19 @@ def test_non_editable_override_editable(project, pdm):
     assert not project.get_dependencies("dev")[0].editable
 
 
+@pytest.mark.usefixtures("working_set", "vcs")
+def test_add_editable_normal_dev_dependency(project, pdm):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    url = "git+https://github.com/test-root/demo.git#egg=demo"
+    pdm(["add", "--dev", "-e", url], obj=project, strict=True)
+    pdm(["add", "-d", "urllib3"], obj=project, strict=True)
+    pdm(["add", "-d", "idna"], obj=project, strict=True)
+    dev_group = project.pyproject.settings["dev-dependencies"]["dev"]
+    pep735_group = project.pyproject.dependency_groups["dev"]
+    assert dev_group == ["-e git+https://github.com/test-root/demo.git#egg=demo"]
+    assert pep735_group == ["urllib3>=1.22", "idna>=2.7"]
+
+
 @pytest.mark.usefixtures("working_set")
 def test_add_remote_package_url(project, dev_option, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
