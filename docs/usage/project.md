@@ -17,8 +17,12 @@ will be stored in `.pdm-python` and used by subsequent commands. You can also ch
 
 Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
++++ 2.22.2
+
+If `.python-version` is present in the project root or `PDM_PYTHON_VERSION` env var is set, PDM will use the Python version specified in it. The file or env var should contain a valid Python version string, such as `3.11`.
+
 !!! warning "Using an existing environment"
-If you choose to use an existing environment, such as reusing an environment created by `conda`, please note that PDM will _remove_ dependencies not listed in `pyproject.toml` or `pdm.lock` when running `pdm sync --clean` or `pdm remove`. This may lead to destructive consequences. Therefore, try not to share environment among multiple projects.
+    If you choose to use an existing environment, such as reusing an environment created by `conda`, please note that PDM will _remove_ dependencies not listed in `pyproject.toml` or `pdm.lock` when running `pdm sync --clean` or `pdm remove`. This may lead to destructive consequences. Therefore, try not to share environment among multiple projects.
 
 ### Install Python interpreters with PDM
 

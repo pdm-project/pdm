@@ -792,13 +792,26 @@ class Project:
         python_spec: str | None = None,
         search_venv: bool | None = None,
         filter_func: Callable[[PythonInfo], bool] | None = None,
+        respect_version_file: bool = True,
     ) -> Iterable[PythonInfo]:
         """Iterate over all interpreters that matches the given specifier.
         And optionally install the interpreter if not found.
         """
+        from packaging.version import InvalidVersion
+
         from pdm.cli.commands.python import InstallCommand
 
         found = False
+        if (
+            respect_version_file
+            and not python_spec
+            and (os.getenv("PDM_PYTHON_VERSION") or self.root.joinpath(".python-version").exists())
+        ):
+            requested = os.getenv("PDM_PYTHON_VERSION") or self.root.joinpath(".python-version").read_text().strip()
+            if requested not in self.python_requires:
+                self.core.ui.warn(".python-version is found but the version is not in requires-python, ignored.")
+            else:
+                python_spec = requested
         for interpreter in self.find_interpreters(python_spec, search_venv):
             if filter_func is None or filter_func(interpreter):
                 found = True
@@ -812,7 +825,12 @@ class Project:
             if best_match is None:
                 return
             python_spec = str(best_match)
-
+        else:
+            try:
+                if python_spec not in self.python_requires:
+                    return
+            except InvalidVersion:
+                return
         try:
             # otherwise if no interpreter is found, try to install it
             installed = InstallCommand.install_python(self, python_spec)
