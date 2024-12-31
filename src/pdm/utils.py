@@ -37,8 +37,6 @@ if TYPE_CHECKING:
     from pdm._types import FileHash, RepositoryConfig
     from pdm.compat import Distribution
 
-_egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
-
 try:
     _packaging_version = importlib_metadata.version("packaging")
 except Exception:
@@ -227,6 +225,12 @@ else:
             path = path[1:]
 
         return path
+
+
+def split_path_fragments(path: Path) -> tuple[Path, str]:
+    """Split a path into fragments"""
+    left, sep, right = path.as_posix().partition("#egg=")
+    return Path(left), sep + right
 
 
 def expand_env_vars(credential: str, quote: bool = False, env: Mapping[str, str] | None = None) -> str:

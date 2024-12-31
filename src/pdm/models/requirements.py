@@ -28,6 +28,7 @@ from pdm.utils import (
     add_ssh_scheme_to_git_uri,
     comparable_version,
     normalize_name,
+    split_path_fragments,
     url_to_path,
     url_without_fragments,
 )
@@ -307,17 +308,24 @@ class FileRequirement(Requirement):
         return result
 
     def _parse_url(self) -> None:
-        if not self.url and self.path and self.path.is_absolute():
-            self.url = self.path.as_uri()
-        if not self.path:
-            path = get_relative_path(url_without_fragments(self.url))
-            if path is None:
+        if self.path:
+            path, fragments = split_path_fragments(self.path)
+            if not self.url and path.is_absolute():
+                self.url = path.as_uri() + fragments
+                self.path = path
+            # For relative path, we don't resolve URL now, so the path may still contain fragments,
+            # it will be handled in `relocate()` method.
+        else:
+            url = url_without_fragments(self.url)
+            relpath = get_relative_path(url)
+            if relpath is None:
                 try:
-                    self.path = Path(url_to_path(self.url))
+                    self.path = Path(url_to_path(url))
                 except AssertionError:
                     pass
             else:
-                self.path = Path(path)
+                self.path = Path(relpath)
+
         if self.url:
             self._parse_name_from_url()
 
@@ -326,11 +334,12 @@ class FileRequirement(Requirement):
         if self.path is None or self.path.is_absolute():
             return
         # self.path is relative
-        self.path = Path(os.path.relpath(self.path, backend.root))
-        path = self.path.as_posix()
-        if path == ".":
-            path = ""
-        self.url = backend.relative_path_to_url(path)
+        path, fragments = split_path_fragments(self.path)
+        self.path = Path(os.path.relpath(path, backend.root))
+        relpath = self.path.as_posix()
+        if relpath == ".":
+            relpath = ""
+        self.url = backend.relative_path_to_url(relpath) + fragments
         self._root = backend.root
 
     @property
