@@ -142,6 +142,19 @@ def test_venv_activate(pdm, mocker, project):
 
 
 @pytest.mark.usefixtures("venv_backends")
+def test_venv_activate_tcsh(pdm, mocker, project):
+    project.project_config["venv.in_project"] = False
+    result = pdm(["venv", "create"], obj=project)
+    assert result.exit_code == 0, result.stderr
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
+    key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
+
+    mocker.patch("shellingham.detect_shell", return_value=("tcsh", None))
+    result = pdm(["venv", "activate", key], obj=project)
+    assert result.output.startswith("source") and result.output.strip("'\"\n").endswith("activate.csh")
+
+
+@pytest.mark.usefixtures("venv_backends")
 def test_venv_activate_custom_prompt(pdm, mocker, project):
     project.project_config["venv.in_project"] = False
     creator = mocker.patch("pdm.cli.commands.venv.backends.Backend.create")

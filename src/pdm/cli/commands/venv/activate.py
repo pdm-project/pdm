@@ -48,7 +48,7 @@ class ActivateCommand(BaseCommand):
             shell = ""
         if shell == "fish":
             command, filename = "source", "activate.fish"
-        elif shell == "csh":
+        elif shell in ["csh", "tcsh"]:
             command, filename = "source", "activate.csh"
         elif shell in ["powershell", "pwsh"]:
             command, filename = ".", "Activate.ps1"
