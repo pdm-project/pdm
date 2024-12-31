@@ -6,7 +6,7 @@ import urllib.parse
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pdm.utils import expand_env_vars, path_to_url
+from pdm.utils import expand_env_vars
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -24,7 +24,7 @@ class BuildBackend(metaclass=abc.ABCMeta):
         return line
 
     def relative_path_to_url(self, path: str) -> str:
-        return path_to_url(os.path.join(self.root, path))
+        return self.root.joinpath(path).as_uri()
 
     @classmethod
     @abc.abstractmethod
@@ -52,14 +52,14 @@ class SetuptoolsBackend(BuildBackend):
 
 class PDMBackend(BuildBackend):
     def expand_line(self, req: str, expand_env: bool = True) -> str:
-        line = req.replace("file:///${PROJECT_ROOT}", path_to_url(self.root.as_posix()))
+        line = req.replace("file:///${PROJECT_ROOT}", self.root.as_uri())
         if expand_env:
             line = expand_env_vars(line)
         return line
 
     def relative_path_to_url(self, path: str) -> str:
         if os.path.isabs(path):
-            return path_to_url(path)
+            return Path(path).as_uri()
         return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(path)}"
 
     @classmethod
@@ -79,7 +79,7 @@ class PathContext:
         if not __format_spec:
             return self.__path.as_posix()
         elif __format_spec == "uri":
-            return path_to_url(self.__path.as_posix())
+            return self.__path.as_uri()
         elif __format_spec == "real":
             return self.__path.resolve().as_posix()
         raise ValueError(f"Unknown format specifier: {__format_spec}")
@@ -110,7 +110,7 @@ class HatchBackend(BuildBackend):
 
     def relative_path_to_url(self, path: str) -> str:
         if os.path.isabs(path):
-            return path_to_url(path)
+            return Path(path).as_uri()
         return f"{{root:uri}}/{urllib.parse.quote(path)}"
 
     @classmethod

@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import posixpath
 from functools import cached_property
+from pathlib import Path
 from typing import TYPE_CHECKING, Collection, NamedTuple, cast
 
 from pdm.exceptions import CandidateNotFound, PdmException
@@ -10,7 +11,7 @@ from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
 from pdm.models.repositories.base import BaseRepository, CandidateMetadata
 from pdm.models.requirements import FileRequirement, Requirement, parse_line
-from pdm.utils import cd, path_to_url, url_to_path, url_without_fragments
+from pdm.utils import cd, url_to_path, url_without_fragments
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Iterable, Mapping
@@ -89,7 +90,7 @@ class LockedRepository(BaseRepository):
                 }
                 req = Requirement.from_req_dict(package_name, req_dict)
                 if req.is_file_or_url and req.path and not req.url:  # type: ignore[attr-defined]
-                    req.url = path_to_url(posixpath.join(root, req.path))  # type: ignore[attr-defined]
+                    req.url = root.joinpath(req.path).as_uri()  # type: ignore[attr-defined]
                 can = Candidate(req, name=package_name, version=version)
                 can.hashes = package.get("files", [])
                 if not static_urls and any("url" in f for f in can.hashes):
@@ -112,7 +113,7 @@ class LockedRepository(BaseRepository):
             url = self.environment.project.backend.expand_line(cast(str, url))
             if url.startswith("file://"):
                 path = posixpath.normpath(url_to_path(url))
-                url = path_to_url(path)
+                url = Path(path).as_uri()
         return (
             candidate.identify(),
             candidate.version if not url else None,

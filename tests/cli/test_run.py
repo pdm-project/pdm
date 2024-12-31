@@ -10,7 +10,7 @@ import pytest
 from pdm import termui
 from pdm.cli import actions
 from pdm.cli.utils import get_pep582_path
-from pdm.utils import cd, path_to_url
+from pdm.utils import cd
 
 
 @pytest.fixture
@@ -972,7 +972,7 @@ def test_run_script_with_inline_metadata(project, pdm, local_finder, local_finde
         result = pdm(["run", "test_script.py"], obj=project)
         assert result.exit_code != 0
 
-    local_artifacts_url = path_to_url(str(local_finder_artifacts))
+    local_artifacts_url = local_finder_artifacts.as_uri()
 
     project.root.joinpath("test_script.py").write_text(
         textwrap.dedent(f"""\

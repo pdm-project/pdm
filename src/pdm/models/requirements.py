@@ -28,8 +28,6 @@ from pdm.utils import (
     add_ssh_scheme_to_git_uri,
     comparable_version,
     normalize_name,
-    path_to_url,
-    path_without_fragments,
     url_to_path,
     url_without_fragments,
 )
@@ -310,16 +308,16 @@ class FileRequirement(Requirement):
 
     def _parse_url(self) -> None:
         if not self.url and self.path and self.path.is_absolute():
-            self.url = path_to_url(self.path.as_posix())
+            self.url = self.path.as_uri()
         if not self.path:
-            path = get_relative_path(self.url)
+            path = get_relative_path(url_without_fragments(self.url))
             if path is None:
                 try:
-                    self.path = path_without_fragments(url_to_path(self.url))
+                    self.path = Path(url_to_path(self.url))
                 except AssertionError:
                     pass
             else:
-                self.path = path_without_fragments(path)
+                self.path = Path(path)
         if self.url:
             self._parse_name_from_url()
 
@@ -328,7 +326,7 @@ class FileRequirement(Requirement):
         if self.path is None or self.path.is_absolute():
             return
         # self.path is relative
-        self.path = path_without_fragments(os.path.relpath(self.path, backend.root))
+        self.path = Path(os.path.relpath(self.path, backend.root))
         path = self.path.as_posix()
         if path == ".":
             path = ""
@@ -492,7 +490,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         # We replace the {root.uri} temporarily with a dummy URL header
         # to make it pass through the packaging.requirement parser
         # and then revert it.
-        root_url = path_to_url(Path().as_posix())
+        root_url = Path().absolute().as_uri()
         replaced = "{root:uri}" in line
         if replaced:
             line = line.replace("{root:uri}", root_url)
