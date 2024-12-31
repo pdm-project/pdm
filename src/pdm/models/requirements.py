@@ -321,7 +321,7 @@ class FileRequirement(Requirement):
             if relpath is None:
                 try:
                     self.path = Path(url_to_path(url))
-                except AssertionError:
+                except ValueError:
                     pass
             else:
                 self.path = Path(relpath)

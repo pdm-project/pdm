@@ -155,7 +155,7 @@ def test_add_ssh_scheme_to_git_uri(given, expected):
 
 class TestUrlToPath:
     def test_non_file_url(self):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             utils.url_to_path("not_a_file_scheme://netloc/path")
 
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows test")
