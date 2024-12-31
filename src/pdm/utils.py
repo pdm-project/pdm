@@ -37,8 +37,6 @@ if TYPE_CHECKING:
     from pdm._types import FileHash, RepositoryConfig
     from pdm.compat import Distribution
 
-_egg_fragment_re = re.compile(r"(.*)[#&]egg=[^&]*")
-
 try:
     _packaging_version = importlib_metadata.version("packaging")
 except Exception:
@@ -189,7 +187,8 @@ def url_to_path(url: str) -> str:
 
     WINDOWS = sys.platform == "win32"
 
-    assert url.startswith("file:"), f"You can only turn file: urls into filenames (not {url!r})"
+    if not url.startswith("file:"):
+        raise ValueError(f"You can only turn file: urls into filenames (not {url!r})")
 
     _, netloc, path, _, _ = parse.urlsplit(url)
 
@@ -220,16 +219,10 @@ def url_to_path(url: str) -> str:
     return path
 
 
-def path_to_url(path: str) -> str:
-    """
-    Convert a path to a file: URL.  The path will be made absolute and have
-    quoted path parts.
-    """
-    from urllib.request import pathname2url
-
-    path = os.path.normpath(os.path.abspath(path))
-    url = parse.urljoin("file:", pathname2url(path))
-    return url
+def split_path_fragments(path: Path) -> tuple[Path, str]:
+    """Split a path into fragments"""
+    left, sep, right = path.as_posix().partition("#egg=")
+    return Path(left), sep + right
 
 
 def expand_env_vars(credential: str, quote: bool = False, env: Mapping[str, str] | None = None) -> str:
@@ -446,14 +439,6 @@ def is_pip_compatible_with_python(python_version: Version | str) -> bool:
     pip = importlib_metadata.distribution("pip")
     requires_python = get_specifier(pip.metadata.get("Requires-Python"))
     return requires_python.contains(python_version, True)
-
-
-def path_without_fragments(path: str) -> Path:
-    """Remove egg fragment from path"""
-    match = _egg_fragment_re.search(path)
-    if not match:
-        return Path(path)
-    return Path(match.group(1))
 
 
 def is_in_zipapp() -> bool:

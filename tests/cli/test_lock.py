@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import ANY
 
 import pytest
@@ -8,7 +9,7 @@ from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM, Compatibility
-from pdm.utils import parse_version, path_to_url
+from pdm.utils import parse_version
 from tests import FIXTURES
 
 
@@ -418,7 +419,7 @@ CONSTRAINT_FILE = str(FIXTURES / "constraints.txt")
 
 
 @pytest.mark.usefixtures("repository")
-@pytest.mark.parametrize("constraint", [CONSTRAINT_FILE, path_to_url(CONSTRAINT_FILE)])
+@pytest.mark.parametrize("constraint", [CONSTRAINT_FILE, Path(CONSTRAINT_FILE).as_uri()])
 def test_lock_with_override_file(project, pdm, constraint):
     project.add_dependencies(["requests"])
     pdm(["lock", "--override", constraint], obj=project, strict=True)

@@ -5,7 +5,7 @@ import os
 import pytest
 
 from pdm.models.requirements import RequirementError, filter_requirements_with_extras, parse_requirement
-from pdm.utils import PACKAGING_22, path_to_url
+from pdm.utils import PACKAGING_22
 from tests import FIXTURES
 
 FILE_PREFIX = "file:///" if os.name == "nt" else "file://"
@@ -35,15 +35,15 @@ REQUIREMENTS = [
     ),
     (
         (FIXTURES / "projects/demo").as_posix(),
-        "demo @ " + path_to_url(FIXTURES / "projects/demo"),
+        "demo @ " + (FIXTURES / "projects/demo").as_uri(),
     ),
     (
         (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_posix(),
-        "demo @ " + path_to_url(FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"),
+        "demo @ " + (FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl").as_uri(),
     ),
     (
         (FIXTURES / "projects/demo").as_posix() + "[security]",
-        "demo[security] @ " + path_to_url(FIXTURES / "projects/demo"),
+        "demo[security] @ " + (FIXTURES / "projects/demo").as_uri(),
     ),
     (
         'requests; python_version=="3.7.*"',

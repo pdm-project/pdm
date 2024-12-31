@@ -5,7 +5,7 @@ import pytest
 
 from pdm.models.backends import _BACKENDS, get_backend, get_relative_path
 from pdm.project import Project
-from pdm.utils import cd, path_to_url
+from pdm.utils import cd
 from tests import FIXTURES
 
 
@@ -36,8 +36,8 @@ def test_project_backend(project, working_set, backend, pdm):
         assert "idna" in working_set
         assert "demo" in working_set
         dep = project.pyproject.metadata["dependencies"][0]
-        demo_path = project.root.joinpath("demo").as_posix()
-        demo_url = path_to_url(demo_path)
+        demo_path = project.root.joinpath("demo")
+        demo_url = demo_path.as_uri()
         if backend == "pdm-backend":
             assert dep == "demo @ file:///${PROJECT_ROOT}/demo"
         elif backend == "hatchling":
@@ -54,7 +54,7 @@ def test_project_backend(project, working_set, backend, pdm):
 
 def test_hatch_expand_variables(monkeypatch):
     root = Path().absolute()
-    root_url = path_to_url(root.as_posix())
+    root_url = root.as_uri()
     backend = get_backend("hatchling")(root)
     monkeypatch.setenv("BAR", "bar")
     assert backend.expand_line("demo @ {root:uri}/demo") == f"demo @ {root_url}/demo"
@@ -65,7 +65,7 @@ def test_hatch_expand_variables(monkeypatch):
 
 def test_pdm_backend_expand_variables(monkeypatch):
     root = Path().absolute()
-    root_url = path_to_url(root.as_posix())
+    root_url = root.as_uri()
     backend = get_backend("pdm-backend")(root)
     monkeypatch.setenv("BAR", "bar")
     assert backend.expand_line("demo @ file:///${PROJECT_ROOT}/demo") == f"demo @ {root_url}/demo"

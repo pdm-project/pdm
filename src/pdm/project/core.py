@@ -39,7 +39,6 @@ from pdm.utils import (
     is_conda_base_python,
     is_path_relative_to,
     normalize_name,
-    path_to_url,
 )
 
 if TYPE_CHECKING:
@@ -621,7 +620,7 @@ class Project:
 
         from pdm.models.candidates import Candidate
 
-        req = parse_requirement(path_to_url(self.root.as_posix()), editable)
+        req = parse_requirement(self.root.as_uri(), editable)
         assert self.name
         req.name = self.name
         can = Candidate(req, name=self.name, link=Link.from_path(self.root))

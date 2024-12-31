@@ -34,7 +34,6 @@ from pdm.utils import (
     filtered_sources,
     get_rev_from_url,
     normalize_name,
-    path_to_url,
     url_without_fragments,
 )
 
@@ -353,7 +352,7 @@ class PreparedCandidate:
                 assert self._source_dir
                 return _filter_none(
                     {
-                        "url": path_to_url(self._source_dir.as_posix()),
+                        "url": self._source_dir.as_uri(),
                         "dir_info": {"editable": True},
                         "subdirectory": req.subdirectory,
                     }

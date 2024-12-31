@@ -1,4 +1,3 @@
-import os
 import pathlib
 import sys
 import unittest.mock as mock
@@ -156,7 +155,7 @@ def test_add_ssh_scheme_to_git_uri(given, expected):
 
 class TestUrlToPath:
     def test_non_file_url(self):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             utils.url_to_path("not_a_file_scheme://netloc/path")
 
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows test")
@@ -171,27 +170,6 @@ class TestUrlToPath:
     @pytest.mark.skipif(not sys.platform.startswith("win"), reason="Windows test")
     def test_windows_localhost_local_file_url(self):
         assert utils.url_to_path("file://localhost/local/file/path") == "\\local\\file\\path"
-
-
-# Only testing POSIX-style paths here
-@pytest.mark.skipif(sys.platform.startswith("win"), reason="Non-Windows tests")
-@pytest.mark.parametrize(
-    "given, expected",
-    [
-        ("/path/to/my/pdm", "file:///path/to/my/pdm"),
-        ("/abs/path/to/my/pdm", "file:///abs/path/to/my/pdm"),
-        ("/path/to/my/pdm/pyproject.toml", "file:///path/to/my/pdm/pyproject.toml"),
-        ("../path/to/my/pdm/pyproject.toml", "file:///abs/path/to/my/pdm/pyproject.toml"),
-    ],
-)
-def test_path_to_url(given, expected):
-    if os.path.isabs(given):
-        assert utils.path_to_url(given) == expected
-    else:
-        abs_given = "abs" + str(given).replace("..", "")
-
-        with mock.patch("pdm.utils.os.path.abspath", return_value=abs_given):
-            assert utils.path_to_url(given) == expected
 
 
 @pytest.mark.parametrize(

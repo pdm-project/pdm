@@ -6,7 +6,6 @@ from unearth import Link
 from pdm.models.markers import EnvSpec
 from pdm.models.specifiers import PySpecSet
 from pdm.pytest import Distribution
-from pdm.utils import path_to_url
 from tests import FIXTURES
 
 
@@ -268,9 +267,9 @@ def test_add_with_prerelease(project, working_set, pdm):
 
 def test_add_editable_package_with_extras(project, working_set, pdm):
     project.environment.python_requires = PySpecSet(">=3.6")
-    dep_path = FIXTURES.joinpath("projects/demo").as_posix()
-    pdm(["add", "-dGdev", "-e", f"{dep_path}[security]"], obj=project, strict=True)
-    assert f"-e {path_to_url(dep_path)}#egg=demo[security]" in project.use_pyproject_dependencies("dev", True)[0]
+    dep_path = FIXTURES.joinpath("projects/demo")
+    pdm(["add", "-dGdev", "-e", f"{dep_path.as_posix()}[security]"], obj=project, strict=True)
+    assert f"-e {dep_path.as_uri()}#egg=demo[security]" in project.use_pyproject_dependencies("dev", True)[0]
     assert "demo" in working_set
     assert "requests" in working_set
     assert "urllib3" in working_set
