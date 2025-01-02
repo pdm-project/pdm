@@ -17,7 +17,7 @@ will be stored in `.pdm-python` and used by subsequent commands. You can also ch
 
 Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
-+++ 2.22.2
++++ 2.23.0
 
 If `.python-version` is present in the project root or `PDM_PYTHON_VERSION` env var is set, PDM will use the Python version specified in it. The file or env var should contain a valid Python version string, such as `3.11`.
 

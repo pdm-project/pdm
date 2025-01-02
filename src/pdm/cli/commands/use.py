@@ -42,6 +42,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Ignore the remembered selection",
         )
+        parser.add_argument(
+            "--no-version-file",
+            dest="version_file",
+            default=True,
+            action="store_false",
+            help="Do not write .python-version file",
+        )
         parser.add_argument("--venv", help="Use the interpreter in the virtual environment with the given name")
         parser.add_argument("python", nargs="?", help="Specify the Python version or path", default="")
 
@@ -137,6 +144,7 @@ class Command(BaseCommand):
         venv: str | None = None,
         auto_install_min: bool = False,
         auto_install_max: bool = False,
+        version_file: bool = True,
         hooks: HookManager | None = None,
     ) -> PythonInfo:
         """Use the specified python version and save in project config.
@@ -176,8 +184,9 @@ class Command(BaseCommand):
             f"Using {'[bold]Global[/] ' if project.is_global else ''}Python interpreter: [success]{selected_python.path!s}[/] ({selected_python_identifier})"
         )
         project.python = selected_python
-        with project.root.joinpath(".python-version").open("w") as f:
-            f.write(f"{selected_python.major}.{selected_python.minor}\n")
+        if version_file:
+            with project.root.joinpath(".python-version").open("w") as f:
+                f.write(f"{selected_python.major}.{selected_python.minor}\n")
         if project.environment.is_local:
             assert isinstance(project.environment, PythonLocalEnvironment)
             project.core.ui.echo(
@@ -202,5 +211,6 @@ class Command(BaseCommand):
             venv=options.venv,
             auto_install_min=options.auto_install_min,
             auto_install_max=options.auto_install_max,
+            version_file=options.version_file,
             hooks=HookManager(project, options.skip),
         )
