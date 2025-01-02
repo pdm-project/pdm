@@ -42,6 +42,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Ignore the remembered selection",
         )
+        parser.add_argument(
+            "--no-version-file",
+            dest="version_file",
+            default=True,
+            action="store_false",
+            help="Do not write .python-version file",
+        )
         parser.add_argument("--venv", help="Use the interpreter in the virtual environment with the given name")
         parser.add_argument("python", nargs="?", help="Specify the Python version or path", default="")
 
@@ -99,7 +106,9 @@ class Command(BaseCommand):
             else:
                 return installed_interpreter_to_use
 
-        found_interpreters = list(dict.fromkeys(project.iter_interpreters(python, filter_func=version_matcher)))
+        found_interpreters = list(
+            dict.fromkeys(project.iter_interpreters(python, filter_func=version_matcher, respect_version_file=False))
+        )
         if not found_interpreters:
             req = python if ignore_requires_python else f'requires-python="{project.python_requires}"'
             raise NoPythonVersion(f"No Python interpreter matching [success]{req}[/] is found.")
@@ -135,6 +144,7 @@ class Command(BaseCommand):
         venv: str | None = None,
         auto_install_min: bool = False,
         auto_install_max: bool = False,
+        version_file: bool = True,
         hooks: HookManager | None = None,
     ) -> PythonInfo:
         """Use the specified python version and save in project config.
@@ -156,7 +166,7 @@ class Command(BaseCommand):
         # This can lead to inconsistency when the same virtual environment is reused.
         # So the original python identifier is preserved here for logging purpose.
         selected_python_identifier = selected_python.identifier
-        if python:
+        if python and selected_python.get_venv() is None:
             use_cache: JSONFileCache[str, str] = JSONFileCache(project.cache_dir / "use_cache.json")
             use_cache.set(python, selected_python.path.as_posix())
 
@@ -174,6 +184,9 @@ class Command(BaseCommand):
             f"Using {'[bold]Global[/] ' if project.is_global else ''}Python interpreter: [success]{selected_python.path!s}[/] ({selected_python_identifier})"
         )
         project.python = selected_python
+        if version_file:
+            with project.root.joinpath(".python-version").open("w") as f:
+                f.write(f"{selected_python.major}.{selected_python.minor}\n")
         if project.environment.is_local:
             assert isinstance(project.environment, PythonLocalEnvironment)
             project.core.ui.echo(
@@ -198,5 +211,6 @@ class Command(BaseCommand):
             venv=options.venv,
             auto_install_min=options.auto_install_min,
             auto_install_max=options.auto_install_max,
+            version_file=options.version_file,
             hooks=HookManager(project, options.skip),
         )

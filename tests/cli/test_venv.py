@@ -142,6 +142,7 @@ def test_venv_activate(pdm, mocker, project):
 
 
 @pytest.mark.usefixtures("venv_backends")
+@pytest.mark.skipif(platform.system() == "Windows", reason="UNIX only")
 def test_venv_activate_tcsh(pdm, mocker, project):
     project.project_config["venv.in_project"] = False
     result = pdm(["venv", "create"], obj=project)
