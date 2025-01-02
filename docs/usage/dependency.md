@@ -109,6 +109,12 @@ Example:
 pdm add "wheel @ git+ssh://git@github.com/pypa/wheel.git@main"
 ```
 
+Or the short non-URI form, which uses a colon(`:`) to separate the host and path:
+
+```bash
+pdm add "wheel @ git+git@github.com:pypa/wheel.git@main"
+```
+
 ### Hide credentials in the URL
 
 You can hide the credentials in the URL by using the `${ENV_VAR}` variable syntax:
