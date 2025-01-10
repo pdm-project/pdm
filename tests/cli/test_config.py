@@ -204,6 +204,7 @@ def test_config_password_save_into_keyring(project, keyring):
 
     del project.global_config["pypi.extra"]
     del project.global_config["repository.pypi.password"]
+    keyring.get_auth_info.cache_clear()
     assert keyring.get_auth_info("pdm-pypi-extra", "foo") is None
     assert keyring.get_auth_info("pdm-repository-pypi", None) is None
 

@@ -34,7 +34,7 @@ class RepositoryConfig:
         self.include_packages = [_normalize_pattern(p) for p in self.include_packages]
         self.exclude_packages = [_normalize_pattern(p) for p in self.exclude_packages]
 
-    def populate_auth(self) -> None:
+    def populate_keyring_auth(self) -> None:
         if self.username is None or self.password is None:
             from pdm.models.auth import keyring
 
@@ -57,7 +57,7 @@ class RepositoryConfig:
     def __rich__(self) -> str:
         config_prefix = f"{self.config_prefix}.{self.name}." if self.name else f"{self.config_prefix}."
         lines: list[str] = []
-        self.populate_auth()
+        self.populate_keyring_auth()
         if self.url:
             lines.append(f"[primary]{config_prefix}url[/] = {self.url}")
         if self.username:
