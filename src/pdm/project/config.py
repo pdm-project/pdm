@@ -327,7 +327,7 @@ class Config(MutableMapping[str, str]):
             if repo is None:
                 raise KeyError(f"No {parts[0]} named {parts[1]}")
             if len(parts) >= 3:
-                repo.populate_auth()
+                repo.populate_keyring_auth()
                 return getattr(repo, parts[2])
             return repo
 

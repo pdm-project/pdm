@@ -470,7 +470,6 @@ class Project:
             client_cert=self.config.get("pypi.client_cert"),
             client_key=self.config.get("pypi.client_key"),
         )
-        config.populate_auth()
         return config
 
     @property
@@ -504,7 +503,6 @@ class Project:
                 continue
             if expand_env:
                 source.url = DEFAULT_BACKEND(self.root).expand_line(expand_env_vars_in_auth(source.url))
-            source.populate_auth()
             sources.append(source)
         return sources
 

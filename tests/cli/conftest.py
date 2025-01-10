@@ -120,4 +120,5 @@ def keyring_fixture(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> K
     mocker.patch("unearth.auth.get_keyring_provider", return_value=provider)
     monkeypatch.setattr(keyring, "provider", provider)
     monkeypatch.setattr(keyring, "enabled", True)
+    keyring.get_auth_info.cache_clear()
     return keyring
