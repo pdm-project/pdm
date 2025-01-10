@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import urllib.parse
 
 from unearth.auth import MaybeAuth, MultiDomainBasicAuth, get_keyring_provider
@@ -68,6 +69,7 @@ class Keyring:
         self.provider = get_keyring_provider()
         self.enabled = self.provider is not None
 
+    @functools.lru_cache(maxsize=128)
     def get_auth_info(self, url: str, username: str | None) -> tuple[str, str] | None:
         """Return the password for the given url and username.
         The username can be None.
