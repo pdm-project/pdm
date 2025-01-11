@@ -1,3 +1,19 @@
+## Release v2.22.2 (2025-01-11)
+
+
+### Features & Improvements
+
+- Write installer metadata like `INSTALLER` and `REQUESTED` to dist-info directory when installing packages. ([#3359](https://github.com/pdm-project/pdm/issues/3359))
+- Respect `.python-version` file in the project root directory when selecting the Python interpreter. By default, it will be written when running `pdm use` command. ([#3367](https://github.com/pdm-project/pdm/issues/3367))
+
+### Bug Fixes
+
+- Fix a problem of missing dependencies when adding to dev dependencies if both editable and non-editable dependencies exist. ([#3361](https://github.com/pdm-project/pdm/issues/3361))
+- Use stdlib for URL <-> Path conversions. ([#3362](https://github.com/pdm-project/pdm/issues/3362))
+- `shellingham.detect_shell()` returns `('tcsh', '/bin/tcsh')` for tcsh on FreeBSD, so the current code tries to use the Bash venv activation script and fails due to syntax error. This change fixes the issue. ([#3366](https://github.com/pdm-project/pdm/issues/3366))
+- Fix a performance issue because pypi source credentials were being queried many times from keyring. ([#3368](https://github.com/pdm-project/pdm/issues/3368))
+
+
 ## Release v2.22.1 (2024-12-19)
 
 ### Bug Fixes
