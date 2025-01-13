@@ -146,6 +146,8 @@ class Candidate:
         :param link: the file link of the candidate.
         """
         self.req = req
+        if isinstance(req, FileRequirement):
+            req.check_installable()
         self.name = name or self.req.project_name
         self.version = version
         if link is None and not req.is_named:
@@ -277,6 +279,7 @@ class Candidate:
                 result.update(revision=self.get_revision())
         elif not self.req.is_named:
             if self.req.is_file_or_url and self.req.is_local:
+                self.req._root = project_root
                 result.update(path=self.req.str_path)
             else:
                 result.update(url=self.req.url)

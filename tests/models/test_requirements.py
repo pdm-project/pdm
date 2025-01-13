@@ -83,6 +83,8 @@ def filter_requirements_to_lines(
 @pytest.mark.parametrize("req, result", REQUIREMENTS)
 def test_convert_req_dict_to_req_line(req, result):
     r = parse_requirement(req)
+    if hasattr(r, "check_installable"):
+        r.check_installable()
     result = result or req
     assert r.as_line() == result
 
