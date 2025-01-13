@@ -145,7 +145,7 @@ class Requirement:
         try:
             kwargs["specifier"] = get_specifier(version)
         except InvalidSpecifier as e:
-            raise RequirementError(f'Invalid specifier for {kwargs.get("name")}: {version}: {e}') from None
+            raise RequirementError(f"Invalid specifier for {kwargs.get('name')}: {version}: {e}") from None
         return cls(**{k: v for k, v in kwargs.items() if k in inspect.signature(cls).parameters})
 
     @classmethod
@@ -171,7 +171,7 @@ class Requirement:
         return NamedRequirement.create(name=dist.metadata["Name"], version=f"=={dist.version}")
 
     @classmethod
-    def from_req_dict(cls, name: str, req_dict: RequirementDict, check_installable: bool = True) -> Requirement:
+    def from_req_dict(cls, name: str, req_dict: RequirementDict) -> Requirement:
         if isinstance(req_dict, str):  # Version specifier only.
             return NamedRequirement.create(name=name, version=req_dict)
         for vcs in VCS_SCHEMA:
@@ -180,7 +180,7 @@ class Requirement:
                 url = f"{vcs}+{repo}"
                 return VcsRequirement.create(name=name, vcs=vcs, url=url, **req_dict)
         if "path" in req_dict or "url" in req_dict:
-            return FileRequirement.create(name=name, **req_dict, check_installable=check_installable)
+            return FileRequirement.create(name=name, **req_dict)
         return NamedRequirement.create(name=name, **req_dict)
 
     @property
@@ -242,14 +242,11 @@ class FileRequirement(Requirement):
     url: str = ""
     path: Path | None = None
     subdirectory: str | None = None
-    check_installable: bool = True
     _root: Path = dataclasses.field(default_factory=Path.cwd, repr=False)
 
     def __post_init__(self) -> None:
         super().__post_init__()
         self._parse_url()
-        if self.is_local_dir and self.check_installable:
-            self._check_installable()
 
     def _hash_key(self) -> tuple:
         return (*super()._hash_key(), self.get_full_url(), self.editable)
@@ -397,15 +394,20 @@ class FileRequirement(Requirement):
         if not self.name and not self.is_vcs:
             self.name = self.guess_name()
 
-    def _check_installable(self) -> None:
-        assert self.path
-        if not self.path.exists():
-            return
-        if not (self.path.joinpath("setup.py").exists() or self.path.joinpath("pyproject.toml").exists()):
-            raise RequirementError(f"The local path '{self.path}' is not installable.")
-        result = Setup.from_directory(self.path.absolute())
-        if result.name:
-            self.name = result.name
+    def check_installable(self) -> None:
+        if path := self.absolute_path:
+            if not path.exists():
+                raise RequirementError(f"The local path '{self.path}' does not exist.")
+            if path.is_dir():
+                if not path.joinpath("setup.py").exists() and not path.joinpath("pyproject.toml").exists():
+                    raise RequirementError(f"The local path '{self.path}' is not installable.")
+                result = Setup.from_directory(path)
+                if result.name:
+                    self.name = result.name
+            elif self.editable:
+                raise RequirementError("Local file requirement must not be editable.")
+        elif self.editable and not self.is_vcs:
+            raise RequirementError("Non-VCS remote file requirement must not be editable.")
 
 
 @dataclasses.dataclass(eq=False)
@@ -521,8 +523,7 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
             r.path = Path(get_relative_path(r.url) or "")
 
     if editable:
-        if r.is_vcs or (r.is_file_or_url and r.is_local_dir):  # type: ignore[attr-defined]
-            assert isinstance(r, FileRequirement)
+        if isinstance(r, FileRequirement) and (r.is_vcs or not r.url or r.url.startswith("file://")):
             r.editable = True
         else:
             raise RequirementError(f"{line}: Editable requirement is only supported for VCS link or local directory.")

@@ -5,6 +5,7 @@ import shutil
 import pytest
 from unearth import Link
 
+from pdm.exceptions import RequirementError
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -313,6 +314,5 @@ def test_parse_metadata_with_dynamic_fields(project, local_finder):
 
 def test_get_metadata_for_non_existing_path(project):
     req = parse_requirement("file:///${PROJECT_ROOT}/non-existing-path")
-    candidate = Candidate(req)
-    with pytest.raises(FileNotFoundError, match="No such file or directory"):
-        candidate.prepare(project.environment).metadata
+    with pytest.raises(RequirementError, match="The local path '.+' does not exist"):
+        Candidate(req)

@@ -80,7 +80,7 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
         for req in req_dict:
             yield from _convert_req(name, req)
     elif isinstance(req_dict, str):
-        pdm_req = fix_req_path(Requirement.from_req_dict(name, _convert_specifier(req_dict), check_installable=False))
+        pdm_req = fix_req_path(Requirement.from_req_dict(name, _convert_specifier(req_dict)))
         yield pdm_req.as_line()
     else:
         assert isinstance(req_dict, dict)
@@ -100,7 +100,7 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
                 "rev",
                 req_dict.pop("tag", req_dict.pop("branch", None)),  # type: ignore[arg-type]
             )
-        pdm_req = fix_req_path(Requirement.from_req_dict(name, req_dict, check_installable=False))
+        pdm_req = fix_req_path(Requirement.from_req_dict(name, req_dict))
         yield pdm_req.as_line()
 
 
