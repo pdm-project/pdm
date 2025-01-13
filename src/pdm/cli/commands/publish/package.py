@@ -34,7 +34,7 @@ def parse_metadata(fp: IO[bytes]) -> email.message.Message:
     Note that this function will close fp. See https://github.com/python/cpython/issues/65562.
     """
     with io.TextIOWrapper(fp, encoding="utf-8", errors="surrogateescape") as file:
-        return email.message_from_file(file, policy=UTF8_POLICY)
+        return email.message_from_file(file, policy=UTF8_POLICY)  # type: ignore[arg-type]
 
 
 @dataclass
@@ -61,7 +61,7 @@ class PackageFile:
         except ValueError:
             pass
         try:
-            hashers["blake2_256_digest"] = hashlib.blake2b(digest_size=256 // 8)
+            hashers["blake2_256_digest"] = hashlib.blake2b(digest_size=256 // 8)  # type: ignore[assignment]
         except (TypeError, ValueError):
             pass
         with open(self.filename, "rb") as f:
@@ -107,7 +107,7 @@ class PackageFile:
         else:
             logger.warning(f"Can't determine the compression mode for {filename}")
             mode = "r:*"
-        with tarfile.open(filename, mode) as tar:
+        with tarfile.open(filename, mode) as tar:  # type: ignore[call-overload]
             members = tar.getmembers()
             has_leading = has_leading_dir(m.name for m in members)
             for m in members:
