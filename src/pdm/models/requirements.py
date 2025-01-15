@@ -312,6 +312,9 @@ class FileRequirement(Requirement):
                 self.path = path
             # For relative path, we don't resolve URL now, so the path may still contain fragments,
             # it will be handled in `relocate()` method.
+            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
+            if result.name:
+                self.name = result.name
         else:
             url = url_without_fragments(self.url)
             relpath = get_relative_path(url)
@@ -401,13 +404,8 @@ class FileRequirement(Requirement):
             if path.is_dir():
                 if not path.joinpath("setup.py").exists() and not path.joinpath("pyproject.toml").exists():
                     raise RequirementError(f"The local path '{self.path}' is not installable.")
-                result = Setup.from_directory(path)
-                if result.name:
-                    self.name = result.name
             elif self.editable:
                 raise RequirementError("Local file requirement must not be editable.")
-        elif self.editable and not self.is_vcs:
-            raise RequirementError("Non-VCS remote file requirement must not be editable.")
 
 
 @dataclasses.dataclass(eq=False)

@@ -146,8 +146,6 @@ class Candidate:
         :param link: the file link of the candidate.
         """
         self.req = req
-        if isinstance(req, FileRequirement):
-            req.check_installable()
         self.name = name or self.req.project_name
         self.version = version
         if link is None and not req.is_named:
@@ -292,6 +290,8 @@ class Candidate:
     def prepare(self, environment: BaseEnvironment, reporter: CandidateReporter | None = None) -> PreparedCandidate:
         """Prepare the candidate for installation."""
         if self._prepared is None:
+            if isinstance(self.req, FileRequirement):
+                self.req.check_installable()
             self._prepared = PreparedCandidate(self, environment, reporter=reporter or CandidateReporter())
         else:
             self._prepared.environment = environment

@@ -314,5 +314,6 @@ def test_parse_metadata_with_dynamic_fields(project, local_finder):
 
 def test_get_metadata_for_non_existing_path(project):
     req = parse_requirement("file:///${PROJECT_ROOT}/non-existing-path")
+    candidate = Candidate(req)
     with pytest.raises(RequirementError, match="The local path '.+' does not exist"):
-        Candidate(req)
+        candidate.prepare(project.environment).metadata
