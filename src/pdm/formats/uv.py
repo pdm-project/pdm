@@ -48,7 +48,6 @@ class _UvFileBuilder:
             )
 
         data.setdefault("project", {})["requires-python"] = self.requires_python
-        data.setdefault("project", {})["dependencies"] = []
         data.pop("dependency-groups", None)
         data.setdefault("project", {}).pop("optional-dependencies", None)
         sources = {}
