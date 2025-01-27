@@ -1,3 +1,12 @@
+## Release v2.22.3 (2025-01-27)
+
+### Bug Fixes
+
+- Don't validate local file requirements that are not used. ([#3376](https://github.com/pdm-project/pdm/issues/3376))
+- Don't set "dependencies" as empty list for uv toml if there is no dependencies in the raw toml file. ([#3378](https://github.com/pdm-project/pdm/issues/3378))
+- Add a dummy project name to the script environment pyproject.toml. ([#3382](https://github.com/pdm-project/pdm/issues/3382))
+
+
 ## Release v2.22.2 (2025-01-11)
 
 
