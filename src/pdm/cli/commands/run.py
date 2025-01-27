@@ -163,7 +163,7 @@ class TaskRunner:
             return self.project.environment
         tool_config = metadata.pop("tool", {})
         script_project = self.project.core.create_project()
-        script_project.pyproject.set_data({"project": metadata, "tool": tool_config})
+        script_project.pyproject.set_data({"project": {"name": "temp-project", **metadata}, "tool": tool_config})
         md5_kwargs = {"usedforsecurity": False}
         venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8"), **md5_kwargs).hexdigest()
         venv_backend = BACKENDS[script_project.config["venv.backend"]](script_project, None)

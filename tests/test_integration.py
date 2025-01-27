@@ -30,6 +30,7 @@ PYTHON_VERSIONS = get_python_versions()
 def test_basic_integration(python_version, core, tmp_path, pdm):
     """An e2e test case to ensure PDM works on all supported Python versions"""
     project = core.create_project(tmp_path)
+    project.project_config["python.use_venv"] = True
     project.pyproject.set_data(PYPROJECT)
     project.root.joinpath("foo.py").write_text("import django\n")
     project._environment = None
@@ -58,11 +59,13 @@ def test_use_python_write_file(pdm, project):
 @pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 @pytest.mark.parametrize("via_env", [True, False])
 def test_init_project_respect_version_file(pdm, project, python_version, via_env, monkeypatch):
+    project.project_config["python.use_venv"] = True
     if via_env:
         monkeypatch.setenv("PDM_PYTHON_VERSION", python_version)
     else:
         project.root.joinpath(".python-version").write_text(python_version)
     project._saved_python = None
+    project._environment = None
     pdm(["install"], obj=project, strict=True)
     assert f"{project.python.major}.{project.python.minor}" == python_version
 
