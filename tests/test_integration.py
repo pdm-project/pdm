@@ -30,6 +30,7 @@ PYTHON_VERSIONS = get_python_versions()
 def test_basic_integration(python_version, core, tmp_path, pdm):
     """An e2e test case to ensure PDM works on all supported Python versions"""
     project = core.create_project(tmp_path)
+    project.project_config["python.use_venv"] = True
     project.pyproject.set_data(PYPROJECT)
     project.root.joinpath("foo.py").write_text("import django\n")
     project._environment = None
