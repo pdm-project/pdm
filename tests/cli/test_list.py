@@ -586,14 +586,7 @@ def fake_metadata(mocker, repository):
 def test_list_freeze(project, pdm):
     pdm(["add", "requests"], obj=project, strict=True)
     result = pdm(["list", "--freeze"], obj=project)
-    expected = (
-        "certifi==2018.11.17\n"
-        "chardet==3.0.4\n"
-        "idna==2.7\n"
-        "requests==2.19.1\n"
-        "test-project==0.0.0\n"
-        "urllib3==1.22\n"
-    )
+    expected = "certifi==2018.11.17\nchardet==3.0.4\nidna==2.7\nrequests==2.19.1\ntest-project==0.0.0\nurllib3==1.22\n"
     assert expected == result.output
 
 

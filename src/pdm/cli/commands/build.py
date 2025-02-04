@@ -92,7 +92,7 @@ class Command(BaseCommand):
                 if verbose == -1:
                     uv_build_cmd.append("-q")
                 elif verbose > 0:
-                    uv_build_cmd.append(f"-{'v'*verbose}")
+                    uv_build_cmd.append(f"-{'v' * verbose}")
                 subprocess.run(uv_build_cmd, check=True)
 
                 # pdm build doesn't include .gitignore, and pdm publish would fail with .gitignore

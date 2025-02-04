@@ -19,8 +19,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "shell",
             nargs="?",
-            help="The shell to generate the scripts for. "
-            "If not given, PDM will properly guess from `SHELL` env var.",
+            help="The shell to generate the scripts for. If not given, PDM will properly guess from `SHELL` env var.",
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

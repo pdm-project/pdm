@@ -118,9 +118,7 @@ class Command(BaseCommand):
         hooks = hooks or HookManager(project)
         check_project_file(project)
         if len(packages) > 0 and (top or len(selection.groups) > 1 or not selection.default):
-            raise PdmUsageError(
-                "packages argument can't be used together with multiple -G or " "--no-default or --top."
-            )
+            raise PdmUsageError("packages argument can't be used together with multiple -G or --no-default or --top.")
         all_dependencies = project.all_dependencies
         updated_deps: dict[str, list[Requirement]] = defaultdict(list)
         locked_groups = project.lockfile.groups

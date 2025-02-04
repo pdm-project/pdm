@@ -310,8 +310,7 @@ class Project:
                 note("The saved Python interpreter does not exist or broken. Trying to find another one.")
             else:
                 note(
-                    "The saved Python interpreter doesn't match the project's requirement. "
-                    "Trying to find another one."
+                    "The saved Python interpreter doesn't match the project's requirement. Trying to find another one."
                 )
             self._saved_python = None  # Clear the saved path if it doesn't match
 
@@ -703,7 +702,7 @@ class Project:
         """Add requirements to the given group, and return the requirements of that group."""
         if isinstance(requirements, Mapping):  # pragma: no cover
             deprecation_warning(
-                "Passing a requirements map to add_dependencies is deprecated, " "please pass an iterable", stacklevel=2
+                "Passing a requirements map to add_dependencies is deprecated, please pass an iterable", stacklevel=2
             )
             requirements = requirements.values()
         deps, setter = self.use_pyproject_dependencies(to_group, dev)
