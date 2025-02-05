@@ -61,9 +61,7 @@ If you’re a library developer, you need `setuptools` anyway.
 
 Poetry manages environments and dependencies in a similar way to Pipenv,
 but it can also build .whl files with your code, and it can upload wheels and source distributions to PyPI.
-It has a pretty user interface and users can customize it via a plugin. Poetry uses the `pyproject.toml` standard,
-but it does not follow the standard specifying how metadata should be represented in a pyproject.toml file ([PEP 621]),
-instead using a custom `[tool.poetry]` table. This is partly because Poetry came out before PEP 621.
+It has a pretty user interface and users can customize it via a plugin. Poetry uses the `pyproject.toml` standard.
 
 ### [Hatch](https://hatch.pypa.io)
 
