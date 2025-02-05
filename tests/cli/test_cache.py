@@ -146,8 +146,7 @@ def test_cache_info(project, pdm):
             "http://fixtures.test/artifacts/demo-0.0.1.tar.gz#sha384=9130e5e4912bc78b"
             "1ffabbf406d56bc74b9165b0adc8c627168b7b563b80d5ff6c30e269398d01144ee52aa3"
             "3292682d",
-            "sha384:9130e5e4912bc78b1ffabbf406d56bc74b9165b0adc8c627168b7b563b80d5ff6"
-            "c30e269398d01144ee52aa33292682d",
+            "sha384:9130e5e4912bc78b1ffabbf406d56bc74b9165b0adc8c627168b7b563b80d5ff6c30e269398d01144ee52aa33292682d",
         ),
         (
             "http://fixtures.test/artifacts/demo-0.0.1.tar.gz#md5=5218509812c9fcb4646adde8fd3307e1",

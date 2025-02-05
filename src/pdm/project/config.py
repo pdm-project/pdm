@@ -353,7 +353,7 @@ class Config(MutableMapping[str, str]):
                 raise PdmUsageError(f"Set {parts[0]} config with [success]{parts[0]}.{{name}}.{{attr}}")
             index_key = ".".join(parts[:2])
             username = self._data.get(index_key, {}).get("username")  # type: ignore[call-overload]
-            service = f'pdm-{index_key.replace(".", "-")}'
+            service = f"pdm-{index_key.replace('.', '-')}"
             if (
                 parts[2] == "password"
                 and self.is_global
@@ -402,7 +402,7 @@ class Config(MutableMapping[str, str]):
                 raise PdmUsageError(f"Should specify the name of {parts[0]}")
             index_key = ".".join(parts[:2])
             username = self._data.get(index_key, {}).get("username")  # type: ignore[call-overload]
-            service = f'pdm-{index_key.replace(".", "-")}'
+            service = f"pdm-{index_key.replace('.', '-')}"
             if len(parts) >= 3:
                 index_key, attr = key.rsplit(".", 1)
                 if attr == "password" and username:

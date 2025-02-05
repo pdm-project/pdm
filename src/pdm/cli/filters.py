@@ -97,7 +97,7 @@ class GroupSelection:
         invalid_groups = groups_set - {normalize_name(g) for g in project.iter_groups()}
         if invalid_groups:
             project.core.ui.echo(
-                "[d]Ignoring non-existing groups: [success]" f"{', '.join(invalid_groups)}[/]",
+                f"[d]Ignoring non-existing groups: [success]{', '.join(invalid_groups)}[/]",
                 err=True,
             )
             groups_set -= invalid_groups
