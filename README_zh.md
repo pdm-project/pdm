@@ -51,7 +51,7 @@ Pipenv 是一个依赖管理器，它结合了 `pip` 和 `venv`，正如其名�
 ### [Poetry](https://python-poetry.org)
 
 Poetry 以类似于 Pipenv 的方式管理环境和依赖，它也可以从你的代码构建 `.whl` 文件，并且可以将轮子和源码发行版上传到 PyPI。
-它有一个漂亮的用户界面，用户可以通过贡献插件来定制它。Poetry 使用 `pyproject.toml` 标准。但它并不遵循指定元数据应如何在 `pyproject.toml` 文件中表示的标准（[PEP 621]）。而是使用一个自定义的 `[tool.poetry]` 表。这部分是因为 Poetry 诞生在 PEP 621 出现之前。
+它有一个漂亮的用户界面，用户可以通过贡献插件来定制它。Poetry 使用 `pyproject.toml` 标准。
 
 ### [Hatch](https://hatch.pypa.io)
 
