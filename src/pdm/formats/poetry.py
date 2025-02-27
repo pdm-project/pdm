@@ -215,11 +215,10 @@ class PoetryMetaConverter(MetaConverter):
 
     @convert_from("build")
     def build(self, value: str | dict) -> None:
-        value = {}
-        if isinstance(value, dict):
-            if "generate-setup-file" in value:
-                value["run-setuptools"] = cast(bool, value["generate-setup-file"])
-        self.settings.setdefault("build", {}).update(value)
+        result = {}
+        if isinstance(value, dict) and "generate-setup-file" in value:
+            result["run-setuptools"] = cast(bool, value["generate-setup-file"])
+        self.settings.setdefault("build", {}).update(result)
         raise Unset()
 
     @convert_from("source")

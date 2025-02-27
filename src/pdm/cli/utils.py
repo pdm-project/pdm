@@ -7,7 +7,6 @@ import os
 import re
 import sys
 from collections import OrderedDict
-from difflib import SequenceMatcher
 from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
@@ -21,18 +20,9 @@ from rich.tree import Tree
 from pdm import termui
 from pdm.exceptions import PdmArgumentError, ProjectError
 from pdm.models.markers import EnvSpec
-from pdm.models.requirements import (
-    Requirement,
-    filter_requirements_with_extras,
-    strip_extras,
-)
+from pdm.models.requirements import Requirement, filter_requirements_with_extras, strip_extras
 from pdm.models.specifiers import PySpecSet, get_specifier
-from pdm.utils import (
-    comparable_version,
-    is_path_relative_to,
-    normalize_name,
-    url_to_path,
-)
+from pdm.utils import comparable_version, is_path_relative_to, normalize_name, url_to_path
 
 if TYPE_CHECKING:
     from argparse import Action, _ArgumentGroup
@@ -148,33 +138,23 @@ class ArgumentParser(argparse.ArgumentParser):
         return args, argv
 
 
-def find_similar_text(origin_name: str, target_names: list[str], ratio: float = 0.5) -> list[str]:
-    results = []
-    for name in target_names:
-        ratio = SequenceMatcher(None, origin_name, name).ratio()
-        if ratio > 0.4:
-            results.append((name, ratio))
-    return [name for name, _ in sorted(results, key=lambda x: x[1], reverse=True)]
-
-
 def format_similar_command(root_command: str, commands: list[str], script_commands: list[str]) -> str:
-    similar_commands = find_similar_text(root_command, commands)
-    similar_script_commands = find_similar_text(root_command, script_commands)
-    commands_text = "\n".join([f"    - {cmd}" for cmd in similar_commands])
-    script_commands_text = "\n".join([f"    - {cmd}" for cmd in similar_script_commands])
-    message = f"""[red]Command not found: {root_command}[/]
-    """
+    from difflib import get_close_matches
+
+    similar_commands = get_close_matches(root_command, commands)
+    similar_script_commands = get_close_matches(root_command, script_commands)
+    commands_text = "\n".join([f"  - {cmd}" for cmd in similar_commands])
+    script_commands_text = "\n".join([f"  - {cmd}" for cmd in similar_script_commands])
+    message = f"[red]Command not found: {root_command}[/]"
     if commands_text:
         message += f"""
-[green]Did you mean one of these command?
-{commands_text}[/]
-"""
+[green]Did you mean one of these commands?
+{commands_text}[/]"""
 
     if script_commands_text:
         message += f"""
-[yellow]Or one of these script command?
-{script_commands_text}[/]
-"""
+[yellow]{"Or" if commands_text else "Did you mean"} one of these script commands?
+{script_commands_text}[/]"""
     return message
 
 
