@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import subprocess
 from dataclasses import dataclass, replace
@@ -25,6 +26,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 GIT_URL = re.compile(r"(?P<repo>[^:/]+://[^\?#]+)(?:\?rev=(?P<ref>[^#]+?))?(?:#(?P<revision>[a-f0-9]+))$")
+
+ALLOWED_INDEX_STRATEGIES = {"first-index", "unsafe-first-match", "unsafe-best-match"}
 
 
 @dataclass
@@ -69,10 +72,14 @@ class UvResolver(Resolver):
                 first_index = False
             else:
                 cmd.extend(["--extra-index-url", source.url])
-        if self.project.pyproject.settings.get("resolution", {}).get("respect-source-order", False):
-            cmd.append("--index-strategy=unsafe-first-match")
+        if index_strategy:=os.environ.get("UV_INDEX_STRATEGY"):
+            if index_strategy not in ALLOWED_INDEX_STRATEGIES:
+                raise ValueError(f"UV_INDEX_STRATEGY should be one of {' '.join(ALLOWED_INDEX_STRATEGIES)}")
+        elif self.project.pyproject.settings.get("resolution", {}).get("respect-source-order", False):
+            index_strategy = "unsafe-first-match"
         else:
-            cmd.append("--index-strategy=unsafe-best-match")
+            index_strategy = "unsafe-best-match"
+        cmd.append(f"--index-strategy={index_strategy}")
         if self.update_strategy != "all":
             for name in self.tracked_names:
                 cmd.extend(["-P", name])
