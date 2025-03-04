@@ -1,13 +1,30 @@
+import os
+
 import pytest
 
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
+from tests.test_installer import environment
+
 
 pytestmark = [pytest.mark.network, pytest.mark.uv]
 
 
-def resolve(environment, requirements, target=None):
+def get_resolver(environment, requirements, target=None):
     from pdm.resolver.uv import UvResolver
+
+    resolver = UvResolver(
+        environment,
+        requirements=requirements,
+        target=target or environment.spec,
+        update_strategy="all",
+        strategies=set(),
+    )
+
+    return resolver
+
+
+def resolve(environment, requirements, target=None):
 
     reqs = []
     for req in requirements:
@@ -15,14 +32,7 @@ def resolve(environment, requirements, target=None):
             req = parse_requirement(req)
             req.groups = ["default"]
         reqs.append(req)
-
-    resolver = UvResolver(
-        environment,
-        requirements=reqs,
-        target=target or environment.spec,
-        update_strategy="all",
-        strategies=set(),
-    )
+    resolver = get_resolver(environment, reqs, target)
     return resolver.resolve()
 
 
@@ -80,3 +90,26 @@ def test_resolve_dependencies_with_overrides(project, overrides):
 
     mapping = {p.candidate.identify(): p.candidate for p in resolution.packages}
     assert mapping["requests"].version == "2.31.0"
+
+
+def test_index_strategy(project, monkeypatch):
+    from pdm.resolver.uv import ALLOWED_INDEX_STRATEGIES
+
+    environment = project.environment
+    resolver = get_resolver(environment, [], None)
+
+    command = resolver._build_lock_command()
+    assert "--index-strategy=unsafe-best-match" in command
+
+    project.pyproject.settings["resolution"] = {"respect-source-order": True}
+    command = resolver._build_lock_command()
+    assert "--index-strategy=unsafe-first-match" in command
+
+    for index_strategy in ALLOWED_INDEX_STRATEGIES:
+        monkeypatch.setenv("UV_INDEX_STRATEGY", index_strategy)
+        command = resolver._build_lock_command()
+        assert r"--index-strategy={strategy}" in command
+
+    with pytest.raises(ValueError):
+        monkeypatch.setenv("UV_INDEX_STRATEGY", "abcd")
+        command = resolver._build_lock_command()
