@@ -72,7 +72,7 @@ class UvResolver(Resolver):
                 first_index = False
             else:
                 cmd.extend(["--extra-index-url", source.url])
-        if index_strategy:=os.environ.get("UV_INDEX_STRATEGY"):
+        if index_strategy := os.environ.get("UV_INDEX_STRATEGY"):
             if index_strategy not in ALLOWED_INDEX_STRATEGIES:
                 raise ValueError(f"UV_INDEX_STRATEGY should be one of {' '.join(ALLOWED_INDEX_STRATEGIES)}")
         elif self.project.pyproject.settings.get("resolution", {}).get("respect-source-order", False):

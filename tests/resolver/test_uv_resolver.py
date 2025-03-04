@@ -1,11 +1,7 @@
-import os
-
 import pytest
 
 from pdm.models.markers import EnvSpec
 from pdm.models.requirements import parse_requirement
-from tests.test_installer import environment
-
 
 pytestmark = [pytest.mark.network, pytest.mark.uv]
 
@@ -25,7 +21,6 @@ def get_resolver(environment, requirements, target=None):
 
 
 def resolve(environment, requirements, target=None):
-
     reqs = []
     for req in requirements:
         if isinstance(req, str):
