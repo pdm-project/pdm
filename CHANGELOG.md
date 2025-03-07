@@ -1,3 +1,10 @@
+## Release v2.22.4 (2025-03-07)
+
+### Bug Fixes
+
+- Ensure dev-dependencies are added to the correct group when the `tool.pdm.dev-dependencies` table has groups. ([#3392](https://github.com/pdm-project/pdm/issues/3392))
+
+
 ## Release v2.22.3 (2025-01-27)
 
 ### Bug Fixes
