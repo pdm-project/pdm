@@ -51,7 +51,7 @@ _file_req_re = re.compile(
     r"|\"(?:[^\"]|\\\")*\"))"
     r"(?P<extras>\[[^\[\]]+\])?(?P<marker>[\t ]*;[^\n]+)?"
 )
-_egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
+_egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+).tar.gz", re.IGNORECASE)
 T = TypeVar("T", bound="Requirement")
 ALLOW_ANY = SpecifierSet()
 
@@ -278,6 +278,8 @@ class FileRequirement(Requirement):
                 # the metadata.
                 if match:
                     return match.group(1)
+                else:
+                    return Path(filename).name
         return None
 
     @classmethod
