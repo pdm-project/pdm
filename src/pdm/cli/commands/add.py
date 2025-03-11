@@ -174,7 +174,7 @@ class Command(BaseCommand):
         if sync:
             do_sync(
                 project,
-                selection=GroupSelection(project, groups=[group], default=False),
+                selection=GroupSelection(project, groups=[group], dev=selection.dev, default=False),
                 no_editable=no_editable and tracked_names,
                 no_self=no_self or group != "default",
                 requirements=group_deps,
