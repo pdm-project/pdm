@@ -127,8 +127,9 @@ class Command(BaseCommand):
 
         # Map dependency groups to requirements.
         name_to_groups: Mapping[str, set[str]] = defaultdict(set)
+        all_deps = project._resolve_dependencies()
         for g in project.iter_groups():
-            for r in project.get_dependencies(g):
+            for r in project.get_dependencies(g, all_deps):
                 k = r.key or "unknown"
                 name_to_groups[k].add(g)
 

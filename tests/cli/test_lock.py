@@ -189,7 +189,7 @@ def test_lock_include_groups_not_allowed(project, pdm):
     project.pyproject.write()
     result = pdm(["lock", "-G", "all"], obj=project)
     assert result.exit_code != 0
-    assert "Dependency group 'http' not found" in result.stderr
+    assert "Missing group 'http' in `include-group`" in result.stderr
 
 
 @pytest.mark.usefixtures("repository")
@@ -200,7 +200,7 @@ def test_lock_optional_referencing_dev_group_not_allowed(project, pdm):
     project.pyproject.write()
     result = pdm(["lock", "-G", "http"], obj=project)
     assert result.exit_code != 0
-    assert "Dependency group 'dev' not found" in result.stderr
+    assert "Optional dependency group 'http' cannot include non-existing extras" in result.stderr
 
 
 @pytest.mark.usefixtures("local_finder")

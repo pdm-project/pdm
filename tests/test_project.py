@@ -207,12 +207,15 @@ def test_invalid_dependency_group(project):
             "invalid": [{"invalid-key": True}],
             "missing": [{"include-group": "missing-group"}],
             "doc": ["mkdocs"],
+            "recursive": [{"include-group": "invalid"}],
         }
     )
     assert sorted([r.key for r in project.get_dependencies("doc")]) == ["mkdocs"]
     with pytest.raises(ProjectError, match="Invalid dependency group item"):
         project.get_dependencies("invalid")
-    with pytest.raises(ProjectError, match="Dependency group 'missing-group' not found"):
+    with pytest.raises(ProjectError, match="Invalid dependency group item"):
+        project.get_dependencies("recursive")
+    with pytest.raises(ProjectError, match="Missing group 'missing-group'"):
         project.get_dependencies("missing")
 
 

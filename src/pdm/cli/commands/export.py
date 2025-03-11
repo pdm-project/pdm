@@ -73,7 +73,8 @@ class Command(BaseCommand):
             )
         packages: Iterable[Requirement] | Iterable[Candidate]
         if options.pyproject:
-            packages = [r for group in selection for r in project.get_dependencies(group)]
+            all_deps = project._resolve_dependencies(list(selection))
+            packages = [r for group in selection for r in project.get_dependencies(group, all_deps)]
         else:
             if not project.lockfile.exists():
                 raise PdmUsageError("No lockfile found, please run `pdm lock` first.")
