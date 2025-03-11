@@ -105,3 +105,11 @@ def test_remove_group_not_in_lockfile(project, pdm, mocker):
     pdm(["remove", "--group", "tz", "pytz"], obj=project, strict=True)
     assert "optional-dependencies" not in project.pyproject.metadata
     locker.assert_not_called()
+
+@pytest.mark.usefixtures("working_set")
+def test_remove_exclude_non_existing_dev_group_in_lockfile(project, pdm):
+    pdm(["add", "requests"], obj=project, strict=True)
+    project.add_dependencies(["pytz"], to_group="tz", dev=True)
+    assert project.lockfile.groups == ["default"]
+    result = pdm(["remove", "requests"], obj=project)
+    assert result.exit_code == 0
