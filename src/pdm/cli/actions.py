@@ -79,7 +79,8 @@ def do_lock(
     if groups is None:
         groups = list(project.iter_groups())
     if not requirements:
-        requirements = [r for group in groups for r in project.get_dependencies(group)]
+        all_deps = project._resolve_dependencies(groups)
+        requirements = [r for group in groups for r in project.get_dependencies(group, all_deps)]
     ui = project.core.ui
     supports_env_spec = "env_spec" in inspect.signature(project.get_provider).parameters
     # The repository to store the lock result
@@ -279,8 +280,9 @@ def do_sync(
     if requirements is None:
         requirements = []
         selection.validate()
+        all_deps = project._resolve_dependencies(list(selection))
         for group in selection:
-            requirements.extend(project.get_dependencies(group))
+            requirements.extend(project.get_dependencies(group, all_deps))
     packages = list(resolve_from_lockfile(project, requirements, groups=list(selection)))
     if tracked_names and dry_run:
         packages = [p for p in packages if p.candidate.identify() in tracked_names]

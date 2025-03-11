@@ -63,7 +63,7 @@ def test_resolve_dependencies_with_nested_extras(project):
     project.add_dependencies([f"{name}[extra1,extra2]"], "all")
 
     dependencies = [*project.get_dependencies(), *project.get_dependencies("all")]
-    assert len(dependencies) == 4
+    assert len(dependencies) == 3, [dep.identify() for dep in dependencies]
     resolution = resolve(project.environment, dependencies)
     assert resolution.collected_groups == {"default", "extra1", "extra2", "all"}
     mapping = {p.candidate.identify(): p.candidate for p in resolution.packages}
