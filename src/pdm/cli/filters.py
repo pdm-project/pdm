@@ -104,7 +104,7 @@ class GroupSelection:
             )
             groups_set -= invalid_groups
 
-        if self.exclude_non_existing:
+        if self.exclude_non_existing and self.project.lockfile.groups is not None:
             groups_set &= {normalize_name(g) for g in self.project.lockfile.groups}
 
         # Sorts the result in ascending order instead of in random order
