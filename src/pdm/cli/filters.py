@@ -23,6 +23,7 @@ class GroupSelection:
         groups: Sequence[str] = (),
         group: str | None = None,
         excluded_groups: Sequence[str] = (),
+        exclude_non_existing: bool = False,
     ):
         self.project = project
         self.groups = groups
@@ -30,6 +31,7 @@ class GroupSelection:
         self.default = default
         self.dev = dev
         self.excluded_groups = excluded_groups
+        self.exclude_non_existing = exclude_non_existing
 
     @classmethod
     def from_options(cls, project: Project, options: argparse.Namespace) -> GroupSelection:
@@ -102,8 +104,8 @@ class GroupSelection:
             )
             groups_set -= invalid_groups
 
-        # Intersects with the lockfile groups to exclude the non-existing groups
-        groups_set &= {normalize_name(g) for g in self.project.lockfile.groups}
+        if self.exclude_non_existing:
+            groups_set &= {normalize_name(g) for g in self.project.lockfile.groups}
 
         # Sorts the result in ascending order instead of in random order
         # to make this function pure
