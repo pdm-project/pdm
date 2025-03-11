@@ -101,6 +101,10 @@ class GroupSelection:
                 err=True,
             )
             groups_set -= invalid_groups
+
+        # Intersects with the lockfile groups to exclude the non-existing groups
+        groups_set &= {normalize_name(g) for g in self.project.lockfile.groups}
+
         # Sorts the result in ascending order instead of in random order
         # to make this function pure
         result = sorted(groups_set, key=lambda x: (x != "default", x))
