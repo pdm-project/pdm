@@ -573,7 +573,7 @@ files = [
 
 [[package]]
 name = "findpython"
-version = "0.6.2"
+version = "0.6.3"
 requires_python = ">=3.8"
 summary = "A utility to find python versions on your system"
 groups = ["default"]
@@ -581,8 +581,8 @@ dependencies = [
     "packaging>=20",
 ]
 files = [
-    {file = "findpython-0.6.2-py3-none-any.whl", hash = "sha256:bda62477f858ea623ef2269f5e734469a018104a5f6c0fd9317ba238464ddb76"},
-    {file = "findpython-0.6.2.tar.gz", hash = "sha256:e0c75ba9f35a7f9bb4423eb31bd17358cccf15761b6837317719177aeff46723"},
+    {file = "findpython-0.6.3-py3-none-any.whl", hash = "sha256:a85bb589b559cdf1b87227cc233736eb7cad894b9e68021ee498850611939ebc"},
+    {file = "findpython-0.6.3.tar.gz", hash = "sha256:5863ea55556d8aadc693481a14ac4f3624952719efc1c5591abb0b4a9e965c94"},
 ]
 
 [[package]]
