@@ -23,6 +23,7 @@ from pdm.models.backends import BuildBackend, get_relative_path
 from pdm.models.markers import Marker, get_marker
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, fix_legacy_specifier, get_specifier
+from pdm.termui import logger
 from pdm.utils import (
     PACKAGING_22,
     add_ssh_scheme_to_git_uri,
@@ -288,6 +289,7 @@ class FileRequirement(Requirement):
                     return name
 
         logger.debug(f"guess_name: Unable to determine name from: {filename}")
+        logger.warn("Unable to guess package name for '{self.url}'")
         return None
 
     @classmethod
@@ -327,15 +329,6 @@ class FileRequirement(Requirement):
                 self.url = path.as_uri() + fragments
                 self.path = path
                 logger.debug(f"_parse_url: Absolute path set URL to {self.url} and self.path to {path}")
-
-            # For relative path, we don't resolve URL now, so the path may still contain fragments,
-            # it will be handled in `relocate()` method.
-            abs_path = self.absolute_path
-            logger.debug(f"_parse_url: Absolute path for setup: {abs_path}")
-            result = Setup.from_directory(abs_path)  # type: ignore[arg-type]
-            if result.name:
-                self.name = result.name
-                logger.debug(f"_parse_url: Setup name: {self.name}")
         else:
             url = url_without_fragments(self.url)
             logger.debug(f"_parse_url: Parsing URL {url}")
@@ -356,7 +349,18 @@ class FileRequirement(Requirement):
 
         logger.debug(f"_parse_url: Final path={self.path}, url={self.url}")
 
-        if self.url:
+        if self.path:
+            # For relative path, we don't resolve URL now, so the path may still contain fragments,
+            # it will be handled in `relocate()` method.
+            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
+            logger.debug(f"_parse_url: determining name from absolute path {self.absolute_path}")
+            if result.name:
+                logger.debug(f"determined name {result.name}")
+                self.name = result.name
+            else:
+                logger.debug("failed to determine name")
+
+        if not self.name and self.url:
             logger.debug(f"_parse_url: Parsing name from URL: {self.url}")
             self._parse_name_from_url()
 
