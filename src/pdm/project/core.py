@@ -346,6 +346,13 @@ class Project:
     def _resolve_dependencies(
         self, requested_groups: list[str] | None = None, include_referred: bool = True
     ) -> dict[str, list[Requirement]]:
+        """Resolve dependencies for the given groups, and return a list of requirements for each group.
+
+        The .groups attribute will be set to all that refers this requirement directly or indirectly.
+        If `include_referred` is True, all self-references and `include-group` will be expanded to
+        corresponding requirements. Otherwise, each group only contains explicitly defined requirements.
+        """
+
         def _get_dependencies(group: str) -> tuple[list[Requirement], set[str]]:
             in_metadata = group in metadata_dependencies
             collected_deps: list[str] = []
