@@ -23,6 +23,7 @@ from pdm.models.backends import BuildBackend, get_relative_path
 from pdm.models.markers import Marker, get_marker
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, fix_legacy_specifier, get_specifier
+from pdm.termui import logger
 from pdm.utils import (
     PACKAGING_22,
     add_ssh_scheme_to_git_uri,
@@ -278,6 +279,7 @@ class FileRequirement(Requirement):
                 # the metadata.
                 if match:
                     return match.group(1)
+        logger.warn("Unable to guess package name for '{self.url}'")
         return None
 
     @classmethod
@@ -310,11 +312,6 @@ class FileRequirement(Requirement):
             if not self.url and path.is_absolute():
                 self.url = path.as_uri() + fragments
                 self.path = path
-            # For relative path, we don't resolve URL now, so the path may still contain fragments,
-            # it will be handled in `relocate()` method.
-            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
-            if result.name:
-                self.name = result.name
         else:
             url = url_without_fragments(self.url)
             relpath = get_relative_path(url)
@@ -326,7 +323,13 @@ class FileRequirement(Requirement):
             else:
                 self.path = Path(relpath)
 
-        if self.url:
+        if self.path:
+            # For relative path, we don't resolve URL now, so the path may still contain fragments,
+            # it will be handled in `relocate()` method.
+            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
+            if result.name:
+                self.name = result.name
+        if not self.name and self.url:
             self._parse_name_from_url()
 
     def relocate(self, backend: BuildBackend) -> None:

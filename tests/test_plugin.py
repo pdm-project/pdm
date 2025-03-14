@@ -118,3 +118,22 @@ def test_project_plugin_library(pdm, project, core, monkeypatch):
         core.load_plugins()
         result = pdm(["hello", "Frost"], strict=True)
     assert result.stdout.strip() == "Hello, Frost!"
+
+
+@pytest.mark.parametrize(
+    "req_str",
+    [
+        "-e file:///${PROJECT_ROOT}/tests/fixtures/projects/test-plugin-pdm",
+        "-e test_plugin_pdm@file:///${PROJECT_ROOT}/tests/fixtures/projects/test-plugin-pdm",
+    ],
+)
+@pytest.mark.usefixtures("local_finder")
+def test_build_single_module_with_readme(pdm, project, core, req_str, monkeypatch):
+    monkeypatch.setattr(sys, "path", sys.path[:])
+    project.pyproject.settings["plugins"] = [req_str]
+    pdm(["install", "-vv", "--plugins"], obj=project, strict=True)
+    assert project.root.joinpath(".pdm-plugins").exists()
+    with cd(project.root):
+        core.load_plugins()
+        result = pdm(["hello", "--name", "Frost"], strict=True)
+    assert result.stdout.strip() == "Hello, Frost"
