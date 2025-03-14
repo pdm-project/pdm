@@ -8,16 +8,16 @@ from pdm.utils import cd
 from tests import FIXTURES
 
 
-@pytest.mark.usefixtures("project_no_init", "local_finder")
-def test_build_distributions(tmp_path, core):
+def test_build_distributions(project):
     from pdm.cli.commands.build import Command
 
-    project = core.create_project()
-    Command.do_build(project, dest=tmp_path.as_posix())
-    wheel = next(tmp_path.glob("*.whl"))
-    assert wheel.name.startswith("pdm-")
-    tarball = next(tmp_path.glob("*.tar.gz"))
-    assert tarball.exists()
+    Command.do_build(project)
+    dist = project.root / "dist"
+    assert dist.exists()
+    wheel = next(dist.glob("*.whl"))
+    assert wheel.name.startswith("test_project-")
+    tarball = next(dist.glob("*.tar.gz"))
+    assert tarball.name.startswith("test_project-")
 
 
 def test_project_no_init_error(project_no_init, pdm):
