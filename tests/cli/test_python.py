@@ -186,3 +186,15 @@ def test_link_python_invalid_interpreter(project, pdm):
     result = pdm(["python", "link", sys.executable, "--name", "foo"], obj=project)
     assert result.exit_code != 0
     assert "Link foo already exists" in result.stderr
+
+
+def test_find_python(project, pdm, mock_install):
+    pdm(["py", "install", "3.10.8"], obj=project, strict=True)
+    result = pdm(["py", "find", "3.10.8"], obj=project, strict=True)
+    assert "3.10.8" in result.stdout
+
+    result = pdm(["py", "find", "3.10.8", "--managed"], obj=project, strict=True)
+    assert "3.10.8" in result.stdout
+
+    result = pdm(["py", "find", "3.10.9"], obj=project)
+    assert result.exit_code != 0
