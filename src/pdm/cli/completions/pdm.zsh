@@ -73,6 +73,7 @@ _pdm() {
         '--save-compatible[Save compatible version specifiers]'
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
+        '--save-safe-compatible[Save safe compatible version specifiers]'
         '--save-minimum[Save minimum version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-reuse-installed[Reuse installed packages if possible]'
@@ -344,6 +345,7 @@ _pdm() {
             "remove:Remove a Python interpreter installed with PDM"
             "list:List all Python interpreters installed with PDM"
             "install:Install a Python interpreter with PDM"
+            "find:Search for a Python interpreter"
           )
           _describe -t command 'pdm python actions' actions && ret=0
           ;;
@@ -359,6 +361,12 @@ _pdm() {
                 '--list[List all available Python versions]'
                 '--min[Use minimum instead of highest version for installation if `version` is left empty]'
                 ':python:_files'
+              )
+              ;;
+            find)
+              arguments+=(
+                '--managed[Only find interpreters managed by PDM]'
+                ':request:'
               )
               ;;
             *)
@@ -474,6 +482,7 @@ _pdm() {
         '--save-wildcard[Save wildcard version specifiers]'
         '--save-exact[Save exact version specifiers]'
         '--save-minimum[Save minimum version specifiers]'
+        '--save-safe-compatible[Save safe compatible version specifiers]'
         '--update-reuse[Reuse pinned versions already present in lock file if possible]'
         '--update-eager[Try to update the packages and their dependencies recursively]'
         '--update-all[Update all dependencies and sub-dependencies]'
@@ -506,6 +515,7 @@ _pdm() {
         '--auto-install-max[If `python` argument not given, auto install maximum best match - otherwise has no effect]'
         {-i,--ignore-remembered}'[Ignore the remembered selection]'
         '--venv[Use the interpreter in the virtual environment with the given name]:venv:'
+        '--no-version-file[Do not write the version file]'
         '*:python:_files'
       )
       ;;

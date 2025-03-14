@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 import tempfile
+from argparse import ArgumentParser
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -33,6 +35,7 @@ class Command(BaseCommand):
         RemoveCommand.register_to(subparsers, name="remove")
         InstallCommand.register_to(subparsers, name="install")
         LinkCommand.register_to(subparsers, name="link")
+        FindCommand.register_to(subparsers, name="find")
 
     @classmethod
     def register_to(cls, subparsers: _SubParsersAction, name: str | None = None, **kwargs: Any) -> None:
@@ -209,3 +212,40 @@ class LinkCommand(BaseCommand):
         link_path.parent.mkdir(parents=True, exist_ok=True)
         link_path.symlink_to(exe_dir)
         project.core.ui.echo(f"[success]Successfully linked {link_name} to {exe_dir}[/]")
+
+
+class FindCommand(BaseCommand):
+    """Search for a Python interpreter"""
+
+    arguments = (verbose_option,)
+
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        parser.add_argument("--managed", action="store_true", help="Only find interpreters managed by PDM")
+        parser.add_argument("request", help="The Python version to find. E.g. 3.12, cpython@3.13")
+
+    def handle(self, project: Project, options: Namespace) -> None:
+        from findpython import Finder
+
+        if options.managed:
+            old_rye_root = os.getenv("RYE_PY_ROOT")
+            os.environ["RYE_PY_ROOT"] = os.path.expanduser(project.config["python.install_root"])
+            try:
+                finder = Finder(resolve_symlinks=True, selected_providers=["rye"])
+            finally:
+                if old_rye_root:  # pragma: no cover
+                    os.environ["RYE_PY_ROOT"] = old_rye_root
+                else:
+                    del os.environ["RYE_PY_ROOT"]
+        else:
+            finder = project._get_python_finder()
+
+        python_version = finder.find(options.request)
+        location = (
+            "managed installations"
+            if options.managed
+            else "virtual environments, managed installations, or search paths"
+        )
+        if python_version is None:
+            project.core.ui.error(f"Python interpreter {options.request!r} not found in {location}")
+            raise SystemExit(1)
+        print(python_version.executable)

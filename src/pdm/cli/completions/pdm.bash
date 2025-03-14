@@ -29,7 +29,7 @@ _pdm_a919b69078acdf0a_complete()
         case "$com" in
 
             (add)
-            opts="--config-setting --dev --dry-run --editable --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --override --prerelease --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose"
+            opts="--config-setting --dev --dry-run --editable --fail-fast --frozen-lockfile --global --group --help --lockfile --no-editable --no-isolation --no-self --no-sync --override --prerelease --project --quiet --save-compatible --save-exact --save-minimum --save-safe-compatible --save-wildcard --skip --stable --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose"
             ;;
 
             (build)
@@ -81,7 +81,7 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (outdated)
-            opts="--global --help --json --project --quiet --verbose"
+            opts="--global --help --include-sub --json --project --quiet --verbose"
             ;;
 
             (plugin)
@@ -121,15 +121,15 @@ _pdm_a919b69078acdf0a_complete()
             ;;
 
             (sync)
-            opts="--clean --config-setting --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --clean-unselected --only-keep --production --project --quiet --reinstall --skip --venv --verbose --without"
+            opts="--clean --clean-unselected --config-setting --dev --dry-run --fail-fast --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --production --project --quiet --reinstall --skip --venv --verbose --without"
             ;;
 
             (update)
-            opts="--config-setting --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --override --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
+            opts="--config-setting --dev --fail-fast --frozen-lockfile --global --group --help --lockfile --no-default --no-editable --no-isolation --no-self --no-sync --outdated --override --prerelease --production --project --quiet --save-compatible --save-exact --save-minimum --save-safe-compatible --save-wildcard --skip --stable --top --unconstrained --update-all --update-eager --update-reuse --update-reuse-installed --venv --verbose --without"
             ;;
 
             (use)
-            opts="--auto-install-max --auto-install-min --first --global --help --ignore-remembered --project --quiet --skip --venv --verbose"
+            opts="--auto-install-max --auto-install-min --first --global --help --ignore-remembered --no-version-file --project --quiet --skip --venv --verbose"
             ;;
 
             (venv)
