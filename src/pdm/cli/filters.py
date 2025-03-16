@@ -81,6 +81,7 @@ class GroupSelection:
         if dev is None:  # --prod is not set, include dev-dependencies
             dev = True
         project = self.project
+        locked_groups = {normalize_name(g) for g in self.project.lockfile.groups}
         optional_groups = {normalize_name(g) for g in project.pyproject.metadata.get("optional-dependencies", {})}
         dev_groups = set(project.pyproject.dev_dependencies)
         groups_set = {normalize_name(g) if g != ":all" else g for g in groups}
@@ -89,9 +90,13 @@ class GroupSelection:
                 raise PdmUsageError("--prod is not allowed with dev groups and should be left")
         elif dev:
             groups_set.update(dev_groups)
+            if locked_groups:
+                groups_set &= locked_groups
         if ":all" in groups:
             groups_set.discard(":all")
             groups_set.update(optional_groups)
+            if locked_groups:
+                groups_set &= locked_groups
         if default:
             groups_set.add("default")
         groups_set -= {normalize_name(g) for g in self.excluded_groups}
@@ -103,10 +108,6 @@ class GroupSelection:
                 err=True,
             )
             groups_set -= invalid_groups
-
-        if self.exclude_non_existing and self.project.lockfile.groups is not None:
-            groups_set &= {normalize_name(g) for g in self.project.lockfile.groups}
-
         # Sorts the result in ascending order instead of in random order
         # to make this function pure
         result = sorted(groups_set, key=lambda x: (x != "default", x))
