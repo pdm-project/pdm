@@ -94,8 +94,6 @@ class GroupSelection:
         if ":all" in groups:
             groups_set.discard(":all")
             groups_set.update(optional_groups)
-            if self.exclude_non_existing and locked_groups:
-                groups_set.intersection_update(locked_groups)
         if default:
             groups_set.add("default")
         groups_set -= {normalize_name(g) for g in self.excluded_groups}
