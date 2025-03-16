@@ -71,9 +71,9 @@ class GroupSelection:
     @cached_property
     def _translated_groups(self) -> list[str]:
         """Translate default, dev and groups containing ":all" into a list of groups"""
+        locked_groups = self.project.lockfile.groups
         if self.is_unset:
             # Default case, return what is in the lock file
-            locked_groups = self.project.lockfile.groups
             project_groups = list(self.project.iter_groups())
             if locked_groups:
                 return [g for g in locked_groups if g in project_groups]
@@ -81,7 +81,6 @@ class GroupSelection:
         if dev is None:  # --prod is not set, include dev-dependencies
             dev = True
         project = self.project
-        locked_groups = {normalize_name(g) for g in self.project.lockfile.groups}
         optional_groups = {normalize_name(g) for g in project.pyproject.metadata.get("optional-dependencies", {})}
         dev_groups = set(project.pyproject.dev_dependencies)
         groups_set = {normalize_name(g) if g != ":all" else g for g in groups}
@@ -90,13 +89,13 @@ class GroupSelection:
                 raise PdmUsageError("--prod is not allowed with dev groups and should be left")
         elif dev:
             groups_set.update(dev_groups)
-            if locked_groups:
-                groups_set &= locked_groups
+            if self.exclude_non_existing and locked_groups:
+                groups_set.intersection_update(locked_groups)
         if ":all" in groups:
             groups_set.discard(":all")
             groups_set.update(optional_groups)
-            if locked_groups:
-                groups_set &= locked_groups
+            if self.exclude_non_existing and locked_groups:
+                groups_set.intersection_update(locked_groups)
         if default:
             groups_set.add("default")
         groups_set -= {normalize_name(g) for g in self.excluded_groups}
