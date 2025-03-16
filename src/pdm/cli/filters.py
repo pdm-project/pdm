@@ -89,7 +89,7 @@ class GroupSelection:
                 raise PdmUsageError("--prod is not allowed with dev groups and should be left")
         elif dev:
             groups_set.update(dev_groups)
-            if locked_groups:
+            if self.exclude_non_existing and locked_groups:
                 groups_set.intersection_update(locked_groups)
         if ":all" in groups:
             groups_set.discard(":all")
