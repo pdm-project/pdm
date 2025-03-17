@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import os
 from functools import cached_property
 from typing import TYPE_CHECKING, Callable
@@ -231,8 +232,11 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                 return (c for c in candidates if c not in incompat)
             elif identifier in self.overrides:
                 return iter(self._find_candidates(self.overrides[identifier]))
-            elif (name := strip_extras(identifier)[0]) in self.overrides:
-                return iter(self._find_candidates(self.overrides[name]))
+            else:
+                name, extras = strip_extras(identifier)
+                if name in self.overrides:
+                    req = dataclasses.replace(self.overrides[name], extras=extras)
+                    return iter(self._find_candidates(req))
             reqs = list(requirements[identifier])
             if not reqs:
                 return iter(())
