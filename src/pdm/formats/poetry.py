@@ -189,6 +189,11 @@ class PoetryMetaConverter(MetaConverter):
             )
         raise Unset()
 
+    @convert_from("package-mode")
+    def package_mode(self, value: bool) -> None:
+        self.settings["distribution"] = value
+        raise Unset()
+
     @convert_from()
     def includes(self, source: dict[str, list[str] | str]) -> list[str]:
         includes: list[str] = []
@@ -205,7 +210,8 @@ class PoetryMetaConverter(MetaConverter):
             else:
                 dest = source_includes if "sdist" in item.get("format", "") else includes
                 dest.append(item["path"])
-        self.settings.setdefault("build", {})["includes"] = includes
+        if includes:
+            self.settings.setdefault("build", {})["includes"] = includes
         raise Unset()
 
     @convert_from("exclude")
