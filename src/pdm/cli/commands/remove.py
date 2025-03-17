@@ -125,7 +125,7 @@ class Command(BaseCommand):
         if sync:
             do_sync(
                 project,
-                selection=GroupSelection(project, default=False, groups=[group]),
+                selection=GroupSelection(project, default=False, groups=[group], exclude_non_existing=True),
                 clean=True,
                 no_editable=no_editable,
                 no_self=no_self,
