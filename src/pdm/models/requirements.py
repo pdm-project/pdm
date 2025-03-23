@@ -336,9 +336,9 @@ class FileRequirement(Requirement):
         """Change the project root to the given path"""
         if self.path is None:
             return
-        
+
         path, fragments = split_path_fragments(self.path)
-        
+
         # Skip relocation for absolute paths
         if path.is_absolute():
             self.path = path
@@ -348,7 +348,7 @@ class FileRequirement(Requirement):
             self.url = backend.relative_path_to_url(relpath) + fragments
             self._root = backend.root
             return
-        
+
         # Handle path relocation for relative paths
         try:
             # Try using os.path.relpath which handles more cases
@@ -357,7 +357,7 @@ class FileRequirement(Requirement):
         except (ValueError, OSError):
             # Fall back to original behavior on error
             self.path = path
-        
+
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
