@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import os
+import sys
 import urllib.parse
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -52,7 +53,14 @@ class SetuptoolsBackend(BuildBackend):
 
 class PDMBackend(BuildBackend):
     def expand_line(self, req: str, expand_env: bool = True) -> str:
-        line = req.replace("file:///${PROJECT_ROOT}", self.root.as_uri())
+        root_uri = self.root.as_uri()
+        # Windows paths need special handling for variable expansion
+        if sys.platform == "win32":
+            # Make sure we properly handle drive letters in Windows URLs
+            line = req.replace("file:///${PROJECT_ROOT}", root_uri)
+        else:
+            line = req.replace("file:///${PROJECT_ROOT}", root_uri)
+        
         if expand_env:
             line = expand_env_vars(line)
         return line
@@ -60,6 +68,9 @@ class PDMBackend(BuildBackend):
     def relative_path_to_url(self, path: str) -> str:
         if os.path.isabs(path):
             return Path(path).as_uri()
+        # Use platform-appropriate path for Windows
+        if sys.platform == "win32":
+            return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(path.replace('\\', '/'))}"
         return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(path)}"
 
     @classmethod

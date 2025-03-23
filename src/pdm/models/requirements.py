@@ -8,6 +8,7 @@ import os
 import posixpath
 import re
 import secrets
+import sys
 import urllib.parse as urlparse
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Sequence, TypeVar, cast
@@ -342,10 +343,19 @@ class FileRequirement(Requirement):
         # Skip relocation for absolute paths
         if path.is_absolute():
             self.path = path
-            relpath = self.path.as_posix()
-            if relpath == ".":
-                relpath = ""
-            self.url = backend.relative_path_to_url(relpath) + fragments
+            # On Windows, use normalized absolute path
+            if sys.platform == "win32" and not str(backend.root) in str(path):
+                # Just use absolute path as-is for unrelated paths on Windows
+                relpath = self.path.as_posix()
+                if relpath == ".":
+                    relpath = ""
+                self.url = path.as_uri() + fragments
+            else:
+                # Normal case for Unix or related Windows paths
+                relpath = self.path.as_posix()
+                if relpath == ".":
+                    relpath = ""
+                self.url = backend.relative_path_to_url(relpath) + fragments
             self._root = backend.root
             return
 
@@ -421,10 +431,17 @@ class FileRequirement(Requirement):
 
     def check_installable(self) -> None:
         if path := self.absolute_path:
+            logger.debug(
+                f"Checking installable: path={path}, exists={path.exists()}, "
+                f"is_dir={path.is_dir() if path.exists() else False}"
+            )
             if not path.exists():
                 raise RequirementError(f"The local path '{self.path}' does not exist.")
             if path.is_dir():
-                if not path.joinpath("setup.py").exists() and not path.joinpath("pyproject.toml").exists():
+                has_setup_py = path.joinpath("setup.py").exists()
+                has_pyproject = path.joinpath("pyproject.toml").exists()
+                logger.debug(f"Directory check: has_setup_py={has_setup_py}, has_pyproject={has_pyproject}")
+                if not has_setup_py and not has_pyproject:
                     raise RequirementError(f"The local path '{self.path}' is not installable.")
             elif self.editable:
                 raise RequirementError("Local file requirement must not be editable.")
