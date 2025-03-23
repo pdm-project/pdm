@@ -330,7 +330,7 @@ class FileRequirement(Requirement):
                 logger.debug(f"_parse_url: Relative path from URL: {url} -> {self.path}")
 
         logger.debug(f"_parse_url: Final path: {self.path}, URL: {self.url}")
-        
+
         if self.path:
             # For relative path, we don't resolve URL now, so the path may still contain fragments,
             # it will be handled in `relocate()` method.
@@ -347,7 +347,7 @@ class FileRequirement(Requirement):
     def relocate(self, backend: BuildBackend) -> None:
         """Change the project root to the given path"""
         if self.path is None:
-            logger.debug(f"relocate: Path is None, skipping relocation")
+            logger.debug("relocate: Path is None, skipping relocation")
             return
 
         logger.debug(f"relocate: Initial path={self.path}, url={self.url}, backend.root={backend.root}")
@@ -356,11 +356,11 @@ class FileRequirement(Requirement):
 
         # Skip relocation for absolute paths
         if path.is_absolute():
-            logger.debug(f"relocate: Path is absolute")
+            logger.debug("relocate: Path is absolute")
             self.path = path
             # On Windows, use normalized absolute path
             if sys.platform == "win32" and str(backend.root) not in str(path):
-                logger.debug(f"relocate: Windows path on different drive than backend root")
+                logger.debug("relocate: Windows path on different drive than backend root")
                 # Just use absolute path as-is for unrelated paths on Windows
                 relpath = self.path.as_posix()
                 if relpath == ".":
@@ -369,7 +369,7 @@ class FileRequirement(Requirement):
                 self.url = path.as_uri() + fragments
                 logger.debug(f"relocate: Updated URL on Windows: {old_url} -> {self.url}")
             else:
-                logger.debug(f"relocate: Path is related to backend root or not on Windows")
+                logger.debug("relocate: Path is related to backend root or not on Windows")
                 # Normal case for Unix or related Windows paths
                 relpath = self.path.as_posix()
                 if relpath == ".":
@@ -381,7 +381,7 @@ class FileRequirement(Requirement):
             logger.debug(f"relocate: Final for absolute path: path={self.path}, url={self.url}")
             return
 
-        logger.debug(f"relocate: Path is relative")
+        logger.debug("relocate: Path is relative")
         # Handle path relocation for relative paths
         try:
             # Try using os.path.relpath which handles more cases
