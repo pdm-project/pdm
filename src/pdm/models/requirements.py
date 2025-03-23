@@ -376,7 +376,13 @@ class FileRequirement(Requirement):
 
     @property
     def absolute_path(self) -> Path | None:
-        return self._root.joinpath(self.path) if self.path else None
+        # Handle both absolute and relative paths correctly
+        if self.path is None:
+            return None
+        
+        if self.path.is_absolute():
+            return self.path
+        return self._root.joinpath(self.path)
 
     @property
     def is_local(self) -> bool:
