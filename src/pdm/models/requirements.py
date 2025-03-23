@@ -254,33 +254,75 @@ class FileRequirement(Requirement):
         return (*super()._hash_key(), self.get_full_url(), self.editable)
 
     def guess_name(self) -> str | None:
-        filename = os.path.basename(urlparse.unquote(url_without_fragments(self.url))).rsplit("@", 1)[0]
+        url = url_without_fragments(self.url)
+        logger.debug(f"guess_name: URL without fragments: {url}")
+        
+        # Use correct URL parsing for Windows paths
+        if sys.platform == "win32" and url.startswith("file:///"):
+            try:
+                # Get path from URL in Windows-compatible way
+                raw_path = url_to_path(url)
+                logger.debug(f"guess_name: Windows URL to path: {raw_path}")
+                filename = os.path.basename(raw_path).rsplit("@", 1)[0]
+                logger.debug(f"guess_name: Windows filename: {filename}")
+            except ValueError as e:
+                logger.debug(f"guess_name: Error converting Windows URL to path: {e}")
+                # Fall back to standard method
+                filename = os.path.basename(urlparse.unquote(url)).rsplit("@", 1)[0]
+                logger.debug(f"guess_name: Windows fallback filename: {filename}")
+        else:
+            # Standard non-Windows parsing
+            filename = os.path.basename(urlparse.unquote(url)).rsplit("@", 1)[0]
+            logger.debug(f"guess_name: Non-Windows filename: {filename}")
+            
+        # VCS handling
         if self.is_vcs:
+            logger.debug(f"guess_name: VCS type: {getattr(self, 'vcs', None)}")
             if self.vcs == "git":  # type: ignore[attr-defined]
                 name = filename
                 if name.endswith(".git"):
                     name = name[:-4]
+                logger.debug(f"guess_name: Git name: {name}")
                 return name
             elif self.vcs == "hg":  # type: ignore[attr-defined]
+                logger.debug(f"guess_name: Hg name: {filename}")
                 return filename
             else:  # svn and bzr
                 name, in_branch, _ = filename.rpartition("/branches/")
                 if not in_branch and name.endswith("/trunk"):
-                    return name[:-6]
-                return name
+                    result = name[:-6]
+                else:
+                    result = name
+                logger.debug(f"guess_name: SVN/BZR name: {result}")
+                return result
+        
+        # Wheel handling
         elif filename.endswith(".whl"):
-            return parse_wheel_filename(filename)[0]
+            try:
+                name = parse_wheel_filename(filename)[0]
+                logger.debug(f"guess_name: Wheel name: {name}")
+                return name
+            except Exception as e:
+                logger.debug(f"guess_name: Error parsing wheel filename: {e}")
+        
+        # Sdist handling
         else:
             try:
-                return parse_sdist_filename(filename)[0]
-            except ValueError:
+                name = parse_sdist_filename(filename)[0]
+                logger.debug(f"guess_name: Sdist name: {name}")
+                return name
+            except ValueError as e:
+                logger.debug(f"guess_name: Error parsing sdist filename: {e}, trying egg_info regex")
                 match = _egg_info_re.match(filename)
                 # Filename is like `<name>-<version>.tar.gz`, where name will be
                 # extracted and version will be left to be determined from
                 # the metadata.
                 if match:
-                    return match.group(1)
-        logger.warn("Unable to guess package name for '{self.url}'")
+                    name = match.group(1)
+                    logger.debug(f"guess_name: Egg info match name: {name}")
+                    return name
+        
+        logger.warn(f"Unable to guess package name for '{self.url}'")
         return None
 
     @classmethod
@@ -454,16 +496,25 @@ class FileRequirement(Requirement):
         return f"{project_name}{extras}{delimiter}{url}{fragment_str}{marker}"
 
     def _parse_name_from_url(self) -> None:
+        logger.debug(f"_parse_name_from_url: URL: {self.url}")
         parsed = urlparse.urlparse(self.url)
+        logger.debug(f"_parse_name_from_url: Parsed URL: scheme={parsed.scheme}, netloc={parsed.netloc}, path={parsed.path}, fragment={parsed.fragment}")
+        
         fragments = dict(urlparse.parse_qsl(parsed.fragment))
+        logger.debug(f"_parse_name_from_url: Fragments: {fragments}")
+        
         if "egg" in fragments:
             egg_info = urlparse.unquote(fragments["egg"])
+            logger.debug(f"_parse_name_from_url: Egg info: {egg_info}")
             name, extras = strip_extras(egg_info)
             self.name = name
+            logger.debug(f"_parse_name_from_url: Name from egg: {name}, extras: {extras}")
             if not self.extras:
                 self.extras = extras
         if not self.name and not self.is_vcs:
-            self.name = self.guess_name()
+            name = self.guess_name()
+            logger.debug(f"_parse_name_from_url: Name from guess_name: {name}")
+            self.name = name
 
     def check_installable(self) -> None:
         logger.debug(f"check_installable: Starting check for {self.url}")
