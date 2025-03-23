@@ -379,7 +379,7 @@ class FileRequirement(Requirement):
         # Handle both absolute and relative paths correctly
         if self.path is None:
             return None
-        
+
         if self.path.is_absolute():
             return self.path
         return self._root.joinpath(self.path)
