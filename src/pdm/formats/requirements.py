@@ -11,6 +11,7 @@ from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError
 from pdm.formats.base import make_array
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement
+from pdm.termui import logger
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -143,6 +144,7 @@ def convert_url_to_source(url: str, name: str | None, trusted_hosts: list[str], 
 
 
 def convert(project: Project, filename: PathLike, options: Namespace) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
+    logger.warn(f"formats.requirements.convert project: {project}, filename: {filename}, options: {options}")
     env = BareEnvironment(project)
     parser = RequirementParser(env.session)
     parser.parse_file(str(filename))
@@ -153,8 +155,10 @@ def convert(project: Project, filename: PathLike, options: Namespace) -> tuple[M
 
     for req in parser.requirements:
         if req.is_file_or_url:
+            logger.warn(f"req {req} is file or url, relocating to {backend}")
             req.relocate(backend)  # type: ignore[attr-defined]
         if req.editable or options.dev:
+            logger.warn(f"req {req} is editable, appending {req.as_line()} to dev_deps")
             dev_deps.append(req.as_line())
         else:
             deps.append(req.as_line())
