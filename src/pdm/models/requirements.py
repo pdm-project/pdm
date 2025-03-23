@@ -409,7 +409,9 @@ class FileRequirement(Requirement):
             return None
 
         if self.path.is_absolute():
+            logger.debug(f"absolute_path: self.path is absolute, returning {self.path}")
             return self.path
+        logger.debug(f"absolute_path: self.path is relative joining {self._root} with {self.path}")
         return self._root.joinpath(self.path)
 
     @property
