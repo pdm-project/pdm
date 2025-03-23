@@ -54,13 +54,9 @@ class SetuptoolsBackend(BuildBackend):
 class PDMBackend(BuildBackend):
     def expand_line(self, req: str, expand_env: bool = True) -> str:
         root_uri = self.root.as_uri()
-        # Windows paths need special handling for variable expansion
-        if sys.platform == "win32":
-            # Make sure we properly handle drive letters in Windows URLs
-            line = req.replace("file:///${PROJECT_ROOT}", root_uri)
-        else:
-            line = req.replace("file:///${PROJECT_ROOT}", root_uri)
-
+        # Replace project root placeholder with actual URI
+        line = req.replace("file:///${PROJECT_ROOT}", root_uri)
+        
         if expand_env:
             line = expand_env_vars(line)
         return line
