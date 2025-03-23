@@ -60,7 +60,7 @@ class PDMBackend(BuildBackend):
             line = req.replace("file:///${PROJECT_ROOT}", root_uri)
         else:
             line = req.replace("file:///${PROJECT_ROOT}", root_uri)
-        
+
         if expand_env:
             line = expand_env_vars(line)
         return line

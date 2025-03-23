@@ -344,7 +344,7 @@ class FileRequirement(Requirement):
         if path.is_absolute():
             self.path = path
             # On Windows, use normalized absolute path
-            if sys.platform == "win32" and not str(backend.root) in str(path):
+            if sys.platform == "win32" and str(backend.root) not in str(path):
                 # Just use absolute path as-is for unrelated paths on Windows
                 relpath = self.path.as_posix()
                 if relpath == ".":
