@@ -338,9 +338,9 @@ class FileRequirement(Requirement):
             return
         path, fragments = split_path_fragments(self.path)
         # self.path is relative
-        
+
         # Handle Windows paths specifically
-        if os.name == 'nt' and path.is_absolute():
+        if os.name == "nt" and path.is_absolute():
             # On Windows, if path is absolute, just keep it as is
             self.path = path
         else:
@@ -351,7 +351,7 @@ class FileRequirement(Requirement):
             except ValueError:
                 # Fall back to original behavior on error
                 self.path = path
-        
+
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
