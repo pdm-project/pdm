@@ -334,24 +334,30 @@ class FileRequirement(Requirement):
 
     def relocate(self, backend: BuildBackend) -> None:
         """Change the project root to the given path"""
-        if self.path is None or self.path.is_absolute():
+        if self.path is None:
             return
+        
         path, fragments = split_path_fragments(self.path)
-        # self.path is relative
-
-        # Handle Windows paths specifically
-        if os.name == "nt" and path.is_absolute():
-            # On Windows, if path is absolute, just keep it as is
+        
+        # Skip relocation for absolute paths
+        if path.is_absolute():
             self.path = path
-        else:
-            try:
-                # Try using os.path.relpath which handles more cases
-                relpath_str = os.path.relpath(path, backend.root)
-                self.path = Path(relpath_str)
-            except ValueError:
-                # Fall back to original behavior on error
-                self.path = path
-
+            relpath = self.path.as_posix()
+            if relpath == ".":
+                relpath = ""
+            self.url = backend.relative_path_to_url(relpath) + fragments
+            self._root = backend.root
+            return
+        
+        # Handle path relocation for relative paths
+        try:
+            # Try using os.path.relpath which handles more cases
+            relpath_str = os.path.relpath(path, backend.root)
+            self.path = Path(relpath_str)
+        except (ValueError, OSError):
+            # Fall back to original behavior on error
+            self.path = path
+        
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
