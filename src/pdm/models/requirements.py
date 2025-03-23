@@ -313,66 +313,94 @@ class FileRequirement(Requirement):
             if not self.url and path.is_absolute():
                 self.url = path.as_uri() + fragments
                 self.path = path
+                logger.debug(f"_parse_url: Absolute path set URL to {self.url}")
         else:
             url = url_without_fragments(self.url)
+            logger.debug(f"_parse_url: Parsing URL {url}")
             relpath = get_relative_path(url)
             if relpath is None:
                 try:
                     self.path = Path(url_to_path(url))
-                except ValueError:
+                    logger.debug(f"_parse_url: URL to path conversion: {url} -> {self.path}")
+                except ValueError as e:
+                    logger.debug(f"_parse_url: Failed to convert URL to path: {url}, error: {e}")
                     pass
             else:
                 self.path = Path(relpath)
+                logger.debug(f"_parse_url: Relative path from URL: {url} -> {self.path}")
 
+        logger.debug(f"_parse_url: Final path: {self.path}, URL: {self.url}")
+        
         if self.path:
             # For relative path, we don't resolve URL now, so the path may still contain fragments,
             # it will be handled in `relocate()` method.
-            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
+            abs_path = self.absolute_path
+            logger.debug(f"_parse_url: Absolute path for setup: {abs_path}")
+            result = Setup.from_directory(abs_path)  # type: ignore[arg-type]
             if result.name:
                 self.name = result.name
+                logger.debug(f"_parse_url: Setup name: {self.name}")
         if not self.name and self.url:
+            logger.debug(f"_parse_url: Parsing name from URL: {self.url}")
             self._parse_name_from_url()
 
     def relocate(self, backend: BuildBackend) -> None:
         """Change the project root to the given path"""
         if self.path is None:
+            logger.debug(f"relocate: Path is None, skipping relocation")
             return
 
+        logger.debug(f"relocate: Initial path={self.path}, url={self.url}, backend.root={backend.root}")
         path, fragments = split_path_fragments(self.path)
+        logger.debug(f"relocate: Split path={path}, fragments={fragments}")
 
         # Skip relocation for absolute paths
         if path.is_absolute():
+            logger.debug(f"relocate: Path is absolute")
             self.path = path
             # On Windows, use normalized absolute path
             if sys.platform == "win32" and str(backend.root) not in str(path):
+                logger.debug(f"relocate: Windows path on different drive than backend root")
                 # Just use absolute path as-is for unrelated paths on Windows
                 relpath = self.path.as_posix()
                 if relpath == ".":
                     relpath = ""
+                old_url = self.url
                 self.url = path.as_uri() + fragments
+                logger.debug(f"relocate: Updated URL on Windows: {old_url} -> {self.url}")
             else:
+                logger.debug(f"relocate: Path is related to backend root or not on Windows")
                 # Normal case for Unix or related Windows paths
                 relpath = self.path.as_posix()
                 if relpath == ".":
                     relpath = ""
+                old_url = self.url
                 self.url = backend.relative_path_to_url(relpath) + fragments
+                logger.debug(f"relocate: Updated URL from backend: {old_url} -> {self.url}")
             self._root = backend.root
+            logger.debug(f"relocate: Final for absolute path: path={self.path}, url={self.url}")
             return
 
+        logger.debug(f"relocate: Path is relative")
         # Handle path relocation for relative paths
         try:
             # Try using os.path.relpath which handles more cases
             relpath_str = os.path.relpath(path, backend.root)
+            logger.debug(f"relocate: Relative path computation: {path} relative to {backend.root} = {relpath_str}")
             self.path = Path(relpath_str)
-        except (ValueError, OSError):
+        except (ValueError, OSError) as e:
             # Fall back to original behavior on error
+            logger.debug(f"relocate: Error computing relative path: {e}, keeping original path")
             self.path = path
 
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
+        old_url = self.url
         self.url = backend.relative_path_to_url(relpath) + fragments
+        logger.debug(f"relocate: Updated URL for relative path: {old_url} -> {self.url}")
         self._root = backend.root
+        logger.debug(f"relocate: Final for relative path: path={self.path}, url={self.url}")
 
     @property
     def absolute_path(self) -> Path | None:
@@ -436,21 +464,37 @@ class FileRequirement(Requirement):
             self.name = self.guess_name()
 
     def check_installable(self) -> None:
-        if path := self.absolute_path:
+        logger.debug(f"check_installable: Starting check for {self.url}")
+        abs_path = self.absolute_path
+        if abs_path:
             logger.debug(
-                f"Checking installable: path={path}, exists={path.exists()}, "
-                f"is_dir={path.is_dir() if path.exists() else False}"
+                f"check_installable: path={abs_path}, exists={abs_path.exists()}, "
+                f"is_dir={abs_path.is_dir() if abs_path.exists() else False}"
             )
-            if not path.exists():
+            if not abs_path.exists():
+                logger.debug(f"check_installable: Path does not exist: {abs_path}")
                 raise RequirementError(f"The local path '{self.path}' does not exist.")
-            if path.is_dir():
-                has_setup_py = path.joinpath("setup.py").exists()
-                has_pyproject = path.joinpath("pyproject.toml").exists()
-                logger.debug(f"Directory check: has_setup_py={has_setup_py}, has_pyproject={has_pyproject}")
+            if abs_path.is_dir():
+                setup_py_path = abs_path.joinpath("setup.py")
+                pyproject_path = abs_path.joinpath("pyproject.toml")
+                has_setup_py = setup_py_path.exists()
+                has_pyproject = pyproject_path.exists()
+                logger.debug(
+                    f"check_installable: Directory check: "
+                    f"setup.py={setup_py_path}, exists={has_setup_py}, "
+                    f"pyproject.toml={pyproject_path}, exists={has_pyproject}"
+                )
                 if not has_setup_py and not has_pyproject:
+                    logger.debug(f"check_installable: Path is not installable: {abs_path}")
                     raise RequirementError(f"The local path '{self.path}' is not installable.")
+                logger.debug(f"check_installable: Path is installable: {abs_path}")
             elif self.editable:
+                logger.debug(f"check_installable: Non-directory path cannot be editable: {abs_path}")
                 raise RequirementError("Local file requirement must not be editable.")
+            else:
+                logger.debug(f"check_installable: File path is installable: {abs_path}")
+        else:
+            logger.debug(f"check_installable: No absolute path available for {self.url}")
 
 
 @dataclasses.dataclass(eq=False)
