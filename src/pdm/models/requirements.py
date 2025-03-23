@@ -338,14 +338,20 @@ class FileRequirement(Requirement):
             return
         path, fragments = split_path_fragments(self.path)
         # self.path is relative
-        try:
-            # First try using os.path.relpath which handles more cases
-            relpath_str = os.path.relpath(path, backend.root)
-            self.path = Path(relpath_str)
-        except ValueError:
-            # Fall back to original behavior on error
+        
+        # Handle Windows paths specifically
+        if os.name == 'nt' and path.is_absolute():
+            # On Windows, if path is absolute, just keep it as is
             self.path = path
-
+        else:
+            try:
+                # Try using os.path.relpath which handles more cases
+                relpath_str = os.path.relpath(path, backend.root)
+                self.path = Path(relpath_str)
+            except ValueError:
+                # Fall back to original behavior on error
+                self.path = path
+        
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
