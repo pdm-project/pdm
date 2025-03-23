@@ -256,7 +256,7 @@ class FileRequirement(Requirement):
     def guess_name(self) -> str | None:
         url = url_without_fragments(self.url)
         logger.debug(f"guess_name: URL without fragments: {url}")
-        
+
         # Use correct URL parsing for Windows paths
         if sys.platform == "win32" and url.startswith("file:///"):
             try:
@@ -274,7 +274,7 @@ class FileRequirement(Requirement):
             # Standard non-Windows parsing
             filename = os.path.basename(urlparse.unquote(url)).rsplit("@", 1)[0]
             logger.debug(f"guess_name: Non-Windows filename: {filename}")
-            
+
         # VCS handling
         if self.is_vcs:
             logger.debug(f"guess_name: VCS type: {getattr(self, 'vcs', None)}")
@@ -295,7 +295,7 @@ class FileRequirement(Requirement):
                     result = name
                 logger.debug(f"guess_name: SVN/BZR name: {result}")
                 return result
-        
+
         # Wheel handling
         elif filename.endswith(".whl"):
             try:
@@ -304,7 +304,7 @@ class FileRequirement(Requirement):
                 return name
             except Exception as e:
                 logger.debug(f"guess_name: Error parsing wheel filename: {e}")
-        
+
         # Sdist handling
         else:
             try:
@@ -321,7 +321,7 @@ class FileRequirement(Requirement):
                     name = match.group(1)
                     logger.debug(f"guess_name: Egg info match name: {name}")
                     return name
-        
+
         logger.warn(f"Unable to guess package name for '{self.url}'")
         return None
 
@@ -498,11 +498,13 @@ class FileRequirement(Requirement):
     def _parse_name_from_url(self) -> None:
         logger.debug(f"_parse_name_from_url: URL: {self.url}")
         parsed = urlparse.urlparse(self.url)
-        logger.debug(f"_parse_name_from_url: Parsed URL: scheme={parsed.scheme}, netloc={parsed.netloc}, path={parsed.path}, fragment={parsed.fragment}")
-        
+        logger.debug(
+            f"_parse_name_from_url: Parsed URL: scheme={parsed.scheme}, netloc={parsed.netloc}, path={parsed.path}, fragment={parsed.fragment}"
+        )
+
         fragments = dict(urlparse.parse_qsl(parsed.fragment))
         logger.debug(f"_parse_name_from_url: Fragments: {fragments}")
-        
+
         if "egg" in fragments:
             egg_info = urlparse.unquote(fragments["egg"])
             logger.debug(f"_parse_name_from_url: Egg info: {egg_info}")
