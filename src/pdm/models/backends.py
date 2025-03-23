@@ -56,7 +56,7 @@ class PDMBackend(BuildBackend):
         root_uri = self.root.as_uri()
         # Replace project root placeholder with actual URI
         line = req.replace("file:///${PROJECT_ROOT}", root_uri)
-        
+
         if expand_env:
             line = expand_env_vars(line)
         return line
