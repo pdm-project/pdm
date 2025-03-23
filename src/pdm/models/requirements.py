@@ -338,7 +338,14 @@ class FileRequirement(Requirement):
             return
         path, fragments = split_path_fragments(self.path)
         # self.path is relative
-        self.path = Path(os.path.relpath(path, backend.root))
+        try:
+            # First try using os.path.relpath which handles more cases
+            relpath_str = os.path.relpath(path, backend.root)
+            self.path = Path(relpath_str)
+        except ValueError:
+            # Fall back to original behavior on error
+            self.path = path
+        
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
