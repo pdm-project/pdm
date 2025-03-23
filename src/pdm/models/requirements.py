@@ -345,7 +345,7 @@ class FileRequirement(Requirement):
         except ValueError:
             # Fall back to original behavior on error
             self.path = path
-        
+
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
