@@ -66,7 +66,9 @@ class PDMBackend(BuildBackend):
             return Path(path).as_uri()
         # Use platform-appropriate path for Windows
         if sys.platform == "win32":
-            return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(path.replace('\\', '/'))}"
+            # Need to normalize Windows path separators without using backslash in f-string
+            normalized_path = path.replace("\\", "/")
+            return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(normalized_path)}"
         return f"file:///${{PROJECT_ROOT}}/{urllib.parse.quote(path)}"
 
     @classmethod
