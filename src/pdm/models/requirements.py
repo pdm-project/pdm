@@ -338,22 +338,12 @@ class FileRequirement(Requirement):
             return
         path, fragments = split_path_fragments(self.path)
         # self.path is relative
-        logger.warn(f"relocate , path={path}, backend.root={backend.root}")
-        logger.warn(f"trying alternative {path.absolute().relative_to(backend.root)}")
         self.path = Path(os.path.relpath(path, backend.root))
-        # if path.is_absolute():
-        #    self.path = path.relative_to(backend.root)
-        # else:
-        #    self.path = path
-
-        logger.warn(f"self.path={self.path}")
         relpath = self.path.as_posix()
-        logger.warn(f"relpath = {relpath}")
         if relpath == ".":
             relpath = ""
         self.url = backend.relative_path_to_url(relpath) + fragments
         self._root = backend.root
-        logger.warn(f"self.url = {self.url} self._root={self._root}")
 
     @property
     def absolute_path(self) -> Path | None:
