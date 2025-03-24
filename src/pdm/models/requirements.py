@@ -33,7 +33,6 @@ from pdm.utils import (
     url_to_path,
     url_without_fragments,
 )
-from pdm.termui import logger
 
 if TYPE_CHECKING:
     from unearth import Link
@@ -340,7 +339,7 @@ class FileRequirement(Requirement):
                 try:
                     self.path = Path(url_to_path(url))
                     logger.debug(f"_parse_url: URL to path conversion: {url} -> {self.path}")
-                except ValueError as e:
+                except ValueError:
                     logger.debug(f"_parse_url: Failed to convert URL to path: {url}")
                     pass
             else:
@@ -367,17 +366,17 @@ class FileRequirement(Requirement):
     def relocate(self, backend: BuildBackend) -> None:
         """Change the project root to the given path"""
         if self.path is None:
-            logger.debug(f"relocate: Path is None, skipping relocation")
+            logger.debug("relocate: Path is None, skipping relocation")
             return
 
         logger.debug(f"relocate: Initial path={self.path}, url={self.url}, backend.root={backend.root}")
 
         if self.path.is_absolute():
-            logger.debug(f"relocate: Path is absolute, skipping relocation")
+            logger.debug("relocate: Path is absolute, skipping relocation")
             return
 
         # self.path is relative
-        logger.debug(f"relocate: Path is relative")
+        logger.debug("relocate: Path is relative")
         path, fragments = split_path_fragments(self.path)
         logger.debug(f"relocate: Split path={path}, fragments={fragments}")
 
@@ -403,7 +402,7 @@ class FileRequirement(Requirement):
     @property
     def absolute_path(self) -> Path | None:
         if self.path is None:
-            logger.debug(f"absolute_path: Path is None")
+            logger.debug("absolute_path: Path is None")
             return None
         else:
             result = self._root.joinpath(self.path)
@@ -478,7 +477,7 @@ class FileRequirement(Requirement):
                 if not abs_path.joinpath("setup.py").exists() and not abs_path.joinpath("pyproject.toml").exists():
                     raise RequirementError(f"The local path '{self.path}' is not installable.")
             elif self.editable:
-                logger.debug(f"check_installable: editable")
+                logger.debug("check_installable: editable")
                 raise RequirementError("Local file requirement must not be editable.")
 
 

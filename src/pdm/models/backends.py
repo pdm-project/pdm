@@ -6,8 +6,8 @@ import urllib.parse
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pdm.utils import expand_env_vars
 from pdm.termui import logger
+from pdm.utils import expand_env_vars
 
 if TYPE_CHECKING:
     from typing import TypedDict
