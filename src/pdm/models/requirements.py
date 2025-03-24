@@ -32,6 +32,7 @@ from pdm.utils import (
     url_to_path,
     url_without_fragments,
 )
+from pdm.termui import logger
 
 if TYPE_CHECKING:
     from unearth import Link
@@ -252,7 +253,12 @@ class FileRequirement(Requirement):
         return (*super()._hash_key(), self.get_full_url(), self.editable)
 
     def guess_name(self) -> str | None:
-        filename = os.path.basename(urlparse.unquote(url_without_fragments(self.url))).rsplit("@", 1)[0]
+        url = url_without_fragments(self.url)
+        logger.debug(f"guess_name: URL without fragments: {url}")
+
+        filename = os.path.basename(urlparse.unquote(url)).rsplit("@", 1)[0]
+        logger.debug(f"guess_name: Filename: {filename}")
+
         if self.is_vcs:
             if self.vcs == "git":  # type: ignore[attr-defined]
                 name = filename
@@ -277,7 +283,11 @@ class FileRequirement(Requirement):
                 # extracted and version will be left to be determined from
                 # the metadata.
                 if match:
-                    return match.group(1)
+                    name = match.group(1)
+                    logger.debug(f"guess_name: Egg info match name: {name}")
+                    return name
+
+        logger.debug(f"guess_name: Unable to determine name from: {filename}")
         return None
 
     @classmethod
@@ -305,46 +315,96 @@ class FileRequirement(Requirement):
         return result
 
     def _parse_url(self) -> None:
+        from pdm.termui import logger
+
+        logger.debug(f"_parse_url: path={self.path}, url={self.url}")
+
         if self.path:
             path, fragments = split_path_fragments(self.path)
+            logger.debug(f"_parse_url: Split path={path}, fragments={fragments}")
+
             if not self.url and path.is_absolute():
                 self.url = path.as_uri() + fragments
                 self.path = path
+                logger.debug(f"_parse_url: Absolute path set URL to {self.url} and self.path to {path}")
+
             # For relative path, we don't resolve URL now, so the path may still contain fragments,
             # it will be handled in `relocate()` method.
-            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
+            abs_path = self.absolute_path
+            logger.debug(f"_parse_url: Absolute path for setup: {abs_path}")
+            result = Setup.from_directory(abs_path)  # type: ignore[arg-type]
             if result.name:
                 self.name = result.name
+                logger.debug(f"_parse_url: Setup name: {self.name}")
         else:
             url = url_without_fragments(self.url)
+            logger.debug(f"_parse_url: Parsing URL {url}")
+
             relpath = get_relative_path(url)
+            logger.debug(f"_parse_url: Relative path from get_relative_path: {relpath}")
+
             if relpath is None:
                 try:
                     self.path = Path(url_to_path(url))
-                except ValueError:
+                    logger.debug(f"_parse_url: URL to path conversion: {url} -> {self.path}")
+                except ValueError as e:
+                    logger.debug(f"_parse_url: Failed to convert URL to path: {url}")
                     pass
             else:
                 self.path = Path(relpath)
+                logger.debug(f"_parse_url: Relative path from URL: {url} -> {self.path}")
+
+        logger.debug(f"_parse_url: Final path={self.path}, url={self.url}")
 
         if self.url:
+            logger.debug(f"_parse_url: Parsing name from URL: {self.url}")
             self._parse_name_from_url()
 
     def relocate(self, backend: BuildBackend) -> None:
         """Change the project root to the given path"""
-        if self.path is None or self.path.is_absolute():
+        if self.path is None:
+            logger.debug(f"relocate: Path is None, skipping relocation")
             return
+
+        logger.debug(f"relocate: Initial path={self.path}, url={self.url}, backend.root={backend.root}")
+
+        if self.path.is_absolute():
+            logger.debug(f"relocate: Path is absolute, skipping relocation")
+            return
+
         # self.path is relative
+        logger.debug(f"relocate: Path is relative")
         path, fragments = split_path_fragments(self.path)
-        self.path = Path(os.path.relpath(path, backend.root))
+        logger.debug(f"relocate: Split path={path}, fragments={fragments}")
+
+        try:
+            relpath_str = os.path.relpath(path, backend.root)
+            logger.debug(f"relocate: Relative path computation: {path} relative to {backend.root} = {relpath_str}")
+            self.path = Path(relpath_str)
+        except (ValueError, OSError) as e:
+            logger.debug(f"relocate: Error computing relative path: {e}, keeping original path")
+            self.path = path
+
         relpath = self.path.as_posix()
         if relpath == ".":
             relpath = ""
+
+        old_url = self.url
         self.url = backend.relative_path_to_url(relpath) + fragments
+        logger.debug(f"relocate: Updated URL: {old_url} -> {self.url}")
+
         self._root = backend.root
+        logger.debug(f"relocate: Final path={self.path}, url={self.url}")
 
     @property
     def absolute_path(self) -> Path | None:
-        return self._root.joinpath(self.path) if self.path else None
+        if self.path is None:
+            logger.debug(f"absolute_path: Path is None")
+            return None
+        else:
+            result = self._root.joinpath(self.path)
+            logger.debug(f"absolute_path: Joined with root: {self._root} + {self.path} = {result}")
+        return result
 
     @property
     def is_local(self) -> bool:
@@ -386,6 +446,7 @@ class FileRequirement(Requirement):
         return f"{project_name}{extras}{delimiter}{url}{fragment_str}{marker}"
 
     def _parse_name_from_url(self) -> None:
+        logger.debug(f"_parse_name_from_url: URL: {self.url}")
         parsed = urlparse.urlparse(self.url)
         fragments = dict(urlparse.parse_qsl(parsed.fragment))
         if "egg" in fragments:
@@ -398,13 +459,22 @@ class FileRequirement(Requirement):
             self.name = self.guess_name()
 
     def check_installable(self) -> None:
-        if path := self.absolute_path:
-            if not path.exists():
+        logger.debug(f"check_installable: Starting check for {self.url}")
+        abs_path = self.absolute_path
+        if abs_path:
+            logger.debug(
+                f"check_installable: path={abs_path}, exists={abs_path.exists()}, "
+                f"is_dir={abs_path.is_dir() if abs_path.exists() else False}"
+            )
+            if not abs_path.exists():
+                logger.debug(f"check_installable: Path does not exist: {abs_path}")
                 raise RequirementError(f"The local path '{self.path}' does not exist.")
-            if path.is_dir():
-                if not path.joinpath("setup.py").exists() and not path.joinpath("pyproject.toml").exists():
+            if abs_path.is_dir():
+                logger.debug(f"check_installable: {abs_path} is a directory")
+                if not abs_path.joinpath("setup.py").exists() and not abs_path.joinpath("pyproject.toml").exists():
                     raise RequirementError(f"The local path '{self.path}' is not installable.")
             elif self.editable:
+                logger.debug(f"check_installable: editable")
                 raise RequirementError("Local file requirement must not be editable.")
 
 

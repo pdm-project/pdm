@@ -29,6 +29,7 @@ from pbs_installer import PythonVersion
 
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PDMDeprecationWarning, PdmException
+from pdm.termui import logger
 
 if TYPE_CHECKING:
     from re import Match
@@ -233,8 +234,11 @@ def expand_env_vars(credential: str, quote: bool = False, env: Mapping[str, str]
 
     Neither $ENV_VAR and %ENV_VAR is supported.
     """
+
     if env is None:
         env = os.environ
+
+    logger.debug(f"expand_env_vars: Input credential: {credential}, quote: {quote}, env={env}")
 
     def replace_func(match: Match) -> str:
         rv = env.get(match.group(1), match.group(0))
