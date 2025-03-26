@@ -43,7 +43,10 @@ class Backend(abc.ABC):
                 py_version.valid and self.project.python_requires.contains(py_version.version, True)
             )
 
-        for py_version in self.project.iter_interpreters(self.python, search_venv=False, filter_func=match_func):
+        respect_version_file = self.project.config["python.use_python_version"]
+        for py_version in self.project.iter_interpreters(
+            self.python, search_venv=False, filter_func=match_func, respect_version_file=respect_version_file
+        ):
             return py_version
 
         python = f" {self.python}" if self.python else ""
