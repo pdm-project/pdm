@@ -52,32 +52,32 @@ jobs:
           python -m pip install "pdm[locked] @ file://$(ls ${GITHUB_WORKSPACE}/dist/*.whl)"
           pdm --help
 
-      # - name: Publish package distributions to PyPI
-      #   run: pdm publish --no-build
+      - name: Publish package distributions to PyPI
+        run: pdm publish --no-build
 
-      # - name: Get Changelog
-      #   id: get-changelog
-      #   run: |
-      #     awk '/## Release/{if (flag==1)exit;else;flag=1;next} flag' CHANGELOG.md > .changelog.md
+      - name: Get Changelog
+        id: get-changelog
+        run: |
+          awk '/## Release/{if (flag==1)exit;else;flag=1;next} flag' CHANGELOG.md > .changelog.md
 
-      # - name: Create Release
-      #   uses: actions/create-release@main
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: v${{ github.ref }}
-      #     body_path: .changelog.md
-      #     draft: false
-      #     prerelease: ${{ steps.check_version.outputs.PRERELEASE }}
+      - name: Create Release
+        uses: actions/create-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: v${{ github.ref }}
+          body_path: .changelog.md
+          draft: false
+          prerelease: ${{ steps.check_version.outputs.PRERELEASE }}
 
-      # - name: Trigger Bucket Update
-      #   uses: benc-uk/workflow-dispatch@v1
-      #   with:
-      #     workflow: Excavator
-      #     repo: frostming/scoop-frostming
-      #     token: ${{ secrets.G_T }}
-      #     ref: master
+      - name: Trigger Bucket Update
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Excavator
+          repo: frostming/scoop-frostming
+          token: ${{ secrets.G_T }}
+          ref: master
 
   binary:
     needs: release-pypi
