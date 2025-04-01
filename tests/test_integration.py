@@ -69,6 +69,7 @@ def test_init_project_respect_version_file(pdm, project, python_version, via_env
     pdm(["install"], obj=project, strict=True)
     assert f"{project.python.major}.{project.python.minor}" == python_version
 
+
 @pytest.mark.integration
 @pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 def test_use_python_write_file_multiple_versions(pdm, project, python_version, monkeypatch):
@@ -79,6 +80,7 @@ def test_use_python_write_file_multiple_versions(pdm, project, python_version, m
     project._environment = None
     pdm(["install"], obj=project, strict=True)
     assert f"{project.python.major}.{project.python.minor}" not in no_versions
+
 
 @pytest.mark.integration
 @pytest.mark.skipif(len(PYTHON_VERSIONS) < 2, reason="Need at least 2 Python versions to test")
@@ -92,6 +94,7 @@ def test_use_python_write_file_with_use_python_version(pdm, project, monkeypatch
     pdm(["install"], obj=project, strict=True)
     assert f"{project.python.major}.{project.python.minor}" == configured_python_version
 
+
 @pytest.mark.integration
 @pytest.mark.skipif(len(PYTHON_VERSIONS) < 2, reason="Need at least 2 Python versions to test")
 def test_use_python_write_file_without_use_python_version(pdm, project):
@@ -102,6 +105,7 @@ def test_use_python_write_file_without_use_python_version(pdm, project):
     project._environment = None
     pdm(["install"], obj=project, strict=True)
     assert f"{project.python.major}.{project.python.minor}" in PYTHON_VERSIONS
+
 
 def test_actual_list_freeze(project, local_finder, pdm):
     pdm(["config", "-l", "install.parallel", "false"], obj=project, strict=True)
