@@ -203,7 +203,7 @@ def resolve_from_lockfile(
             strategies = project.lockfile.strategy.copy()
             if FLAG_INHERIT_METADATA in strategies and groups is not None and not project.config["use_uv"]:
                 return locked_repo.evaluate_candidates(groups)
-            strategies.update((FLAG_STATIC_URLS, FLAG_INHERIT_METADATA))
+            strategies.add(FLAG_STATIC_URLS)
             resolver = project.get_resolver()(
                 environment=project.environment,
                 requirements=reqs,
