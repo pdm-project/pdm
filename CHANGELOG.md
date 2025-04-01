@@ -1,3 +1,17 @@
+## Release v2.23.0 (2025-04-01)
+
+### Features & Improvements
+
+- Add `pdm python find` command to search for a python interpreter. ([#3389](https://github.com/pdm-project/pdm/issues/3389))
+- `pdm import` now converts `package-mode` from Poetry's settings table to `distribution`. ([#3427](https://github.com/pdm-project/pdm/issues/3427))
+
+### Bug Fixes
+
+- Excluding non-existing groups for `pdm remove`. ([#3404](https://github.com/pdm-project/pdm/issues/3404))
+- Fix a bug that `pdm add` and `pdm update` remove dependency groups incorrectly. ([#3418](https://github.com/pdm-project/pdm/issues/3418))
+- Fix a bug that using resolution overrides drops extra dependencies. ([#3426](https://github.com/pdm-project/pdm/issues/3426))
+
+
 ## Release v2.22.4 (2025-03-07)
 
 ### Bug Fixes
