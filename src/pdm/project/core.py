@@ -270,7 +270,9 @@ class Project:
                 return self.python
 
         if self.root.joinpath("__pypackages__").exists() or not config["python.use_venv"] or self.is_global:
-            for py_version in self.iter_interpreters(filter_func=match_version):
+            for py_version in self.iter_interpreters(
+                filter_func=match_version, respect_version_file=config["python.use_python_version"]
+            ):
                 note("[success]__pypackages__[/] is detected, using the PEP 582 mode")
                 self.python = py_version
                 return py_version
