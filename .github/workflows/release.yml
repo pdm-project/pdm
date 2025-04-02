@@ -94,6 +94,7 @@ jobs:
       PYAPP_PROJECT_VERSION: ${{ github.ref_name }}
       PYAPP_SELF_COMMAND: app  # since `self` has been taken in `pdm`
       PYAPP_DISTRIBUTION_EMBED: true
+      PYAPP_PROJECT_FEATURES: locked
       SCCACHE_GHA_ENABLED: "true"
       RUSTC_WRAPPER: "sccache"
       SOURCE_FILE: ${{ matrix.os != 'windows-2022' && 'pyapp' || 'pyapp.exe' }}
