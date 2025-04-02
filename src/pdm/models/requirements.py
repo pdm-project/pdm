@@ -310,11 +310,6 @@ class FileRequirement(Requirement):
             if not self.url and path.is_absolute():
                 self.url = path.as_uri() + fragments
                 self.path = path
-            # For relative path, we don't resolve URL now, so the path may still contain fragments,
-            # it will be handled in `relocate()` method.
-            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
-            if result.name:
-                self.name = result.name
         else:
             url = url_without_fragments(self.url)
             relpath = get_relative_path(url)
@@ -325,6 +320,13 @@ class FileRequirement(Requirement):
                     pass
             else:
                 self.path = Path(relpath)
+
+        if self.path is not None:
+            # For relative path, we don't resolve URL now, so the path may still contain fragments,
+            # it will be handled in `relocate()` method.
+            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
+            if result.name:
+                self.name = result.name
 
         if self.url:
             self._parse_name_from_url()
