@@ -5,6 +5,11 @@ on:
     tags:
       - "*"
 
+defaults:
+  run:
+    # make sure to work on Windows
+    shell: bash
+
 jobs:
   release-pypi:
     name: release-pypi
@@ -33,6 +38,14 @@ jobs:
       - name: Build artifacts
         run: |
           pipx run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdm-wheel
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 15
 
       - name: Test Build
         run: |
@@ -65,3 +78,77 @@ jobs:
           repo: frostming/scoop-frostming
           token: ${{ secrets.G_T }}
           ref: master
+
+  binary:
+    needs: release-pypi
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04", "ubuntu-22.04-arm", "windows-2022", "macos-13", "macos-14"]
+
+    env:
+      PYAPP_REPO: pyapp
+      PYAPP_VERSION: "0.27.0"
+      PYAPP_PROJECT_NAME: pdm
+      PYAPP_PROJECT_VERSION: ${{ github.ref_name }}
+      PYAPP_SELF_COMMAND: app  # since `self` has been taken in `pdm`
+      PYAPP_DISTRIBUTION_EMBED: true
+      PYAPP_PROJECT_FEATURES: locked
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
+      SOURCE_FILE: ${{ matrix.os != 'windows-2022' && 'pyapp' || 'pyapp.exe' }}
+      TARGET_FILE: ${{ matrix.os != 'windows-2022' && 'pdm' || 'pdm.exe' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch PyApp
+        run: >-
+          mkdir $PYAPP_REPO && curl -L
+          https://github.com/ofek/pyapp/releases/download/v$PYAPP_VERSION/source.tar.gz
+          |
+          tar --strip-components=1 -xzf - -C $PYAPP_REPO
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pdm-wheel
+          path: dist
+
+      - name: Configure embedded wheel
+        run: |
+          cd dist
+          wheel="$(echo *.whl)"
+          mv $wheel ../$PYAPP_REPO
+          echo "PYAPP_PROJECT_PATH=$wheel" >> $GITHUB_ENV
+          echo "TARGET_TRIPLE=$(rustc --version --verbose | grep "host" | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: Build
+        run: |
+          cd $PYAPP_REPO
+          cargo build --release
+          mv target/release/$SOURCE_FILE ../$TARGET_FILE
+
+      - name: Upload Assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdm-${{ github.ref_name }}-${{ env.TARGET_TRIPLE }}
+          path: ${{ env.TARGET_FILE }}
+          if-no-files-found: error
+          retention-days: 15
+
+      - name: Upload to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPLOAD_FILE: pdm-${{ github.ref_name }}-${{ env.TARGET_TRIPLE }}.tar.gz
+        run: |
+          tar -czf $UPLOAD_FILE $TARGET_FILE
+          gh release upload ${{ github.ref_name }} $UPLOAD_FILE --clobber
