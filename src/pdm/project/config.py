@@ -182,6 +182,12 @@ class Config(MutableMapping[str, str]):
         "python.use_venv": ConfigItem(
             "Use virtual environments when available", True, env_var="PDM_USE_VENV", coerce=ensure_boolean
         ),
+        "python.use_python_version": ConfigItem(
+            "Use .python-version file next to pyproject.toml to find python interpreters",
+            True,
+            env_var="PDM_USE_PYTHON_VERSION",
+            coerce=ensure_boolean,
+        ),
         "python.install_root": ConfigItem(
             "The root directory to install python interpreters",
             global_only=True,
