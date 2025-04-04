@@ -1,3 +1,4 @@
+import base64
 import os
 from argparse import Namespace
 
@@ -7,6 +8,7 @@ from pdm._types import RepositoryConfig
 from pdm.cli.commands.publish import Command as PublishCommand
 from pdm.cli.commands.publish.package import PackageFile
 from pdm.cli.commands.publish.repository import Repository
+from pdm.exceptions import PdmUsageError
 from tests import FIXTURES
 
 pytestmark = pytest.mark.usefixtures("mock_run_gpg")
@@ -71,7 +73,11 @@ def test_repository_get_release_urls(project):
         ]
     ]
     config = RepositoryConfig(
-        config_prefix="repository", name="test", url="https://upload.pypi.org/legacy/", username="abc", password="123"
+        config_prefix="repository",
+        name="test",
+        url="https://upload.pypi.org/legacy/",
+        username="abc",
+        password="123",
     )
     repository = Repository(project, config)
     assert repository.get_release_urls(package_files) == {"https://pypi.org/project/demo/0.0.1/"}
@@ -129,7 +135,13 @@ def test_publish_cli_args_and_env_var_precedence(project, monkeypatch, mocker):
     repository = mocker.patch.object(Repository, "__init__", return_value=None)
     PublishCommand.get_repository(
         project,
-        Namespace(repository=None, username="foo", password="bar", ca_certs="custom.pem", verify_ssl=True),
+        Namespace(
+            repository=None,
+            username="foo",
+            password="bar",
+            ca_certs="custom.pem",
+            verify_ssl=True,
+        ),
     )
     repository.assert_called_with(
         project,
@@ -152,7 +164,13 @@ def test_publish_cli_args_and_env_var_precedence(project, monkeypatch, mocker):
 
         PublishCommand.get_repository(
             project,
-            Namespace(repository=None, username=None, password=None, ca_certs=None, verify_ssl=True),
+            Namespace(
+                repository=None,
+                username=None,
+                password=None,
+                ca_certs=None,
+                verify_ssl=True,
+            ),
         )
         repository.assert_called_with(
             project,
@@ -169,7 +187,13 @@ def test_publish_cli_args_and_env_var_precedence(project, monkeypatch, mocker):
 
         PublishCommand.get_repository(
             project,
-            Namespace(repository="pypi", username="foo", password=None, ca_certs="custom.pem", verify_ssl=True),
+            Namespace(
+                repository="pypi",
+                username="foo",
+                password=None,
+                ca_certs="custom.pem",
+                verify_ssl=True,
+            ),
         )
         repository.assert_called_with(
             project,
@@ -191,3 +215,79 @@ def test_repository_get_credentials_from_keyring(project, keyring, mocker):
     basic_auth = mocker.patch("httpx.BasicAuth.__init__", return_value=None)
     Repository(project, config)
     basic_auth.assert_called_with(username="foo", password="barbaz")
+
+
+def test_repository_get_token_from_oidc(project, mocker, httpx_mock):
+    minted_token = "minted_oidc_token"
+    test_pypi_url = "https://test.org/upload"
+    httpx_mock.add_response(
+        url="https://test.org/_/oidc/audience",
+        method="GET",
+        json={"audience": "testpypi"},
+    )
+    httpx_mock.add_response(
+        url="https://test.org/_/oidc/mint-token",
+        method="POST",
+        json={"token": minted_token},
+    )
+    config = RepositoryConfig(config_prefix="repository", name="test", url=test_pypi_url)
+    detect_credential_mock = mocker.patch(
+        "pdm.cli.commands.publish.repository.detect_credential",
+        return_value="A_OIDC_TOKEN",
+    )
+    repository = Repository(project, config=config)
+    detect_credential_mock.assert_called_once()
+    assert base64.b64decode(repository.session.auth._auth_header[6:]).decode("utf-8") == f"__token__:{minted_token}"
+
+
+def test_repository_get_token_from_oidc_request_error(project, mocker, httpx_mock, capsys):
+    test_pypi_url = "https://test.org/upload"
+    httpx_mock.add_response(
+        url="https://test.org/_/oidc/audience",
+        method="GET",
+        status_code=502,
+    )
+
+    config = RepositoryConfig(config_prefix="repository", name="test", url=test_pypi_url)
+    with pytest.raises(PdmUsageError):
+        Repository(project, config=config)
+    captured = capsys.readouterr()
+    assert "Failed to get PyPI token via OIDC" in captured.err
+
+
+def test_repository_get_token_from_oidc_unsupported_platform(project, mocker, httpx_mock, capsys):
+    test_pypi_url = "https://test.org/upload"
+    httpx_mock.add_response(
+        url="https://test.org/_/oidc/audience",
+        method="GET",
+        json={"audience": "testpypi"},
+    )
+
+    config = RepositoryConfig(config_prefix="repository", name="test", url=test_pypi_url)
+    detect_credential_mock = mocker.patch(
+        "pdm.cli.commands.publish.repository.detect_credential",
+        return_value=None,
+    )
+    with pytest.raises(PdmUsageError):
+        Repository(project, config=config)
+    captured = capsys.readouterr()
+    assert "This platform is not supported for trusted publishing via OIDC" in captured.err
+    detect_credential_mock.assert_called_once()
+
+
+def test_repository_get_token_misconfigured_github(project, monkeypatch, capsys, httpx_mock):
+    test_pypi_url = "https://test.org/upload"
+    httpx_mock.add_response(
+        url="https://test.org/_/oidc/audience",
+        method="GET",
+        json={"audience": "testpypi"},
+    )
+
+    config = RepositoryConfig(config_prefix="repository", name="test", url=test_pypi_url)
+    # set env variable to get `id`` into detect_github function
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+
+    with pytest.raises(PdmUsageError):
+        Repository(project, config=config)
+    captured = capsys.readouterr()
+    assert "Unable to detect OIDC token for CI platform:" in captured.err
