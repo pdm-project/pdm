@@ -20,13 +20,14 @@ pdm publish --repository https://test.pypi.org/legacy/
 ## Publish with trusted publishers
 
 You can configure trusted publishers for PyPI so that you don't need to expose the PyPI tokens in the release workflow. To do this, follow
-[the guide](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) to add a publisher and write the GitHub Actions workflow as below:
+[the guide](https://docs.pypi.org/trusted-publishers/adding-a-publisher/) to add a publisher write a action as below:
+
+### GitHub Actions
 
 ```yaml
 on:
   release:
     types: [published]
-
 
 jobs:
   pypi-publish:
@@ -44,6 +45,23 @@ jobs:
 
       - name: Publish package distributions to PyPI
         run: pdm publish
+```
+
+### GitLab CI
+
+```yaml
+image: python:3.12-bookworm
+before_script:
+  - pip install pdm
+
+publish-package:
+  stage: release
+  environment: production
+  id_tokens:
+    PYPI_ID_TOKEN: # for testpypi: TESTPYPI_ID_TOKEN
+      aud: "pypi" # testpypi
+  script:
+    - pdm publish
 ```
 
 ## Build and publish separately

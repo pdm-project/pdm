@@ -38,6 +38,7 @@ dependencies = [
     "filelock>=3.13",
     "httpcore>=1.0.6",
     "certifi>=2024.8.30",
+    "id>=1.5.0"
 ]
 readme = "README.md"
 keywords = ["packaging", "dependency", "workflow"]
@@ -75,37 +76,6 @@ all = [
 [project.scripts]
 pdm = "pdm.core:main"
 
-[tool.pdm.version]
-source = "scm"
-write_to = "pdm/VERSION"
-
-[tool.pdm.build]
-excludes = ["./**/.git"]
-package-dir = "src"
-includes = ["src/pdm"]
-source-includes = ["tests", "typings", "CHANGELOG.md", "LICENSE", "README.md", "tox.ini"]
-# editables backend doesn't work well with namespace packages
-editable-backend = "path"
-locked = true
-locked-groups = ["default", "all"]
-
-[tool.pdm.scripts]
-pre_release = "python tasks/max_versions.py"
-release = "python tasks/release.py"
-test = "pytest"
-coverage = {shell = """\
-                    python -m pytest \
-                              --verbosity=3 \
-                              --cov=src/pdm \
-                              --cov-branch \
-                              --cov-report term-missing \
-                              tests/
-                    """}
-tox = "tox"
-doc = {cmd = "mkdocs serve", help = "Start the dev server for docs preview"}
-lint = "pre-commit run --all-files"
-complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
-
 [dependency-groups]
 test = [
     "pdm[pytest]",
@@ -113,6 +83,7 @@ test = [
     "pytest-xdist>=1.31.0",
     "pytest-rerunfailures>=10.2",
     "pytest-httpserver>=1.0.6",
+    "pytest-httpx>=0.34.0",
 ]
 tox = [
     "tox",
@@ -258,3 +229,35 @@ exclude = "pdm/(pep582/|models/in_process/.+\\.py)"
 namespace_packages = true
 mypy_path = "src"
 explicit_package_bases = true
+
+[tool.pdm.version]
+source = "scm"
+write_to = "pdm/VERSION"
+
+[tool.pdm.build]
+excludes = ["./**/.git"]
+package-dir = "src"
+includes = ["src/pdm"]
+source-includes = ["tests", "typings", "CHANGELOG.md", "LICENSE", "README.md", "tox.ini"]
+# editables backend doesn't work well with namespace packages
+editable-backend = "path"
+locked = true
+locked-groups = ["default", "all"]
+
+[tool.pdm.scripts]
+pre_release = "python tasks/max_versions.py"
+release = "python tasks/release.py"
+test = "pytest"
+coverage = {shell = """\
+                    python -m pytest \
+                              --verbosity=3 \
+                              --cov=src/pdm \
+                              --cov-branch \
+                              --cov-report term-missing \
+                              tests/
+                    """}
+tox = "tox"
+doc = {cmd = "mkdocs serve", help = "Start the dev server for docs preview"}
+lint = "pre-commit run --all-files"
+complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
+

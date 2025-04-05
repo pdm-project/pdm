@@ -5,7 +5,13 @@ from typing import TYPE_CHECKING, Any, Iterable, cast
 from urllib.parse import urlparse, urlunparse
 
 import httpx
-from rich.progress import BarColumn, DownloadColumn, TimeRemainingColumn, TransferSpeedColumn
+from id import AmbientCredentialError, detect_credential
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
 
 from pdm import termui
 from pdm.cli.commands.publish.package import PackageFile
@@ -71,33 +77,30 @@ class Repository:
         return username, password
 
     def _get_pypi_token_via_oidc(self) -> str | None:
-        ACTIONS_ID_TOKEN_REQUEST_TOKEN = os.getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
-        ACTIONS_ID_TOKEN_REQUEST_URL = os.getenv("ACTIONS_ID_TOKEN_REQUEST_URL")
-        if not ACTIONS_ID_TOKEN_REQUEST_TOKEN or not ACTIONS_ID_TOKEN_REQUEST_URL:
-            return None
-        self.ui.echo("Getting PyPI token via GitHub Actions OIDC...")
-        import httpx
+        self.ui.echo("Getting PyPI token via OIDC...")
 
         try:
             parsed_url = urlparse(self.url)
             audience_url = urlunparse(parsed_url._replace(path="/_/oidc/audience"))
             resp = self.session.get(audience_url)
             resp.raise_for_status()
-
-            resp = self.session.get(
-                ACTIONS_ID_TOKEN_REQUEST_URL,
-                params=resp.json(),
-                headers={"Authorization": f"bearer {ACTIONS_ID_TOKEN_REQUEST_TOKEN}"},
-            )
-            resp.raise_for_status()
-            oidc_token = resp.json()["value"]
-
-            mint_token_url = urlunparse(parsed_url._replace(path="/_/oidc/github/mint-token"))
+            audience = cast(str, resp.json()["audience"])
+            oidc_token = detect_credential(audience)
+            if oidc_token is None:
+                self.ui.echo(
+                    "This platform is not supported for trusted publishing via OIDC",
+                    err=True,
+                )
+                return None
+            mint_token_url = urlunparse(parsed_url._replace(path="/_/oidc/mint-token"))
             resp = self.session.post(mint_token_url, json={"token": oidc_token})
             resp.raise_for_status()
             token = resp.json()["token"]
+        except AmbientCredentialError as e:
+            self.ui.echo(f"Unable to detect OIDC token for CI platform: {e}", err=True)
+            return None
         except httpx.HTTPError:
-            self.ui.echo("Failed to get PyPI token via GitHub Actions OIDC", err=True)
+            self.ui.echo("Failed to get PyPI token via OIDC", err=True)
             return None
         else:
             if os.getenv("GITHUB_ACTIONS"):
