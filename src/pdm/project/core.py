@@ -426,13 +426,16 @@ class Project:
         extra_deps: dict[str, list[Requirement]] = {}
         while referred_groups:
             updated = False
-            for group, referred in list(referred_groups.items()):
+            ref_iter = list(referred_groups.items())
+            for group, referred in ref_iter:
                 for ref in list(referred):
                     if ref not in requested_groups:
                         deps, r = _get_dependencies(ref)
                         group_deps[ref] = deps
                         if r:
                             referred_groups[ref] = r
+                            # append to the ref_iter to process later
+                            ref_iter.append((ref, r))
                         requested_groups.append(ref)
                     if ref in referred_groups:  # not resolved yet
                         continue
@@ -445,7 +448,7 @@ class Project:
                 if not referred:
                     referred_groups.pop(group)
             if not updated:
-                raise ProjectError("Cyclic dependency group include detected")
+                raise ProjectError(f"Cyclic dependency group include detected: {set(referred_groups)}")
         if include_referred:
             for group, deps in extra_deps.items():
                 group_deps[group].extend(deps)
