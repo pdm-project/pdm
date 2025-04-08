@@ -654,11 +654,10 @@ class PreparedCandidate:
         return cache_entry
 
     def _get_build_dir(self) -> str:
-        original_link = self.candidate.link
-        assert original_link
-        if original_link.is_file and original_link.file_path.is_dir():
+        assert self.link is not None
+        if self.link.is_file and self.link.file_path.is_dir():
             # Local directories are built in tree
-            return str(original_link.file_path)
+            return str(self.link.file_path)
         if self.req.editable:
             # In this branch the requirement must be an editable VCS requirement.
             # The repository will be unpacked into a *persistent* src directory.
@@ -676,7 +675,7 @@ class PreparedCandidate:
             src_dir.mkdir(exist_ok=True, parents=True)
             dirname = self.candidate.name or self.req.name
             if not dirname:
-                dirname, _ = os.path.splitext(original_link.filename)
+                dirname, _ = os.path.splitext(self.link.filename)
             return str(src_dir / str(dirname))
         # Otherwise, for source dists, they will be unpacked into a *temp* directory.
         return self.environment.project.core.create_temp_dir(prefix="pdm-build-")
