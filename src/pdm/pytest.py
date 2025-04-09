@@ -215,6 +215,23 @@ class Metadata(dict):
         return cast(str, dict.get(self, __key))
 
 
+class BlackHoleDict(MutableMapping):
+    def __len__(self) -> int:
+        return 0
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(())
+
+    def __getitem__(self, key: Any) -> Any:
+        raise KeyError(key)
+
+    def __setitem__(self, key: Any, value: Any) -> None:
+        return None
+
+    def __delitem__(self, key: Any) -> None:
+        return None
+
+
 class Distribution:
     """A mock Distribution"""
 
@@ -306,7 +323,7 @@ def build_env_wheels() -> Iterable[Path]:
 @pytest.fixture(autouse=True)
 def temp_env(monkeypatch: pytest.MonkeyPatch) -> Generator[MutableMapping[str, str]]:
     old_env = os.environ.copy()
-    monkeypatch.setattr("pdm.models.candidates.PreparedCandidate._build_dir_cache", {})
+    monkeypatch.setattr("pdm.models.candidates.PreparedCandidate._build_dir_cache", BlackHoleDict())
     try:
         yield os.environ
     finally:
