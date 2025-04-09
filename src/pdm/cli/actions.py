@@ -268,6 +268,7 @@ def do_sync(
     selection: GroupSelection,
     dry_run: bool = False,
     clean: bool = False,
+    quiet: bool = False,
     requirements: list[Requirement] | None = None,
     tracked_names: Collection[str] | None = None,
     no_editable: bool | Collection[str] = False,
@@ -288,7 +289,7 @@ def do_sync(
     packages = list(resolve_from_lockfile(project, requirements, groups=list(selection)))
     if tracked_names and dry_run:
         packages = [p for p in packages if p.candidate.identify() in tracked_names]
-    synchronizer = project.get_synchronizer()(
+    synchronizer = project.get_synchronizer(quiet=quiet)(
         project.environment,
         clean=clean,
         dry_run=dry_run,
