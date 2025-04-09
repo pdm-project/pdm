@@ -52,7 +52,7 @@ class InstallManager:
             remove_path.remove()
             remove_path.commit()
         except OSError as e:
-            termui.logger.warn("Error occurred during uninstallation, roll back the changes now.")
+            termui.logger.warning("Error occurred during uninstallation, roll back the changes now.")
             remove_path.rollback()
             raise UninstallError(e) from e
 
@@ -68,6 +68,6 @@ class InstallManager:
             paths_to_remove.remove()
             paths_to_remove.commit()
         except OSError as e:
-            termui.logger.warn("Error occurred during overwriting, roll back the changes now.")
+            termui.logger.warning("Error occurred during overwriting, roll back the changes now.")
             paths_to_remove.rollback()
             raise UninstallError(e) from e
