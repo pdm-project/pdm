@@ -640,6 +640,7 @@ class PreparedCandidate:
             assert link
             vcs_backend = vcs_support.get_backend(link.vcs, self.environment.project.core.ui.verbosity)
             return vcs_backend.is_immutable_revision(source_dir, link)
+        link = self._replace_url_vars(link)
         if link and not (link.is_file and link.file_path.is_dir()):
             # Cache if the link contains egg-info like 'foo-1.0'
             return _egg_info_re.search(link.filename) is not None
