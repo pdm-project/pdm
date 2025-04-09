@@ -680,9 +680,11 @@ class PreparedCandidate:
                 dirname, _ = os.path.splitext(self.link.filename)
             return str(src_dir / str(dirname))
         # Otherwise, for source dists, they will be unpacked into a *temp* directory.
-        if self.link not in self._build_dir_cache:
-            self._build_dir_cache[self.link] = self.environment.project.core.create_temp_dir(prefix="pdm-build-")
-        return self._build_dir_cache[self.link]
+        if (build_dir := self._build_dir_cache.get(self.link)) is None:
+            build_dir = self._build_dir_cache[self.link] = self.environment.project.core.create_temp_dir(
+                prefix="pdm-build-"
+            )
+        return build_dir
 
     def _wheel_compatible(self, wheel_file: str, allow_all: bool = False) -> bool:
         env_spec = self.environment.allow_all_spec if allow_all else self.environment.spec

@@ -202,6 +202,8 @@ class Requirement:
         """Return whether the passed in PEP 508 string
         is the same requirement as this one.
         """
+        if not isinstance(line, str):
+            return False
         req = parse_line(line)
         return self.key == req.key or (
             isinstance(self, FileRequirement) and isinstance(req, FileRequirement) and self.url == req.url
