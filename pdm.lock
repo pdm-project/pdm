@@ -5,7 +5,7 @@
 groups = ["default", "all", "cookiecutter", "copier", "doc", "keyring", "pytest", "template", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:5c004ad629e014130dcd0a71ab839c12f525c8b91246ac988b5018b0e88127d7"
+content_hash = "sha256:5b9a6368d6eb1341b227a41c56d341325b743bbd81c1ae6269eba51dc6489474"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -2083,7 +2083,7 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.17.4"
+version = "0.17.5"
 requires_python = ">=3.8"
 summary = "A utility to fetch and download python packages"
 groups = ["default"]
@@ -2092,8 +2092,8 @@ dependencies = [
     "packaging>=20",
 ]
 files = [
-    {file = "unearth-0.17.4-py3-none-any.whl", hash = "sha256:5b0eb24bfd479642ac5dc73a9123fc5f8660f1c2e5672c5fd54b1731c3ac6165"},
-    {file = "unearth-0.17.4.tar.gz", hash = "sha256:ac881e9a39de4654c1c23872b15988dcca4745ef5cdfc9579e85c00c70f99f18"},
+    {file = "unearth-0.17.5-py3-none-any.whl", hash = "sha256:9963e66b14f0484644c9b45b517e530befb2de6a8da4b06a9a38bed2d086dfe6"},
+    {file = "unearth-0.17.5.tar.gz", hash = "sha256:a19e1c02e64b40518d088079c7416fc41b45a648b81a4128aac02597234ee6ba"},
 ]
 
 [[package]]
