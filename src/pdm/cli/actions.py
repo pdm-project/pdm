@@ -23,7 +23,7 @@ from pdm.cli.utils import (
     set_env_in_reg,
 )
 from pdm.environments import BareEnvironment
-from pdm.exceptions import PdmException, PdmUsageError, ProjectError
+from pdm.exceptions import PdmException, PdmUsageError, ProjectError, ResolutionError
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
 from pdm.models.repositories import LockedRepository, Package
@@ -144,11 +144,13 @@ def do_lock(
                     f"[success]`strategy.resolve_max_rounds`[/] config.",
                     err=True,
                 )
-                raise
+                raise ResolutionError(
+                    f"The dependency resolution exceeds the maximum loop depth of {resolve_max_rounds}"
+                ) from None
             except ResolutionImpossible as err:
                 reporter.update(f"{termui.Emoji.LOCK} Lock failed.", info="", completed=1)
                 ui.error(format_resolution_impossible(err))
-                raise ResolutionImpossible("Unable to find a resolution") from None
+                raise ResolutionError("Unable to find a resolution") from None
             else:
                 groups = list(set(groups) | collected_groups)
                 data = result_repo.format_lockfile(groups=groups, strategy=lock_strategy)
