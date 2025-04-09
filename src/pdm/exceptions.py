@@ -11,6 +11,10 @@ class PdmException(Exception):
     pass
 
 
+class ResolutionError(PdmException):
+    pass
+
+
 class PdmArgumentError(PdmException):
     pass
 

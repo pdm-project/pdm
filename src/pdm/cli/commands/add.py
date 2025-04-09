@@ -134,7 +134,6 @@ class Command(BaseCommand):
             if r.is_file_or_url:
                 r.relocate(project.backend)  # type: ignore[attr-defined]
             key = r.identify()
-            r.prerelease = prerelease
             tracked_names.add(key)
             requirements.append(r)
         if requirements:
@@ -143,9 +142,12 @@ class Command(BaseCommand):
                 f"{'dev-' if selection.dev else ''}dependencies: "
                 + ", ".join(f"[req]{r.as_line()}[/]" for r in requirements)
             )
-        group_deps = project.add_dependencies(requirements, group, selection.dev or False, write=False)
+        project.add_dependencies(requirements, group, selection.dev or False, write=False)
         all_dependencies = project.all_dependencies
-        all_dependencies[group] = group_deps
+        group_deps = all_dependencies[group]
+        for req in group_deps:
+            if req.identify() in tracked_names:
+                req.prerelease = prerelease
         if unconstrained:
             if not requirements:
                 raise PdmUsageError("--unconstrained requires at least one package")
@@ -177,7 +179,7 @@ class Command(BaseCommand):
                 selection=GroupSelection(project, groups=[group], default=False),
                 no_editable=no_editable and tracked_names,
                 no_self=no_self or group != "default",
-                requirements=group_deps,
+                requirements=list(group_deps),
                 dry_run=dry_run,
                 fail_fast=fail_fast,
                 hooks=hooks,
