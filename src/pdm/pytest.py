@@ -304,8 +304,9 @@ def build_env_wheels() -> Iterable[Path]:
 
 
 @pytest.fixture(autouse=True)
-def temp_env() -> Generator[MutableMapping[str, str]]:
+def temp_env(monkeypatch: pytest.MonkeyPatch) -> Generator[MutableMapping[str, str]]:
     old_env = os.environ.copy()
+    monkeypatch.setattr("pdm.models.candidates.PreparedCandidate._build_dir_cache", {})
     try:
         yield os.environ
     finally:
