@@ -114,3 +114,15 @@ def test_remove_exclude_non_existing_dev_group_in_lockfile(project, pdm):
     assert project.lockfile.groups == ["default"]
     result = pdm(["remove", "requests"], obj=project)
     assert result.exit_code == 0
+
+
+@pytest.mark.usefixtures("working_set")
+def test_remove_package_with_group_include(project, pdm):
+    project.pyproject._data["dependency-groups"] = {
+        "web": ["requests"],
+        "serve": [{"include-group": "web"}, "django"],
+    }
+    project.pyproject.write()
+    pdm(["lock"], obj=project, strict=True)
+    pdm(["remove", "--no-sync", "-Gserve", "django"], obj=project, strict=True)
+    assert "django" not in project.pyproject.dependency_groups["serve"]
