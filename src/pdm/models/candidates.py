@@ -8,7 +8,7 @@ import warnings
 from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, cast, no_type_check
+from typing import TYPE_CHECKING, Any, ClassVar, cast, no_type_check
 from zipfile import ZipFile
 
 from packaging.version import InvalidVersion
@@ -305,6 +305,8 @@ class PreparedCandidate:
     """A candidate that has been prepared for installation.
     The metadata and built wheel are available.
     """
+
+    _build_dir_cache: ClassVar[dict[Link, str]] = {}
 
     candidate: Candidate
     environment: BaseEnvironment
@@ -678,7 +680,9 @@ class PreparedCandidate:
                 dirname, _ = os.path.splitext(self.link.filename)
             return str(src_dir / str(dirname))
         # Otherwise, for source dists, they will be unpacked into a *temp* directory.
-        return self.environment.project.core.create_temp_dir(prefix="pdm-build-")
+        if self.link not in self._build_dir_cache:
+            self._build_dir_cache[self.link] = self.environment.project.core.create_temp_dir(prefix="pdm-build-")
+        return self._build_dir_cache[self.link]
 
     def _wheel_compatible(self, wheel_file: str, allow_all: bool = False) -> bool:
         env_spec = self.environment.allow_all_spec if allow_all else self.environment.spec
