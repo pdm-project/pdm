@@ -72,7 +72,9 @@ class ProjectTemplate:
                             os.rename(os.path.join(root, f), os.path.join(root, new_import_name + ".py"))
                     elif f.endswith((".md", ".rst")):
                         replace_all(os.path.join(root, f), original_name, new_name)
+                        replace_all(os.path.join(root, f), import_name, new_import_name)
                     elif Path(root) == self._path and f == "pyproject.toml":
+                        replace_all(os.path.join(root, f), original_name, new_name)
                         replace_all(os.path.join(root, f), import_name, new_import_name)
 
         target_path.mkdir(exist_ok=True, parents=True)
