@@ -82,7 +82,7 @@ class UvSynchronizer(BaseSynchronizer):
 
 
 class QuietUvSynchronizer(UvSynchronizer):
-    def get_sync_command(self) -> list[str]:
+    def _get_sync_command(self) -> list[str]:
         cmd = super()._get_sync_command()
         if "--verbose" in cmd:
             cmd.remove("--verbose")
