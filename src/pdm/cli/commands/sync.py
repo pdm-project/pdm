@@ -46,6 +46,7 @@ class Command(BaseCommand):
             selection=selection,
             dry_run=options.dry_run,
             clean=options.clean,
+            quiet=options.verbose == -1,
             no_editable=options.no_editable,
             no_self=options.no_self or "default" not in selection,
             reinstall=options.reinstall,
