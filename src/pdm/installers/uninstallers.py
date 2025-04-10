@@ -161,7 +161,7 @@ class BaseRemovePaths(abc.ABC):
             egg_link_path = cast("Path | None", getattr(dist, "link_file", None))
             dist_name = dist.metadata.get("Name")
             if not egg_link_path:
-                termui.logger.warn(
+                termui.logger.warning(
                     "No egg link is found for editable distribution %s, do nothing.",
                     dist_name,
                 )
