@@ -152,7 +152,7 @@ asdf install pdm latest
 **初始化一个新的 PDM 项目**
 
 ```bash
-pdm init
+pdm new my_project
 ```
 
 按照指引回答提示的问题，一个 PDM 项目和对应的`pyproject.toml`文件就创建好了。

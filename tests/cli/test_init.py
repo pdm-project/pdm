@@ -5,6 +5,7 @@ import pytest
 
 from pdm.compat import tomllib
 from pdm.models.python import PythonInfo
+from pdm.utils import cd
 
 PYTHON_VERSION = f"{sys.version_info[0]}.{sys.version_info[1]}"
 
@@ -45,6 +46,32 @@ def test_init_command(project_no_init, pdm, mocker):
     }
 
     with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        assert tomllib.load(fp) == data
+
+
+def test_new_command(project_no_init, pdm, mocker):
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    with cd(project_no_init.root):
+        pdm(["new", "myproject"], input="\ntest-project\n\n\n\n\n\n\n", strict=True)
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
+    data = {
+        "project": {
+            "authors": [{"email": "me@example.org", "name": "Testing"}],
+            "dependencies": [],
+            "description": "Default template for PDM package",
+            "license": {"text": "MIT"},
+            "name": "test-project",
+            "requires-python": f"=={python_version}.*",
+            "readme": "README.md",
+            "version": "0.1.0",
+        },
+        "tool": {"pdm": {"distribution": False}},
+    }
+
+    with open(project_no_init.root.joinpath("myproject/pyproject.toml"), "rb") as fp:
         assert tomllib.load(fp) == data
 
 

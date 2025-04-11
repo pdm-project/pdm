@@ -159,10 +159,10 @@ asdf install pdm latest
 
 ## Quickstart
 
-**Initialize a new PDM project**
+**Create a new PDM project**
 
 ```bash
-pdm init
+pdm new my-project
 ```
 
 Answer the questions following the guide, and a PDM project with a `pyproject.toml` file will be ready to use.
