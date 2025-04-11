@@ -63,7 +63,9 @@ class Command(BaseCommand):
             if options.delete:
                 raise PdmUsageError("`--delete` doesn't work when `--edit` is given")
             config = project.project_config if options.local else project.global_config
-            return self.edit_file(config.config_file)
+            config_path = config.config_file
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            return self.edit_file(config_path)
         if options.delete:
             self._delete_config(project, options)
         elif options.value:
