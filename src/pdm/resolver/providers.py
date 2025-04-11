@@ -370,7 +370,7 @@ class ReusePinProvider(BaseProvider):
         def matches_gen() -> Iterator[Candidate]:
             requested_req = next(filter(lambda r: r.is_named, requirements[identifier]), None)
             for pin in self.iter_reuse_candidates(identifier, requested_req):
-                if identifier not in self.overrides:
+                if identifier not in self.overrides and pin.req.is_named:
                     pin = pin.copy_with(min(requirements[identifier], key=self.requirement_preference))
                 incompat = list(incompatibilities[identifier])
                 pin._preferred = True  # type: ignore[attr-defined]
