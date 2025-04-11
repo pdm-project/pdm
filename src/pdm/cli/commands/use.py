@@ -184,7 +184,7 @@ class Command(BaseCommand):
             f"Using {'[bold]Global[/] ' if project.is_global else ''}Python interpreter: [success]{selected_python.path!s}[/] ({selected_python_identifier})"
         )
         project.python = selected_python
-        if version_file:
+        if version_file and project.config["python.use_python_version"]:
             with project.root.joinpath(".python-version").open("w") as f:
                 f.write(f"{selected_python.major}.{selected_python.minor}\n")
         if project.environment.is_local:
