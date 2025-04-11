@@ -1,17 +1,17 @@
 # Create Project From a Template
 
 Similar to `yarn create` and `npm create`, PDM also supports initializing or creating a project from a template.
-The template is given as a positional argument of `pdm init`, in one of the following forms:
+The template is given as a positional argument of `pdm new`, in one of the following forms:
 
-- `pdm init django` - Initialize the project from the template `https://github.com/pdm-project/template-django`
-- `pdm init https://github.com/frostming/pdm-template-django` - Initialize the project from a Git URL. Both HTTPS and SSH URL are acceptable.
-- `pdm init django@v2` - To check out the specific branch or tag. Full Git URL also supports it.
-- `pdm init /path/to/template` - Initialize the project from a template directory on local filesystem.
-- `pdm init minimal` - Initialize with the builtin "minimal" template, that only generates a `pyproject.toml`.
+- `pdm new django my-project` - Create a new project `my-project` from the template `https://github.com/pdm-project/template-django`
+- `pdm new https://github.com/frostming/pdm-template-django my-project` - Initialize the project from a Git URL. Both HTTPS and SSH URL are acceptable.
+- `pdm new django@v2 my-project` - To check out the specific branch or tag. Full Git URL also supports it.
+- `pdm new /path/to/template my-project` - Initialize the project from a template directory on local filesystem.
+- `pdm new minimal my-project` - Initialize with the builtin "minimal" template, that only generates a `pyproject.toml`.
 
-And `pdm init` will use the default template built in.
+And `pdm new my-project` will use the default template built in and create a project at the given path.
 
-The project will be initialized at the current directory, existing files with the same name will be overwritten. You can also use the `-p <path>` option to create a project at a new path.
+`pdm init` command also supports the same template argument. The project will be initialized at the current directory, existing files with the same name will be overwritten.
 
 ## Contribute a template
 

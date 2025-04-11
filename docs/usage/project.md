@@ -1,14 +1,22 @@
 # New Project
 
-To start with, create a new project with [`pdm init`](../reference/cli.md#init):
+To start with, create a new project with [`pdm new`](../reference/cli.md#new):
 
 ```bash
-mkdir my-project && cd my-project
-pdm init
+pdm new my-project
 ```
 
 You will need to answer a few questions, to help PDM to create a `pyproject.toml` file for you.
-For more usages of `pdm init`, please read [Create your project from a template](./template.md).
+For more usages of `pdm new`, please read [Create your project from a template](./template.md).
+
+## Create pyproject.toml for an existing project
+
+If you already have a project and want to create a `pyproject.toml` file for it, you can use [`pdm init`](../reference/cli.md#init):
+
+```bash
+cd my-project
+pdm init
+```
 
 ## Choose a Python interpreter
 
