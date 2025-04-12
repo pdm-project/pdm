@@ -28,4 +28,5 @@ Despite the significant performance improvements brought by uv, it is important 
 - Update strategies other than `all` and `reuse` are not supported.
 - Editable requirement must be a local path. Requirements like `-e git+<git_url>` are not supported.
 - `excludes` settings under `[tool.pdm.resolution]` are not supported.
-- Cross-platform lock targets are not supported by uv resolver, i.e., you can lock for platforms that are different from the current.
+- Cross-platform lock targets are not needed by uv resolver, uv always generates universal lock files.
+- `include_packages` and `exclude_packages` settings under `[tool.pdm.source]` are not supported.
