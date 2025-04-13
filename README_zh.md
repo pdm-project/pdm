@@ -20,7 +20,7 @@
 
 </div>
 
-## 这个项目是啥?
+## 这个项目是啥？
 
 PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人兴趣而诞生的。如果你觉得 `pipenv` 或者
 `poetry` 用着非常好，并不想引入一个新的包管理器，那么继续使用它们吧；但如果你发现有些东西这些
@@ -29,7 +29,7 @@ PDM 旨在成为下一代 Python 软件包管理工具。它最初是为个人�
 ## 主要特性
 
 - 一个简单且相对快速的依赖解析器，特别是对于大的二进制包发布。
-- 兼容 [PEP 517] 的构建后端，用于构建发布包(源码格式与 wheel 格式)
+- 兼容 [PEP 517] 的构建后端，用于构建发布包 (源码格式与 wheel 格式)
 - 灵活且强大的插件系统
 - [PEP 621] 元数据格式
 - 功能强大的用户脚本
@@ -128,13 +128,13 @@ scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
 scoop install pdm
 ```
 
-否则，强烈推荐把 `pdm` 安装在一个隔离环境中， 用 `pipx` 是最好的。
+否则，强烈推荐把 `pdm` 安装在一个隔离环境中，用 `pipx` 是最好的。
 
 ```bash
 pipx install pdm
 ```
 
-或者你可以将它安装在用户目录下:
+或者你可以将它安装在用户目录下：
 
 ```bash
 pip install --user pdm
