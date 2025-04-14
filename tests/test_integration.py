@@ -56,6 +56,20 @@ def test_use_python_write_file(pdm, project):
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(len(PYTHON_VERSIONS) < 2, reason="Need at least 2 Python versions to test")
+def test_use_python_write_no_file(pdm, project):
+    project.project_config["python.use_python_version"] = False
+    pdm(["use", PYTHON_VERSIONS[0]], obj=project, strict=True)
+    assert f"{project.python.major}.{project.python.minor}" == PYTHON_VERSIONS[0]
+    assert not project.root.joinpath(".python-version").exists()
+    project.project_config["python.use_python_version"] = True
+    pdm(["use", PYTHON_VERSIONS[1]], obj=project, strict=True)
+    assert f"{project.python.major}.{project.python.minor}" == PYTHON_VERSIONS[1]
+    assert project.root.joinpath(".python-version").exists()
+    assert project.root.joinpath(".python-version").read_text().strip() == PYTHON_VERSIONS[1]
+
+
+@pytest.mark.integration
 @pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 @pytest.mark.parametrize("via_env", [True, False])
 def test_init_project_respect_version_file(pdm, project, python_version, via_env, monkeypatch):
@@ -68,6 +82,43 @@ def test_init_project_respect_version_file(pdm, project, python_version, via_env
     project._environment = None
     pdm(["install"], obj=project, strict=True)
     assert f"{project.python.major}.{project.python.minor}" == python_version
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
+def test_use_python_write_file_multiple_versions(pdm, project, python_version, monkeypatch):
+    no_versions = [p for p in DEFAULT_PYTHON_VERSIONS if p not in PYTHON_VERSIONS]
+    project.project_config["python.use_venv"] = True
+    project.root.joinpath(".python-version").write_text("\n".join(no_versions))
+    project._saved_python = None
+    project._environment = None
+    pdm(["install"], obj=project, strict=True)
+    assert f"{project.python.major}.{project.python.minor}" not in no_versions
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(len(PYTHON_VERSIONS) < 2, reason="Need at least 2 Python versions to test")
+def test_use_python_write_file_with_use_python_version(pdm, project, monkeypatch):
+    configured_python_version = PYTHON_VERSIONS[0]
+    project.project_config["python.use_venv"] = True
+    project.project_config["python.use_python_version"] = True
+    project.root.joinpath(".python-version").write_text(configured_python_version)
+    project._saved_python = None
+    project._environment = None
+    pdm(["install"], obj=project, strict=True)
+    assert f"{project.python.major}.{project.python.minor}" == configured_python_version
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(len(PYTHON_VERSIONS) < 2, reason="Need at least 2 Python versions to test")
+def test_use_python_write_file_without_use_python_version(pdm, project):
+    project.project_config["python.use_venv"] = True
+    project.project_config["python.use_python_version"] = False
+    project.root.joinpath(".python-version").write_text(PYTHON_VERSIONS[0])
+    project._saved_python = None
+    project._environment = None
+    pdm(["install"], obj=project, strict=True)
+    assert f"{project.python.major}.{project.python.minor}" in PYTHON_VERSIONS
 
 
 def test_actual_list_freeze(project, local_finder, pdm):
