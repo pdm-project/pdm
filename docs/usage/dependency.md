@@ -241,7 +241,7 @@ pdm update -dG test pytest
 
 ### About update strategy
 
-Similarly, PDM also provides 3 different behaviors of updating dependencies and sub-dependencies，
+Similarly, PDM also provides 3 different behaviors of updating dependencies and sub-dependencies,
 which is given by `--update-<strategy>` option:
 
 - `reuse`: Keep all locked dependencies except for those given in the command line (default).
