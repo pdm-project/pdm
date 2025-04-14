@@ -11,8 +11,8 @@ class Command(InitCommand):
 
     arguments = (verbose_option,)
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
-        super().add_arguments(parser)
+    def add_arguments(self, parser: argparse.ArgumentParser, is_init=False) -> None:
+        super().add_arguments(parser, is_init=is_init)
         parser.add_argument("project_path", help="The path to create the new project")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

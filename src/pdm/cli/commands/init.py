@@ -176,7 +176,7 @@ class Command(BaseCommand):
 
         return data
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+    def add_arguments(self, parser: argparse.ArgumentParser, is_init: bool = True) -> None:
         skip_option.add_to_parser(parser)
 
         status = {
@@ -215,7 +215,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"
         )
-        parser.add_argument("generator_args", nargs=argparse.REMAINDER, help="Arguments passed to the generator")
+        if is_init:
+            parser.add_argument("generator_args", nargs=argparse.REMAINDER, help="Arguments passed to the generator")
         parser.add_argument("-r", "--overwrite", action="store_true", help="Overwrite existing files")
         parser.set_defaults(search_parent=False, generator="builtin")
 
