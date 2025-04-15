@@ -247,7 +247,7 @@ locked-groups = ["default", "all"]
 [tool.pdm.scripts]
 pre_release = "python tasks/max_versions.py"
 release = "python tasks/release.py"
-test = "pytest -n auto"
+test = "pytest"
 coverage = {shell = """\
                     python -m pytest \
                               --verbosity=3 \
