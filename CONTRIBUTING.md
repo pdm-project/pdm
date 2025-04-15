@@ -16,16 +16,20 @@ this section.
 
 1. First, fork this project to your own namespace using the fork button at the top right of the repository page.
 2. Clone the **upstream** repository to local:
+
    ```bash
    git clone https://github.com/pdm-project/pdm.git
    # Or if you prefer SSH clone:
    git clone git@github.com:pdm-project/pdm.git
    ```
+
 3. Add the fork as a new remote:
+
    ```bash
    git remote add fork https://github.com/yourname/pdm.git
    git fetch fork
    ```
+
    where `fork` is the remote name of the fork repository.
 
 **ProTips:**
@@ -83,13 +87,19 @@ Now, all dependencies are installed into the Python environment you chose, which
 pdm run test
 ```
 
+faster test using pytest-xdist
+
+```bash
+pdm run test -n auto
+```
+
 The test suite is still simple and needs expansion! Please help write more test cases.
 
 !!! note
     You can also run your test suite against all supported Python version using `tox` with the `tox-pdm` plugin.
     You can either run it by yourself with:
 
-    ```shell
+   ```shell
     tox
     ```
 
