@@ -31,6 +31,8 @@ class Command(BaseCommand):
     - minimal: `pdm init minimal`, A minimal template with only `pyproject.toml`.
     """
 
+    supports_other_generator = True
+
     def __init__(self) -> None:
         self.interactive = True
 
@@ -183,21 +185,22 @@ class Command(BaseCommand):
             False: termui.style("\\[not installed]", style="error"),
             True: termui.style("\\[installed]", style="success"),
         }
-        generator = parser.add_mutually_exclusive_group()
-        generator.add_argument(
-            "--copier",
-            action="store_const",
-            dest="generator",
-            const="copier",
-            help=f"Use Copier to generate project {status[package_installed('copier')]}",
-        )
-        generator.add_argument(
-            "--cookiecutter",
-            action="store_const",
-            dest="generator",
-            const="cookiecutter",
-            help=f"Use Cookiecutter to generate project {status[package_installed('cookiecutter')]}",
-        )
+        if self.supports_other_generator:
+            generator = parser.add_mutually_exclusive_group()
+            generator.add_argument(
+                "--copier",
+                action="store_const",
+                dest="generator",
+                const="copier",
+                help=f"Use Copier to generate project {status[package_installed('copier')]}",
+            )
+            generator.add_argument(
+                "--cookiecutter",
+                action="store_const",
+                dest="generator",
+                const="cookiecutter",
+                help=f"Use Cookiecutter to generate project {status[package_installed('cookiecutter')]}",
+            )
         group = parser.add_argument_group("builtin generator options")
         group.add_argument(
             "-n",
@@ -215,7 +218,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"
         )
-        parser.add_argument("generator_args", nargs=argparse.REMAINDER, help="Arguments passed to the generator")
+        if self.supports_other_generator:
+            parser.add_argument("generator_args", nargs=argparse.REMAINDER, help="Arguments passed to the generator")
         parser.add_argument("-r", "--overwrite", action="store_true", help="Overwrite existing files")
         parser.set_defaults(search_parent=False, generator="builtin")
 

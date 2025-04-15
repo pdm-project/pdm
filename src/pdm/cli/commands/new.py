@@ -9,6 +9,8 @@ from pdm.project.core import Project
 class Command(InitCommand):
     """Create a new Python project at <project_path>"""
 
+    supports_other_generator = False
+
     arguments = (verbose_option,)
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
