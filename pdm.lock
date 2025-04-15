@@ -5,7 +5,7 @@
 groups = ["default", "all", "cookiecutter", "copier", "doc", "keyring", "pytest", "template", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:5b9a6368d6eb1341b227a41c56d341325b743bbd81c1ae6269eba51dc6489474"
+content_hash = "sha256:6decb703744274e6210e0412f3d4c5dfafe8fb6e3eec24522ad879e916d5ba94"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -488,7 +488,7 @@ files = [
 
 [[package]]
 name = "dep-logic"
-version = "0.4.11"
+version = "0.5.0"
 requires_python = ">=3.8"
 summary = "Python dependency specifications supporting logical operations"
 groups = ["default"]
@@ -496,8 +496,8 @@ dependencies = [
     "packaging>=22",
 ]
 files = [
-    {file = "dep_logic-0.4.11-py3-none-any.whl", hash = "sha256:44cf69b3e0e369315e7d4cafa4a5050aa70666753831bf0c27b7f3eadbcf70ce"},
-    {file = "dep_logic-0.4.11.tar.gz", hash = "sha256:6084c81ce683943a60394ca0f8531ff803dfd955b5d7f52fb0571b53b930a182"},
+    {file = "dep_logic-0.5.0-py3-none-any.whl", hash = "sha256:f16a73ec5baf1f126e253f6a6249c80999818e608f84677736591ac623c516a6"},
+    {file = "dep_logic-0.5.0.tar.gz", hash = "sha256:be92e772f15d2563edd6b8694a6818846ad2822310dfc8f39cd20ebb0b03e329"},
 ]
 
 [[package]]
