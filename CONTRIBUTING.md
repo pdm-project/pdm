@@ -90,7 +90,7 @@ pdm run test
 faster test using pytest-xdist
 
 ```bash
-pdm run test -n local
+pdm run test -n auto
 ```
 
 The test suite is still simple and needs expansion! Please help write more test cases.
