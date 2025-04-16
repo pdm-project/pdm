@@ -10,8 +10,6 @@ on:
       - "docs/**"
       - "news/**"
       - "*.md"
-      - Dockerfile
-      - tasks/benchmarks/**
   push:
     branches:
       - main
@@ -21,8 +19,6 @@ on:
       - "docs/**"
       - "news/**"
       - "*.md"
-      - Dockerfile
-      - tasks/benchmarks/**
 
 concurrency:
   group: ${{ github.event.number || github.run_id }}
