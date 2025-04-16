@@ -9,7 +9,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.cli.templates import ProjectTemplate
-from pdm.exceptions import PdmUsageError
+from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend
 from pdm.models.specifiers import get_specifier
 from pdm.utils import (
@@ -116,7 +116,12 @@ class Command(BaseCommand):
     def get_metadata_from_input(self, project: Project, options: argparse.Namespace) -> dict[str, Any]:
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
 
-        name = self.ask_project(project)
+        if options.name:
+            if not validate_project_name(options.name):
+                raise ProjectError("Project name is not valid, it should follow PEP 426")
+            name = options.name
+        else:
+            name = self.ask_project(project)
         version = self.ask("Project version", options.project_version or "0.1.0")
         is_dist = options.dist or bool(options.backend)
         if not is_dist and self.interactive:
@@ -214,6 +219,7 @@ class Command(BaseCommand):
         )
         group.add_argument("--backend", choices=list(_BACKENDS), help="Specify the build backend, which implies --dist")
         group.add_argument("--license", help="Specify the license (SPDX name)")
+        group.add_argument("--name", help="Specify the project name")
         group.add_argument("--project-version", help="Specify the project's version")
         parser.add_argument(
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"

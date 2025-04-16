@@ -10,7 +10,7 @@
 - Installation error for local plugins specified with file URL without a name. ([#3407](https://github.com/pdm-project/pdm/issues/3407))
 - Eliminate the warning about inherit_metadata when using uv mode. ([#3434](https://github.com/pdm-project/pdm/issues/3434))
 - Fix an installation failure when installing editable local dependencies on Windows and Python 3.13. ([#3444](https://github.com/pdm-project/pdm/issues/3444))
-- Fix a bug that overriden requirements in lock file get rewritten when adding a new requirement. ([#3446](https://github.com/pdm-project/pdm/issues/3446))
+- Fix a bug that overridden requirements in lock file get rewritten when adding a new requirement. ([#3446](https://github.com/pdm-project/pdm/issues/3446))
 - Cyclic group inclusion is detected incorrectly. Also show the cyclic group names in the error message. ([#3447](https://github.com/pdm-project/pdm/issues/3447))
 - Fix a bug that `pdm remove` doesn't handle dependency groups include correctly. ([#3452](https://github.com/pdm-project/pdm/issues/3452))
 - Update `unearth` to address an issue downloading git repos with short commit hash. ([#3455](https://github.com/pdm-project/pdm/issues/3455))
