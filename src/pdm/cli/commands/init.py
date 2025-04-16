@@ -9,7 +9,7 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.cli.templates import ProjectTemplate
-from pdm.exceptions import PdmUsageError
+from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend
 from pdm.models.specifiers import get_specifier
 from pdm.utils import (
@@ -118,14 +118,8 @@ class Command(BaseCommand):
 
         if options.name:
             if not validate_project_name(options.name):
-                project.core.ui.echo(
-                    "Project name is not valid, it should follow PEP 426",
-                    err=True,
-                    style="warning",
-                )
-                name = self.ask_project(project)
-            else:
-                name = options.name
+                raise ProjectError("Project name is not valid, it should follow PEP 426")
+            name = options.name
         else:
             name = self.ask_project(project)
         version = self.ask("Project version", options.project_version or "0.1.0")
