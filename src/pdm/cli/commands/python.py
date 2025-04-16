@@ -85,7 +85,8 @@ class RemoveCommand(BaseCommand):
                 ui.error(f"No Python interpreter found for {options.version!r}")
                 ui.echo("Installed Pythons:", err=True)
                 for child in root.iterdir():
-                    ui.echo(f"  {child.name}", err=True)
+                    if not child.name.startswith("."):
+                        ui.echo(f"  {child.name}", err=True)
                 sys.exit(1)
         if version_dir.is_symlink():
             version_dir.unlink()
