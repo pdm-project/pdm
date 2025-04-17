@@ -168,5 +168,15 @@ class EnvSpec(_EnvSpec):
 
         return {**default_environment(), **self.markers()}  # type: ignore[dict-item]
 
+    def markers_with_python(self) -> Marker:
+        env = self.markers()
+        markers: list[BaseMarker] = []
+        env.pop("python_version", None)
+        env.pop("python_full_version", None)
+        markers.append(parse_marker(PySpecSet(self.requires_python).as_marker_string()))
+        for key, value in env.items():
+            markers.append(parse_marker(f'{key} == "{value}"'))
+        return Marker(MultiMarker.of(*markers))
+
     def is_allow_all(self) -> bool:
         return self.platform is None and self.implementation is None

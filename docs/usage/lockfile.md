@@ -247,3 +247,11 @@ pdm export -o requirements.txt
 
 !!! TIP
     You can also run `pdm export` with a [`.pre-commit` hook](./advanced.md#hooks-for-pre-commit).
+
++++ 2.24.0
+
+Additionally, PDM supports exporting to `pylock.toml` format as defined by [PEP 751](https://peps.python.org/pep-0751/). The following command will convert your lock file to a PEP 751 compatible format:
+
+```bash
+pdm export -f pylock -o pylock.toml
+```
