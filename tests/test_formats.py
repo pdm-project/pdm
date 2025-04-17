@@ -249,3 +249,14 @@ def test_convert_poetry_project_with_circular_dependency(project):
 
     _, settings = poetry.convert(project, child_file, ns())
     assert settings["dev-dependencies"]["dev"] == ["parent @ file:///${PROJECT_ROOT}/../.."]
+
+
+def test_export_pylock_toml(core, pdm):
+    project = core.create_project(FIXTURES / "projects/demo")
+    golden_file = FIXTURES / "projects/demo/pylock.toml"
+    result = pdm(["export", "-f", "pylock"], obj=project, strict=True)
+    assert result.stdout.strip() == golden_file.read_text(encoding="utf-8").strip()
+    with cd(project.root):
+        result = pdm(["export", "-f", "pylock", "-L", "pdm.no_groups.lock"])
+    assert result.exit_code == 1
+    assert "inherit_metadata strategy is required for pylock format" in result.stderr

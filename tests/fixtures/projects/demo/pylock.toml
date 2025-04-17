@@ -1,0 +1,141 @@
+lock-version = "1.0"
+requires-python = ">=3.3"
+environments = [
+    "python_version >= \"3.3\"",
+]
+extras = ["security", "tests"]
+dependency-groups = ["default"]
+default-groups = ["default"]
+created-by = "pdm"
+[[packages]]
+name = "certifi"
+version = "2025.1.31"
+requires-python = ">=3.6"
+wheels = [
+    {name = "certifi-2025.1.31-py3-none-any.whl",hashes = {sha256 = "ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe"}},
+]
+marker = "python_version >= \"3.6\" and \"security\" in extras"
+
+[packages.sdist]
+name = "certifi-2025.1.31.tar.gz"
+hashes = {sha256 = "3d5da6925056f6f18f119200434a4780a94263f10d1c21d032a6f6b2baa20651"}
+
+[[packages]]
+name = "chardet"
+version = "3.0.4"
+requires-python = ""
+wheels = [
+    {name = "chardet-3.0.4-py2.py3-none-any.whl",hashes = {sha256 = "fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"}},
+]
+marker = "os_name == \"nt\" and \"default\" in dependency_groups"
+
+[packages.sdist]
+name = "chardet-3.0.4.tar.gz"
+hashes = {sha256 = "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"}
+
+[[packages]]
+name = "charset-normalizer"
+version = "2.0.12"
+requires-python = ">=3.5.0"
+wheels = [
+    {name = "charset_normalizer-2.0.12-py3-none-any.whl",hashes = {sha256 = "6881edbebdb17b39b4eaaa821b438bf6eddffb4468cf344f09f89def34a8b1df"}},
+]
+marker = "python_version >= \"3.6\" and \"security\" in extras"
+
+[packages.sdist]
+name = "charset-normalizer-2.0.12.tar.gz"
+hashes = {sha256 = "2857e29ff0d34db842cd7ca3230549d1a697f96ee6d3fb071cfa6c7393832597"}
+
+[[packages]]
+name = "colorama"
+version = "0.3.9"
+requires-python = ""
+wheels = [
+    {name = "colorama-0.3.9-py2.py3-none-any.whl",hashes = {sha256 = "463f8483208e921368c9f306094eb6f725c6ca42b0f97e313cb5d5512459feda"}},
+]
+marker = "sys_platform == \"win32\" and \"tests\" in extras"
+
+[packages.sdist]
+name = "colorama-0.3.9.tar.gz"
+hashes = {sha256 = "48eb22f4f8461b1df5734a074b57042430fb06e1d61bd1e11b078c0fe6d7a1f1"}
+
+[[packages]]
+name = "idna"
+version = "2.7"
+requires-python = ""
+wheels = [
+    {name = "idna-2.7-py2.py3-none-any.whl",hashes = {sha256 = "156a6814fb5ac1fc6850fb002e0852d56c0c8d2531923a51032d1b70760e186e"}},
+]
+marker = "\"default\" in dependency_groups or \"security\" in extras"
+
+[packages.sdist]
+name = "idna-2.7.tar.gz"
+hashes = {sha256 = "684a38a6f903c1d71d6d5fac066b58d7768af4de2b832e426ec79c30daa94a16"}
+
+[[packages]]
+name = "py"
+version = "1.4.34"
+requires-python = ""
+wheels = [
+    {name = "py-1.4.34-py2.py3-none-any.whl",hashes = {sha256 = "2ccb79b01769d99115aa600d7eed99f524bf752bba8f041dc1c184853514655a"}},
+]
+marker = "\"tests\" in extras"
+
+[packages.sdist]
+name = "py-1.4.34.tar.gz"
+hashes = {sha256 = "0f2d585d22050e90c7d293b6451c83db097df77871974d90efd5a30dc12fcde3"}
+
+[[packages]]
+name = "pytest"
+version = "3.2.5"
+requires-python = ""
+wheels = [
+    {name = "pytest-3.2.5-py2.py3-none-any.whl",hashes = {sha256 = "241d7e7798d79192a123ceaf64c602b4d233eacf6d6e42ae27caa97f498b7dc6"}},
+]
+marker = "\"tests\" in extras"
+
+[packages.sdist]
+name = "pytest-3.2.5.tar.gz"
+hashes = {sha256 = "6d5bd4f7113b444c55a3bbb5c738a3dd80d43563d063fc42dcb0aaefbdd78b81"}
+
+[[packages]]
+name = "requests"
+version = "2.27.1"
+requires-python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+wheels = [
+    {name = "requests-2.27.1-py2.py3-none-any.whl",hashes = {sha256 = "f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"}},
+]
+marker = "python_version >= \"3.6\" and \"security\" in extras"
+
+[packages.sdist]
+name = "requests-2.27.1.tar.gz"
+hashes = {sha256 = "68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61"}
+
+[[packages]]
+name = "setuptools"
+version = "39.2.0"
+requires-python = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*"
+wheels = [
+    {name = "setuptools-39.2.0-py2.py3-none-any.whl",hashes = {sha256 = "8fca9275c89964f13da985c3656cb00ba029d7f3916b37990927ffdf264e7926"}},
+]
+marker = "\"tests\" in extras"
+
+[packages.sdist]
+name = "setuptools-39.2.0.zip"
+hashes = {sha256 = "f7cddbb5f5c640311eb00eab6e849f7701fa70bf6a183fc8a2c33dd1d1672fb2"}
+
+[[packages]]
+name = "urllib3"
+version = "1.26.20"
+requires-python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+wheels = [
+    {name = "urllib3-1.26.20-py2.py3-none-any.whl",hashes = {sha256 = "0ed14ccfbf1c30a9072c7ca157e4319b70d65f623e91e7b32fadb2853431016e"}},
+]
+marker = "python_version >= \"3.6\" and \"security\" in extras"
+
+[packages.sdist]
+name = "urllib3-1.26.20.tar.gz"
+hashes = {sha256 = "40c2dc0c681e47eb8f90e7e27bf6ff7df2e677421fd46756da1161c39ca70d32"}
+
+[tool.pdm]
+hashes = {sha256 = "2584886ac58a0ae70aa36bc0318b62c3e2c89acc9c21ebb9aee74147c0a9dc06"}
