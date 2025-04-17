@@ -9,6 +9,7 @@ from pdm.cli.filters import GroupSelection
 from pdm.cli.options import groups_group, lockfile_option
 from pdm.exceptions import PdmUsageError
 from pdm.formats import FORMATS
+from pdm.formats.pylock import PyLockConverter
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement
 from pdm.project import Project
@@ -23,9 +24,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "-f",
             "--format",
-            choices=["requirements"],
+            choices=["requirements", "pylock"],
             default="requirements",
-            help="Only requirements.txt is supported for now.",
+            help="Export to requirements.txt format or pylock.toml format",
         )
         groups_group.add_to_parser(parser)
         parser.add_argument(
@@ -64,6 +65,13 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        if options.format == "pylock":
+            doc = PyLockConverter(project).convert()
+            if options.output:
+                Path(options.output).write_text(doc, encoding="utf-8")
+            else:
+                print(doc)
+            return
         if options.pyproject:
             options.hashes = False
         selection = GroupSelection.from_options(project, options)
