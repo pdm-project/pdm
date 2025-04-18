@@ -1,3 +1,20 @@
+## Release v2.24.0 (2025-04-18)
+
+### Features & Improvements
+
+- New command `pdm new` that behaves like `pdm init` but creates a new project. ([#3462](https://github.com/pdm-project/pdm/issues/3462))
+- Support use `--name` as project name for command `pdm new` e.g. `pdm new hello --name world` ([#3476](https://github.com/pdm-project/pdm/issues/3476))
+- Support exporting to pylock.toml format as described by PEP 751. ([#3480](https://github.com/pdm-project/pdm/issues/3480))
+
+### Bug Fixes
+
+- Pass the `--quiet` option to `pdm sync` command. ([#3401](https://github.com/pdm-project/pdm/issues/3401))
+- If a `.python-version` file is found and it contains multiple lines, the file will be ignored. The usage of the `.python-version` file can be disabled, if configuration value `python.use_python_version` (or environment variable `PDM_USE_PYTHON_VERSION`) is `False`. ([#3417](https://github.com/pdm-project/pdm/issues/3417))
+- fix `pdm config -e` command to open read-only file under linux ([#3423](https://github.com/pdm-project/pdm/issues/3423))
+- Replace project names and import names in both `README.md` and `pyproject.toml` when running `pdm init <template>`. ([#3460](https://github.com/pdm-project/pdm/issues/3460))
+- Fix a bug that URL dependency hashes are not updated if running `pdm lock --update-reuse`. ([#3461](https://github.com/pdm-project/pdm/issues/3461))
+
+
 ## Release v2.23.1 (2025-04-09)
 
 ### Features & Improvements
