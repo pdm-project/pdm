@@ -20,7 +20,7 @@ from datetime import datetime
 from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import TYPE_CHECKING, cast
 
 import tomlkit.exceptions
 
@@ -70,7 +70,6 @@ class Core:
     project_class = Project
     repository_class: type[BaseRepository] = PyPIRepository
     install_manager_class = InstallManager
-    commands: ClassVar[list[str]] = []
 
     def __init__(self) -> None:
         self.version = __version__
@@ -78,6 +77,7 @@ class Core:
         self.ui = termui.UI(exit_stack=self.exit_stack)
         self.state = State()
         self.exit_stack.callback(setattr, self, "config_settings", None)
+        self.commands: list[str] = []
         self.init_parser()
         self.load_plugins()
 
@@ -292,8 +292,7 @@ class Core:
                 is used
         """
         assert self.subparsers
-        if name:
-            self.commands.append(name)
+        self.commands.append(name or command.name or "")
         command.register_to(self.subparsers, name)
 
     @staticmethod
