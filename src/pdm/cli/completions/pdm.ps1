@@ -286,12 +286,13 @@ function TabExpansion($line, $lastWord) {
                     ))
                 break
             }
+            "new" {}
             "init" {
                 $completer.AddOpts(
                     @(
                         [Option]::new(@(
                             "-g", "--global", "--non-interactive", "-n", "--python", "--dist", "--lib", "--copier",
-                            "--cookiecutter", "--overwrite", "--license", "--project-version"
+                            "--cookiecutter", "--overwrite", "--license", "--project-version", "--name", "--no-git"
                         )),
                         $projectOption,
                         $skipOption,

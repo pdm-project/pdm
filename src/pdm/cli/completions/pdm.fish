@@ -3,7 +3,7 @@
 
 function __fish_pdm_a919b69078acdf0a_complete_no_subcommand
     for i in (commandline -opc)
-        if contains -- $i add build cache completion config export fix import info init install list lock outdated plugin publish py python remove run search self show sync update use venv
+        if contains -- $i add build cache completion config export fix import info init install list lock new outdated plugin publish py python remove run search self show sync update use venv
             return 1
         end
     end
@@ -122,7 +122,7 @@ complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a ex
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l editable-self -d 'Include the project itself as an editable dependency'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l expandvars -d 'Expand environment variables in requirements'
-complete -c pdm -A -n '__fish_seen_subcommand_from export' -l format -d 'Only requirements.txt is supported for now.'
+complete -c pdm -A -n '__fish_seen_subcommand_from export' -l format -d 'Export to requirements.txt format or pylock.toml format'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l group -d 'Select group of optional-dependencies separated by comma or dependency-groups (with `-d`). Can be supplied multiple times, use ":all" to include all groups under the same species.'
 complete -c pdm -A -n '__fish_seen_subcommand_from export' -l help -d 'Show this help message and exit.'
@@ -188,6 +188,8 @@ complete -c pdm -A -n '__fish_seen_subcommand_from init' -l dist -d 'Create a pa
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l license -d 'Specify the license (SPDX name)'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l name -d 'Specify the project name'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l no-git -d 'Do not initialize a git repository'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l non-interactive -d 'Don\'t ask questions but use default values'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l overwrite -d 'Overwrite existing files'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l project -d 'Specify another path as the project root, which changes the base of pyproject.toml and __pypackages__ [env var: PDM_PROJECT]'
@@ -273,6 +275,22 @@ complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse -d 'Reu
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l update-reuse-installed -d 'Reuse installed packages if possible'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l without -d 'Exclude groups of optional-dependencies or dependency-groups'
+
+# new
+complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a new -d 'Create a new Python project at <project_path>'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l backend -d 'Specify the build backend, which implies --dist'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l dist -d 'Create a package for distribution'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l help -d 'Show this help message and exit.'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l license -d 'Specify the license (SPDX name)'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l name -d 'Specify the project name'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l no-git -d 'Do not initialize a git repository'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l non-interactive -d 'Don\'t ask questions but use default values'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l overwrite -d 'Overwrite existing files'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l project-version -d 'Specify the project\'s version'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l python -d 'Specify the Python version/path to use'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l quiet -d 'Suppress output'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l skip -d 'Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use ":all" to skip all hooks. Use ":pre" and ":post" to skip all pre or post hooks.'
+complete -c pdm -A -n '__fish_seen_subcommand_from new' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # outdated
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a outdated -d 'Check for outdated packages and list the latest versions on indexes.'

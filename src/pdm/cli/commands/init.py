@@ -36,6 +36,32 @@ class Command(BaseCommand):
     def __init__(self) -> None:
         self.interactive = True
 
+    def initialize_git(self, project: Project) -> None:
+        """Initialize a git repository if git is available and .git doesn't exist."""
+        import shutil
+        import subprocess
+
+        if (project.root / ".git").exists():
+            project.core.ui.info("Git repository already exists, skipping initialization.")
+            return
+
+        git_command = shutil.which("git")
+        if not git_command:
+            project.core.ui.info("Git command not found, skipping initialization.")
+            return
+
+        try:
+            subprocess.run(
+                [git_command, "init"],
+                cwd=project.root,
+                check=True,
+                capture_output=True,
+                encoding="utf-8",
+            )
+            project.core.ui.info("Git repository initialized successfully.")
+        except subprocess.CalledProcessError as e:
+            project.core.ui.error(f"Failed to initialize Git repository: {e.stderr}")
+
     def do_init(self, project: Project, options: argparse.Namespace) -> None:
         """Bootstrap the project and create a pyproject.toml"""
         hooks = HookManager(project, options.skip)
@@ -46,6 +72,10 @@ class Command(BaseCommand):
         else:
             self.set_python(project, options.python, hooks)
             self._init_builtin(project, options)
+
+        if options.init_git:
+            self.initialize_git(project)
+
         hooks.try_emit("post_init")
 
     def _init_copier(self, project: Project, options: argparse.Namespace) -> None:
@@ -221,6 +251,9 @@ class Command(BaseCommand):
         group.add_argument("--license", help="Specify the license (SPDX name)")
         group.add_argument("--name", help="Specify the project name")
         group.add_argument("--project-version", help="Specify the project's version")
+        group.add_argument(
+            "--no-git", dest="init_git", action="store_false", default=True, help="Do not initialize a git repository"
+        )
         parser.add_argument(
             "template", nargs="?", help="Specify the project template, which can be a local path or a Git URL"
         )

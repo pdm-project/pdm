@@ -25,6 +25,7 @@ _pdm() {
     'import:Import project metadata from other formats'
     'info:Show the project information'
     'init:Initialize a pyproject.toml for PDM'
+    'new:Create a new Python project at project_path'
     'install:Install dependencies from lock file'
     'list:List packages installed in the current working set'
     'lock:Resolve and lock dependencies'
@@ -195,7 +196,7 @@ _pdm() {
         '--venv[Run the command in the virtual environment with the given key. \[env var: PDM_IN_VENV\]]:venv:'
       )
       ;;
-    init)
+    new|init)
       arguments+=(
         {-g,--global}'[Use the global project, supply the project root with `-p` option]'
         {-n,--non-interactive}"[Don't ask questions but use default values]"
@@ -207,6 +208,8 @@ _pdm() {
         '--copier[Use Copier to generate project]'
         '--cookiecutter[Use Cookiecutter to generate project]'
         '--license[Specify the license (SPDX name)]:license:'
+        '--name[Specify the project name]:name:'
+        '--no-git[Do not initialize a git repository]'
         "--project-version[Specify the project's version]:project_version:"
         '1:template:'
       )
