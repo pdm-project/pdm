@@ -283,6 +283,7 @@ def test_ignore_invalid_py_version(project):
     _ = next(iter(repo.find_candidates(req)))
 
 
+@pytest.mark.network
 def test_find_candidates_from_find_links(project):
     project.pyproject.settings["source"] = [
         {"name": "test", "url": "http://fixtures.test/index/demo.html", "verify_ssl": False, "type": "find_links"}
