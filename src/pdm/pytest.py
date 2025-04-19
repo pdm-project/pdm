@@ -63,7 +63,7 @@ from pdm.models.requirements import (
 from pdm.models.session import PDMPyPIClient
 from pdm.project.config import Config
 from pdm.project.core import Project
-from pdm.utils import find_python_in_path, normalize_name, parse_version
+from pdm.utils import normalize_name, parse_version
 
 if TYPE_CHECKING:
     from typing import Protocol
@@ -407,9 +407,7 @@ def project_no_init(
     tmp_path.joinpath("caches").mkdir(parents=True)
     p.global_config["cache_dir"] = tmp_path.joinpath("caches").as_posix()
     p.global_config["log_dir"] = tmp_path.joinpath("logs").as_posix()
-    python_path = find_python_in_path(sys.base_prefix)
-    if python_path is None:
-        raise ValueError("Unable to find a Python path")
+    python_path = Path(sys.executable)
     p._saved_python = python_path.as_posix()
     monkeypatch.delenv("VIRTUAL_ENV", raising=False)
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
