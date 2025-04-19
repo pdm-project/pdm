@@ -443,7 +443,7 @@ def test_preserve_log_file(project, pdm, tmp_path, mocker):
     assert install_log.exists()
 
 
-@pytest.mark.parametrize("use_venv", [True, False])
+@pytest.mark.parametrize("use_venv", [pytest.param(True, marks=pytest.mark.network), False])
 def test_find_interpreters_with_PDM_IGNORE_ACTIVE_VENV(
     pdm: PDMCallable,
     project: Project,
