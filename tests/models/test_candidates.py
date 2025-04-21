@@ -285,7 +285,7 @@ def test_ignore_invalid_py_version(project):
 
 def test_find_candidates_from_find_links(project):
     project.pyproject.settings["source"] = [
-        {"name": "test", "url": "http://fixtures.test/index/demo.html", "verify_ssl": False, "type": "find_links"}
+        {"name": "pypi", "url": "http://fixtures.test/index/demo.html", "verify_ssl": False, "type": "find_links"}
     ]
     project.pyproject.write(False)
     repo = project.get_repository()
