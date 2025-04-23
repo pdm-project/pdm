@@ -223,6 +223,7 @@ class BaseSynchronizer:
             manager.uninstall(dist)
         if self.install_self:
             self_key = self.self_key
+            assert self_key
             word = "a" if self.no_editable else "an editable"
             termui.logger.info(f"Installing the project as {word} package...")
             if self_key in self.working_set:
