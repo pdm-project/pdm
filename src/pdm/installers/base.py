@@ -216,10 +216,19 @@ class BaseSynchronizer:
             dist = self.working_set[strip_extras(key)[0]]
             dist_version = dist.version
             termui.logger.info("Updating %s@%s -> %s...", key, dist_version, can.version)
-            manager.uninstall(dist)
-            manager.install(can)
+            manager.overwrite(dist, can)
         for key in to_remove:
             dist = self.working_set[key]
             termui.logger.info("Removing %s@%s...", key, dist.version)
             manager.uninstall(dist)
+        if self.install_self:
+            self_key = self.self_key
+            assert self_key
+            word = "a" if self.no_editable else "an editable"
+            termui.logger.info(f"Installing the project as {word} package...")
+            if self_key in self.working_set:
+                dist = self.working_set[strip_extras(self_key)[0]]
+                manager.overwrite(dist, self.self_candidate)
+            else:
+                manager.install(self.self_candidate)
         termui.logger.info("Synchronization complete.")
