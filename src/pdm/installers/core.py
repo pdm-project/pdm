@@ -37,6 +37,7 @@ def install_requirements(
         environment,
         clean=clean,
         retry_times=0,
+        install_self=False,
         use_install_cache=use_install_cache,
         packages=resolved,
         requirements=reqs,
