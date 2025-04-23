@@ -1,3 +1,14 @@
+## Release v2.24.1 (2025-04-23)
+
+### Bug Fixes
+
+- Install the project when using the `BaseSynchronizer` with `install_self` set
+  to `True`. This fixes the bug that when calling `pdm sync --quiet`, it skips
+  installing the project itself. ([#3484](https://github.com/pdm-project/pdm/issues/3484))
+- Mark one additional test as requiring network, and fix another one
+  not to require it anymore. ([#3487](https://github.com/pdm-project/pdm/issues/3487))
+
+
 ## Release v2.24.0 (2025-04-18)
 
 ### Features & Improvements
