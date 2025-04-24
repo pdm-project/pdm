@@ -79,7 +79,7 @@ Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users h
     <img src="https://repology.org/badge/vertical-allrepos/pdm.svg" alt="Packaging status" align="right">
 </a>
 
-PDM requires python version 3.9 or higher.
+PDM requires python version 3.9 or higher. Alternatively, you can download the standalone binary file from the [release assets](https://github.com/pdm-project/pdm/releases).
 
 ### Via Install Script
 
