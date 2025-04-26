@@ -173,7 +173,7 @@ class VenvBackend(VirtualenvBackend):
 class UvBackend(VirtualenvBackend):
     def pip_args(self, with_pip: bool) -> Iterable[str]:
         if with_pip:
-            return ("--seed", "pip")
+            return ("--seed",)
         return ()
 
     def perform_create(self, location: Path, args: tuple[str, ...], prompt: str | None = None) -> None:
