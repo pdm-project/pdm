@@ -29,6 +29,9 @@ PDM requires Python 3.9+ to be installed. It works on multiple platforms includi
 !!! note
     You can still have your project working on lower Python versions, read how to do it [here](usage/project.md#working-with-python-37).
 
+!!! note
+    Alternatively, you can download the standalone binary file from the [release assets](https://github.com/pdm-project/pdm/releases).
+
 ### Recommended installation method
 
 PDM requires python version 3.9 or higher.

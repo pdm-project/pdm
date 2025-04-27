@@ -69,7 +69,7 @@ PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从�
     <img src="https://repology.org/badge/vertical-allrepos/pdm.svg" alt="Packaging status" align="right">
 </a>
 
-PDM 需要 Python 3.9 或更高版本。
+PDM 需要 Python 3.9 或更高版本。你也可以从 [release assets](https://github.com/pdm-project/pdm/releases) 下载独立的可执行文件来使用。
 
 ### 通过安装脚本
 
