@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import os
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, cast
 
@@ -25,10 +26,18 @@ if TYPE_CHECKING:
 
 def check_fingerprint(project: Project | None, filename: PathLike) -> bool:
     with open(filename, "rb") as fp:
-        try:
-            data = tomllib.load(fp)
-        except tomllib.TOMLDecodeError:
-            return False
+        content = fp.read()
+    try:
+        text = content.decode()
+    except UnicodeDecodeError:
+        if (encoding := sys.getdefaultencoding()) != "utf-8":
+            text = content.decode(encoding)
+        else:
+            raise
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return False
 
     return "tool" in data and "flit" in data["tool"]
 
