@@ -3,7 +3,7 @@ import pytest
 
 from pdm.utils import cd
 
-DEFAULT_PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+DEFAULT_PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
 PYPROJECT = {
     "project": {"name": "test-project", "version": "0.1.0", "requires-python": ">=3.7"},
     "build-system": {"requires": ["pdm-backend"], "build-backend": "pdm.backend"},
