@@ -244,7 +244,7 @@ setup(name='editable-project',
     editable_module = editable_path / "module.py"
     editable_module.write_text("")
 
-    req = parse_requirement(f"file://{editable_path}#egg=editable-project", True)
+    req = parse_requirement(f"{editable_path.as_uri()}#egg=editable-project", True)
     candidate = Candidate(req)
     installer = InstallManager(project.environment, use_install_cache=True)
     installer.install(candidate)
