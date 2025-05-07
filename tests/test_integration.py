@@ -14,7 +14,7 @@ def get_python_versions():
     finder = findpython.Finder(resolve_symlinks=True)
     available_versions = []
     for version in DEFAULT_PYTHON_VERSIONS:
-        v = finder.find(version)
+        v = finder.find(version, allow_prereleases=True)
         if v and v.is_valid():
             available_versions.append(version)
     return available_versions
