@@ -255,12 +255,16 @@ class _SetupReader:
             return install_requires
 
         if isinstance(value, ast.List):
-            install_requires.extend([el.s for el in value.elts if isinstance(el, ast.Str)])
+            install_requires.extend(
+                [el.value for el in value.elts if isinstance(el, ast.Constant) and isinstance(el.value, str)]
+            )
         elif isinstance(value, ast.Name):
             variable = cls._find_variable_in_body(body, value.id)
 
             if variable is not None and isinstance(variable, ast.List):
-                install_requires.extend([el.s for el in variable.elts if isinstance(el, ast.Str)])
+                install_requires.extend(
+                    [el.value for el in variable.elts if isinstance(el, ast.Constant) and isinstance(el.value, str)]
+                )
 
         return install_requires
 
@@ -300,7 +304,9 @@ class _SetupReader:
                     val = cls._find_variable_in_body(body, val.id)
 
                 if isinstance(val, ast.List):
-                    extras_require[key.s] = [e.s for e in val.elts if isinstance(e, ast.Str)]
+                    extras_require[key.value] = [
+                        e.value for e in val.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)
+                    ]
         elif isinstance(value, ast.Name):
             variable = cls._find_variable_in_body(body, value.id)
 
@@ -312,7 +318,9 @@ class _SetupReader:
                     val = cls._find_variable_in_body(body, val.id)
 
                 if isinstance(val, ast.List):
-                    extras_require[key.s] = [e.s for e in val.elts if isinstance(e, ast.Str)]
+                    extras_require[key.value] = [
+                        e.value for e in val.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)
+                    ]
 
         return extras_require
 
@@ -344,13 +352,13 @@ class _SetupReader:
         if value is None:
             return None
 
-        if isinstance(value, ast.Str):
-            return value.s
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            return value.value
         elif isinstance(value, ast.Name):
             variable = cls._find_variable_in_body(body, value.id)
 
-            if variable is not None and isinstance(variable, ast.Str):
-                return variable.s
+            if variable is not None and isinstance(variable, ast.Constant) and isinstance(variable.value, str):
+                return variable.value
 
         return None
 
@@ -387,7 +395,7 @@ class _SetupReader:
     @staticmethod
     def _find_in_dict(dict_: ast.Dict, name: str) -> Any | None:
         for key, val in zip(dict_.keys, dict_.values):
-            if isinstance(key, ast.Str) and key.s == name:
+            if isinstance(key, ast.Constant) and key.value == name:
                 return val
         return None
 

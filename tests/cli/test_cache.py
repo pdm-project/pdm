@@ -139,7 +139,7 @@ def test_cache_info(project, pdm):
             "sha256:d57bf5e3b8723e4fc68275159dcc4ca983d86d4c84220a4d715d491401f27db2",
         ),
         (
-            f"file://{(FIXTURES / 'artifacts/demo-0.0.1.tar.gz').as_posix()}",
+            (FIXTURES / "artifacts/demo-0.0.1.tar.gz").as_uri(),
             "sha256:d57bf5e3b8723e4fc68275159dcc4ca983d86d4c84220a4d715d491401f27db2",
         ),
         (
