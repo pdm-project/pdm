@@ -59,10 +59,11 @@ def get_docstring_and_version_via_ast(
             and len(child.targets) == 1
             and isinstance(child.targets[0], ast.Name)
             and child.targets[0].id == "__version__"
-            and isinstance(child.value, ast.Str)
+            and isinstance(child.value, ast.Constant)
+            and isinstance(child.value.value, str)
         )
         if is_version_str:
-            version: str | None = cast(ast.Str, cast(ast.Assign, child).value).s
+            version: str | None = cast(ast.Constant, cast(ast.Assign, child).value).value
             break
     else:
         version = None
