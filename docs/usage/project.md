@@ -173,7 +173,7 @@ PDM provides `import` command so that you don't have to initialize the project m
 Also, when you are executing [`pdm init`](../reference/cli.md#init) or [`pdm install`](../reference/cli.md#install), PDM can auto-detect possible files to import if your PDM project has not been initialized yet.
 
 !!! info
-Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
+    Converting a `setup.py` will execute the file with the project interpreter. Make sure `setuptools` is installed with the interpreter and the `setup.py` is trusted.
 
 ## Working with version control
 
