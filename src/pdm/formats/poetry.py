@@ -12,6 +12,7 @@ from pdm.formats.base import (
     MetaConverter,
     Unset,
     array_of_inline_tables,
+    check_fingerprint_by_toml,
     convert_from,
     make_array,
     make_inline_table,
@@ -31,13 +32,7 @@ if TYPE_CHECKING:
 def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
     if Path(filename).name != "pyproject.toml":
         return False
-    with open(filename, "rb") as fp:
-        try:
-            data = tomllib.load(fp)
-        except tomllib.TOMLDecodeError:
-            return False
-
-    return "tool" in data and "poetry" in data["tool"]
+    return check_fingerprint_by_toml(project, filename, "poetry")
 
 
 VERSION_RE = re.compile(r"([^\d\s]*)\s*(\d.*?)\s*(?=,|$)")

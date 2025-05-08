@@ -1,10 +1,18 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Mapping, TypeVar, cast
+import sys
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Mapping, TypeVar, cast
 
 import tomlkit
 
 from pdm import termui
+from pdm.compat import tomllib
+
+if TYPE_CHECKING:
+    from os import PathLike
+
+    from pdm.project import Project
 
 _T = TypeVar("_T", bound=Callable)
 
@@ -102,3 +110,21 @@ def make_array(data: list, multiline: bool = False) -> list:
 
 def array_of_inline_tables(value: list[Mapping], multiline: bool = True) -> list[str]:
     return make_array([make_inline_table(item) for item in value], multiline)
+
+
+def check_fingerprint_by_toml(project: Project | None, filename: PathLike | Path | str, tool: str) -> bool:
+    with open(filename, "rb") as fp:
+        content = fp.read()
+    try:
+        text = content.decode()
+    except UnicodeDecodeError:
+        if (encoding := sys.getdefaultencoding()) != "utf-8":
+            text = content.decode(encoding)
+        else:
+            raise
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return False
+
+    return "tool" in data and tool in data["tool"]
