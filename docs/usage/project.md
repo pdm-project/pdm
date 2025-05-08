@@ -65,7 +65,7 @@ Install a free-threaded Python interpreter:
 pdm python install 3.13t
 ```
 
-!!! TIP "Share installations with Rye"
+!!! tip "Share installations with Rye"
 
     PDM installs Python interpreters using the same source as [Rye](https://rye-up.com). If you are using Rye at the same time, you can point the `python.install_root` to the same directory as Rye to share the Python interpreters:
 

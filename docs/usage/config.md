@@ -133,7 +133,7 @@ These configurations are read in the following order to build the final source l
 
 You can set `pypi.ignore_stored_index` to `true` to disable all additional indexes from the PDM config and only use those specified in `pyproject.toml`.
 
-!!! TIP "Disable the default PyPI index"
+!!! tip "Disable the default PyPI index"
     If you want to omit the default PyPI index, just set the source name to `pypi` and that source will **replace** it.
 
     ```toml
@@ -288,11 +288,11 @@ export PDM_PUBLISH_CA_CERTS=...
 
 A PEM-encoded Certificate Authority bundle (`ca_certs`) can be used for local / custom PyPI repositories where the server certificate is not signed by the standard [certifi](https://github.com/certifi/python-certifi/blob/master/certifi/cacert.pem) CA bundle.
 
-!!! NOTE
+!!! note
     Repositories are different from indexes in the previous section. Repositories are for publishing while indexes are for locking
     and resolving. They don't share the configuration.
 
-!!! TIP
+!!! tip
     You don't need to configure the `url` for `pypi` and `testpypi` repositories, they are filled by default values.
     The username, password, and certificate authority bundle can be passed in from the command line for `pdm publish` via `--username`, `--password`, and `--ca-certs`, respectively.
 
