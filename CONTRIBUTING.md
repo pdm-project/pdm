@@ -99,7 +99,7 @@ The test suite is still simple and needs expansion! Please help write more test 
     You can also run your test suite against all supported Python version using `tox` with the `tox-pdm` plugin.
     You can either run it by yourself with:
 
-   ```shell
+    ```shell
     tox
     ```
 

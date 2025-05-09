@@ -9,7 +9,7 @@ PDM installs packages exclusively from the existing lock file named `pdm.lock`. 
 
 To create or overwrite the lock file, run [`pdm lock`](../reference/cli.md#lock), and it supports the same [update strategies](./dependency.md#about-update-strategy) as [`pdm add`](../reference/cli.md#add). In addition, the [`pdm install`](../reference/cli.md#install) and [`pdm add`](../reference/cli.md#add) commands will also automatically create the `pdm.lock` file.
 
-??? NOTE "Should I add `pdm.lock` to version control?"
+??? note "Should I add `pdm.lock` to version control?"
 
     It depends. If your goal is to make CI use the same dependency versions as local development and avoid unexpected failures, you should add the `pdm.lock` file to version control. Otherwise, if your project is a library and you want CI to mimic the installation on user site to ensure that the current version on PyPI doesn't break anything, then do not submit the `pdm.lock` file.
 
@@ -148,7 +148,7 @@ When it is enabled by passing `--strategy direct_minimal_versions`, dependencies
 
 For example, if you specified `flask>=2.0` in the `pyproject.toml`, `flask` will be resolved to version `2.0.0` if there is no other compatibility issue.
 
-!!! NOTE
+!!! note
     Version constraints in package dependencies are not future-proof. If you resolve the dependencies to the minimal versions, there will likely be backwards-compatibility issues.
     For example, `flask==2.0.0` requires `werkzeug>=2.0`, but in fact, it can not work with `Werkzeug 3.0.0`, which is released 2 years after it.
 
@@ -245,7 +245,7 @@ You can export the `pdm.lock` file to other formats, which will simplify the CI 
 pdm export -o requirements.txt
 ```
 
-!!! TIP
+!!! tip
     You can also run `pdm export` with a [`.pre-commit` hook](./advanced.md#hooks-for-pre-commit).
 
 +++ 2.24.0

@@ -4,7 +4,7 @@ When you run [`pdm init`](../reference/cli.md#init) command, PDM will [ask for t
 
 Compared to [PEP 582](https://www.python.org/dev/peps/pep-0582/), virtual environments are considered more mature and have better support in the Python ecosystem as well as IDEs. Therefore, virtualenv is the default mode if not configured otherwise.
 
-!!! NOTE "Configure pdm to use virtual environment or PEP 582"
+!!! note "Configure pdm to use virtual environment or PEP 582"
     By default pdm is configured to use virtual environment instead of PEP 582. But this behavior can be changed with `pdm config python.use_venv False` config variable.
 
 **Virtual environments will be used if the project interpreter (the interpreter stored in `.pdm-python`, which can be checked by `pdm info`) is from a virtualenv.**
@@ -111,12 +111,12 @@ Instead of spawning a subshell like what `pipenv` and `poetry` do, `pdm venv` do
 
     Additionally, if the project interpreter is a venv Python, you can omit the name argument following activate.
 
-!!! NOTE
+!!! note
     `venv activate` **does not** switch the Python interpreter used by the project. It only changes the shell by injecting the virtualenv paths to environment variables. For the aforementioned purpose, use the `pdm use` command.
 
 For more CLI usage, see the [`pdm venv`](../reference/cli.md#venv) documentation.
 
-!!! TIP "Looking for `pdm shell`?"
+!!! tip "Looking for `pdm shell`?"
     PDM doesn't provide a `shell` command because many fancy shell functions may not work perfectly in a subshell, which brings a maintenance burden to support all the corner cases. However, you can still gain the ability via the following ways:
 
     - Use `pdm run $SHELL`, this will spawn a subshell with the environment variables set properly. **The subshell can be quit with `exit` or `Ctrl+D`.**
