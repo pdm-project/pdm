@@ -115,6 +115,23 @@ def test_convert_poetry_12(project):
     assert settings["dev-dependencies"]["test"] == ["pytest<7.0.0,>=6.0.0", "pytest-mock"]
 
 
+def test_check_fingerprint_gbk(project, tmp_path, mocker):
+    flit_golden_file = FIXTURES / "projects/flit-demo/pyproject.toml"
+    flit_toml = tmp_path / ("flit_" + flit_golden_file.name)
+    text = flit_golden_file.read_text()
+    flit_toml.write_bytes((text + "\n# 这是中文").encode("gbk"))
+    with pytest.raises(UnicodeDecodeError):
+        flit.check_fingerprint(project, flit_toml)
+    poetry_golden_file = FIXTURES / "pyproject.toml"
+    poetry_toml = tmp_path / poetry_golden_file.name
+    poetry_toml.write_bytes(poetry_golden_file.read_text().encode("gbk"))
+    with pytest.raises(UnicodeDecodeError):
+        poetry.check_fingerprint(project, poetry_toml)
+    mocker.patch("sys.getdefaultencoding", return_value="gbk")
+    assert flit.check_fingerprint(project, flit_toml)
+    assert poetry.check_fingerprint(project, poetry_toml)
+
+
 def test_convert_flit(project):
     golden_file = FIXTURES / "projects/flit-demo/pyproject.toml"
     assert flit.check_fingerprint(project, golden_file)
