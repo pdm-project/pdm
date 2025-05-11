@@ -71,7 +71,7 @@ def test_parse_artifact_metadata(requirement_line, project):
 @pytest.mark.usefixtures("local_finder")
 def test_parse_metadata_with_extras(project):
     req = parse_requirement(
-        f"demo[tests,security] @ file://{(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_posix()}"
+        f"demo[tests,security] @ {(FIXTURES / 'artifacts/demo-0.0.1-py2.py3-none-any.whl').as_uri()}"
     )
     candidate = Candidate(req)
     prepared = candidate.prepare(project.environment)
@@ -296,7 +296,7 @@ def test_find_candidates_from_find_links(project):
 
 def test_parse_metadata_from_pep621(project, mocker):
     builder = mocker.patch("pdm.builders.wheel.WheelBuilder.build")
-    req = parse_requirement(f"test-hatch @ file://{FIXTURES.as_posix()}/projects/test-hatch-static")
+    req = parse_requirement(f"test-hatch @ {(FIXTURES / 'projects/test-hatch-static').as_uri()}")
     candidate = Candidate(req)
     distribution = candidate.prepare(project.environment).metadata
     assert sorted(distribution.requires) == ["click", "requests"]
@@ -305,7 +305,7 @@ def test_parse_metadata_from_pep621(project, mocker):
 
 
 def test_parse_metadata_with_dynamic_fields(project, local_finder):
-    req = parse_requirement(f"demo-package @ file://{FIXTURES.as_posix()}/projects/demo-src-package")
+    req = parse_requirement(f"demo-package @ {(FIXTURES / 'projects/demo-src-package').as_uri()}")
     candidate = Candidate(req)
     metadata = candidate.prepare(project.environment).metadata
     assert not metadata.requires

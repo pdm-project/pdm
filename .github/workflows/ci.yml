@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
         os: [ubuntu-latest, windows-latest, macos-latest]
         install-via: [pip]
         include:
@@ -51,6 +51,7 @@ jobs:
             3.11
             3.12
             3.13
+            3.14
           allow-prereleases: true
         if: matrix.os != 'macos-latest'
       - name: Setup Python Versions
@@ -61,6 +62,7 @@ jobs:
             3.11
             3.12
             3.13
+            3.14
           allow-prereleases: true
         if: matrix.os == 'macos-latest'
       - name: Setup Python ${{ matrix.python-version }}
