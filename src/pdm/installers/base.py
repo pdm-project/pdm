@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 from functools import cached_property
 from itertools import chain
 from typing import Collection, Iterable
@@ -164,7 +165,14 @@ class BaseSynchronizer:
                 # We don't know whether a local dir has been changed, always update
                 return True
             assert can.link is not None
-            return url != backend.expand_line(can.link.url_without_fragment)
+            if url != backend.expand_line(can.link.url_without_fragment):
+                return True
+            direct_json = json.loads(content) if (content := dist.read_text("direct_url.json")) else None
+            if not direct_json or "archive_info" not in direct_json:
+                # We are not able to check, don't update
+                return False
+            dist_hash = direct_json["archive_info"]["hash"].replace("=", ":")
+            return not any(dist_hash == file_hash["hash"] for file_hash in can.hashes)
         specifier = can.req.as_pinned_version(can.version).specifier
         return not specifier.contains(dist.version, prereleases=True)
 

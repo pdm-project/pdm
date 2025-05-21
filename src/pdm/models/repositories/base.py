@@ -290,7 +290,7 @@ class BaseRepository:
             candidate.req.is_vcs or (candidate.req.is_file_or_url and candidate.req.is_local_dir)  # type: ignore[attr-defined]
         ):
             return []
-        if candidate.hashes:
+        if candidate.hashes and candidate.req.is_named:
             return candidate.hashes
         req = candidate.req.as_pinned_version(candidate.version)
         comes_from = candidate.link.comes_from if candidate.link else None
