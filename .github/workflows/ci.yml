@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.14.0a7"]
+        python-version: ["3.14.0-alpha.7"]
         os: [windows-latest]
         install-via: [pip]
         # include:
