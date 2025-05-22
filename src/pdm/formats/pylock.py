@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import tomlkit
-from dep_logic.markers import BaseMarker, MarkerUnion, parse_marker
+from dep_logic.markers import AnyMarker, BaseMarker, MarkerUnion, parse_marker
 
 from pdm.exceptions import ProjectError
 from pdm.formats.base import make_array, make_inline_table
@@ -13,7 +13,7 @@ from pdm.utils import cd, normalize_name
 
 if TYPE_CHECKING:
     from pdm.models.markers import Marker
-    from pdm.models.repositories.lock import Package
+    from pdm.models.repositories.lock import LockedRepository, Package
     from pdm.project import Project
 
 
@@ -22,8 +22,9 @@ def _group_sort_key(group: str) -> tuple[bool, str]:
 
 
 class PyLockConverter:
-    def __init__(self, project: Project) -> None:
+    def __init__(self, project: Project, locked_repository: LockedRepository) -> None:
         self.project = project
+        self.locked_repository = locked_repository
 
     def make_package(self, package: Package) -> dict[str, Any]:
         req = package.candidate.req
@@ -89,7 +90,7 @@ class PyLockConverter:
         lockfile = project.lockfile
         if FLAG_INHERIT_METADATA not in lockfile.strategy:
             raise ProjectError("inherit_metadata strategy is required for pylock format")
-        repository = project.get_locked_repository()
+        repository = self.locked_repository
         all_groups = lockfile.groups
         if all_groups is None:
             all_groups = list(project.iter_groups())
@@ -132,7 +133,7 @@ class PyLockConverter:
                         selection_markers.append(parse_marker(f"'{item}' in extras"))
                     else:
                         selection_markers.append(parse_marker(f"'{item}' in dependency_groups"))
-                marker = MarkerUnion.of(*selection_markers)
+                marker = MarkerUnion.of(*selection_markers) if selection_markers else AnyMarker()
                 if package.candidate.req.marker is not None:
                     marker = package.candidate.req.marker.inner & marker
                 if not marker.is_any():
