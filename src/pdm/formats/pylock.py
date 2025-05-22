@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterable
 
 import tomlkit
 from dep_logic.markers import BaseMarker, MarkerUnion, parse_marker
 
 from pdm.exceptions import ProjectError
 from pdm.formats.base import make_array, make_inline_table
+from pdm.models.candidates import Candidate
 from pdm.models.requirements import FileRequirement, VcsRequirement
 from pdm.project.lockfile import FLAG_INHERIT_METADATA
 from pdm.utils import cd, normalize_name
@@ -83,6 +84,21 @@ class PyLockConverter:
 
         return result
 
+    def _populate_hashes(self, packages: Iterable[Package]) -> None:
+        candidates: list[Candidate] = []
+        for package in packages:
+            if not package.candidate.req.is_named or package.candidate.req.extras:
+                continue
+            hashes = package.candidate.hashes
+            if all("url" in hash_item for hash_item in hashes):
+                continue
+            package.candidate.hashes.clear()
+            candidates.append(package.candidate)
+        if candidates:
+            with self.project.core.ui.open_spinner("Fetching package file URLs"):
+                repo = self.project.get_repository()
+                repo.fetch_hashes(candidates)
+
     def convert(self) -> str:
         doc = tomlkit.document()
         project = self.project
@@ -121,6 +137,7 @@ class PyLockConverter:
         packages = doc.setdefault("packages", tomlkit.aot())
 
         with cd(project.root):
+            self._populate_hashes(repository.packages.values())
             for package in repository.packages.values():
                 if package.candidate.req.extras:
                     continue
