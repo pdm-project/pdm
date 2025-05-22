@@ -32,8 +32,9 @@ class PyLockConverter:
         result: dict[str, Any] = {
             "name": candidate.req.key,
             "version": candidate.version,
-            "requires-python": candidate.requires_python,
         }
+        if candidate.requires_python:
+            result["requires-python"] = candidate.requires_python
         if isinstance(req, VcsRequirement):
             result["vcs"] = {
                 "type": req.vcs,
@@ -78,7 +79,7 @@ class PyLockConverter:
                     if "url" in hash_item:
                         sdist["url"] = hash_item["url"]
                     sdist["hashes"] = make_inline_table({hash_type: hash_value})
-                    result["sdist"] = sdist
+                    result["sdist"] = make_inline_table(sdist)
             if wheels:
                 result["wheels"] = wheels
 
