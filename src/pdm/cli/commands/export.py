@@ -65,8 +65,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        from pdm.models.repositories.lock import Package
+
         if options.format == "pylock":
-            doc = PyLockConverter(project).convert()
+            locked_repository = project.get_locked_repository()
+            if options.self or options.editable_self:
+                locked_repository.add_package(
+                    Package(project.make_self_candidate(editable=options.editable_self), [], "")
+                )
+            doc = PyLockConverter(project, locked_repository).convert()
             if options.output:
                 Path(options.output).write_text(doc, encoding="utf-8")
             else:

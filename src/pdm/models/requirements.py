@@ -300,7 +300,7 @@ class FileRequirement(Requirement):
         else:
             result = self.path.as_posix()
         result = posixpath.normpath(result)
-        if not result.startswith(("./", "../")):
+        if not result.startswith(("./", "../")) and result != ".":
             result = "./" + result
         if result.startswith("./../"):
             result = result[2:]
