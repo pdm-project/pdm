@@ -1,3 +1,17 @@
+## Release v2.24.2 (2025-05-23)
+
+### Bug Fixes
+
+- Reinstalling local wheel if its checksum changes. ([#3503](https://github.com/pdm-project/pdm/issues/3503))
+- Ignore HTTP cache entries if deserialization fails. ([#3515](https://github.com/pdm-project/pdm/issues/3515))
+- Fetch missing URLs when `static_urls` is not enabled when running `pdm export -f pylock`. ([#3517](https://github.com/pdm-project/pdm/issues/3517))
+- Missing self package when `--self` or `--editable-self` is passed to `pdm export -f pylock`. ([#3518](https://github.com/pdm-project/pdm/issues/3518))
+
+### Miscellany
+
+- Add Python 3.14 to the test matrix. ([#3506](https://github.com/pdm-project/pdm/issues/3506))
+
+
 ## Release v2.24.1 (2025-04-23)
 
 ### Bug Fixes
