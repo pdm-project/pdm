@@ -3,12 +3,47 @@ from __future__ import annotations
 from typing import Any, cast
 
 import hishel
-import msgpack
 from hishel._serializers import Metadata
 from httpcore import Request, Response
 
+try:
+    import msgpack
 
-class MsgPackSerializer(hishel.BaseSerializer):
+    packb = msgpack.packb
+    pack_loads = msgpack.loads
+    UnpackValueError = msgpack.UnpackValueError
+except ImportError:
+    import base64
+    import json
+
+    class Encoder(json.JSONEncoder):
+        bytes_ident = "PDM_BYTES_OBJECT"
+
+        def default(self, obj: Any) -> Any:
+            if isinstance(obj, bytes):
+                return {
+                    "type": self.bytes_ident,
+                    "val": base64.b64encode(obj).decode(),
+                }
+            return super().default(obj)
+
+    def object_hook(obj: Any) -> Any:
+        if isinstance(obj, dict) and obj.get("type") == Encoder.bytes_ident:
+            val = obj.get("val")
+            if val is not None and isinstance(val, str):
+                return base64.b64decode(val)
+        return obj
+
+    def packb(data: dict, use_bin_type: bool = True) -> bytes:
+        return json.dumps(data, cls=Encoder).encode()
+
+    def pack_loads(data: bytes, raw: bool = False) -> Any:
+        return json.loads(data, object_hook=object_hook)
+
+    UnpackValueError = json.JSONDecodeError
+
+
+class Serializer(hishel.BaseSerializer):
     KNOWN_REQUEST_EXTENSIONS = ("timeout", "sni_hostname")
     KNOWN_RESPONSE_EXTENSIONS = ("http_version", "reason_phrase")
     DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -45,14 +80,14 @@ class MsgPackSerializer(hishel.BaseSerializer):
             "request": request_dict,
             "metadata": metadata_dict,
         }
-        return cast(bytes, msgpack.packb(full_dict, use_bin_type=True))
+        return cast(bytes, packb(full_dict, use_bin_type=True))
 
     def loads(self, data: bytes) -> tuple[Response, Request, Metadata] | None:
         from datetime import datetime
 
         try:
-            full_dict = cast("dict[str, Any]", msgpack.loads(data, raw=False))
-        except msgpack.UnpackValueError:
+            full_dict = cast("dict[str, Any]", pack_loads(data, raw=False))
+        except UnpackValueError:
             return None
 
         response_dict = full_dict["response"]

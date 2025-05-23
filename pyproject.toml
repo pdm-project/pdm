@@ -32,7 +32,6 @@ dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
     "hishel>=0.0.32",
-    "msgpack>=1.0",
     "pbs-installer>=2024.4.18",
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
@@ -66,11 +65,12 @@ pytest = [
 copier = ["copier>=8.0.0"]
 cookiecutter = ["cookiecutter"]
 keyring = ["keyring"]
+msgpack = ["msgpack>=1.0"]
 template = [
     "pdm[copier,cookiecutter]",
 ]
 all = [
-    "pdm[keyring,template]",
+    "pdm[keyring,msgpack,template]",
 ]
 
 [project.scripts]
