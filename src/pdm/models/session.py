@@ -11,7 +11,7 @@ import httpx
 from unearth.fetchers import PyPIClient
 
 from pdm.__version__ import __version__
-from pdm.models.serializers import Serializer
+from pdm.models.serializers import MsgPackSerializer
 from pdm.termui import logger
 
 if TYPE_CHECKING:
@@ -65,7 +65,7 @@ class PDMPyPIClient(PyPIClient):
             def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:
                 return transport
         else:
-            storage = hishel.FileStorage(serializer=Serializer(), base_path=cache_dir, ttl=CACHES_TTL)
+            storage = hishel.FileStorage(serializer=MsgPackSerializer(), base_path=cache_dir, ttl=CACHES_TTL)
             controller = hishel.Controller()
 
             def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:

@@ -8,10 +8,6 @@ from httpcore import Request, Response
 
 try:
     import msgpack
-
-    packb = msgpack.packb
-    pack_loads = msgpack.loads
-    UnpackValueError = msgpack.UnpackValueError
 except ImportError:
     import base64
     import json
@@ -33,16 +29,19 @@ except ImportError:
                     return base64.b64decode(val)
             return obj
 
-    def packb(data: dict, use_bin_type: bool = True) -> bytes:
-        return json.dumps(data, cls=Encoder).encode()
+    class msgpack:  # type:ignore[no-redef]
+        UnpackValueError = json.JSONDecodeError
 
-    def pack_loads(data: bytes, raw: bool = False) -> Any:
-        return json.loads(data, object_hook=Encoder.object_hook)
+        @staticmethod
+        def packb(data: dict, use_bin_type: bool = True) -> bytes:
+            return json.dumps(data, cls=Encoder).encode()
 
-    UnpackValueError = json.JSONDecodeError
+        @staticmethod
+        def loads(data: bytes, raw: bool = False) -> Any:
+            return json.loads(data, object_hook=Encoder.object_hook)
 
 
-class Serializer(hishel.BaseSerializer):
+class MsgPackSerializer(hishel.BaseSerializer):
     KNOWN_REQUEST_EXTENSIONS = ("timeout", "sni_hostname")
     KNOWN_RESPONSE_EXTENSIONS = ("http_version", "reason_phrase")
     DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -79,14 +78,14 @@ class Serializer(hishel.BaseSerializer):
             "request": request_dict,
             "metadata": metadata_dict,
         }
-        return cast(bytes, packb(full_dict, use_bin_type=True))
+        return cast(bytes, msgpack.packb(full_dict, use_bin_type=True))
 
     def loads(self, data: bytes) -> tuple[Response, Request, Metadata] | None:
         from datetime import datetime
 
         try:
-            full_dict = cast("dict[str, Any]", pack_loads(data, raw=False))
-        except UnpackValueError:
+            full_dict = cast("dict[str, Any]", msgpack.loads(data, raw=False))
+        except msgpack.UnpackValueError:
             return None
 
         response_dict = full_dict["response"]
