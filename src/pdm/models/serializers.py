@@ -21,24 +21,23 @@ except ImportError:
 
         def default(self, obj: Any) -> Any:
             if isinstance(obj, bytes):
-                return {
-                    "type": self.bytes_ident,
-                    "val": base64.b64encode(obj).decode(),
-                }
+                base64_string = base64.b64encode(obj).decode()
+                return {"type": self.bytes_ident, "val": base64_string}
             return super().default(obj)
 
-    def object_hook(obj: Any) -> Any:
-        if isinstance(obj, dict) and obj.get("type") == Encoder.bytes_ident:
-            val = obj.get("val")
-            if val is not None and isinstance(val, str):
-                return base64.b64decode(val)
-        return obj
+        @classmethod
+        def object_hook(cls, obj: Any) -> Any:
+            if isinstance(obj, dict) and obj.get("type") == cls.bytes_ident:
+                val = obj.get("val")
+                if val is not None and isinstance(val, str):
+                    return base64.b64decode(val)
+            return obj
 
     def packb(data: dict, use_bin_type: bool = True) -> bytes:
         return json.dumps(data, cls=Encoder).encode()
 
     def pack_loads(data: bytes, raw: bool = False) -> Any:
-        return json.loads(data, object_hook=object_hook)
+        return json.loads(data, object_hook=Encoder.object_hook)
 
     UnpackValueError = json.JSONDecodeError
 
