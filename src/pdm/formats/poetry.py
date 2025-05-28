@@ -112,7 +112,7 @@ NAME_EMAIL_RE = re.compile(
 )
 
 
-def parse_name_email(name_email: list[str]) -> list[str]:
+def parse_name_email(name_email: list[str]) -> list[dict]:
     return array_of_inline_tables(
         [
             {
@@ -127,11 +127,11 @@ def parse_name_email(name_email: list[str]) -> list[str]:
 
 class PoetryMetaConverter(MetaConverter):
     @convert_from("authors")
-    def authors(self, value: list[str]) -> list[str]:
+    def authors(self, value: list[str]) -> list[dict]:
         return parse_name_email(value)
 
     @convert_from("maintainers")
-    def maintainers(self, value: list[str]) -> list[str]:
+    def maintainers(self, value: list[str]) -> list[dict]:
         return parse_name_email(value)
 
     @convert_from("license")
