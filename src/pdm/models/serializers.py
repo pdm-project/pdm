@@ -1,33 +1,39 @@
 from __future__ import annotations
 
+import base64
+import json
 from typing import Any, cast
 
 import hishel
 from hishel._serializers import Metadata
 from httpcore import Request, Response
 
+from pdm.exceptions import PdmException
+
+
+class Encoder(json.JSONEncoder):
+    """Expand standard json encoder to support dumps bytes object."""
+
+    bytes_ident = "PDM_BYTES_OBJECT"
+
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, bytes):
+            base64_string = base64.b64encode(obj).decode()
+            return {"type": self.bytes_ident, "val": base64_string}
+        return super().default(obj)
+
+    @classmethod
+    def object_hook(cls, obj: Any) -> Any:
+        if isinstance(obj, dict) and obj.get("type") == cls.bytes_ident:
+            val = obj.get("val")
+            if val is not None and isinstance(val, str):
+                return base64.b64decode(val)
+        return obj
+
+
 try:
     import msgpack
 except ImportError:
-    import base64
-    import json
-
-    class Encoder(json.JSONEncoder):
-        bytes_ident = "PDM_BYTES_OBJECT"
-
-        def default(self, obj: Any) -> Any:
-            if isinstance(obj, bytes):
-                base64_string = base64.b64encode(obj).decode()
-                return {"type": self.bytes_ident, "val": base64_string}
-            return super().default(obj)
-
-        @classmethod
-        def object_hook(cls, obj: Any) -> Any:
-            if isinstance(obj, dict) and obj.get("type") == cls.bytes_ident:
-                val = obj.get("val")
-                if val is not None and isinstance(val, str):
-                    return base64.b64decode(val)
-            return obj
 
     class msgpack:  # type:ignore[no-redef]
         UnpackValueError = json.JSONDecodeError
@@ -85,8 +91,23 @@ class MsgPackSerializer(hishel.BaseSerializer):
 
         try:
             full_dict = cast("dict[str, Any]", msgpack.loads(data, raw=False))
+        except json.JSONDecodeError:
+            if data.strip().startswith(b"{"):
+                return None
+            # For compatibility: loaded by json, while data was dumped by MsgPack
+            raise PdmException(
+                "You are trying to load cache that was previous dumped by MsgPack."
+                'Install it by `pip install "pdm[msgpack]"` then try again, or remove '
+                "the previous cache by `pdm cache clear`"
+            ) from None
         except msgpack.UnpackValueError:
-            return None
+            if not data.strip().startswith(b"{"):
+                return None
+            # Dumped by json, but tried to load by MsgPack
+            try:
+                full_dict = cast("dict[str, Any]", json.loads(data, object_hook=Encoder.object_hook))
+            except json.JSONDecodeError:
+                return None
 
         response_dict = full_dict["response"]
         request_dict = full_dict["request"]
