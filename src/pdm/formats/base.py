@@ -100,5 +100,5 @@ def make_array(data: list, multiline: bool = False) -> list:
     return array
 
 
-def array_of_inline_tables(value: list[Mapping], multiline: bool = True) -> list[str]:
+def array_of_inline_tables(value: list[Mapping], multiline: bool = True) -> list[dict]:
     return make_array([make_inline_table(item) for item in value], multiline)
