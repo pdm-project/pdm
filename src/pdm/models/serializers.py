@@ -91,7 +91,7 @@ class MsgPackSerializer(hishel.BaseSerializer):
 
         try:
             full_dict = cast("dict[str, Any]", msgpack.loads(data, raw=False))
-        except json.JSONDecodeError:
+        except (UnicodeDecodeError, json.JSONDecodeError):
             if data.strip().startswith(b"{"):
                 return None
             # For compatibility: loaded by json, while data was dumped by MsgPack
