@@ -3,15 +3,13 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-import pytest
 from hishel._serializers import Metadata
 from httpcore import Request, Response
 
-from pdm.exceptions import PdmException
 from pdm.models.serializers import Encoder, MsgPackSerializer
 
 
-def test_compatibility(project: Project, mocker, monkeypatch):
+def test_compatibility():
     try:
         import msgpack
     except ImportError:
@@ -37,16 +35,13 @@ def test_compatibility(project: Project, mocker, monkeypatch):
     assert req.headers == request.headers
     assert meta == metadata
 
+    # dumped by msgpack, loads by json will return None
     origin_msgpack_loads = msgpack.loads
-    # dumped by msgpack, loads by json will raises PdmException
     msgpack.loads = lambda data, raw: json.loads(data, object_hook=Encoder.object_hook)
-    with pytest.raises(PdmException, match=r'pip install "pdm\[msgpack\]".*pdm cache clear'):
-        serializer.loads(cached_bytes)
-
-    origin_msgpack_packb = msgpack.packb
-    msgpack.packb = lambda data, use_bin_type: json.dumps(data, cls=Encoder).encode()
+    assert serializer.loads(cached_bytes) is None
 
     # dumped by json, loads by json is OK
+    msgpack.packb = lambda data, use_bin_type: json.dumps(data, cls=Encoder).encode()
     cached_bytes = serializer.dumps(response, request, metadata)
     assert cached_bytes.startswith(b"{")  # Ensure that it was dumped by json
     resp, req, meta = serializer.loads(cached_bytes)
@@ -61,7 +56,7 @@ def test_compatibility(project: Project, mocker, monkeypatch):
     assert meta == metadata
 
     # dumped by json, loads with msgpack installed is OK too
-    msgpack.packb = origin_msgpack_packb
+    msgpack.loads = origin_msgpack_loads
     resp, req, meta = serializer.loads(cached_bytes)
     resp.read()
     assert resp.status == response.status

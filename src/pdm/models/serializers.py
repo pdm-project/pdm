@@ -8,8 +8,6 @@ import hishel
 from hishel._serializers import Metadata
 from httpcore import Request, Response
 
-from pdm.exceptions import PdmException
-
 
 class Encoder(json.JSONEncoder):
     """Expand standard json encoder to support dumps bytes object."""
@@ -91,15 +89,9 @@ class MsgPackSerializer(hishel.BaseSerializer):
 
         try:
             full_dict = cast("dict[str, Any]", msgpack.loads(data, raw=False))
-        except (UnicodeDecodeError, json.JSONDecodeError):
-            if data.strip().startswith(b"{"):
-                return None
+        except UnicodeDecodeError:
             # For compatibility: loaded by json, while data was dumped by MsgPack
-            raise PdmException(
-                "You are trying to load cache that was previous dumped by MsgPack."
-                'Install it by `pip install "pdm[msgpack]"` then try again, or remove '
-                "the previous cache by `pdm cache clear`"
-            ) from None
+            return None
         except msgpack.UnpackValueError:
             if not data.strip().startswith(b"{"):
                 return None
