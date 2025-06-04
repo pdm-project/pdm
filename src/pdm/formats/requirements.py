@@ -214,7 +214,7 @@ def export(
         lines.append(project.backend.expand_line(req.as_line(), options.expandvars))
         collected_req.add(line)
         if options.hashes and getattr(candidate, "hashes", None):
-            for item in sorted({row["hash"] for row in candidate.hashes}):  # type: ignore[attr-defined]
+            for item in sorted({row["hash"] for row in candidate.hashes}):  # type: ignore[union-attr]
                 lines.append(f" \\\n    --hash={item}")
         lines.append("\n")
     if (options.self or options.editable_self) and not project.is_distribution:
