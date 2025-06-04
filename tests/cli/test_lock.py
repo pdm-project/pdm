@@ -431,3 +431,17 @@ def test_lock_with_override_file(project, pdm, constraint):
     assert candidates["requests"].version == "2.20.0b1"
     assert candidates["urllib3"].version == "1.23b0"
     assert "django" not in candidates
+
+
+def test_pylock_add_remove_strategy(project, pdm):
+    project.project_config["lock.format"] = "pylock"
+    pdm(["lock"], obj=project, strict=True)
+    assert project.lockfile.strategy == {"inherit_metadata", "static_urls"}
+    pdm(["lock", "-S", "static_urls"], obj=project, strict=True)
+    pdm(["lock", "-S", "direct_minimal_versions"], obj=project, strict=True)
+    assert project.lockfile.strategy == {"inherit_metadata", "static_urls", "direct_minimal_versions"}
+
+    result = pdm(["lock", "-S", "no_static_urls"], obj=project)
+    assert result.exit_code != 0
+    result = pdm(["lock", "-S", "no_inherit_metadata"], obj=project)
+    assert result.exit_code != 0

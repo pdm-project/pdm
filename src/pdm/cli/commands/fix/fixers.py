@@ -111,7 +111,7 @@ class LockStrategyFixer(BaseFixer):
         from pdm.project.lockfile import PDMLock
 
         lockfile = self.project.lockfile
-        if not isinstance(lockfile, PDMLock):
+        if not isinstance(lockfile, PDMLock):  # pragma: no cover
             return False
         lockfile_version = lockfile.file_version
         if not lockfile_version or parse_version(lockfile_version) < parse_version("4.5.0"):

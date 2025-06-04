@@ -575,3 +575,8 @@ def test_select_lockfile_format(project, pdm, capsys):
     assert project.lockfile._path.name == "pdm.lock"
     _, err = capsys.readouterr()
     assert "`lock.format` is set to pylock but pylock.toml is not found" in err
+
+    with cd(project.root):
+        pdm(["export", "-f", "pylock", "-o", "pylock.toml"], strict=True)
+    project._lockfile = None
+    assert project.lockfile._path.name == "pylock.toml"

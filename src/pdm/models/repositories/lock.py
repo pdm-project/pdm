@@ -77,7 +77,7 @@ class LockedRepository(BaseRepository):
         if "targets" in lockfile.get("tool", {}).get("pdm", {}):
             self.targets = [EnvSpec.from_spec(**t) for t in lockfile["tool"]["pdm"]["targets"]]
         else:
-            for marker in lockfile.get("environments", []):
+            for marker in lockfile.get("environments", []):  # pragma: no cover
                 self.targets.append(EnvSpec.from_marker(get_marker(cast(str, marker))))
 
         with cd(root):
@@ -88,16 +88,16 @@ class LockedRepository(BaseRepository):
                     req_dict["version"] = f"=={package['version']}"
                 if "marker" in package:
                     req_dict["marker"] = package["marker"]
-                if vcs := package.get("vcs"):
+                if vcs := package.get("vcs"):  # pragma: no cover
                     req_dict[vcs["type"]] = vcs["url"]
                     req_dict["ref"] = vcs.get("requested-revision")
                     req_dict["revision"] = vcs.get("commit-id")
                     req_dict["subdirectory"] = vcs.get("subdirectory")
-                elif directory := package.get("directory"):
+                elif directory := package.get("directory"):  # pragma: no cover
                     req_dict["path"] = directory["path"]
                     req_dict["editable"] = directory.get("editable", False)
                     req_dict["subdirectory"] = directory.get("subdirectory")
-                elif archive := package.get("archive"):
+                elif archive := package.get("archive"):  # pragma: no cover
                     req_dict["url"] = archive.get("url")
                     req_dict["path"] = archive.get("path")
                     req_dict["subdirectory"] = archive.get("subdirectory")

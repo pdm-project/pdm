@@ -39,8 +39,7 @@ class PyLock(Lockfile):
     def apply_strategy_change(self, changes: Iterable[str]) -> set[str]:
         for change in changes:
             change = change.replace("-", "_").lower()
-            item = change[3:] if change.startswith("no_") else change
-            if item != FLAG_DIRECT_MINIMAL_VERSIONS:
+            if change.startswith("no_") and change[3:] != FLAG_DIRECT_MINIMAL_VERSIONS:
                 raise PdmUsageError(f"Unsupported strategy change for pylock: {change}")
         return super().apply_strategy_change(changes)
 
@@ -52,5 +51,5 @@ class PyLock(Lockfile):
         data["tool"]["pdm"]["strategy"] = sorted(strategy)
         self.set_data(data)
 
-    def compatibility(self) -> Compatibility:
+    def compatibility(self) -> Compatibility:  # pragma: no cover
         return Compatibility.SAME

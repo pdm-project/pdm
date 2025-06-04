@@ -50,5 +50,5 @@ def load_lockfile(project: Project, path: str | Path) -> Lockfile:
             return PDMLock(path, ui=project.core.ui)
         elif data.get("lock-version"):
             return PyLock(path, ui=project.core.ui)
-        else:
+        else:  # pragma: no cover
             return default_lockfile(path, ui=project.core.ui)

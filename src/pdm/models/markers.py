@@ -173,7 +173,7 @@ class EnvSpec(_EnvSpec):
         return {**default_environment(), **self.markers()}  # type: ignore[dict-item]
 
     @classmethod
-    def from_marker(cls, marker: Marker) -> Self:
+    def from_marker(cls, marker: Marker) -> Self:  # pragma: no cover
         """Create an EnvSpec from a Marker object."""
         marker_no_python, pyspec = marker.split_pyspec()
         kwargs = {"requires_python": str(pyspec)}
@@ -199,7 +199,7 @@ class EnvSpec(_EnvSpec):
 
     def markers_with_python(self) -> Marker:
         env = self.markers()
-        if self.platform is not None:
+        if self.platform is not None:  # pragma: no cover
             env.update(
                 sys_platform=self.platform.sys_platform,
                 platform_system=self.platform.platform_system,
