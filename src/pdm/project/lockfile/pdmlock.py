@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cached_property
 from typing import TYPE_CHECKING, Iterable
 
 import tomlkit
@@ -36,6 +37,10 @@ class PDMLock(Lockfile):
     @property
     def groups(self) -> list[str] | None:
         return self._data.get("metadata", {}).get("groups")
+
+    @cached_property
+    def default_strategies(self) -> set[str]:
+        return {FLAG_INHERIT_METADATA}
 
     @property
     def strategy(self) -> set[str]:

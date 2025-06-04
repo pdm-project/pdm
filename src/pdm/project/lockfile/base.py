@@ -58,8 +58,10 @@ class Lockfile(TOMLBase, metaclass=abc.ABCMeta):
         return set()
 
     @cached_property
+    @abc.abstractmethod
     def default_strategies(self) -> set[str]:
-        return {FLAG_INHERIT_METADATA, FLAG_STATIC_URLS}
+        """The default strategies to be used if no strategies are defined in the lockfile."""
+        return set()
 
     def apply_strategy_change(self, changes: Iterable[str]) -> set[str]:
         """Apply the given strategy changes to the current strategy."""

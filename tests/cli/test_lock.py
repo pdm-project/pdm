@@ -292,7 +292,7 @@ def test_lock_direct_minimal_versions_real(project, pdm, args):
 )
 def test_lockfile_compatibility(project, monkeypatch, lock_version, expected, pdm):
     pdm(["lock"], obj=project, strict=True)
-    monkeypatch.setattr("pdm.project.lockfile.Lockfile.spec_version", parse_version("4.1.1"))
+    monkeypatch.setattr("pdm.project.lockfile.PDMLock.spec_version", parse_version("4.1.1"))
     project.lockfile._data["metadata"]["lock_version"] = lock_version
     assert project.lockfile.compatibility() == expected
     result = pdm(["lock", "--check"], obj=project)

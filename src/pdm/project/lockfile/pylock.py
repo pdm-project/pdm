@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Iterable
 
 from pdm.exceptions import PdmUsageError
@@ -26,6 +27,10 @@ class PyLock(Lockfile):
     @property
     def groups(self) -> list[str] | None:
         return [*self._data.get("dependency-groups", []), *self._data.get("extras", [])]
+
+    @cached_property
+    def default_strategies(self) -> set[str]:
+        return {FLAG_INHERIT_METADATA, FLAG_STATIC_URLS}
 
     @property
     def strategy(self) -> set[str]:
