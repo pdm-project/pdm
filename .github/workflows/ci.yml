@@ -97,6 +97,10 @@ jobs:
           pdm info
       - name: Run Tests
         run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
+      - name: Run Tests With MsgPack Installed
+        run: |
+          pdm install -G msgpack
+          pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

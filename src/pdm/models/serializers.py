@@ -1,11 +1,48 @@
 from __future__ import annotations
 
+import base64
+import json
 from typing import Any, cast
 
 import hishel
-import msgpack
 from hishel._serializers import Metadata
 from httpcore import Request, Response
+
+
+class Encoder(json.JSONEncoder):
+    """Expand standard json encoder to support dumps bytes object."""
+
+    bytes_ident = "PDM_BYTES_OBJECT"
+
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, bytes):
+            base64_string = base64.b64encode(obj).decode()
+            return {"type": self.bytes_ident, "val": base64_string}
+        return super().default(obj)
+
+    @classmethod
+    def object_hook(cls, obj: Any) -> Any:
+        if isinstance(obj, dict) and obj.get("type") == cls.bytes_ident:
+            val = obj.get("val")
+            if val is not None and isinstance(val, str):
+                return base64.b64decode(val)
+        return obj
+
+
+try:
+    import msgpack
+except ImportError:
+
+    class msgpack:  # type:ignore[no-redef]
+        UnpackValueError = json.JSONDecodeError
+
+        @staticmethod
+        def packb(data: dict, use_bin_type: bool = True) -> bytes:
+            return json.dumps(data, cls=Encoder).encode()
+
+        @staticmethod
+        def loads(data: bytes, raw: bool = False) -> Any:
+            return json.loads(data, object_hook=Encoder.object_hook)
 
 
 class MsgPackSerializer(hishel.BaseSerializer):
@@ -52,8 +89,17 @@ class MsgPackSerializer(hishel.BaseSerializer):
 
         try:
             full_dict = cast("dict[str, Any]", msgpack.loads(data, raw=False))
-        except msgpack.UnpackValueError:
+        except UnicodeDecodeError:
+            # For compatibility: loaded by json, while data was dumped by MsgPack
             return None
+        except msgpack.UnpackValueError:
+            if not data.strip().startswith(b"{"):
+                return None
+            # Dumped by json, but tried to load by MsgPack
+            try:
+                full_dict = cast("dict[str, Any]", json.loads(data, object_hook=Encoder.object_hook))
+            except json.JSONDecodeError:
+                return None
 
         response_dict = full_dict["response"]
         request_dict = full_dict["request"]
