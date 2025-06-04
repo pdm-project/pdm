@@ -8,15 +8,13 @@ from typing import TYPE_CHECKING, Collection, NamedTuple, cast
 
 from pdm.exceptions import CandidateNotFound, PdmException
 from pdm.models.candidates import Candidate
-from pdm.models.markers import EnvSpec
+from pdm.models.markers import EnvSpec, exclude_multi, get_marker
 from pdm.models.repositories.base import BaseRepository, CandidateMetadata
 from pdm.models.requirements import FileRequirement, Requirement, parse_line
 from pdm.utils import cd, url_to_path, url_without_fragments
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Iterable, Mapping
-
-    from tomlkit.toml_document import TOMLDocument
 
     from pdm._types import FileHash, RepositoryConfig
     from pdm.environments import BaseEnvironment
@@ -60,12 +58,71 @@ class LockedRepository(BaseRepository):
         result: dict[str, Candidate] = {}
         for candidates in self.all_candidates.values():
             for can in candidates:
-                if can.req.marker and not can.req.marker.matches(self.env_spec):
-                    continue
+                if can.req.marker:
+                    marker = exclude_multi(can.req.marker, "extras", "dependency_groups")
+                    if not marker.matches(self.env_spec):
+                        continue
                 result[can.identify()] = can
         return result
 
     def _read_lockfile(self, lockfile: Mapping[str, Any]) -> None:
+        if lockfile.get("lock-version"):
+            return self._read_pylock(lockfile)
+        else:
+            return self._read_pdm_lock(lockfile)
+
+    def _read_pylock(self, lockfile: Mapping[str, Any]) -> None:
+        root = self.environment.project.root
+
+        if "targets" in lockfile.get("tool", {}).get("pdm", {}):
+            self.targets = [EnvSpec.from_spec(**t) for t in lockfile["tool"]["pdm"]["targets"]]
+        else:
+            for marker in lockfile.get("environments", []):
+                self.targets.append(EnvSpec.from_marker(get_marker(cast(str, marker))))
+
+        with cd(root):
+            for package in lockfile.get("packages", []):
+                package_name = package.pop("name")
+                req_dict: dict[str, str | bool] = {}
+                if "version" in package:
+                    req_dict["version"] = f"=={package['version']}"
+                if "marker" in package:
+                    req_dict["marker"] = package["marker"]
+                if vcs := package.get("vcs"):
+                    req_dict[vcs["type"]] = vcs["url"]
+                    req_dict["ref"] = vcs.get("requested-revision")
+                    req_dict["revision"] = vcs.get("commit-id")
+                    req_dict["subdirectory"] = vcs.get("subdirectory")
+                elif directory := package.get("directory"):
+                    req_dict["path"] = directory["path"]
+                    req_dict["editable"] = directory.get("editable", False)
+                    req_dict["subdirectory"] = directory.get("subdirectory")
+                elif archive := package.get("archive"):
+                    req_dict["url"] = archive.get("url")
+                    req_dict["path"] = archive.get("path")
+                    req_dict["subdirectory"] = archive.get("subdirectory")
+                candidate = Candidate(
+                    req=Requirement.from_req_dict(package_name, req_dict),
+                    name=package_name,
+                    version=package.get("version"),
+                )
+                candidate.requires_python = package.get("requires-python", "")
+                for wheel in package.get("wheels", []):
+                    algo, hash_value = next(iter(wheel["hashes"].items()))
+                    hash_item: FileHash = {"hash": f"{algo}:{hash_value}"}
+                    if "url" in wheel:
+                        hash_item["url"] = wheel["url"]
+                    if "name" in wheel:
+                        hash_item["file"] = wheel["name"]
+                    candidate.hashes.append(hash_item)
+                if sdist := package.get("sdist"):
+                    algo, hash_value = next(iter(sdist["hashes"].items()))
+                    candidate.hashes.append(
+                        {"file": sdist["name"], "url": sdist["url"], "hash": f"{algo}:{hash_value}"}
+                    )
+                self.packages[self._identify_candidate(candidate)] = Package(candidate, [], "")
+
+    def _read_pdm_lock(self, lockfile: Mapping[str, Any]) -> None:
         from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_STATIC_URLS
 
         root = self.environment.project.root
@@ -180,11 +237,12 @@ class LockedRepository(BaseRepository):
         return candidate.hashes
 
     def evaluate_candidates(self, groups: Collection[str]) -> Iterable[Package]:
+        extras, dependency_groups = self.environment.project.split_extras_groups(list(groups))
         for package in self.packages.values():
             can = package.candidate
-            if can.req.marker and not can.req.marker.matches(self.env_spec):
+            if can.req.marker and not can.req.marker.matches(self.env_spec, extras, dependency_groups):
                 continue
-            if not any(g in can.req.groups for g in groups):
+            if can.req.groups and not any(g in can.req.groups for g in groups):
                 continue
             yield package
 
@@ -220,57 +278,3 @@ class LockedRepository(BaseRepository):
         # clear caches
         if "all_candidates" in self.__dict__:
             del self.__dict__["all_candidates"]
-
-    def format_lockfile(self, groups: Iterable[str] | None, strategy: set[str]) -> TOMLDocument:
-        """Format lock file from a dict of resolved candidates, a mapping of dependencies
-        and a collection of package summaries.
-        """
-        import tomlkit
-
-        from pdm.formats.base import make_array, make_inline_table
-        from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
-
-        def _group_sort_key(group: str) -> tuple[bool, str]:
-            return group != "default", group
-
-        project = self.environment.project
-        packages = tomlkit.aot()
-        for entry in sorted(self.packages.values(), key=lambda x: x.candidate.identify()):
-            base = tomlkit.table()
-            base.update(entry.candidate.as_lockfile_entry(project.root))
-            base.add("summary", entry.summary or "")
-            if FLAG_INHERIT_METADATA in strategy:
-                base.add("groups", sorted(entry.candidate.req.groups, key=_group_sort_key))
-                if entry.candidate.req.marker is not None:
-                    base.add("marker", str(entry.candidate.req.marker))
-            if len(entry.dependencies) > 0:
-                base.add("dependencies", make_array(sorted(entry.dependencies), True))
-            if hashes := entry.candidate.hashes:
-                collected = {}
-                for item in hashes:
-                    if FLAG_STATIC_URLS in strategy:
-                        row = {"url": item["url"], "hash": item["hash"]}
-                    else:
-                        row = {"file": item["file"], "hash": item["hash"]}
-                    inline = make_inline_table(row)
-                    # deduplicate and sort
-                    collected[tuple(row.values())] = inline
-                if collected:
-                    base.add("files", make_array([collected[k] for k in sorted(collected)], True))
-            packages.append(base)
-        doc = tomlkit.document()
-        metadata = tomlkit.table()
-        if groups is None:
-            groups = list(project.iter_groups())
-        metadata.update(
-            {
-                "groups": sorted(groups, key=_group_sort_key),
-                "strategy": sorted(strategy),
-                "targets": [t.as_dict() for t in self.targets],
-            }
-        )
-        metadata.pop(FLAG_STATIC_URLS, None)
-        metadata.pop(FLAG_CROSS_PLATFORM, None)
-        doc.add("metadata", metadata)
-        doc.add("package", packages)
-        return doc

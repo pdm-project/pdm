@@ -8,7 +8,8 @@ from pdm.cli import actions
 from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, Compatibility
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM
+from pdm.project.lockfile.base import Compatibility
 from pdm.utils import parse_version
 from tests import FIXTURES
 
@@ -29,10 +30,13 @@ def test_lock_command(project, pdm, mocker):
 
 
 @pytest.mark.usefixtures("repository")
-def test_lock_dependencies(project):
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_dependencies(project, lock_format):
     project.add_dependencies(["requests"])
+    project.project_config["lock.format"] = lock_format
     actions.do_lock(project)
-    assert project.lockfile.exists
+    assert project.lockfile.exists()
+    assert project.lockfile._path.name == "pdm.lock" if lock_format == "pdm" else "pylock.toml"
     locked = project.get_locked_repository().candidates
     for package in ("requests", "idna", "chardet", "certifi"):
         assert package in locked

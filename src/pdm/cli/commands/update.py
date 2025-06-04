@@ -192,7 +192,7 @@ class Command(BaseCommand):
             if unconstrained:
                 for group, deps in updated_deps.items():
                     project.add_dependencies(deps, group, selection.dev or False)
-            project.write_lockfile(project.lockfile._data, False)
+            project.write_lockfile(show_message=False)
         hooks.try_emit("post_lock", resolution=resolved, dry_run=dry_run)
         if sync or dry_run:
             do_sync(
