@@ -23,6 +23,8 @@ def _group_sort_key(group: str) -> tuple[bool, str]:
 
 
 class PyLockConverter:
+    lock_version = "1.0"
+
     def __init__(self, project: Project, locked_repository: LockedRepository) -> None:
         self.project = project
         self.locked_repository = locked_repository
@@ -101,33 +103,25 @@ class PyLockConverter:
                 repo = self.project.get_repository()
                 repo.fetch_hashes(candidates)
 
-    def convert(self) -> str:
+    def convert(self, all_groups: Iterable[str] | None = None) -> dict[str, Any]:
         doc = tomlkit.document()
         project = self.project
         lockfile = project.lockfile
         if FLAG_INHERIT_METADATA not in lockfile.strategy:
             raise ProjectError("inherit_metadata strategy is required for pylock format")
         repository = self.locked_repository
-        all_groups = lockfile.groups
+        if all_groups is None:
+            all_groups = lockfile.groups
         if all_groups is None:
             all_groups = list(project.iter_groups())
-        extras: list[str] = []
-        groups: list[str] = []
-        optional_groups = {
-            normalize_name(group) for group in project.pyproject.metadata.get("optional-dependencies", [])
-        }
-        for group in all_groups:
-            if group in optional_groups:
-                extras.append(group)
-            else:
-                groups.append(group)
+        extras, groups = self.project.split_extras_groups(list(all_groups))
         env_markers: list[Marker] = []
         for target in repository.targets:
             env_markers.append(target.markers_with_python())
 
         doc.update(
             {
-                "lock-version": "1.0",
+                "lock-version": self.lock_version,
                 "requires-python": str(project.python_requires),
                 "environments": make_array([str(marker) for marker in env_markers], multiline=True),
                 "extras": extras,
@@ -158,6 +152,11 @@ class PyLockConverter:
                     package_table["marker"] = str(marker)
                 packages.append(package_table)
 
-        doc["tool"] = {"pdm": {"hashes": make_inline_table({"sha256": project.pyproject.content_hash()})}}
+        doc["tool"] = {
+            "pdm": {
+                "hashes": make_inline_table({"sha256": project.pyproject.content_hash()}),
+                "targets": [spec.as_dict() for spec in repository.targets],
+            },
+        }
 
-        return tomlkit.dumps(doc)
+        return doc

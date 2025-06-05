@@ -8,7 +8,8 @@ from pdm.cli import actions
 from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.project.lockfile import FLAG_CROSS_PLATFORM, Compatibility
+from pdm.project.lockfile import FLAG_CROSS_PLATFORM
+from pdm.project.lockfile.base import Compatibility
 from pdm.utils import parse_version
 from tests import FIXTURES
 
@@ -29,10 +30,13 @@ def test_lock_command(project, pdm, mocker):
 
 
 @pytest.mark.usefixtures("repository")
-def test_lock_dependencies(project):
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_dependencies(project, lock_format):
     project.add_dependencies(["requests"])
+    project.project_config["lock.format"] = lock_format
     actions.do_lock(project)
-    assert project.lockfile.exists
+    assert project.lockfile.exists()
+    assert project.lockfile._path.name == "pdm.lock" if lock_format == "pdm" else "pylock.toml"
     locked = project.get_locked_repository().candidates
     for package in ("requests", "idna", "chardet", "certifi"):
         assert package in locked
@@ -288,7 +292,7 @@ def test_lock_direct_minimal_versions_real(project, pdm, args):
 )
 def test_lockfile_compatibility(project, monkeypatch, lock_version, expected, pdm):
     pdm(["lock"], obj=project, strict=True)
-    monkeypatch.setattr("pdm.project.lockfile.Lockfile.spec_version", parse_version("4.1.1"))
+    monkeypatch.setattr("pdm.project.lockfile.PDMLock.spec_version", parse_version("4.1.1"))
     project.lockfile._data["metadata"]["lock_version"] = lock_version
     assert project.lockfile.compatibility() == expected
     result = pdm(["lock", "--check"], obj=project)
@@ -427,3 +431,17 @@ def test_lock_with_override_file(project, pdm, constraint):
     assert candidates["requests"].version == "2.20.0b1"
     assert candidates["urllib3"].version == "1.23b0"
     assert "django" not in candidates
+
+
+def test_pylock_add_remove_strategy(project, pdm):
+    project.project_config["lock.format"] = "pylock"
+    pdm(["lock"], obj=project, strict=True)
+    assert project.lockfile.strategy == {"inherit_metadata", "static_urls"}
+    pdm(["lock", "-S", "static_urls"], obj=project, strict=True)
+    pdm(["lock", "-S", "direct_minimal_versions"], obj=project, strict=True)
+    assert project.lockfile.strategy == {"inherit_metadata", "static_urls", "direct_minimal_versions"}
+
+    result = pdm(["lock", "-S", "no_static_urls"], obj=project)
+    assert result.exit_code != 0
+    result = pdm(["lock", "-S", "no_inherit_metadata"], obj=project)
+    assert result.exit_code != 0

@@ -104,3 +104,6 @@ marker = "python_version >= \"3.6\" and \"security\" in extras"
 
 [tool.pdm]
 hashes = {sha256 = "2584886ac58a0ae70aa36bc0318b62c3e2c89acc9c21ebb9aee74147c0a9dc06"}
+
+[[tool.pdm.targets]]
+requires_python = ">=3.3"

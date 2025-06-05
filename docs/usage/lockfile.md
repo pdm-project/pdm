@@ -45,6 +45,20 @@ pdm lock --refresh
 
 This command also refreshes _all_ file hashes recorded in the lock file.
 
+## Change lock file format
+
+PDM supports two lock file formats: `pdm`(default file name is `pdm.lock`) and `pylock`(default file name is `pylock.toml`). The default format is `pdm`.
+
++++ 2.25.0
+
+    Added experimental support for the [PEP 751](https://packaging.python.org/en/latest/specifications/pylock-toml/#pylock-toml-spec) pylock file format. It's a standard lock file format designed to minimize discrepancies among different Python package managers, enhancing interoperability with other tools. It is set to become the default in a future version of PDM. Read the specification for more details.
+
+You can switch to the `pylock` format with `pdm config` command:
+
+```bash
+pdm config lock.format pylock
+```
+
 ## Specify another lock file to use
 
 By default, PDM uses `pdm.lock` in the current directory. You can specify another lock file with the `-L/--lockfile` option or the `PDM_LOCKFILE` environment variable:
@@ -250,7 +264,7 @@ pdm export -o requirements.txt
 
 +++ 2.24.0
 
-Additionally, PDM supports exporting to `pylock.toml` format as defined by [PEP 751](https://peps.python.org/pep-0751/). The following command will convert your lock file to a PEP 751 compatible format:
+Additionally, PDM supports exporting to `pylock.toml` format as defined by [PEP 751](https://packaging.python.org/en/latest/specifications/pylock-toml/#pylock-toml-spec). The following command will convert your lock file to a PEP 751 compatible format:
 
 ```bash
 pdm export -f pylock -o pylock.toml

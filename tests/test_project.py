@@ -553,3 +553,30 @@ def test_project_best_match_min(project, mocker):
         return_value=get_python_versions(),
     )
     assert project.get_best_matching_cpython_version(use_minimum=True) == expected
+
+
+def test_default_lockfile_format(project):
+    assert project.lockfile._path.name == "pdm.lock"
+    project.project_config["lock.format"] = "pylock"
+    project._lockfile = None
+    assert project.lockfile._path.name == "pylock.toml"
+
+    with pytest.raises(ValueError):
+        project.project_config["lock.format"] = "invalid"
+
+
+def test_select_lockfile_format(project, pdm, capsys):
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile._path.name == "pdm.lock"
+    project.project_config["lock.format"] = "pylock"
+    project._lockfile = None
+    capsys.readouterr()
+    assert project.lockfile._path.name == "pdm.lock"
+    _, err = capsys.readouterr()
+    assert "`lock.format` is set to pylock but pylock.toml is not found" in err
+
+    with cd(project.root):
+        pdm(["export", "-f", "pylock", "-o", "pylock.toml"], strict=True)
+    project._lockfile = None
+    assert project.lockfile._path.name == "pylock.toml"

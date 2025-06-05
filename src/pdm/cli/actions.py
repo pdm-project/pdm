@@ -72,8 +72,8 @@ def do_lock(
                 for c in candidates:
                     c.hashes.clear()
                 repo.fetch_hashes(candidates)
-            lockfile = locked_repo.format_lockfile(groups=project.lockfile.groups, strategy=lock_strategy)
-        project.write_lockfile(lockfile)
+            project.lockfile.format_lockfile(locked_repo, groups=project.lockfile.groups, strategy=lock_strategy)
+        project.write_lockfile()
         return locked_repo.all_candidates
 
     if groups is None:
@@ -153,10 +153,10 @@ def do_lock(
                 raise ResolutionError("Unable to find a resolution") from None
             else:
                 groups = list(set(groups) | collected_groups)
-                data = result_repo.format_lockfile(groups=groups, strategy=lock_strategy)
                 if project.enable_write_lockfile:
                     reporter.update(f"{termui.Emoji.LOCK} Lock successful.", info="", completed=1)
-                project.write_lockfile(data, write=not dry_run)
+                project.lockfile.format_lockfile(result_repo, groups=groups, strategy=lock_strategy)
+                project.write_lockfile(write=not dry_run)
                 hooks.try_emit("post_lock", resolution=result_repo.all_candidates, dry_run=dry_run)
 
     return result_repo.all_candidates
@@ -241,7 +241,7 @@ def resolve_candidates_from_lockfile(
 
 def check_lockfile(project: Project, raise_not_exist: bool = True) -> str | None:
     """Check if the lock file exists and is up to date. Return the lock strategy."""
-    from pdm.project.lockfile import Compatibility
+    from pdm.project.lockfile.base import Compatibility
 
     if not project.lockfile.exists():
         if raise_not_exist:

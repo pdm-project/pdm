@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 from typing import Iterable
 
+import tomlkit
+
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.options import groups_group, lockfile_option
@@ -73,7 +75,7 @@ class Command(BaseCommand):
                 locked_repository.add_package(
                     Package(project.make_self_candidate(editable=options.editable_self), [], "")
                 )
-            doc = PyLockConverter(project, locked_repository).convert()
+            doc = tomlkit.dumps(PyLockConverter(project, locked_repository).convert())
             if options.output:
                 Path(options.output).write_text(doc, encoding="utf-8")
             else:

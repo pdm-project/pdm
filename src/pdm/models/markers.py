@@ -15,6 +15,7 @@ from dep_logic.markers import (
     parse_marker,
 )
 from dep_logic.tags import EnvSpec as _EnvSpec
+from dep_logic.tags import Implementation, Platform
 from packaging.markers import Marker as PackageMarker
 
 from pdm.exceptions import RequirementError
@@ -31,7 +32,7 @@ IMPLEMENTATION_MARKERS = frozenset({"implementation_name", "implementation_versi
 PYTHON_MARKERS = frozenset({"python_version", "python_full_version"})
 
 
-def _exclude_multi(marker: Marker, *names: str) -> Marker:
+def exclude_multi(marker: Marker, *names: str) -> Marker:
     inner = marker.inner
     for name in names:
         inner = inner.exclude(name)
@@ -67,13 +68,18 @@ class Marker:
     def evaluate(self, environment: dict[str, Any] | None = None) -> bool:
         return self.inner.evaluate(environment)
 
-    def matches(self, spec: EnvSpec) -> bool:
+    def matches(self, spec: EnvSpec, extras: list[str] | None = None, groups: list[str] | None = None) -> bool:
         non_python_marker, python_spec = self.split_pyspec()
         if spec.platform is None:
-            non_python_marker = _exclude_multi(non_python_marker, *PLATFORM_MARKERS)
+            non_python_marker = exclude_multi(non_python_marker, *PLATFORM_MARKERS)
         if spec.implementation is None:
-            non_python_marker = _exclude_multi(non_python_marker, *IMPLEMENTATION_MARKERS)
-        return not (python_spec & spec.requires_python).is_empty() and non_python_marker.evaluate(spec.markers())
+            non_python_marker = exclude_multi(non_python_marker, *IMPLEMENTATION_MARKERS)
+        env_dict = spec.markers()
+        if extras is not None:
+            env_dict["extras"] = set(extras)
+        if groups is not None:
+            env_dict["dependency_groups"] = set(groups)
+        return not (python_spec & spec.requires_python).is_empty() and non_python_marker.evaluate(env_dict)
 
     @lru_cache(maxsize=1024)
     def split_pyspec(self) -> tuple[Marker, PySpecSet]:
@@ -81,7 +87,7 @@ class Marker:
         python_marker = self.inner.only(*PYTHON_MARKERS)
         if python_marker.is_any():
             return self, PySpecSet()
-        new_marker = _exclude_multi(self, *PYTHON_MARKERS)
+        new_marker = exclude_multi(self, *PYTHON_MARKERS)
         return new_marker, _build_pyspec_from_marker(python_marker)
 
     def split_extras(self) -> tuple[Marker, Marker]:
@@ -153,8 +159,6 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
 
 class EnvSpec(_EnvSpec):
     def replace(self, **kwargs: Any) -> Self:
-        from dep_logic.tags import Implementation, Platform
-
         if "requires_python" in kwargs:
             kwargs["requires_python"] = cast(PySpecSet, kwargs["requires_python"])._logic
         if "platform" in kwargs:
@@ -168,9 +172,43 @@ class EnvSpec(_EnvSpec):
 
         return {**default_environment(), **self.markers()}  # type: ignore[dict-item]
 
+    @classmethod
+    def from_marker(cls, marker: Marker) -> Self:  # pragma: no cover
+        """Create an EnvSpec from a Marker object."""
+        marker_no_python, pyspec = marker.split_pyspec()
+        kwargs = {"requires_python": str(pyspec)}
+        if not marker_no_python.is_any() and not isinstance(marker_no_python.inner, (MultiMarker, MarkerExpression)):
+            raise TypeError(
+                f"Unsupported environment marker: {marker}, not a single expression or connected with 'and'"
+            )
+        if not (implementation_marker := marker_no_python.inner.only("implementation_name")).is_any():
+            assert isinstance(implementation_marker, MarkerExpression)
+            kwargs["implementation"] = implementation_marker.value
+        if not (platform_marker := marker_no_python.inner.only(*PLATFORM_MARKERS)).is_any():
+            platform = platform_marker.only("platform_system")
+            arch = platform_marker.only("platform_machine")
+            if not all(isinstance(m, MarkerExpression) for m in (platform, arch)):
+                raise TypeError(f"Unsupported platform marker: {platform_marker}")
+            os = platform.value.lower()
+            if os == "linux":
+                os = "manylinux_2_17"
+            elif os == "darwin":
+                os = "macos"
+            kwargs["platform"] = f"{os}_{arch.value.lower()}"
+        return cls.from_spec(**kwargs)
+
     def markers_with_python(self) -> Marker:
         env = self.markers()
+        if self.platform is not None:  # pragma: no cover
+            env.update(
+                sys_platform=self.platform.sys_platform,
+                platform_system=self.platform.platform_system,
+                os_name=self.platform.os_name,
+                platform_machine=self.platform.platform_machine,
+            )
         markers: list[BaseMarker] = []
+        env.pop("platform_release", None)
+        env.pop("platform_version", None)
         env.pop("python_version", None)
         env.pop("python_full_version", None)
         markers.append(parse_marker(PySpecSet(self.requires_python).as_marker_string()))
