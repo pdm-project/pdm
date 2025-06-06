@@ -5,7 +5,7 @@
 groups = ["default", "all", "cookiecutter", "copier", "doc", "keyring", "msgpack", "pytest", "template", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:dc4b36a21800d2e2a731947b7c5ed078b97c476dc460ace372ade5652ed90459"
+content_hash = "sha256:02776ffeb1ebca7270e402b4dac20e1eca7d8df0a0403f1c13c39609f8cc7633"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -1413,13 +1413,13 @@ files = [
 
 [[package]]
 name = "pbs-installer"
-version = "2025.6.4"
+version = "2025.6.6"
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
 groups = ["default"]
 files = [
-    {file = "pbs_installer-2025.6.4-py3-none-any.whl", hash = "sha256:0eb351b4d92edbe3786fcadbb60f1b4385d79d1760b66a2907c7c67363544286"},
-    {file = "pbs_installer-2025.6.4.tar.gz", hash = "sha256:65dea3b2c68d37a49b710cc8946c584729927b59fbc5596c9dd2c820dcd56992"},
+    {file = "pbs_installer-2025.6.6-py3-none-any.whl", hash = "sha256:5b2f0a4ac03842f2e793d4b3c864e73609431d856b22a983509669be1f97ab70"},
+    {file = "pbs_installer-2025.6.6.tar.gz", hash = "sha256:4c9741e4ec2290e2728d41a86621d11d52b7e753efd93bf5a908a3e15801463d"},
 ]
 
 [[package]]

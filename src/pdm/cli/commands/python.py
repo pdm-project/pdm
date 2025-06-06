@@ -147,7 +147,7 @@ class InstallCommand(BaseCommand):
         arch = "x86" if arch == "32" else (arch or THIS_ARCH)
 
         ver, python_file = get_download_link(version, implementation=implementation, arch=arch, build_dir=False)
-        ver_str = f"{ver}{'t' if request.endswith('t') else ''}"
+        ver_str = str(ver)
         with ui.open_spinner(f"Downloading [success]{ver_str}[/]") as spinner:
             destination = root / ver_str
             logger.debug("Installing %s to %s", ver_str, destination)
