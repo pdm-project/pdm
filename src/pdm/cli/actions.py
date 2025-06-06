@@ -118,6 +118,7 @@ def do_lock(
         # any message is thrown to the output.
         resolver_class = project.get_resolver()
         with RichLockReporter(requirements, ui) as reporter:
+            collected_groups: set[str] = set()
             try:
                 for target in targets:
                     resolver = resolver_class(
@@ -131,7 +132,8 @@ def do_lock(
                         reporter=reporter,
                     )
                     reporter.update(f"Resolve for environment {target}")
-                    resolved, collected_groups = resolver.resolve()
+                    resolved, new_groups = resolver.resolve()
+                    collected_groups.update(new_groups)
                     locked_repo.merge_result(target, resolved)
                     if result_repo is not locked_repo:
                         result_repo.merge_result(target, resolved)
