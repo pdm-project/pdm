@@ -126,17 +126,6 @@ class Repository:
         self.ui.echo("Saving credentials to keyring")
         keyring.save_auth_info(service, username, password)
 
-    @staticmethod
-    def _convert_to_list_of_tuples(data: dict[str, Any]) -> list[tuple[str, Any]]:
-        result: list[tuple[str, Any]] = []
-        for key, value in data.items():
-            if isinstance(value, (list, tuple)) and key != "gpg_signature":
-                for item in value:
-                    result.append((key, item))
-            else:
-                result.append((key, value))
-        return result
-
     def get_release_urls(self, packages: list[PackageFile]) -> Iterable[str]:
         if self.url.startswith(DEFAULT_REPOSITORIES["pypi"].rstrip("/")):
             base = "https://pypi.org/"

@@ -28,12 +28,6 @@ if TYPE_CHECKING:
     LinkMethod = Literal["symlink", "hardlink", "copy"]
 
 
-def _get_dist_name(wheel_path: str) -> str:
-    from packaging.utils import parse_wheel_filename
-
-    return parse_wheel_filename(os.path.basename(wheel_path))[0]
-
-
 class WheelFile(_WheelFile):
     @cached_property
     def dist_info_dir(self) -> str:
