@@ -13,7 +13,7 @@ from pdm.models.markers import get_marker
 from pdm.models.repositories import Package
 from pdm.models.requirements import FileRequirement, NamedRequirement, Requirement, VcsRequirement
 from pdm.models.specifiers import get_specifier
-from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA, FLAG_STATIC_URLS
+from pdm.project.lockfile import FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA
 from pdm.resolver.base import Resolution, Resolver
 from pdm.resolver.reporters import RichLockReporter
 from pdm.termui import Verbosity
@@ -113,6 +113,8 @@ class UvResolver(Resolver):
             data = tomllib.load(f)
 
         packages: list[Package] = []
+        hash_cache = self.project.make_hash_cache()
+        session = self.environment.session
 
         def make_requirement(dep: dict[str, Any]) -> str:
             req = NamedRequirement(name=dep["name"])
@@ -121,6 +123,12 @@ class UvResolver(Resolver):
             if marker := dep.get("marker"):
                 req.marker = get_marker(marker)
             return req.as_line()
+
+        def make_hash(item: dict[str, Any]) -> FileHash:
+            link = Link(item["url"])
+            if "hash" not in item:
+                item["hash"] = hash_cache.get_hash(link, session)
+            return {"url": item["url"], "file": link.filename, "hash": item["hash"]}
 
         for package in data["package"]:
             if (
@@ -148,17 +156,9 @@ class UvResolver(Resolver):
             else:
                 req = NamedRequirement.create(name=package["name"], specifier=f"=={package['version']}")
             candidate = Candidate(req, name=package["name"], version=package["version"])
-            if FLAG_STATIC_URLS in self.strategies:
-
-                def hash_maker(item: dict[str, Any]) -> FileHash:
-                    return {"url": item["url"], "hash": item["hash"]}
-            else:
-
-                def hash_maker(item: dict[str, Any]) -> FileHash:
-                    return {"file": Link(item["url"]).filename, "hash": item["hash"]}
 
             for wheel in chain(package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []):
-                candidate.hashes.append(hash_maker(wheel))
+                candidate.hashes.append(make_hash(wheel))
             entry = Package(candidate, [make_requirement(dep) for dep in package.get("dependencies", [])], "")
             packages.append(entry)
             if optional_dependencies := package.get("optional-dependencies"):
