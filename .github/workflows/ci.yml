@@ -32,13 +32,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9, "3.10", 3.11, 3.12, 3.13, 3.14]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.14]
+        os: [macos-latest]
         install-via: [pip]
-        include:
-          - python-version: 3.12
-            os: ubuntu-latest
-            install-via: script
+        # include:
+        #   - python-version: 3.12
+        #     os: ubuntu-latest
+        #     install-via: script
     steps:
       - uses: actions/checkout@v4
 
@@ -95,6 +95,8 @@ jobs:
           pdm install -v -Gtest -Gmsgpack
           pdm run pip install -U setuptools
           pdm info
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Run Tests
         run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
 
