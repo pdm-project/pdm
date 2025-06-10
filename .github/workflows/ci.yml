@@ -97,7 +97,11 @@ jobs:
           pdm info
       - name: Run Tests
         run: |
-          source .venv/bin/activate
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            .venv\Scripts\activate
+          else
+            source .venv/bin/activate
+          fi
           pytest
         # run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
       - name: Run Tests With MsgPack Installed
