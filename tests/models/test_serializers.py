@@ -3,17 +3,19 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
+import pytest
 from hishel._serializers import Metadata
 from httpcore import Request, Response
 
 from pdm.models.serializers import Encoder, MsgPackSerializer
 
 
+@pytest.mark.msgpack
 def test_compatibility():
     try:
         import msgpack
     except ImportError:
-        return  # Skip if 'MsgPack' not installed
+        pytest.skip("msgpack is not installed, skipping compatibility tests")
 
     response = Response(200, headers={"key": "value"}, content=b"I'm a teapot.", extensions={"http_version": "2.0"})
     response.read()

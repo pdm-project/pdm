@@ -146,3 +146,14 @@ def is_editable(request):
 @pytest.fixture(params=[False, True])
 def dev_option(request) -> Iterable[str]:
     return ("--dev",) if request.param else ()
+
+
+@pytest.fixture(autouse=True)
+def random_msgpack_implementation(monkeypatch, request):
+    """Randomly set the MsgPackSerializer implementation to JSONMsgPack."""
+    import random
+
+    from pdm.models import serializers
+
+    if "msgpack" not in request.keywords and random.random() < 0.5:
+        monkeypatch.setattr(serializers.MsgPackSerializer, "implementation", serializers.JSONMsgPack)
