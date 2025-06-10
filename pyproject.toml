@@ -183,6 +183,7 @@ markers = [
     "path: Tests that compare with the system paths",
     "deprecated: Tests about deprecated features",
     "uv: Tests that require uv to be installed",
+    "msgpack: Tests that require msgpack to be installed",
 ]
 addopts = "-r aR"
 testpaths = [
