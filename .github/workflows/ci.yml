@@ -95,6 +95,9 @@ jobs:
           pdm install -v -dGtest
           pdm run pip install -U setuptools
           pdm info
+      - name: Setup upterm session
+        if: matrix.os == 'windows-latest' && matrix.python-version == '3.12'
+        uses: lhotari/action-upterm@v1
       - name: Run Tests
         run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
       - name: Run Tests With MsgPack Installed
