@@ -86,6 +86,8 @@ class PyLockConverter:
             if wheels:
                 result["wheels"] = wheels
 
+            result["tool"] = {"pdm": {"dependencies": make_array(package.dependencies, multiline=True)}}
+
         return result
 
     def _populate_hashes(self, packages: Iterable[Package]) -> None:

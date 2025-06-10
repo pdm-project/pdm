@@ -17,6 +17,9 @@ wheels = [
 ]
 marker = "python_version >= \"3.6\" and \"security\" in extras"
 
+[packages.tool.pdm]
+dependencies = []
+
 [[packages]]
 name = "chardet"
 version = "3.0.4"
@@ -25,6 +28,9 @@ wheels = [
     {url = "https://files.pythonhosted.org/packages/bc/a9/01ffebfb562e4274b6487b4bb1ddec7ca55ec7510b22e4c51f14098443b8/chardet-3.0.4-py2.py3-none-any.whl",hashes = {sha256 = "fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"}},
 ]
 marker = "os_name == \"nt\" and \"default\" in dependency_groups"
+
+[packages.tool.pdm]
+dependencies = []
 
 [[packages]]
 name = "charset-normalizer"
@@ -36,6 +42,9 @@ wheels = [
 ]
 marker = "python_version >= \"3.6\" and \"security\" in extras"
 
+[packages.tool.pdm]
+dependencies = []
+
 [[packages]]
 name = "colorama"
 version = "0.3.9"
@@ -44,6 +53,9 @@ wheels = [
     {url = "https://files.pythonhosted.org/packages/db/c8/7dcf9dbcb22429512708fe3a547f8b6101c0d02137acbd892505aee57adf/colorama-0.3.9-py2.py3-none-any.whl",hashes = {sha256 = "463f8483208e921368c9f306094eb6f725c6ca42b0f97e313cb5d5512459feda"}},
 ]
 marker = "sys_platform == \"win32\" and \"tests\" in extras"
+
+[packages.tool.pdm]
+dependencies = []
 
 [[packages]]
 name = "idna"
@@ -54,6 +66,9 @@ wheels = [
 ]
 marker = "\"default\" in dependency_groups or \"security\" in extras"
 
+[packages.tool.pdm]
+dependencies = []
+
 [[packages]]
 name = "py"
 version = "1.4.34"
@@ -63,6 +78,9 @@ wheels = [
 ]
 marker = "\"tests\" in extras"
 
+[packages.tool.pdm]
+dependencies = []
+
 [[packages]]
 name = "pytest"
 version = "3.2.5"
@@ -71,6 +89,15 @@ wheels = [
     {url = "https://files.pythonhosted.org/packages/ef/41/d8a61f1b2ba308e96b36106e95024977e30129355fd12087f23e4b9852a1/pytest-3.2.5-py2.py3-none-any.whl",hashes = {sha256 = "241d7e7798d79192a123ceaf64c602b4d233eacf6d6e42ae27caa97f498b7dc6"}},
 ]
 marker = "\"tests\" in extras"
+
+[packages.tool.pdm]
+dependencies = [
+    "argparse; python_version == \"2.6\"",
+    "colorama; sys_platform == \"win32\"",
+    "ordereddict; python_version == \"2.6\"",
+    "py>=1.4.33",
+    "setuptools",
+]
 
 [[packages]]
 name = "requests"
@@ -82,6 +109,16 @@ wheels = [
 ]
 marker = "python_version >= \"3.6\" and \"security\" in extras"
 
+[packages.tool.pdm]
+dependencies = [
+    "certifi>=2017.4.17",
+    "chardet<5,>=3.0.2; python_version < \"3\"",
+    "charset-normalizer~=2.0.0; python_version >= \"3\"",
+    "idna<3,>=2.5; python_version < \"3\"",
+    "idna<4,>=2.5; python_version >= \"3\"",
+    "urllib3<1.27,>=1.21.1",
+]
+
 [[packages]]
 name = "setuptools"
 version = "39.2.0"
@@ -92,6 +129,9 @@ wheels = [
 ]
 marker = "\"tests\" in extras"
 
+[packages.tool.pdm]
+dependencies = []
+
 [[packages]]
 name = "urllib3"
 version = "1.26.20"
@@ -101,6 +141,9 @@ wheels = [
     {url = "https://files.pythonhosted.org/packages/33/cf/8435d5a7159e2a9c83a95896ed596f68cf798005fe107cc655b5c5c14704/urllib3-1.26.20-py2.py3-none-any.whl",hashes = {sha256 = "0ed14ccfbf1c30a9072c7ca157e4319b70d65f623e91e7b32fadb2853431016e"}},
 ]
 marker = "python_version >= \"3.6\" and \"security\" in extras"
+
+[packages.tool.pdm]
+dependencies = []
 
 [tool.pdm]
 hashes = {sha256 = "2584886ac58a0ae70aa36bc0318b62c3e2c89acc9c21ebb9aee74147c0a9dc06"}
