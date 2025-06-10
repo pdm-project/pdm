@@ -239,6 +239,10 @@ class NamedRequirement(Requirement):
         return f"{self.project_name}{extras}{self.specifier or ''}{self._format_marker()}"
 
 
+# Cache for checked paths to avoid checking the same path multiple times
+_checked_paths: set[Path] = set()
+
+
 @dataclasses.dataclass(eq=False)
 class FileRequirement(Requirement):
     url: str = ""
@@ -323,12 +327,17 @@ class FileRequirement(Requirement):
             else:
                 self.path = Path(relpath)
 
-        if self.path is not None:
+        if self.path is not None and self.absolute_path not in _checked_paths:
             # For relative path, we don't resolve URL now, so the path may still contain fragments,
             # it will be handled in `relocate()` method.
-            result = Setup.from_directory(self.absolute_path)  # type: ignore[arg-type]
+            assert self.absolute_path is not None
+            # There is a risk of infinite recursion here if the project file contains file dependencies
+            # referring to itself, mark the path as being checked to avoid that.
+            _checked_paths.add(self.absolute_path)
+            result = Setup.from_directory(self.absolute_path)
             if result.name:
                 self.name = result.name
+            _checked_paths.discard(self.absolute_path)
 
         if self.url:
             self._parse_name_from_url()
