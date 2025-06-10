@@ -96,7 +96,9 @@ jobs:
           pdm run pip install -U setuptools
           pdm info
       - name: Run Tests
-        run: pdm run pytest
+        run: |
+          source .venv/bin/activate
+          pytest
         # run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
       - name: Run Tests With MsgPack Installed
         run: |
