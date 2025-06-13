@@ -10,7 +10,7 @@ from packaging.version import InvalidVersion
 from resolvelib import AbstractProvider, RequirementsConflicted
 from resolvelib.resolvers import Criterion
 
-from pdm.exceptions import InvalidPyVersion, RequirementError
+from pdm.exceptions import CandidateNotFound, InvalidPyVersion, RequirementError
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
@@ -26,13 +26,14 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeVar
+    from typing import Iterable, Iterator, Mapping, Sequence, TypeVar
 
     from resolvelib.resolvers import RequirementInformation
 
     from pdm._types import Comparable
-    from pdm.models.repositories import BaseRepository
+    from pdm.models.repositories import BaseRepository, LockedRepository
     from pdm.models.requirements import Requirement
+    from pdm.models.working_set import WorkingSet
 
     ProviderT = TypeVar("ProviderT", bound="type[BaseProvider]")
 
@@ -61,7 +62,7 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         overrides: dict[str, str] | None = None,
         direct_minimal_versions: bool = False,
         *,
-        locked_candidates: dict[str, list[Candidate]],
+        locked_repository: LockedRepository | None = None,
     ) -> None:
         if overrides is not None:  # pragma: no cover
             deprecation_warning(
@@ -77,7 +78,7 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         self.fetched_dependencies: dict[tuple[str, str | None], list[Requirement]] = {}
         self.excludes = {normalize_name(k) for k in project.pyproject.resolution.get("excludes", [])}
         self.direct_minimal_versions = direct_minimal_versions
-        self.locked_candidates = locked_candidates
+        self.locked_repository = locked_repository
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
@@ -131,6 +132,10 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
             -constraints,
             identifier,
         )
+
+    @cached_property
+    def locked_candidates(self) -> dict[str, list[Candidate]]:
+        return self.locked_repository.all_candidates if self.locked_repository else {}
 
     @cached_property
     def overrides(self) -> dict[str, Requirement]:
@@ -290,11 +295,14 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         )
         return requirement.specifier.contains(version, allow_prereleases)
 
+    def _get_dependencies_from_repository(self, candidate: Candidate) -> tuple[list[Requirement], PySpecSet, str]:
+        return self.repository.get_dependencies(candidate)
+
     def get_dependencies(self, candidate: Candidate) -> list[Requirement]:
         if isinstance(candidate, PythonCandidate):
             return []
         try:
-            deps, requires_python, _ = self.repository.get_dependencies(candidate)
+            deps, requires_python, _ = self._get_dependencies_from_repository(candidate)
         except (RequirementError, InvalidPyVersion, InvalidSpecifier) as e:
             # When the metadata is invalid, skip this candidate by marking it as conflicting.
             # Here we pass an empty criterion so it doesn't provide any info to the resolution.
@@ -343,8 +351,23 @@ class ReusePinProvider(BaseProvider):
     where already-pinned candidates in lockfile should be preferred.
     """
 
-    def __init__(self, *args: Any, tracked_names: Iterable[str], **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        repository: BaseRepository,
+        allow_prereleases: bool | None = None,
+        overrides: dict[str, str] | None = None,
+        direct_minimal_versions: bool = False,
+        *,
+        locked_repository: LockedRepository | None = None,
+        tracked_names: Iterable[str],
+    ) -> None:
+        super().__init__(
+            repository=repository,
+            allow_prereleases=allow_prereleases,
+            overrides=overrides,
+            direct_minimal_versions=direct_minimal_versions,
+            locked_repository=locked_repository,
+        )
         self.tracked_names = set(tracked_names)
 
     def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
@@ -379,6 +402,14 @@ class ReusePinProvider(BaseProvider):
             yield from super_find()
 
         return matches_gen
+
+    def _get_dependencies_from_repository(self, candidate: Candidate) -> tuple[list[Requirement], PySpecSet, str]:
+        if self.locked_repository is not None:
+            try:
+                return self.locked_repository.get_dependencies(candidate)
+            except CandidateNotFound:
+                pass
+        return super()._get_dependencies_from_repository(candidate)
 
 
 @register_provider("eager")
@@ -427,9 +458,9 @@ class EagerUpdateProvider(ReusePinProvider):
 class ReuseInstalledProvider(ReusePinProvider):
     """A provider that reuses installed packages if possible."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self.installed = self.repository.environment.get_working_set()
+    @cached_property
+    def installed(self) -> WorkingSet:
+        return self.repository.environment.get_working_set()
 
     def iter_reuse_candidates(self, identifier: str, requirement: Requirement | None) -> Iterable[Candidate]:
         key = strip_extras(identifier)[0]

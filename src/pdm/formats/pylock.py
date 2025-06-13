@@ -86,7 +86,8 @@ class PyLockConverter:
             if wheels:
                 result["wheels"] = wheels
 
-            result["tool"] = {"pdm": {"dependencies": make_array(package.dependencies, multiline=True)}}
+            if package.dependencies is not None:
+                result["tool"] = {"pdm": {"dependencies": make_array(package.dependencies, multiline=True)}}
 
         return result
 

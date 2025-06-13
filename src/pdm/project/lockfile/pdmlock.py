@@ -94,7 +94,7 @@ class PDMLock(Lockfile):
                 base.add("groups", sorted(entry.candidate.req.groups, key=_group_sort_key))
                 if entry.candidate.req.marker is not None:
                     base.add("marker", str(entry.candidate.req.marker))
-            if len(entry.dependencies) > 0:
+            if entry.dependencies:
                 base.add("dependencies", make_array(sorted(entry.dependencies), True))
             if hashes := entry.candidate.hashes:
                 collected = {}
