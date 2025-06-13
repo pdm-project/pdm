@@ -1,3 +1,18 @@
+## Release v2.25.0 (2025-06-13)
+
+### Features & Improvements
+
+- Support pylock as alternative lock format and make it opt-in by config. ([#3481](https://github.com/pdm-project/pdm/issues/3481))
+- Search for package metadata in lock file first when reuse strategy is used. ([#3522](https://github.com/pdm-project/pdm/issues/3522))
+
+### Bug Fixes
+
+- Fix Windows 11 install pdm error, which is because of msgpack install failure. ([#3485](https://github.com/pdm-project/pdm/issues/3485))
+- Change the return type of `array_of_inline_tables` to list[dict] from list[str] ([#3523](https://github.com/pdm-project/pdm/issues/3523))
+- Ensure uv resolver to include hash for package files. ([#3531](https://github.com/pdm-project/pdm/issues/3531))
+- Avoid infinite recursion when reading pyproject.toml with circular file dependencies. ([#3539](https://github.com/pdm-project/pdm/issues/3539))
+
+
 ## Release v2.24.2 (2025-05-23)
 
 ### Bug Fixes
