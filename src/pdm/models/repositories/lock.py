@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import itertools
 import posixpath
 from functools import cached_property
 from pathlib import Path
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 
 class Package(NamedTuple):
     candidate: Candidate
-    dependencies: list[str]
+    dependencies: list[str] | None
     summary: str
 
 
@@ -107,20 +108,18 @@ class LockedRepository(BaseRepository):
                     version=package.get("version"),
                 )
                 candidate.requires_python = package.get("requires-python", "")
-                for wheel in package.get("wheels", []):
-                    algo, hash_value = next(iter(wheel["hashes"].items()))
+                for artifact in itertools.chain(
+                    package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []
+                ):
+                    algo, hash_value = next(iter(artifact["hashes"].items()))
                     hash_item: FileHash = {"hash": f"{algo}:{hash_value}"}
-                    if "url" in wheel:
-                        hash_item["url"] = wheel["url"]
-                    if "name" in wheel:
-                        hash_item["file"] = wheel["name"]
+                    if "url" in artifact:
+                        hash_item["url"] = artifact["url"]
+                    if "name" in artifact:
+                        hash_item["file"] = artifact["name"]
                     candidate.hashes.append(hash_item)
-                if sdist := package.get("sdist"):
-                    algo, hash_value = next(iter(sdist["hashes"].items()))
-                    candidate.hashes.append(
-                        {"file": sdist["name"], "url": sdist["url"], "hash": f"{algo}:{hash_value}"}
-                    )
-                self.packages[self._identify_candidate(candidate)] = Package(candidate, [], "")
+                dependencies = package.get("tool", {}).get("pdm", {}).get("dependencies")
+                self.packages[self._identify_candidate(candidate)] = Package(candidate, dependencies, "")
 
     def _read_pdm_lock(self, lockfile: Mapping[str, Any]) -> None:
         from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_STATIC_URLS
@@ -188,6 +187,8 @@ class LockedRepository(BaseRepository):
         except KeyError as e:  # pragma: no cover
             raise CandidateNotFound(err) from e
 
+        if entry.dependencies is None:
+            raise CandidateNotFound(f"Missing dependencies from the lockfile for package {candidate.identify()}")
         deps: list[Requirement] = []
         for line in entry.dependencies:
             deps.append(parse_line(line))

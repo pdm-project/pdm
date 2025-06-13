@@ -184,6 +184,8 @@ class _UvFileBuilder:
                 result["sdist"] = item
         optional_dependencies: dict[str, list[dict[str, Any]]] = {}
         for package in packages:
+            if package.dependencies is None:
+                continue
             if not package.candidate.req.extras:
                 deps = [
                     self._make_dependency(package.candidate, parse_requirement(dep)) for dep in package.dependencies

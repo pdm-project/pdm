@@ -606,10 +606,13 @@ class Project:
         params: dict[str, Any] = {}
         if strategy != "all":
             params["tracked_names"] = [strip_extras(name)[0] for name in tracked_names or ()]
-        locked_candidates: dict[str, list[Candidate]] = (
-            {} if locked_repository is None else locked_repository.all_candidates
-        )
-        params["locked_candidates"] = locked_candidates
+        if "locked_repository" in inspect.signature(provider_class).parameters:
+            params["locked_repository"] = locked_repository
+        else:
+            locked_candidates: dict[str, list[Candidate]] = (
+                {} if locked_repository is None else locked_repository.all_candidates
+            )
+            params["locked_candidates"] = locked_candidates
         return provider_class(repository=repository, direct_minimal_versions=direct_minimal_versions, **params)
 
     def get_reporter(

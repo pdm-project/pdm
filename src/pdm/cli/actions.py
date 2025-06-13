@@ -196,6 +196,8 @@ def resolve_from_lockfile(
                 )
                 if loose_compatible_target is not None:
                     ui.warn(f"Found lock target {loose_compatible_target}, installing for env {env_spec}")
+                elif not lock_targets:  # pragma: no cover
+                    ui.warn("Missing lock targets or environment field in the lock file, installing it anyway.")
                 else:
                     errors = [f"None of the lock targets matches the current env {env_spec}:"] + [
                         f" - {target}" for target in lock_targets
