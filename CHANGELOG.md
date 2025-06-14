@@ -1,3 +1,11 @@
+## Release v2.25.1 (2025-06-14)
+
+### Bug Fixes
+
+- Fix duplicated dependencies added to the lock file when the same dependency with extras is requested. ([#3542](https://github.com/pdm-project/pdm/issues/3542))
+- Stabilize order of the `extras` and `dependency-groups` fields in pylock output. ([#3543](https://github.com/pdm-project/pdm/issues/3543))
+
+
 ## Release v2.25.0 (2025-06-13)
 
 ### Features & Improvements
