@@ -128,7 +128,7 @@ class PyLockConverter:
                 "requires-python": str(project.python_requires),
                 "environments": make_array([str(marker) for marker in env_markers], multiline=True),
                 "extras": sorted(extras),
-                "dependency-groups": sorted(groups),
+                "dependency-groups": sorted(groups, key=_group_sort_key),
                 "default-groups": ["default"],
                 "created-by": "pdm",
             }
