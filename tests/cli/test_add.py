@@ -294,6 +294,20 @@ def test_add_editable_package_with_extras(project, working_set, pdm):
     assert "urllib3" in working_set
 
 
+@pytest.mark.usefixtures("repository")
+def test_add_dependency_with_extras(project, pdm):
+    project.environment.python_requires = PySpecSet(">=3.6")
+    pdm(["add", "requests[security]", "--no-sync"], obj=project, strict=True)
+    locked_repo = project.get_locked_repository()
+    extra_package = next(p for p in locked_repo.packages.values() if p.candidate.identify() == "requests[security]")
+    assert extra_package.dependencies == ["pyOpenSSL>=0.14", "requests==2.19.1"]
+    # test adding new package won't add duplicate dependencies
+    pdm(["add", "pytz", "--no-sync"], obj=project, strict=True)
+    locked_repo = project.get_locked_repository()
+    extra_package = next(p for p in locked_repo.packages.values() if p.candidate.identify() == "requests[security]")
+    assert extra_package.dependencies == ["pyOpenSSL>=0.14", "requests==2.19.1"]
+
+
 def test_add_package_with_local_version(project, repository, working_set, pdm):
     repository.add_candidate("foo", "1.0a0+local")
     pdm(["add", "-v", "foo"], obj=project, strict=True)
