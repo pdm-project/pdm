@@ -309,6 +309,17 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
             logger.error("Invalid metadata in %s: %s", candidate, e)
             raise RequirementsConflicted(Criterion([], [], [])) from None
 
+        if candidate.req.extras:
+            # XXX: If the requirement has extras, add the original candidate
+            # (without extras) as its dependency. This ensures the same package with
+            # different extras resolve to the same version.
+            self_req = dataclasses.replace(
+                candidate.req.as_pinned_version(candidate.version),
+                extras=None,
+                marker=None,
+            )
+            if self_req not in deps:
+                deps.insert(0, self_req)
         self.fetched_dependencies[candidate.dep_key] = deps[:]
         # Filter out incompatible dependencies(e.g. functools32) early so that
         # we don't get errors when building wheels.
