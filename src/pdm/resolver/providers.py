@@ -13,7 +13,7 @@ from resolvelib.resolvers import Criterion
 from pdm.exceptions import CandidateNotFound, InvalidPyVersion, RequirementError
 from pdm.models.candidates import Candidate
 from pdm.models.repositories import LockedRepository
-from pdm.models.requirements import FileRequirement, Requirement, parse_requirement, strip_extras
+from pdm.models.requirements import FileRequirement, Requirement, VcsRequirement, parse_requirement, strip_extras
 from pdm.models.specifiers import PySpecSet
 from pdm.resolver.python import PythonCandidate, PythonRequirement, find_python_matches, is_python_satisfied_by
 from pdm.termui import logger
@@ -415,7 +415,10 @@ class ReusePinProvider(BaseProvider):
         return matches_gen
 
     def _get_dependencies_from_repository(self, candidate: Candidate) -> tuple[list[Requirement], PySpecSet, str]:
-        if self.locked_repository is not None:
+        is_stable_metadata = candidate.req.is_named or (
+            isinstance(candidate.req, VcsRequirement) and candidate.req.revision
+        )
+        if self.locked_repository is not None and is_stable_metadata:
             try:
                 return self.locked_repository.get_dependencies(candidate)
             except CandidateNotFound:

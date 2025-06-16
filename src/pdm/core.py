@@ -265,7 +265,7 @@ class Core:
             self.handle(project, options)
         except Exception:
             etype, err, traceback = sys.exc_info()
-            should_show_tb = not isinstance(err, PdmUsageError)
+            should_show_tb = not isinstance(err, PdmUsageError) or self.ui.verbosity > termui.Verbosity.DETAIL
             if self.ui.verbosity > termui.Verbosity.NORMAL and should_show_tb:
                 raise cast(Exception, err).with_traceback(traceback) from None
             self.ui.echo(
