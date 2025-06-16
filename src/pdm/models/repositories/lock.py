@@ -189,6 +189,13 @@ class LockedRepository(BaseRepository):
 
         if entry.dependencies is None:
             raise CandidateNotFound(f"Missing dependencies from the lockfile for package {candidate.identify()}")
+        # populate candidate metadata
+        if not candidate.name:
+            candidate.name = entry.candidate.name
+        if not candidate.version:
+            candidate.version = entry.candidate.version
+        if not candidate.requires_python:
+            candidate.requires_python = entry.candidate.requires_python
         deps: list[Requirement] = []
         for line in entry.dependencies:
             deps.append(parse_line(line))
