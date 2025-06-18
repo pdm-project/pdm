@@ -68,18 +68,13 @@ class Marker:
     def evaluate(self, environment: dict[str, Any] | None = None) -> bool:
         return self.inner.evaluate(environment)
 
-    def matches(self, spec: EnvSpec, extras: list[str] | None = None, groups: list[str] | None = None) -> bool:
+    def matches(self, spec: EnvSpec) -> bool:
         non_python_marker, python_spec = self.split_pyspec()
         if spec.platform is None:
             non_python_marker = exclude_multi(non_python_marker, *PLATFORM_MARKERS)
         if spec.implementation is None:
             non_python_marker = exclude_multi(non_python_marker, *IMPLEMENTATION_MARKERS)
-        env_dict = spec.markers()
-        if extras is not None:
-            env_dict["extras"] = set(extras)
-        if groups is not None:
-            env_dict["dependency_groups"] = set(groups)
-        return not (python_spec & spec.requires_python).is_empty() and non_python_marker.evaluate(env_dict)
+        return not (python_spec & spec.requires_python).is_empty() and non_python_marker.evaluate(spec.markers())
 
     @lru_cache(maxsize=1024)
     def split_pyspec(self) -> tuple[Marker, PySpecSet]:

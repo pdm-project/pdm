@@ -5,7 +5,9 @@ import itertools
 import posixpath
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Collection, NamedTuple, cast
+from typing import TYPE_CHECKING, Collection, cast
+
+from dep_logic.markers import AnyMarker, BaseMarker
 
 from pdm.exceptions import CandidateNotFound, PdmException
 from pdm.models.candidates import Candidate
@@ -23,10 +25,12 @@ if TYPE_CHECKING:
     CandidateKey = tuple[str, str | None, str | None, bool]
 
 
-class Package(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class Package:
     candidate: Candidate
-    dependencies: list[str] | None
-    summary: str
+    dependencies: list[str] | None = None
+    summary: str = ""
+    marker: BaseMarker = dataclasses.field(default_factory=AnyMarker)
 
 
 class LockedRepository(BaseRepository):
@@ -83,12 +87,17 @@ class LockedRepository(BaseRepository):
 
         with cd(root):
             for package in lockfile.get("packages", []):
+                group_marker = AnyMarker()
                 package_name = package.pop("name")
                 req_dict: dict[str, str | bool] = {}
                 if "version" in package:
                     req_dict["version"] = f"=={package['version']}"
                 if "marker" in package:
-                    req_dict["marker"] = package["marker"]
+                    package_marker = get_marker(cast(str, package["marker"]))
+                    req_marker = exclude_multi(package_marker, "extras", "dependency_groups")
+                    group_marker = package_marker.inner.only("extras", "dependency_groups")
+                    if not req_marker.is_any():
+                        req_dict["marker"] = str(req_marker)
                 if vcs := package.get("vcs"):  # pragma: no cover
                     req_dict[vcs["type"]] = vcs["url"]
                     req_dict["ref"] = vcs.get("requested-revision")
@@ -119,7 +128,7 @@ class LockedRepository(BaseRepository):
                         hash_item["file"] = artifact["name"]
                     candidate.hashes.append(hash_item)
                 dependencies = package.get("tool", {}).get("pdm", {}).get("dependencies")
-                self.packages[self._identify_candidate(candidate)] = Package(candidate, dependencies, "")
+                self.packages[self._identify_candidate(candidate)] = Package(candidate, dependencies, "", group_marker)
 
     def _read_pdm_lock(self, lockfile: Mapping[str, Any]) -> None:
         from pdm.project.lockfile import FLAG_CROSS_PLATFORM, FLAG_STATIC_URLS
@@ -248,7 +257,9 @@ class LockedRepository(BaseRepository):
         extras, dependency_groups = self.environment.project.split_extras_groups(list(groups))
         for package in self.packages.values():
             can = package.candidate
-            if can.req.marker and not can.req.marker.matches(self.env_spec, extras, dependency_groups):
+            if can.req.marker and not can.req.marker.matches(self.env_spec):
+                continue
+            if not package.marker.evaluate({"extras": set(extras), "dependency_groups": set(dependency_groups)}):
                 continue
             if can.req.groups and not any(g in can.req.groups for g in groups):
                 continue
