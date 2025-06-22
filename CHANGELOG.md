@@ -1,3 +1,11 @@
+## Release v2.25.3 (2025-06-22)
+
+### Bug Fixes
+
+- Fix a bug that local file package metadata was missing when reading the lockfile. ([#3545](https://github.com/pdm-project/pdm/issues/3545))
+- Extract `dependency-groups` and `extras` markers from `marker` value when parsing pylock.toml. ([#3550](https://github.com/pdm-project/pdm/issues/3550))
+
+
 ## Release v2.25.2 (2025-06-16)
 
 No significant changes.
