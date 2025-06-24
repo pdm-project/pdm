@@ -31,7 +31,7 @@ GIT_URL = re.compile(r"(?P<repo>[^:/]+://[^\?#]+)(?:\?rev=(?P<ref>[^#]+?))?(?:#(
 class UvResolver(Resolver):
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.default_source = self.project.sources[0].url
+
         if self.locked_repository is None:
             self.locked_repository = self.project.get_locked_repository()
         if self.update_strategy not in {"reuse", "all"}:
@@ -61,14 +61,14 @@ class UvResolver(Resolver):
             cmd.append("--no-cache")
         first_index = True
         for source in self.project.sources:
-            assert source.url is not None
+            url = source.url_with_credentials
             if source.type == "find_links":
-                cmd.extend(["--find-links", source.url])
+                cmd.extend(["--find-links", url])
             elif first_index:
-                cmd.extend(["--index-url", source.url])
+                cmd.extend(["--index-url", url])
                 first_index = False
             else:
-                cmd.extend(["--extra-index-url", source.url])
+                cmd.extend(["--extra-index-url", url])
         if self.project.pyproject.settings.get("resolution", {}).get("respect-source-order", False):
             cmd.append("--index-strategy=unsafe-first-match")
         else:
