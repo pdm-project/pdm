@@ -72,6 +72,21 @@ class RepositoryConfig:
             lines.append(f"[primary]{config_prefix}ca_certs[/] = {self.ca_certs}")
         return "\n".join(lines)
 
+    @property
+    def url_with_credentials(self) -> str:
+        from urllib.parse import urlsplit, urlunsplit
+
+        from pdm.utils import expand_env_vars_in_auth
+
+        assert self.url is not None
+        self.populate_keyring_auth()
+        if not self.username or not self.password:
+            return expand_env_vars_in_auth(self.url)
+        parsed = urlsplit(self.url)
+        *_, netloc = parsed.netloc.rpartition("@")
+        netloc = f"{self.username}:{self.password}@{netloc}"
+        return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+
 
 RequirementDict = Union[str, dict[str, Union[str, bool]]]
 CandidateInfo = tuple[list[str], str, str]
