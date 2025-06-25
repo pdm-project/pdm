@@ -81,7 +81,7 @@ class RepositoryConfig:
         assert self.url is not None
         self.populate_keyring_auth()
         if not self.username or not self.password:
-            return expand_env_vars_in_auth(self.url)
+            return hide_url(expand_env_vars_in_auth(self.url))
         parsed = urlsplit(self.url)
         *_, netloc = parsed.netloc.rpartition("@")
         netloc = f"{self.username}:{self.password}@{netloc}"
