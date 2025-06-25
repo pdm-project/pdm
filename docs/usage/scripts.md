@@ -14,7 +14,7 @@ It will run `flask run -p 54321` in the environment that is aware of packages in
 
 +++ 2.16.0
 
-PDM can run single-file scripts with [inline script metadata](https://peps.python.org/pep-0723/).
+PDM can run single-file scripts with [inline script metadata](https://peps.python.org/pep-0723/) specified by PEP 723.
 
 The following is an example of a script with embedded metadata:
 
