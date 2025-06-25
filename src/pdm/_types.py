@@ -136,18 +136,10 @@ NotSet = NotSetType()
 @dc.dataclass(frozen=True)
 class HiddenText:
     secret: str
-    redacted: str
+    redacted: str = dc.field(compare=False, hash=False)
 
     def __str__(self) -> str:
         return self.redacted
 
     def __repr__(self) -> str:
         return repr(str(self))
-
-    def __eq__(self, other: Any) -> bool:
-        if type(self) is not type(other):
-            return NotImplemented
-
-        # The string being used for redaction doesn't also have to match,
-        # just the raw, original string.
-        return self.secret == other.secret
