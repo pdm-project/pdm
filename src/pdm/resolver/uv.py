@@ -8,6 +8,7 @@ from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pdm._types import HiddenText
 from pdm.models.candidates import Candidate
 from pdm.models.markers import get_marker
 from pdm.models.repositories import Package
@@ -53,8 +54,13 @@ class UvResolver(Resolver):
                 "the resolution may be inaccurate."
             )
 
-    def _build_lock_command(self) -> list[str]:
-        cmd = [*self.project.core.uv_cmd, "lock", "-p", str(self.environment.interpreter.executable)]
+    def _build_lock_command(self) -> list[str | HiddenText]:
+        cmd: list[str | HiddenText] = [
+            *self.project.core.uv_cmd,
+            "lock",
+            "-p",
+            str(self.environment.interpreter.executable),
+        ]
         if self.project.core.ui.verbosity > 0:
             cmd.append("--verbose")
         if not self.project.core.state.enable_cache:
@@ -185,7 +191,8 @@ class UvResolver(Resolver):
                     self.reporter.stop()
                 uv_lock_command = self._build_lock_command()
                 self.project.core.ui.echo(f"Running uv lock command: {uv_lock_command}", verbosity=Verbosity.DETAIL)
-                subprocess.run(uv_lock_command, cwd=self.project.root, check=True)
+                real_command = [s.secret if isinstance(s, HiddenText) else s for s in uv_lock_command]
+                subprocess.run(real_command, cwd=self.project.root, check=True)
             finally:
                 if isinstance(self.reporter, RichLockReporter):
                     self.reporter.start()

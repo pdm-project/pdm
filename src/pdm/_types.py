@@ -73,19 +73,20 @@ class RepositoryConfig:
         return "\n".join(lines)
 
     @property
-    def url_with_credentials(self) -> str:
+    def url_with_credentials(self) -> HiddenText:
         from urllib.parse import urlsplit, urlunsplit
 
-        from pdm.utils import expand_env_vars_in_auth
+        from pdm.utils import expand_env_vars_in_auth, hide_url
 
         assert self.url is not None
         self.populate_keyring_auth()
         if not self.username or not self.password:
-            return expand_env_vars_in_auth(self.url)
+            return hide_url(expand_env_vars_in_auth(self.url))
         parsed = urlsplit(self.url)
         *_, netloc = parsed.netloc.rpartition("@")
         netloc = f"{self.username}:{self.password}@{netloc}"
-        return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+        url = urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+        return hide_url(url)
 
 
 RequirementDict = Union[str, dict[str, Union[str, bool]]]
@@ -130,3 +131,15 @@ class NotSetType:
 
 
 NotSet = NotSetType()
+
+
+@dc.dataclass(frozen=True)
+class HiddenText:
+    secret: str
+    redacted: str = dc.field(compare=False, hash=False)
+
+    def __str__(self) -> str:
+        return self.redacted
+
+    def __repr__(self) -> str:
+        return repr(str(self))

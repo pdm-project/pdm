@@ -496,3 +496,17 @@ def test_invalidate_project_name(name):
 )
 def test_sanitize_project_name(given, sanitized):
     assert utils.sanitize_project_name(given) == sanitized
+
+
+@pytest.mark.parametrize(
+    "url, redacted",
+    [
+        ("http://user:pass@localhost:8000/path?query=1#fragment", "http://*****@localhost:8000/path?query=1#fragment"),
+        ("https://example.com", "https://example.com"),
+        ("ftp://ftp.example.com/file.txt", "ftp://ftp.example.com/file.txt"),
+    ],
+)
+def test_hide_url(url, redacted):
+    hidden = utils.hide_url(url)
+    assert hidden.secret == url
+    assert hidden.redacted == str(hidden) == redacted
