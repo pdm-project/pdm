@@ -3,6 +3,7 @@ from __future__ import annotations
 import subprocess
 from typing import Any
 
+from pdm._types import HiddenText
 from pdm.environments.local import PythonLocalEnvironment
 from pdm.exceptions import PdmUsageError
 from pdm.installers.base import BaseSynchronizer
@@ -44,11 +45,12 @@ class UvSynchronizer(BaseSynchronizer):
             builder.build_uv_lock(include_self=self.install_self)
             cmd = self._get_sync_command()
             self.environment.project.core.ui.echo(f"Running uv sync command: {cmd}", verbosity=Verbosity.DETAIL)
-            subprocess.run(cmd, check=True, cwd=self.environment.project.root)
+            real_cmd = [s.secret if isinstance(s, HiddenText) else s for s in cmd]
+            subprocess.run(real_cmd, check=True, cwd=self.environment.project.root)
 
-    def _get_sync_command(self) -> list[str]:
+    def _get_sync_command(self) -> list[str | HiddenText]:
         core = self.environment.project.core
-        cmd = [
+        cmd: list[str | HiddenText] = [
             *core.uv_cmd,
             "sync",
             "--all-extras",
@@ -68,21 +70,21 @@ class UvSynchronizer(BaseSynchronizer):
             cmd.append("--no-install-project")
         first_index = True
         for source in self.environment.project.sources:
-            assert source.url is not None
+            url = source.url_with_credentials
             if source.type == "find_links":
-                cmd.extend(["--find-links", source.url])
+                cmd.extend(["--find-links", url])
             elif first_index:
-                cmd.extend(["--index-url", source.url])
+                cmd.extend(["--index-url", url])
                 first_index = False
             else:
-                cmd.extend(["--extra-index-url", source.url])
+                cmd.extend(["--extra-index-url", url])
         if self.use_install_cache:
             cmd.extend(["--link-mode", self.environment.project.config["install.cache_method"]])
         return cmd
 
 
 class QuietUvSynchronizer(UvSynchronizer):
-    def _get_sync_command(self) -> list[str]:
+    def _get_sync_command(self) -> list[str | HiddenText]:
         cmd = super()._get_sync_command()
         if "--verbose" in cmd:
             cmd.remove("--verbose")

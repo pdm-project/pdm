@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from re import Match
     from typing import IO, Any, Iterator
 
-    from pdm._types import FileHash, RepositoryConfig
+    from pdm._types import FileHash, HiddenText, RepositoryConfig
     from pdm.compat import Distribution
 
 try:
@@ -567,3 +567,16 @@ def get_requirement_from_override(name: str, value: str) -> str:
         else:
             req = f"{name}{value}"
     return req
+
+
+def hide_url(url: str) -> HiddenText:
+    """Redact the URL for display purposes."""
+    from pdm._types import HiddenText
+
+    parsed = parse.urlsplit(url)
+    if "@" not in parsed.netloc:
+        return HiddenText(url, url)
+    *_, netloc = parsed.netloc.rpartition("@")
+    netloc = f"*****@{netloc}"
+    redacted = parse.urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+    return HiddenText(url, redacted)
