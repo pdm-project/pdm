@@ -128,6 +128,8 @@ class UvResolver(Resolver):
                 req.specifier = get_specifier(f"=={version}")
             if marker := dep.get("marker"):
                 req.marker = get_marker(marker)
+            if extra := dep.get("extra"):
+                req.extras = extra
             return req.as_line()
 
         def make_hash(item: dict[str, Any]) -> FileHash:
