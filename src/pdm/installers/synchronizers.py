@@ -131,6 +131,8 @@ class Synchronizer(BaseSynchronizer):
 
         lib_paths = self.environment.get_paths()
         for scheme in ["purelib", "platlib"]:
+            if not Path(lib_paths[scheme]).exists():
+                continue
             for path in list(Path(lib_paths[scheme]).iterdir()):
                 if path.suffix == ".pdmtmp":
                     target_path = path.with_suffix("")
