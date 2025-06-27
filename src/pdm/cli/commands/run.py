@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import itertools
 import os
 import re
@@ -170,16 +171,18 @@ class TaskRunner:
         venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8"), **md5_kwargs).hexdigest()
         venv_backend = BACKENDS[script_project.config["venv.backend"]](script_project, None)
         venv = venv_backend.get_location(None, venv_name)
-        if venv.exists() and not self.recreate_env:
-            self.project.core.ui.info(f"Reusing existing script environment: {venv}", verbosity=termui.Verbosity.DETAIL)
-        else:
-            self.project.core.ui.info(f"Creating environment for script: {venv}", verbosity=termui.Verbosity.DETAIL)
-            venv = venv_backend.create(venv_name=venv_name, force=True)
-        env = PythonEnvironment(script_project, python=get_venv_python(venv).as_posix())
-        script_project._python = env.interpreter
-        env.project = script_project  # keep a strong reference to the project
-        if reqs := script_project.get_dependencies():
-            install_requirements(reqs, env, clean=True)
+        with contextlib.ExitStack() as stack:
+            if venv.exists() and not self.recreate_env:
+                stack.enter_context(self.project.core.ui.open_spinner("[info]Reusing existing script environment"))
+            else:
+                stack.enter_context(self.project.core.ui.open_spinner("[info]Creating environment for script"))
+                venv = venv_backend.create(venv_name=venv_name, force=True)
+            self.project.core.ui.info(f"Script environment location: {venv}", verbosity=termui.Verbosity.DETAIL)
+            env = PythonEnvironment(script_project, python=get_venv_python(venv).as_posix())
+            script_project._python = env.interpreter
+            env.project = script_project  # keep a strong reference to the project
+            if reqs := script_project.get_dependencies():
+                install_requirements(reqs, env, clean=True)
         return env
 
     def get_task(self, script_name: str) -> Task | None:
