@@ -1,3 +1,18 @@
+## Release v2.25.4 (2025-06-30)
+
+### Bug Fixes
+
+- Add credentials when passing source urls to uv resolver. ([#3553](https://github.com/pdm-project/pdm/issues/3553))
+- Redact credentials in source urls in the log output, and inject credentials into the source url for uv sync command as well. ([#3555](https://github.com/pdm-project/pdm/issues/3555))
+- Fix a bug that extra dependencies of transitive dependencies are not properly installed when USE_UV=true ([#3558](https://github.com/pdm-project/pdm/issues/3558))
+- Improve the terminal output when setting up a script environment. ([#3560](https://github.com/pdm-project/pdm/issues/3560))
+- Skip non-existent library paths in post-install steps when trying to fix the pth files. ([#3561](https://github.com/pdm-project/pdm/issues/3561))
+
+### Dependencies
+
+- Update `resolvelib` to 1.2.0. ([#3557](https://github.com/pdm-project/pdm/issues/3557))
+
+
 ## Release v2.25.3 (2025-06-22)
 
 ### Bug Fixes
