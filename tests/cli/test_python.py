@@ -30,7 +30,7 @@ def mock_install(mocker):
         name = self.executable.parent.name if sys.platform == "win32" else self.executable.parent.parent.name
         if "@" not in name:
             return parse_version(platform.python_version())
-        return parse_version(name.split("@", 1)[1])
+        return parse_version(name.split("@", 1)[1].rstrip("t"))
 
     def get_freethreaded(self):
         name = self.executable.parent.name if sys.platform == "win32" else self.executable.parent.parent.name
@@ -195,7 +195,9 @@ def test_link_python_invalid_interpreter(project, pdm):
 
 def test_find_python(project, pdm, mock_install):
     pdm(["py", "install", "3.10.8"], obj=project, strict=True)
-    result = pdm(["py", "find", "3.10.8", "-v"], obj=project, strict=True)
+    pdm(["py", "install", "3.13.0"], obj=project, strict=True)
+    pdm(["py", "install", "3.13.0t"], obj=project, strict=True)
+    result = pdm(["py", "find", "3.10.8"], obj=project, strict=True)
     assert "3.10.8" in result.stdout
 
     result = pdm(["py", "find", "3.10.8", "--managed"], obj=project, strict=True)
@@ -203,3 +205,10 @@ def test_find_python(project, pdm, mock_install):
 
     result = pdm(["py", "find", "3.10.9"], obj=project)
     assert result.exit_code != 0
+
+    result = pdm(["py", "find", "3.13", "--managed"], obj=project)
+    assert "3.13.0t" not in result.stdout
+    assert "3.13.0" in result.stdout
+
+    result = pdm(["py", "find", "3.13.0t", "--managed"], obj=project)
+    assert "3.13.0t" in result.stdout
