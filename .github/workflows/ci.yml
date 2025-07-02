@@ -95,6 +95,9 @@ jobs:
           pdm install -v -Gtest -Gmsgpack
           pdm run pip install -U setuptools
           pdm info
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: matrix.os == 'windows-latest' && matrix.python-version == '3.12'
       - name: Run Tests
         run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
 

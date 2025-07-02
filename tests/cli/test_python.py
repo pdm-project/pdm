@@ -196,7 +196,7 @@ def test_link_python_invalid_interpreter(project, pdm):
 def test_find_python(project, pdm, mock_install):
     pdm(["py", "install", "3.10.8"], obj=project, strict=True)
     pdm(["py", "install", "3.13.0"], obj=project, strict=True)
-    pdm(["py", "install", "3.13.0t"], obj=project, strict=True)
+    pdm(["py", "install", "3.13.0t", "-v"], obj=project, strict=True)
     result = pdm(["py", "find", "3.10.8"], obj=project, strict=True)
     assert "3.10.8" in result.stdout
 
