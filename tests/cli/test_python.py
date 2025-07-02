@@ -26,6 +26,9 @@ def mock_install(mocker):
             Path(destination, "bin").mkdir(parents=True, exist_ok=True)
             Path(destination, "bin", "python3").touch()
 
+    def get_download_link(version, *args, **kwargs):
+        return f"cpython@{version}", None
+
     def get_version(self):
         name = self.executable.parent.name if sys.platform == "win32" else self.executable.parent.parent.name
         if "@" not in name:
@@ -48,6 +51,7 @@ def mock_install(mocker):
         return name.split("@", 1)[0]
 
     mocker.patch("pbs_installer.download", return_value="python-3.10.8.tar.gz")
+    mocker.patch("pbs_installer.get_download_link", side_effect=get_download_link)
     installer = mocker.patch("pbs_installer.install_file", side_effect=install_file)
     mocker.patch("findpython.python.PythonVersion.implementation", implementation)
     mocker.patch("findpython.python.PythonVersion._get_version", get_version)
@@ -196,7 +200,7 @@ def test_link_python_invalid_interpreter(project, pdm):
 def test_find_python(project, pdm, mock_install):
     pdm(["py", "install", "3.10.8"], obj=project, strict=True)
     pdm(["py", "install", "3.13.0"], obj=project, strict=True)
-    pdm(["py", "install", "3.13.0t", "-v"], obj=project, strict=True)
+    pdm(["py", "install", "3.13.0t"], obj=project, strict=True)
     result = pdm(["py", "find", "3.10.8"], obj=project, strict=True)
     assert "3.10.8" in result.stdout
 
@@ -210,5 +214,5 @@ def test_find_python(project, pdm, mock_install):
     assert "3.13.0t" not in result.stdout
     assert "3.13.0" in result.stdout
 
-    result = pdm(["py", "find", "3.13.0t", "--managed"], obj=project)
+    result = pdm(["py", "find", "3.13t", "--managed"], obj=project)
     assert "3.13.0t" in result.stdout
