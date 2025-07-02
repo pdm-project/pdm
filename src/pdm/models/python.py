@@ -82,11 +82,15 @@ class PythonInfo:
     @property
     def identifier(self) -> str:
         try:
-            if os.name == "nt" and self.is_32bit:
-                return f"{self.major}.{self.minor}-32"
-            return f"{self.major}.{self.minor}"
+            version_str = f"{self.major}.{self.minor}"
         except InvalidVersion:
             return "unknown"
+
+        if self._py_ver.freethreaded:
+            version_str += "t"
+        if os.name == "nt" and self.is_32bit:
+            version_str += "-32"
+        return version_str
 
     def get_venv(self) -> VirtualEnv | None:
         return VirtualEnv.from_interpreter(self.executable)

@@ -32,6 +32,10 @@ def mock_install(mocker):
             return parse_version(platform.python_version())
         return parse_version(name.split("@", 1)[1])
 
+    def get_freethreaded(self):
+        name = self.executable.parent.name if sys.platform == "win32" else self.executable.parent.parent.name
+        return name.endswith("t")
+
     @property
     def interpreter(self):
         return self.executable
@@ -47,6 +51,7 @@ def mock_install(mocker):
     installer = mocker.patch("pbs_installer.install_file", side_effect=install_file)
     mocker.patch("findpython.python.PythonVersion.implementation", implementation)
     mocker.patch("findpython.python.PythonVersion._get_version", get_version)
+    mocker.patch("findpython.python.PythonVersion._get_freethreaded", get_freethreaded)
     mocker.patch("findpython.python.PythonVersion.interpreter", interpreter)
     mocker.patch("findpython.python.PythonVersion.architecture", mocker.PropertyMock(return_value="64bit"))
     return installer
@@ -190,7 +195,7 @@ def test_link_python_invalid_interpreter(project, pdm):
 
 def test_find_python(project, pdm, mock_install):
     pdm(["py", "install", "3.10.8"], obj=project, strict=True)
-    result = pdm(["py", "find", "3.10.8"], obj=project, strict=True)
+    result = pdm(["py", "find", "3.10.8", "-v"], obj=project, strict=True)
     assert "3.10.8" in result.stdout
 
     result = pdm(["py", "find", "3.10.8", "--managed"], obj=project, strict=True)

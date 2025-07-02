@@ -56,7 +56,7 @@ class ListCommand(BaseCommand):
         ui = project.core.ui
         provider = RyeProvider(root=Path(project.config["python.install_root"]).expanduser())
         for version in provider.find_pythons():
-            ui.echo(f"[success]{version.implementation.lower()}@{version.version}[/] ({version.executable})")
+            ui.echo(f"[success]{version}[/] ({version.executable})")
 
 
 class RemoveCommand(BaseCommand):
