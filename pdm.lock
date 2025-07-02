@@ -5,7 +5,7 @@
 groups = ["default", "all", "cookiecutter", "copier", "doc", "keyring", "msgpack", "pytest", "template", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:02776ffeb1ebca7270e402b4dac20e1eca7d8df0a0403f1c13c39609f8cc7633"
+content_hash = "sha256:635a1bb9800637c65455e64beb8c65558566fc4277ee7211092ffbdd0bb5ceef"
 
 [[metadata.targets]]
 requires_python = ">=3.9"
@@ -677,16 +677,17 @@ files = [
 
 [[package]]
 name = "findpython"
-version = "0.6.3"
+version = "0.7.0"
 requires_python = ">=3.8"
 summary = "A utility to find python versions on your system"
 groups = ["default"]
 dependencies = [
     "packaging>=20",
+    "platformdirs>=4.3.6",
 ]
 files = [
-    {file = "findpython-0.6.3-py3-none-any.whl", hash = "sha256:a85bb589b559cdf1b87227cc233736eb7cad894b9e68021ee498850611939ebc"},
-    {file = "findpython-0.6.3.tar.gz", hash = "sha256:5863ea55556d8aadc693481a14ac4f3624952719efc1c5591abb0b4a9e965c94"},
+    {file = "findpython-0.7.0-py3-none-any.whl", hash = "sha256:f53cfcc29536f5b83c962cf922bba8ff6d6a3c2a05fda6a45aa58a47d005d8fc"},
+    {file = "findpython-0.7.0.tar.gz", hash = "sha256:8b31647c76352779a3c1a0806699b68e6a7bdc0b5c2ddd9af2a07a0d40c673dc"},
 ]
 
 [[package]]
@@ -1413,13 +1414,13 @@ files = [
 
 [[package]]
 name = "pbs-installer"
-version = "2025.6.6"
+version = "2025.6.30"
 requires_python = ">=3.8"
 summary = "Installer for Python Build Standalone"
 groups = ["default"]
 files = [
-    {file = "pbs_installer-2025.6.6-py3-none-any.whl", hash = "sha256:5b2f0a4ac03842f2e793d4b3c864e73609431d856b22a983509669be1f97ab70"},
-    {file = "pbs_installer-2025.6.6.tar.gz", hash = "sha256:4c9741e4ec2290e2728d41a86621d11d52b7e753efd93bf5a908a3e15801463d"},
+    {file = "pbs_installer-2025.6.30-py3-none-any.whl", hash = "sha256:c921b51d0d701c79c06ef3b496a72475f6650800a60f5fae3d840f0f468133b8"},
+    {file = "pbs_installer-2025.6.30.tar.gz", hash = "sha256:baf6b67b379644e5d7a67aec1a14df5fdb0114a9cb6e47001feb1b85b12a59b7"},
 ]
 
 [[package]]
