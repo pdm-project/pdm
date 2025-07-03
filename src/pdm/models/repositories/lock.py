@@ -111,11 +111,10 @@ class LockedRepository(BaseRepository):
                     req_dict["url"] = archive.get("url")
                     req_dict["path"] = archive.get("path")
                     req_dict["subdirectory"] = archive.get("subdirectory")
-                candidate = Candidate(
-                    req=Requirement.from_req_dict(package_name, req_dict),
-                    name=package_name,
-                    version=package.get("version"),
-                )
+                req = Requirement.from_req_dict(package_name, req_dict)
+                if req.is_file_or_url and req.path and not req.url:  # type: ignore[attr-defined]
+                    req.url = root.joinpath(req.path).as_uri()  # type: ignore[attr-defined]
+                candidate = Candidate(req=req, name=package_name, version=package.get("version"))
                 candidate.requires_python = package.get("requires-python", "")
                 for artifact in itertools.chain(
                     package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []
