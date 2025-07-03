@@ -978,9 +978,11 @@ class Project:
         """
         return os.getenv(var.upper()) or self.get_setting(key)
 
-    def get_best_matching_cpython_version(self, use_minimum: bool | None = False) -> PythonVersion | None:
+    def get_best_matching_cpython_version(
+        self, use_minimum: bool | None = False, freethreaded: bool = False
+    ) -> PythonVersion | None:
         """
-        Returns the best matching cPython version that fits requires-python, this platform and arch.
+        Returns the best matching CPython version that fits requires-python, this platform and arch.
         If no best match could be found, return None.
 
         Default for best match strategy is "highest" possible interpreter version. If "minimum" shall be used,
@@ -992,7 +994,11 @@ class Project:
 
         all_matches = get_all_installable_python_versions(build_dir=False)
         filtered_matches = [
-            v for v in all_matches if get_version(v) in self.python_requires and v.implementation.lower() == "cpython"
+            v
+            for v in all_matches
+            if v.freethreaded == freethreaded
+            and get_version(v) in self.python_requires
+            and v.implementation.lower() == "cpython"
         ]
         if filtered_matches:
             if use_minimum:
