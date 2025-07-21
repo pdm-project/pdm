@@ -99,17 +99,17 @@ class Command(BaseCommand):
                 raise PdmUsageError(
                     "Can't export a lock file without environment markers, please re-generate the lock file with `inherit_metadata` strategy."
                 )
+            groups = set(selection)
             candidates = sorted(
-                (entry.candidate for entry in project.get_locked_repository().packages.values()),
+                (
+                    entry.candidate
+                    for entry in project.get_locked_repository().evaluate_candidates(groups, not options.markers)
+                ),
                 key=lambda c: not c.req.extras,
             )
-            groups = set(selection)
             packages = []
             seen_extras: set[str] = set()
-            this_spec = project.environment.spec
             for candidate in candidates:
-                if groups.isdisjoint(candidate.req.groups):
-                    continue
                 if options.extras:
                     key = candidate.req.key or ""
                     if candidate.req.extras:
@@ -119,8 +119,6 @@ class Command(BaseCommand):
                 elif candidate.req.extras:
                     continue
                 if not options.markers and candidate.req.marker:
-                    if not candidate.req.marker.matches(this_spec):
-                        continue
                     candidate.req.marker = None
                 packages.append(candidate)  # type: ignore[arg-type]
 

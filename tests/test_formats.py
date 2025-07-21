@@ -260,3 +260,23 @@ def test_export_pylock_toml(core, pdm):
         result = pdm(["export", "-f", "pylock", "-L", "pdm.no_groups.lock"])
     assert result.exit_code == 1
     assert "inherit_metadata strategy is required for pylock format" in result.stderr
+
+
+def test_export_from_pylock_not_empty(core, pdm):
+    """Test that exporting from pylock.toml produces non-empty output (fixes issue #3573)."""
+    project = core.create_project(FIXTURES / "projects/demo")
+
+    # Export from pylock.toml to requirements format
+    with cd(project.root):
+        result = pdm(["export", "-f", "requirements", "-L", "pylock.toml", "--no-hashes"], obj=project, strict=True)
+        assert result.exit_code == 0
+
+    # The output should not be empty (this was the original bug)
+    output_lines = [
+        line.strip() for line in result.stdout.strip().split("\n") if line.strip() and not line.strip().startswith("#")
+    ]
+    assert len(output_lines) > 0, "Export from pylock.toml should not be empty"
+
+    # Should contain expected packages
+    output = result.stdout
+    assert any(pkg in output for pkg in ["chardet", "idna"]), "Expected at least some packages in output"
