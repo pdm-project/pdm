@@ -42,7 +42,7 @@ class PyLockConverter:
             result["vcs"] = {
                 "type": req.vcs,
                 "url": req.repo,
-                "requested-revision": req.revision,
+                "requested-revision": req.ref,
                 "commit-id": candidate.get_revision(),
             }
             if req.subdirectory:
