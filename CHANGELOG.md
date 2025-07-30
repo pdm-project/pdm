@@ -1,3 +1,17 @@
+## Release v2.25.5 (2025-07-30)
+
+### Features & Improvements
+
+- Tell the difference between free-threaded Python and normal ones. Users need to request for free-threaded versions explicitly by adding `t` to the version string, otherwise the normal build will be preferred. ([#3562](https://github.com/pdm-project/pdm/issues/3562))
+
+### Bug Fixes
+
+- Fix a bug that editable local package URLs are empty when using `pylock.toml`. ([#3565](https://github.com/pdm-project/pdm/issues/3565))
+- Fix a bug where `pdm export` with `--lockfile pylock.toml` produced empty requirements.txt files due to missing group information extraction from pylock format markers. ([#3573](https://github.com/pdm-project/pdm/issues/3573))
+- Read metadata from installed distribution when using reuse-installed strategy. ([#3579](https://github.com/pdm-project/pdm/issues/3579))
+- Fix a lockfile writing error when locking git dependencies in the pylock.toml format. ([#3582](https://github.com/pdm-project/pdm/issues/3582))
+
+
 ## Release v2.25.4 (2025-06-30)
 
 ### Bug Fixes
