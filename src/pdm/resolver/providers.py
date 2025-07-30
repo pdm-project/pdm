@@ -482,4 +482,4 @@ class ReuseInstalledProvider(ReusePinProvider):
             return super().iter_reuse_candidates(identifier, requirement)
         else:
             dist = self.installed[key]
-            return [Candidate(requirement, name=dist.metadata["Name"], version=dist.metadata["Version"])]
+            return [Candidate(requirement, installed=dist)]
