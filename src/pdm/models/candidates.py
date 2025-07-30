@@ -124,6 +124,7 @@ class Candidate:
         "_requires_python",
         "_revision",
         "hashes",
+        "installed",
         "link",
         "name",
         "req",
@@ -138,6 +139,7 @@ class Candidate:
         name: str | None = None,
         version: str | None = None,
         link: Link | None = None,
+        installed: im.Distribution | None = None,
     ):
         """
         :param req: the requirement that produces this candidate.
@@ -154,6 +156,7 @@ class Candidate:
         self.summary = ""
         self.hashes: list[FileHash] = []
         self.requested = False
+        self.installed: im.Distribution | None = installed
 
         self._requires_python: str | None = None
         self._prepared: PreparedCandidate | None = None
@@ -163,7 +166,7 @@ class Candidate:
         return self.req.identify()
 
     def copy_with(self, requirement: Requirement) -> Candidate:
-        can = Candidate(requirement, name=self.name, version=self.version, link=self.link)
+        can = Candidate(requirement, name=self.name, version=self.version, link=self.link, installed=self.installed)
         can.summary = self.summary
         can.hashes = self.hashes
         can._requires_python = self._requires_python
@@ -483,6 +486,9 @@ class PreparedCandidate:
             self._unpacked_dir = result
 
     def prepare_metadata(self, force_build: bool = False) -> im.Distribution:
+        if self.candidate.installed is not None:
+            return self.candidate.installed
+
         self._obtain(allow_all=True, unpack=False)
         if self._metadata_dir:
             return im.PathDistribution(Path(self._metadata_dir))
