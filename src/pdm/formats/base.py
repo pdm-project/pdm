@@ -93,9 +93,9 @@ def make_inline_table(data: Mapping) -> dict:
 
 
 def make_array(data: list, multiline: bool = False) -> list:
-    if not data:
-        return []
     array = cast(list, tomlkit.array().multiline(multiline))
+    if not data:
+        return array
     array.extend(data)
     return array
 
