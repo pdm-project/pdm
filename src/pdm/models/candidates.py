@@ -166,7 +166,7 @@ class Candidate:
         return self.req.identify()
 
     def copy_with(self, requirement: Requirement) -> Candidate:
-        can = Candidate(requirement, name=self.name, version=self.version, link=self.link)
+        can = Candidate(requirement, name=self.name, version=self.version, link=self.link, installed=self.installed)
         can.summary = self.summary
         can.hashes = self.hashes
         can._requires_python = self._requires_python
