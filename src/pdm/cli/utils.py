@@ -94,7 +94,9 @@ class PdmFormatter(argparse.RawDescriptionHelpFormatter):
         # if there was help for the action, add lines of help text
         if action.help:
             help_text = self._expand_help(action)
-            help_lines = self._split_lines(help_text, help_width)
+            help_lines = []
+            for help_line in help_text.split("\n"):
+                help_lines += self._split_lines(help_line, help_width)
             parts.append("{:>{}}{}\n".format("", indent_first, help_lines[0]))
             for line in help_lines[1:]:
                 parts.append("{:>{}}{}\n".format("", help_position, line))
