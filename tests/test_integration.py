@@ -70,6 +70,7 @@ def test_use_python_write_no_file(pdm, project):
 
 
 @pytest.mark.integration
+@pytest.mark.network
 @pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 @pytest.mark.parametrize("via_env", [True, False])
 def test_init_project_respect_version_file(pdm, project, python_version, via_env, monkeypatch):
@@ -85,6 +86,7 @@ def test_init_project_respect_version_file(pdm, project, python_version, via_env
 
 
 @pytest.mark.integration
+@pytest.mark.network
 @pytest.mark.parametrize("python_version", PYTHON_VERSIONS)
 def test_use_python_write_file_multiple_versions(pdm, project, python_version, monkeypatch):
     no_versions = [p for p in DEFAULT_PYTHON_VERSIONS if p not in PYTHON_VERSIONS]
