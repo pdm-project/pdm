@@ -15,14 +15,14 @@ theme:
       primary: deep purple
       accent: teal
       toggle:
-        icon: material/weather-sunny
+        icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
       media: "(prefers-color-scheme: dark)"
       primary: deep purple
       accent: teal
       toggle:
-        icon: material/weather-night
+        icon: material/brightness-4
         name: Switch to system preference
   font:
     text: Open Sans
