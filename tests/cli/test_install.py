@@ -394,8 +394,8 @@ def test_install_from_multi_target_lock(project, pdm, repository, nested, groups
 def test_install_from_lock_with_higher_version(project, pdm, working_set):
     project.add_dependencies(["django"])
     pdm(["lock", "--platform", "manylinux_2_20_x86_64"], obj=project, strict=True)
-    # linux is an alias for manylinux_2_17_x86_64 which is lower than the target
-    project.environment.__dict__["spec"] = EnvSpec.from_spec("==3.11", "linux")
+    # Install with manylinux_2_17_x86_64 which is lower than the target
+    project.environment.__dict__["spec"] = EnvSpec.from_spec("==3.11", "manylinux_2_17_x86_64")
     result = pdm(["install"], obj=project)
     assert result.exit_code == 0
     assert "WARNING: Found lock target" in result.stderr
