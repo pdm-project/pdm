@@ -111,20 +111,14 @@ The test suite is still simple and needs expansion! Please help write more test 
 
 ### Code style
 
-PDM uses `pre-commit` for linting. Install `pre-commit` first, for example with pip or [pipx](https://github.com/pypa/pipx):
+PDM uses pre-commit hooks for linting. You need to install [prefligit](https://github.com/j178/prefligit) to run the hooks.
+
+Please refer to the [prefligit documentation](https://github.com/j178/prefligit?tab=readme-ov-file#installation) and install it with your preferred method.
+
+Then you can install the hooks by running:
 
 ```bash
-python -m pip install pre-commit
-```
-
-```bash
-pipx install pre-commit
-```
-
-Then initialize `pre-commit`:
-
-```bash
-pre-commit install
+prefligit install
 ```
 
 You can now lint the code with:
@@ -133,7 +127,7 @@ You can now lint the code with:
 pdm run lint
 ```
 
-PDM uses `black` for code style and `isort` for sorting import statements. If you are not following them,
+PDM uses `ruff` for code style and sorting import statements. If you are not following them,
 the CI will fail and your Pull Request will not be merged.
 
 ### News fragments
