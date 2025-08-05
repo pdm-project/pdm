@@ -4,10 +4,10 @@ import importlib.resources
 import sys
 from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO, ContextManager, Sequence, TypeVar
+from typing import TYPE_CHECKING, ContextManager, Sequence, TypeVar
 
 if TYPE_CHECKING:
-    from typing import Protocol
+    from typing import IO, Protocol
 
     class SupportsIdentify(Protocol):
         def identify(self) -> str: ...
@@ -25,7 +25,7 @@ if (
     # a bug on windows+py39 that zipfile path is not normalized
 ):
 
-    def resources_open_binary(package: str, resource: str) -> BinaryIO:
+    def resources_open_binary(package: str, resource: str) -> IO[bytes]:
         return (importlib.resources.files(package) / resource).open("rb")
 
     def resources_read_text(package: str, resource: str, encoding: str = "utf-8", errors: str = "strict") -> str:

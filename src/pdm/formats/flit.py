@@ -63,7 +63,7 @@ def get_docstring_and_version_via_ast(
             and isinstance(child.value.value, str)
         )
         if is_version_str:
-            version: str | None = cast(ast.Constant, cast(ast.Assign, child).value).value
+            version: str | None = child.value.value  # type: ignore[assignment, attr-defined]
             break
     else:
         version = None
