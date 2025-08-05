@@ -6,20 +6,24 @@ edit_uri: edit/main/docs
 theme:
   name: material
   palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
     - scheme: default
       media: "(prefers-color-scheme: light)"
       primary: deep purple
       accent: teal
       toggle:
-        icon: material/weather-sunny
+        icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
       media: "(prefers-color-scheme: dark)"
       primary: deep purple
       accent: teal
       toggle:
-        icon: material/weather-night
-        name: Switch to light mode
+        icon: material/brightness-4
+        name: Switch to system preference
   font:
     text: Open Sans
     code: Fira Code
