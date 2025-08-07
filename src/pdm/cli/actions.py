@@ -62,15 +62,17 @@ def do_lock(
     if strategy_change and append:
         raise PdmUsageError("Not allowed to change lock strategy when --append is used.")
     locked_repo = project.get_locked_repository()
+    candidates = [entry.candidate for entry in locked_repo.packages.values()]
+    if refresh or env_spec is not None:
+        # Refetch hashes if --platform/--python/--implementation/--refresh is used
+        for c in candidates:
+            c.hashes.clear()
     if refresh:
         if env_spec is not None:
             raise PdmUsageError("Cannot pass --python/--platform/--implementation with --refresh")
         repo = project.get_repository()
         with project.core.ui.open_spinner("Re-calculating hashes..."):
             with project.core.ui.logging("lock"):
-                candidates = [entry.candidate for entry in locked_repo.packages.values()]
-                for c in candidates:
-                    c.hashes.clear()
                 repo.fetch_hashes(candidates)
             project.lockfile.format_lockfile(locked_repo, groups=project.lockfile.groups, strategy=lock_strategy)
         project.write_lockfile()
