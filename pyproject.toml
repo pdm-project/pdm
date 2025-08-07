@@ -13,9 +13,7 @@ authors = [
 dynamic = ["version"]
 requires-python = ">=3.9"
 license = "MIT"
-license-files = [
-  "LICENSE",
-]
+license-files = ["LICENSE"]
 dependencies = [
     "blinker",
     "packaging>=20.9,!=22.0",
