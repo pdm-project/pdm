@@ -148,7 +148,12 @@ class InstallCommand(BaseCommand):
 
         ver, python_file = get_download_link(version, implementation=implementation, arch=arch, build_dir=False)
         ver_str = str(ver)
-        with ui.open_spinner(f"Downloading [success]{ver_str}[/]") as spinner:
+        spinner_msg = f"Downloading [success]{ver_str}[/]"
+        if ui.verbosity >= Verbosity.DETAIL:
+            download_url = python_file[0] if isinstance(python_file, (tuple, list)) else python_file
+            spinner_msg += f" {download_url}"
+
+        with ui.open_spinner(spinner_msg) as spinner:
             destination = root / ver_str
             logger.debug("Installing %s to %s", ver_str, destination)
             env = BareEnvironment(project)
