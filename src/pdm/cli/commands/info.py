@@ -30,9 +30,11 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         check_project_file(project)
         interpreter = project.environment.interpreter
-        packages_path = ""
         if project.environment.is_local:
-            packages_path = project.environment.packages_path  # type: ignore[attr-defined]
+            packages_path = project.environment.packages_path
+        else:
+            paths = project.environment.get_paths()
+            packages_path = paths["platlib"]
         if options.python:
             project.core.ui.echo(str(interpreter.executable))
         elif options.where:
@@ -42,6 +44,8 @@ class Command(BaseCommand):
         elif options.env:
             project.core.ui.echo(json.dumps(project.environment.spec.markers_with_defaults(), indent=2))
         elif options.json:
+            # 修复 #3556: --json 输出的 packages_path 应与 --packages 保持一致
+            json_packages_path = project.environment.packages_path
             print_json(
                 data={
                     "pdm": {"version": project.core.version},
@@ -52,7 +56,7 @@ class Command(BaseCommand):
                     },
                     "project": {
                         "root": str(project.root),
-                        "pypackages": str(packages_path),
+                        "packages_path": str(json_packages_path),
                     },
                 }
             )
