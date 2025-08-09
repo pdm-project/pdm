@@ -111,14 +111,14 @@ The test suite is still simple and needs expansion! Please help write more test 
 
 ### Code style
 
-PDM uses pre-commit hooks for linting. You need to install [prefligit](https://github.com/j178/prefligit) to run the hooks.
+PDM uses pre-commit hooks for linting. You need to install [prek](https://github.com/j178/prek) to run the hooks.
 
-Please refer to the [prefligit documentation](https://github.com/j178/prefligit?tab=readme-ov-file#installation) and install it with your preferred method.
+Please refer to the [prek documentation](https://github.com/j178/prek?tab=readme-ov-file#installation) and install it with your preferred method.
 
 Then you can install the hooks by running:
 
 ```bash
-prefligit install
+prek install
 ```
 
 You can now lint the code with:
