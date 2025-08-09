@@ -260,6 +260,6 @@ coverage = {shell = """\
                     """}
 tox = "tox"
 doc = {cmd = "mkdocs serve", help = "Start the dev server for docs preview"}
-lint = "prefligit run --all-files"
+lint = "prek run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
 
