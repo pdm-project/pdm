@@ -139,3 +139,4 @@ temp.py
 type_info.json
 .pdm-build/
 src/pdm/VERSION
+.zed/

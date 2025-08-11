@@ -16,7 +16,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
     "blinker",
-    "packaging>=20.9,!=22.0",
+    "packaging>22.0",
     "platformdirs",
     "rich>=12.3.0",
     "virtualenv>=20",
@@ -262,4 +262,3 @@ tox = "tox"
 doc = {cmd = "mkdocs serve", help = "Start the dev server for docs preview"}
 lint = "prek run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
-
