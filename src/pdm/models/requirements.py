@@ -24,7 +24,6 @@ from pdm.models.markers import Marker, get_marker
 from pdm.models.setup import Setup
 from pdm.models.specifiers import PySpecSet, fix_legacy_specifier, get_specifier
 from pdm.utils import (
-    PACKAGING_22,
     add_ssh_scheme_to_git_uri,
     comparable_version,
     normalize_name,
@@ -489,8 +488,6 @@ def parse_as_pkg_requirement(line: str) -> PackageRequirement:
     try:
         return PackageRequirement(line)
     except InvalidRequirement:
-        if not PACKAGING_22:  # We can't do anything, reraise the error.
-            raise
         new_line = fix_legacy_specifier(line)
         return PackageRequirement(new_line)
 

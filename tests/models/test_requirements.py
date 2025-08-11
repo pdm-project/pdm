@@ -5,7 +5,6 @@ import os
 import pytest
 
 from pdm.models.requirements import RequirementError, filter_requirements_with_extras, parse_requirement
-from pdm.utils import PACKAGING_22
 from tests import FIXTURES
 
 FILE_PREFIX = "file:///" if os.name == "nt" else "file://"
@@ -56,17 +55,14 @@ REQUIREMENTS = [
     pytest.param(
         "foo >=4.*, <=5.*",
         "foo<5.0,>=4.0",
-        marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
     ),
     pytest.param(
         "foo (>=4.*, <=5.*)",
         "foo<5.0,>=4.0",
-        marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
     ),
     pytest.param(
         "foo>=3.0+g1234; python_version>='3.6'",
         'foo>=3.0; python_version >= "3.6"',
-        marks=pytest.mark.skipif(not PACKAGING_22, reason="packaging 22+ required"),
     ),
 ]
 
