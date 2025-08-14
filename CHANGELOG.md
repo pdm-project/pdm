@@ -1,3 +1,21 @@
+## Release v2.25.6 (2025-08-14)
+
+### Features & Improvements
+
+- The `pdm python install -v` command now shows the download URL for the Python interpreter. ([#3552](https://github.com/pdm-project/pdm/issues/3552))
+
+### Bug Fixes
+
+- Ensure `make_array` always returns a tomlkit array type. ([#3586](https://github.com/pdm-project/pdm/issues/3586))
+- Preserve multi-line help text in the CLI help output. ([#3587](https://github.com/pdm-project/pdm/issues/3587))
+- Re-caculate artifact files and hashes when the lock target changes. ([#3595](https://github.com/pdm-project/pdm/issues/3595))
+
+### Dependencies
+
+- Require packaging>22.0 and remove conditional PACKAGING_22 version checks. ([#3601](https://github.com/pdm-project/pdm/issues/3601))
+- Bump truststore to version 0.10.4. ([#3602](https://github.com/pdm-project/pdm/issues/3602))
+
+
 ## Release v2.25.5 (2025-07-30)
 
 ### Features & Improvements
