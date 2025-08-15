@@ -256,7 +256,13 @@ class Candidate:
     def as_lockfile_entry(self, project_root: Path) -> dict[str, Any]:
         """Build a lockfile entry dictionary for the candidate."""
         version = str(self.version)
-        if not self.req.is_pinned:
+        if self.req.is_pinned:
+            spec = next(iter(self.req.specifier))
+            should_normalize_version = "+" not in spec.version
+        else:
+            should_normalize_version = True
+
+        if should_normalize_version:
             try:
                 version = str(comparable_version(version))
             except InvalidVersion as e:
