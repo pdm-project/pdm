@@ -15,7 +15,7 @@ PDM will automatically detect the `uv` binary on your system. You need to instal
 uv also supports installing Python interpreters. To avoid overhead, you can configure PDM to reuse the Python installations of uv by:
 
 ```
-pdm config python.install_root $(uv python dir)
+pdm config python.install_root $(uv python dir --color never)
 ```
 
 ## Limitations
