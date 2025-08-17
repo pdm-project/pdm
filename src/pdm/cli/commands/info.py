@@ -34,7 +34,7 @@ class Command(BaseCommand):
         if project.environment.is_local:
             packages_path = project.environment.packages_path  # type: ignore[attr-defined]
         else:
-            # For virtual environments and other non-local environments, 
+            # For virtual environments and other non-local environments,
             # show the site-packages path (purelib is the standard location)
             paths = project.environment.get_paths()
             packages_path = paths.get("purelib", "")
