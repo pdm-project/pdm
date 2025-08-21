@@ -63,7 +63,7 @@ def do_lock(
         raise PdmUsageError("Not allowed to change lock strategy when --append is used.")
     locked_repo = project.get_locked_repository()
     candidates = [entry.candidate for entry in locked_repo.packages.values()]
-    if refresh or env_spec is not None:
+    if refresh or (env_spec is not None and not append):
         # Refetch hashes if --platform/--python/--implementation/--refresh is used
         for c in candidates:
             c.hashes.clear()
