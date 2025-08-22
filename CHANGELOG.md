@@ -1,3 +1,8 @@
+## Release v2.25.9 (2025-08-22)
+
+No significant changes.
+
+
 ## Release v2.25.8 (2025-08-22)
 
 ### Bug Fixes
