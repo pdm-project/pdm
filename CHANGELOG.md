@@ -1,3 +1,10 @@
+## Release v2.25.8 (2025-08-22)
+
+### Bug Fixes
+
+- Fix a careless error by fast apply in AI coding. ([#3612](https://github.com/pdm-project/pdm/issues/3612))
+
+
 ## Release v2.25.7 (2025-08-22)
 
 ### Features & Improvements
