@@ -433,7 +433,7 @@ class Project:
             )
         metadata_dependencies["default"] = self.pyproject.metadata.get("dependencies", [])
         dev_dependencies = self.pyproject.dev_dependencies
-        if "default" in metadata_dependencies:  # pragma: no cover
+        if "default" in dev_dependencies:  # pragma: no cover
             raise ProjectError(
                 "'default' is reserved by the main dependencies and is not allowed in dependency groups."
             )
