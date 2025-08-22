@@ -427,8 +427,14 @@ class Project:
         metadata_dependencies = {
             normalize_name(k): v for k, v in self.pyproject.metadata.get("optional-dependencies", {}).items()
         }
+        if "default" in metadata_dependencies:  # pragma: no cover
+            raise ProjectError(
+                "'default' is reserved by the main dependencies and is not allowed in optional dependencies."
+            )
         metadata_dependencies["default"] = self.pyproject.metadata.get("dependencies", [])
         dev_dependencies = self.pyproject.dev_dependencies
+        if "dev" in metadata_dependencies:  # pragma: no cover
+            raise ProjectError("'dev' is reserved by the main dependencies and is not allowed in dependency groups.")
         group_deps: dict[str, list[Requirement]] = {}
         project_name = normalize_name(self.name) if self.name else None
         for group in requested_groups:
