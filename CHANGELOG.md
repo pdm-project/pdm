@@ -1,3 +1,17 @@
+## Release v2.25.7 (2025-08-22)
+
+### Features & Improvements
+
+- Show the path to site-packages in the output of `pdm info`. ([#3600](https://github.com/pdm-project/pdm/issues/3600))
+
+### Bug Fixes
+
+- Fix `uv python dir` path resolution on Windows ([#3603](https://github.com/pdm-project/pdm/issues/3603))
+- Strip local version in version specifiers when writing package locks. ([#3605](https://github.com/pdm-project/pdm/issues/3605))
+- Show an error message when 'default' is used in optional dependencies or dependency groups. ([#3609](https://github.com/pdm-project/pdm/issues/3609))
+- Prevent hash clearing when appending to lockfile with env_spec. ([#3610](https://github.com/pdm-project/pdm/issues/3610))
+
+
 ## Release v2.25.6 (2025-08-14)
 
 ### Features & Improvements
