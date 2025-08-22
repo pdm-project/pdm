@@ -57,23 +57,9 @@ pdm run lint
 pdm run doc
 ```
 
-### Release Process
-```bash
-# Preview changelog
-pdm run release --dry-run
+### Contribution Guidelines
 
-# Create release
-pdm run release
-```
-
-## Testing Guidelines
-
-Tests are in the `tests/` directory organized by module. Key test fixtures:
-- `project` fixture: Creates temporary PDM projects
-- `working_set` fixture: Mock Python environment
-- `repository` fixture: Mock PyPI repository
-
-Tests use pytest with pytest-mock for mocking and pytest-httpserver for HTTP testing.
+Refer to [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Important Files
 
