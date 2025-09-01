@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 from typing import Any
 
@@ -46,7 +47,8 @@ class UvSynchronizer(BaseSynchronizer):
             cmd = self._get_sync_command()
             self.environment.project.core.ui.echo(f"Running uv sync command: {cmd}", verbosity=Verbosity.DETAIL)
             real_cmd = [s.secret if isinstance(s, HiddenText) else s for s in cmd]
-            subprocess.run(real_cmd, check=True, cwd=self.environment.project.root)
+            env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(self.environment.interpreter.path.parent.parent)}
+            subprocess.run(real_cmd, check=True, cwd=self.environment.project.root, env=env)
 
     def _get_sync_command(self) -> list[str | HiddenText]:
         core = self.environment.project.core

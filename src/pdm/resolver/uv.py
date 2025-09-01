@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import re
 import subprocess
 from dataclasses import dataclass, replace
@@ -194,7 +195,8 @@ class UvResolver(Resolver):
                 uv_lock_command = self._build_lock_command()
                 self.project.core.ui.echo(f"Running uv lock command: {uv_lock_command}", verbosity=Verbosity.DETAIL)
                 real_command = [s.secret if isinstance(s, HiddenText) else s for s in uv_lock_command]
-                subprocess.run(real_command, cwd=self.project.root, check=True)
+                env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(self.environment.interpreter.path.parent.parent)}
+                subprocess.run(real_command, cwd=self.project.root, check=True, env=env)
             finally:
                 if isinstance(self.reporter, RichLockReporter):
                     self.reporter.start()
