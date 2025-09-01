@@ -106,7 +106,10 @@ class Command(BaseCommand):
             # PyPI / TestPyPI / GCP Artifact Registry
             or (status == 400 and any("already exist" in x for x in [reason, text]))
             # Nexus Repository OSS (https://www.sonatype.com/nexus-repository-oss)
-            or (status == 400 and any(any(token in x for token in ["updating asset", "cannot be updated"]) for x in [reason, text]))
+            or (
+                status == 400
+                and any(any(token in x for token in ["updating asset", "cannot be updated"]) for x in [reason, text])
+            )
             # Artifactory (https://jfrog.com/artifactory/)
             or (status == 403 and "overwrite artifact" in text)
             # Gitlab Enterprise Edition (https://about.gitlab.com)
