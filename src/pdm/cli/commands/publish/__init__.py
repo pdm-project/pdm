@@ -108,7 +108,7 @@ class Command(BaseCommand):
             # Nexus Repository OSS (https://www.sonatype.com/nexus-repository-oss)
             or (
                 status == 400
-                and any(any(token in x for token in ["updating asset", "cannot be updated"]) for x in [reason, text])
+                and any(token in x for x in [reason, text] for token in ["updating asset", "cannot be updated"])
             )
             # Artifactory (https://jfrog.com/artifactory/)
             or (status == 403 and "overwrite artifact" in text)
