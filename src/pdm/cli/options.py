@@ -512,7 +512,7 @@ config_setting_option = Option(
     "--config-setting",
     "-C",
     action=ExtendMapAction,
-    help="Pass options to the builder. options with a value must be "
+    help="Pass options to the builder. Options with a value must be "
     'specified after "=": `--config-setting=key(=value)` '
     "or `-Ckey(=value)`",
 )
