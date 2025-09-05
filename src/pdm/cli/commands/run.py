@@ -9,6 +9,7 @@ import shlex
 import signal
 import subprocess
 import sys
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Mapping, NamedTuple, Sequence, cast
 
@@ -25,7 +26,7 @@ from pdm.utils import deprecation_warning, expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
     from types import FrameType
-    from typing import Any, Callable, Iterator, TypedDict
+    from typing import Any, Iterator, TypedDict
 
     from pdm.environments import BaseEnvironment
     from pdm.project import Project
@@ -528,20 +529,21 @@ class Command(BaseCommand):
         sys.exit(exit_code)
 
 
-def run_script_if_present(script_name: str) -> Callable:
-    """Helper to create a signal handler to run specific script"""
+def run_script_if_present(script_name: str, sender: Project, hooks: HookManager, **kwargs: Any) -> None:
+    """A signal handler to run a script if present in the project."""
 
-    def handler(sender: Project, hooks: HookManager, **kwargs: Any) -> None:
-        runner = TaskRunner(sender, hooks)
-        task = runner.get_task(script_name)
-        if task is None:
-            return
-        exit_code = runner.run_task(task)
-        if exit_code != 0:
-            sys.exit(exit_code)
-
-    return handler
+    runner = TaskRunner(sender, hooks)
+    task = runner.get_task(script_name)
+    if task is None:
+        return
+    exit_code = runner.run_task(task)
+    if exit_code != 0:
+        sys.exit(exit_code)
+    # reload project files in case the script modified them
+    sender.project_config.reload()
+    sender.pyproject.reload()
+    sender.lockfile.reload()
 
 
 for hook in pdm_signals:
-    pdm_signals.signal(hook).connect(run_script_if_present(hook), weak=False)
+    pdm_signals.signal(hook).connect(partial(run_script_if_present, hook), weak=False)
