@@ -309,6 +309,12 @@ class Config(MutableMapping[str, str]):
             self.get_defaults() if is_global else {},
         )
 
+    def reload(self) -> None:
+        """Reload the config from file"""
+        new_data = load_config(self.config_file)
+        self._file_data.clear()
+        self._file_data.update(new_data)
+
     def load_theme(self) -> rich.theme.Theme:
         if not self.is_global:  # pragma: no cover
             raise PdmUsageError("Theme can only be loaded from global config")
