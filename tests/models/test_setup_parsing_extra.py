@@ -2,9 +2,9 @@ import textwrap
 
 import pytest
 
-from pdm.models.setup import Setup, SetupDistribution
 from pdm.exceptions import ProjectError
 from pdm.formats import MetaConvertError
+from pdm.models.setup import Setup
 
 
 def test_setup_update_truthiness_semantics():
@@ -39,7 +39,9 @@ def test_parse_setup_py_with_kwargs_dict_and_variables(tmp_path):
 
 
 def test_setup_as_dict():
-    s = Setup(name="n", version="1", install_requires=["a"], extras_require={"x": ["b"]}, python_requires=">=3.8", summary="d")
+    s = Setup(
+        name="n", version="1", install_requires=["a"], extras_require={"x": ["b"]}, python_requires=">=3.8", summary="d"
+    )
     d = s.as_dict()
     assert d["name"] == "n"
     assert d["version"] == "1"
@@ -280,10 +282,7 @@ def test_setup_distribution_metadata_and_requires_markers():
     # Extra-only requirement with no existing marker
     assert any(r.startswith("rich") and 'extra == "tui"' in r for r in reqs)
     # Existing marker combined without parentheses
-    assert any(
-        r.startswith("foo") and 'python_version >= "3.9" and extra == "tui"' in r
-        for r in reqs
-    )
+    assert any(r.startswith("foo") and 'python_version >= "3.9" and extra == "tui"' in r for r in reqs)
     # Existing marker with OR and repeated extra markers (no parentheses)
     assert any(
         r.startswith("bar")
@@ -297,6 +296,7 @@ def test_read_text_and_locate_file_smoke():
     assert dist.read_text("any") is None
     p = dist.locate_file("whatever")
     from pathlib import Path as _P
+
     assert isinstance(p, _P)
 
 
@@ -347,7 +347,7 @@ def test_install_requires_name_resolves_to_non_list(tmp_path):
     )
     tmp_path.joinpath("setup.py").write_text(content)
     result = Setup.from_directory(tmp_path)
-    assert result.name == 'g'
+    assert result.name == "g"
     assert result.install_requires == []
 
 
