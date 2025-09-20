@@ -10,7 +10,7 @@ from pdm import utils
 from pdm._types import RepositoryConfig
 from pdm.cli import utils as cli_utils
 from pdm.cli.filters import GroupSelection
-from pdm.exceptions import PdmUsageError, PDMWarning
+from pdm.exceptions import PdmException, PdmUsageError, PDMWarning
 
 
 @pytest.mark.parametrize(
@@ -496,6 +496,9 @@ def test_invalidate_project_name(name):
 )
 def test_sanitize_project_name(given, sanitized):
     assert utils.sanitize_project_name(given) == sanitized
+
+    with pytest.raises(PdmException):
+        utils.sanitize_project_name("@#$")
 
 
 @pytest.mark.parametrize(
