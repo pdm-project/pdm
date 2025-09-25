@@ -1,7 +1,7 @@
 import os
 import sys
-from types import SimpleNamespace, ModuleType
 from pathlib import Path
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -32,6 +32,7 @@ def test_local_get_paths_headers_override(local_env):
     paths = local_env.get_paths(dist_name="mypkg")
     # Ensure headers path is under include/mypkg (cross-platform path check)
     from pathlib import Path as _P
+
     assert _P(paths["headers"]).parts[-2:] == ("include", "mypkg")
     # Sanity: scheme base is pep582
     scheme = pdm_scheme(local_env.packages_path.as_posix())

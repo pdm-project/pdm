@@ -1,6 +1,6 @@
+import io
 import os
 import shlex
-import io
 import zipfile
 from pathlib import Path
 
