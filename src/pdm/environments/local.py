@@ -32,7 +32,8 @@ def _is_console_script(content: bytes) -> bool:
             with zipfile.ZipFile(io.BytesIO(content)) as zf:
                 return zf.namelist() == ["__main__.py"]
         except zipfile.BadZipFile:
-            return False
+            # Not a valid zip executable; fall back to text-based shebang detection below
+            pass
 
     try:
         text = content.decode("utf-8")
