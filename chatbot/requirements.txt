@@ -43,7 +43,7 @@ jiter==0.7.1
 joblib==1.4.2
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
-llama-index-core==0.12.43
+llama-index-core==0.13.0
 llama-index-embeddings-azure-openai==0.3.8
 llama-index-embeddings-openai==0.3.0
 llama-index-instrumentation==0.2.0
