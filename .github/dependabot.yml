@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Maintain dependencies for workflow actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "github_actions"
+    groups:
+      actions:
+        patterns:
+          - "*"
