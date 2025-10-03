@@ -19,9 +19,9 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5.0.0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.11"
           cache: pip
@@ -40,7 +40,7 @@ jobs:
           pipx run build
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pdm-wheel
           path: dist/*.whl
@@ -72,7 +72,7 @@ jobs:
           prerelease: ${{ steps.check_version.outputs.PRERELEASE }}
 
       - name: Trigger Bucket Update
-        uses: benc-uk/workflow-dispatch@v1
+        uses: benc-uk/workflow-dispatch@v1.2.4
         with:
           workflow: Excavator
           repo: frostming/scoop-frostming
@@ -102,7 +102,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5.0.0
 
       - name: Fetch PyApp
         run: >-
@@ -118,7 +118,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5.0.0
         with:
           name: pdm-wheel
           path: dist
@@ -138,7 +138,7 @@ jobs:
           mv target/release/$SOURCE_FILE ../$TARGET_FILE
 
       - name: Upload Assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: pdm-${{ github.ref_name }}-${{ env.TARGET_TRIPLE }}
           path: ${{ env.TARGET_FILE }}
