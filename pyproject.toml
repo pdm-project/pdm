@@ -33,7 +33,7 @@ dependencies = [
     "tomli>=1.1.0; python_version < \"3.11\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
     "hishel>=0.0.32",
-    "pbs-installer>=2025.6.6",
+    "pbs-installer>=2025.10.7",
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
     "httpcore>=1.0.6",
