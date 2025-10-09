@@ -168,8 +168,7 @@ class TaskRunner:
         script_project.pyproject.set_data(
             {"project": {"name": "temp-project", **metadata, "version": "0.0.0"}, "tool": tool_config}
         )
-        md5_kwargs = {"usedforsecurity": False}
-        venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8"), **md5_kwargs).hexdigest()
+        venv_name = hashlib.md5(os.path.realpath(script_file).encode("utf-8"), usedforsecurity=False).hexdigest()
         venv_backend = BACKENDS[script_project.config["venv.backend"]](script_project, None)
         venv = venv_backend.get_location(None, venv_name)
         with contextlib.ExitStack() as stack:

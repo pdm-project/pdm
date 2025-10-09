@@ -625,7 +625,7 @@ def test_composite_keep_going_on_failure(project, pdm, capfd):
     capfd.readouterr()
     result = pdm(["run", "test"], obj=project)
     assert result.exit_code == 1
-    out, err = capfd.readouterr()
+    out, _ = capfd.readouterr()
     assert "First CALLED" in out
     assert "Second CALLED" in out
 
