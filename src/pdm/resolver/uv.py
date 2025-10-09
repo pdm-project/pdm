@@ -5,7 +5,6 @@ import os
 import re
 import subprocess
 from dataclasses import dataclass, replace
-from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -133,11 +132,15 @@ class UvResolver(Resolver):
                 req.extras = extra
             return req.as_line()
 
-        def make_hash(item: dict[str, Any]) -> FileHash:
-            link = Link(item["url"])
-            if "hash" not in item:
-                item["hash"] = hash_cache.get_hash(link, session)
-            return {"url": item["url"], "file": link.filename, "hash": item["hash"]}
+        def make_hash(item: dict[str, Any], fallback_url: str | None = None) -> FileHash:
+            url = item.get("url") or fallback_url
+            if url is None:
+                raise KeyError("url")
+            link = Link(url)
+            hash_value = item.get("hash")
+            if hash_value is None:
+                hash_value = hash_cache.get_hash(link, session)
+            return {"url": url, "file": link.filename, "hash": hash_value}
 
         for package in data["package"]:
             if (
@@ -166,8 +169,11 @@ class UvResolver(Resolver):
                 req = NamedRequirement.create(name=package["name"], specifier=f"=={package['version']}")
             candidate = Candidate(req, name=package["name"], version=package["version"])
 
-            for wheel in chain(package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []):
-                candidate.hashes.append(make_hash(wheel))
+            fallback_url = package["source"].get("url")
+            for wheel in package.get("wheels", []):
+                candidate.hashes.append(make_hash(wheel, fallback_url))
+            if sdist := package.get("sdist"):
+                candidate.hashes.append(make_hash(sdist, fallback_url))
             entry = Package(candidate, [make_requirement(dep) for dep in package.get("dependencies", [])], "")
             packages.append(entry)
             if optional_dependencies := package.get("optional-dependencies"):
