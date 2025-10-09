@@ -8,7 +8,7 @@ from pdm.exceptions import PdmException
 
 def test_non_pyproject_template_disallowed(project_no_init):
     with ProjectTemplate("tests/fixtures/projects/demo_extras") as template:
-        with pytest.raises(PdmException, match="Template pyproject.toml not found"):
+        with pytest.raises(PdmException, match=r"Template pyproject.toml not found"):
             template.generate(project_no_init.root, {"project": {"name": "foo"}})
 
 

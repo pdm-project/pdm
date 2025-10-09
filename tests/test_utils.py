@@ -31,7 +31,7 @@ from pdm.exceptions import PdmException, PdmUsageError, PDMWarning
 @mock.patch("pdm.utils.os.makedirs")
 @mock.patch("pdm.utils.tempfile.mkdtemp")
 def test_create_tracked_tempdir(mock_tempfile_mkdtemp, mock_os_makedirs, mock_atexit_register, given, dirname):
-    test_suffix, test_prefix, test_dir = given
+    test_suffix, test_prefix, _ = given
     mock_tempfile_mkdtemp.return_value = dirname
     received_dirname = utils.create_tracked_tempdir(suffix=test_suffix, prefix=test_prefix, dir=dirname)
     mock_tempfile_mkdtemp.assert_called_once_with(suffix=test_suffix, prefix=test_prefix, dir=dirname)
