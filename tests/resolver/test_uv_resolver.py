@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import pytest
 
 from pdm.models.markers import EnvSpec
@@ -80,3 +82,43 @@ def test_resolve_dependencies_with_overrides(project, overrides):
 
     mapping = {p.candidate.identify(): p.candidate for p in resolution.packages}
     assert mapping["requests"].version == "2.31.0"
+
+
+def test_parse_uv_lock_with_source_url_fallback(project):
+    from pdm.resolver.uv import UvResolver
+
+    lock_path = project.root / "uv.lock"
+    lock_path.write_text(
+        dedent(
+            """
+            version = 1
+            requires-python = ">=3.8"
+
+            [[package]]
+            name = "mdformat-py-edu-fr"
+            version = "0.1.1"
+            source = { url = "http://foss.heptapod.net/py-edu-fr/mdformat-py-edu-fr/-/archive/0.1.1/mdformat-py-edu-fr.tar.gz" }
+            sdist = { hash = "sha256:124488d1796a7ad5f98b1365fe00ff3e71846fd1f91d46e54f8b73c0cdbd78a1" }
+            """
+        ).strip(),
+        encoding="utf-8",
+    )
+
+    resolver = UvResolver(
+        project.environment,
+        requirements=[],
+        target=project.environment.spec,
+        update_strategy="all",
+        strategies=set(),
+    )
+    resolution = resolver._parse_uv_lock(lock_path)
+    candidate = next(iter(resolution.packages)).candidate
+
+    assert candidate.req.url == (
+        "http://foss.heptapod.net/py-edu-fr/mdformat-py-edu-fr/-/archive/0.1.1/mdformat-py-edu-fr.tar.gz"
+    )
+    assert candidate.hashes[0] == {
+        "url": "http://foss.heptapod.net/py-edu-fr/mdformat-py-edu-fr/-/archive/0.1.1/mdformat-py-edu-fr.tar.gz",
+        "file": "mdformat-py-edu-fr.tar.gz",
+        "hash": "sha256:124488d1796a7ad5f98b1365fe00ff3e71846fd1f91d46e54f8b73c0cdbd78a1",
+    }
