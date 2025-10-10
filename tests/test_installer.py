@@ -100,6 +100,7 @@ def test_uninstall_commit_rollback(project):
 
 def test_rollback_after_commit(project, caplog):
     caplog.set_level(logging.ERROR, logger="pdm.termui")
+    logging.getLogger("pdm.termui").addHandler(caplog.handler)
     req = parse_requirement("demo")
     candidate = Candidate(
         req,
@@ -118,7 +119,7 @@ def test_rollback_after_commit(project, caplog):
     remove_paths.rollback()
     assert not os.path.exists(lib_file)
 
-    assert any(record.message == "Can't rollback, not uninstalled yet" for record in caplog.records)
+    assert any(message == "Can't rollback, not uninstalled yet" for message in caplog.messages)
 
 
 @pytest.mark.parametrize("use_install_cache", [False, True])
