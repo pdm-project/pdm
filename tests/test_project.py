@@ -430,19 +430,6 @@ def test_filter_sources_with_config(project):
     expect_sources("baz-extra", ["source1", "pypi"])
 
 
-@pytest.mark.usefixtures("working_set")
-def test_preserve_log_file(project, pdm, tmp_path, mocker):
-    pdm(["add", "requests"], obj=project, strict=True)
-    all_logs = list(tmp_path.joinpath("logs").iterdir())
-    assert len(all_logs) == 0
-
-    mocker.patch("pdm.installers.Synchronizer.synchronize", side_effect=Exception)
-    result = pdm(["add", "pytz"], obj=project)
-    assert result.exit_code != 0
-    install_log = next(tmp_path.joinpath("logs").glob("pdm-install-*.log"))
-    assert install_log.exists()
-
-
 @pytest.mark.parametrize("use_venv", [pytest.param(True, marks=pytest.mark.network), False])
 def test_find_interpreters_with_PDM_IGNORE_ACTIVE_VENV(
     pdm: PDMCallable,

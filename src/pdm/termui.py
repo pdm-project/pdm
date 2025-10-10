@@ -6,7 +6,7 @@ import logging
 import os
 import tempfile
 import warnings
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING
 
 import rich
 from rich.box import ROUNDED
@@ -160,8 +160,31 @@ class SilentSpinner(DummySpinner):
         pass
 
 
+class TruncatedIO:
+    """A wrapper for IO that truncates output after certain length."""
+
+    def __init__(self, wrapped: IO[str], max_length: int = 100 * 1024 * 1024) -> None:
+        self.max_length = max_length
+        self._fp = wrapped
+        self._truncated = False
+
+    def write(self, s: str) -> int:
+        if self._truncated:
+            return 0
+        if self._fp.tell() >= self.max_length:
+            s = "...[truncated]...\n"
+            self._truncated = True
+            _err_console.print("[warning]WARNING:[/] Log truncated due to excessive length.")
+        return self._fp.write(s)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._fp, name)
+
+
 class UI:
     """Terminal UI object"""
+
+    MAX_LOG_SIZE = 100 * 1024 * 1024  # 100MB
 
     def __init__(
         self, verbosity: Verbosity = Verbosity.NORMAL, *, exit_stack: contextlib.ExitStack | None = None
@@ -244,8 +267,10 @@ class UI:
             if self.log_dir and not os.path.exists(self.log_dir):
                 os.makedirs(self.log_dir, exist_ok=True)
             self._clean_logs()
-            log_file = tempfile.mktemp(".log", f"pdm-{type_}-", self.log_dir)
-            handler = logging.FileHandler(log_file, encoding="utf-8")
+            fp, log_file = tempfile.mkstemp(".log", f"pdm-{type_}-", self.log_dir)
+            handler = logging.StreamHandler(
+                TruncatedIO(self.exit_stack.enter_context(open(fp, "a", encoding="utf-8")), self.MAX_LOG_SIZE)
+            )
             handler.setLevel(logging.DEBUG)
 
         handler.setFormatter(logging.Formatter("%(name)s: %(message)s"))
