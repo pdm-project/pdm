@@ -25,8 +25,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
+logger.setLevel(logging.DEBUG)
 unearth_logger = logging.getLogger("unearth")
 unearth_logger.addHandler(logging.NullHandler())
+unearth_logger.setLevel(logging.DEBUG)
 
 DEFAULT_THEME = {
     "primary": "cyan",
