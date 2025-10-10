@@ -24,10 +24,10 @@ if TYPE_CHECKING:
     from pdm._types import RichProtocol, Spinner, SpinnerT
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+logger.propagate = False
 logger.setLevel(logging.DEBUG)
 unearth_logger = logging.getLogger("unearth")
-unearth_logger.addHandler(logging.NullHandler())
+unearth_logger.propagate = False
 unearth_logger.setLevel(logging.DEBUG)
 
 DEFAULT_THEME = {

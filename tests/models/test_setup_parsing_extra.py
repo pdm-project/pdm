@@ -1,3 +1,4 @@
+import logging
 import textwrap
 
 import pytest
@@ -237,6 +238,7 @@ def test_read_pyproject_toml_metaconverter_error_uses_partial_data_and_logs(tmp_
     monkeypatch.setattr(project_file, "PyProject", DummyPyProject)
 
     caplog.set_level("WARNING")
+    logging.getLogger("pdm.termui").addHandler(caplog.handler)
     tmp_path.joinpath("pyproject.toml").write_text("[tool.other]\nfoo='bar'")
     result = Setup.from_directory(tmp_path)
 
@@ -249,7 +251,7 @@ def test_read_pyproject_toml_metaconverter_error_uses_partial_data_and_logs(tmp_
     assert result.python_requires == ">=3.8"
 
     # Check a warning was logged
-    assert any("Error parsing pyproject.toml" in rec.getMessage() for rec in caplog.records)
+    assert any("Error parsing pyproject.toml" in message for message in caplog.messages)
 
 
 def test_setup_distribution_metadata_and_requires_markers():
