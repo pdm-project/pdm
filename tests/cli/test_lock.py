@@ -445,3 +445,12 @@ def test_pylock_add_remove_strategy(project, pdm):
     assert result.exit_code != 0
     result = pdm(["lock", "-S", "no_inherit_metadata"], obj=project)
     assert result.exit_code != 0
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_with_invalid_python_requirement(project, pdm):
+    project.add_dependencies(["requests", "python>=3.6"])
+    result = pdm(["lock", "-v"], obj=project, strict=True)
+    assert "requests" in project.get_locked_repository().candidates
+    assert "python" not in project.get_locked_repository().candidates
+    assert "The 'python' requirement is not necessary and will be ignored." in result.stderr
