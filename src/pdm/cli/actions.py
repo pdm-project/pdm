@@ -116,6 +116,10 @@ def do_lock(
     resolve_max_rounds = int(project.config["strategy.resolve_max_rounds"])
     hooks.try_emit("pre_lock", requirements=requirements, dry_run=dry_run)
     with ui.logging("lock"):
+        for req in list(requirements):
+            if req.key == "python":
+                requirements.remove(req)
+                logger.warning("The 'python' requirement is not necessary and will be ignored.")
         # The context managers are nested to ensure the spinner is stopped before
         # any message is thrown to the output.
         resolver_class = project.get_resolver()
