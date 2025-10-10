@@ -259,3 +259,22 @@ def test_export_with_vcs_deps(pdm, project):
     result = pdm(["export", "--no-hashes"], obj=project)
     assert result.exit_code == 0
     assert "demo @ git+https://github.com/test-root/demo.git@1234567890abcdef" in result.output.splitlines()
+
+
+@pytest.mark.usefixtures("repository")
+def test_keep_log_on_failure(pdm, project, tmp_path):
+    log_dir = tmp_path / "logs"
+    project.global_config["log_dir"] = str(log_dir)
+    pdm(["add", "non_exist_package"], obj=project)
+    log_files = list(log_dir.glob("pdm-lock-*.log"))
+    assert len(log_files) == 1
+
+
+@pytest.mark.usefixtures("repository")
+def test_truncated_log_on_failure(pdm, project, tmp_path, monkeypatch):
+    monkeypatch.setattr("pdm.termui.UI.MAX_LOG_SIZE", 100)  # 100 bytes
+    project.global_config["log_dir"] = str(tmp_path / "logs")
+    pdm(["add", "non_exist_package"], obj=project)
+    log_file = next((tmp_path / "logs").glob("pdm-lock-*.log"))
+    assert log_file.stat().st_size < 200
+    assert "[truncated]" in log_file.read_text()
