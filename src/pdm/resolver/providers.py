@@ -90,7 +90,7 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         editable = requirement.editable
         is_named = requirement.is_named
         is_pinned = requirement.is_pinned
-        is_prerelease = bool(requirement.prerelease) and bool(requirement.specifier.prereleases)
+        is_prerelease = bool(requirement.prerelease) or bool(requirement.specifier.prereleases)
         specifier_parts = len(requirement.specifier)
         return (not editable, is_named, not is_pinned, not is_prerelease, -specifier_parts)
 
