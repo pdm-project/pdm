@@ -1,3 +1,21 @@
+## Release v2.26.0 (2025-10-11)
+
+### Features & Improvements
+
+- Limit the log file size to 100MB and truncate the log output if exceeded. ([#3633](https://github.com/pdm-project/pdm/issues/3633))
+- Speed up dependency resolution in the bad path by skipping candidates of the same version when resolving. ([#3647](https://github.com/pdm-project/pdm/issues/3647))
+
+### Bug Fixes
+
+- Reload project files after running hook scripts. ([#3615](https://github.com/pdm-project/pdm/issues/3615))
+- Fix a bug when using UV as the resolver does not respect the venv.location configuration. ([#3616](https://github.com/pdm-project/pdm/issues/3616))
+- Fix `publish --skip-existing` for Nexus Repository OSS >= 3.70 ([#3617](https://github.com/pdm-project/pdm/issues/3617))
+- Fix a resolution failure when both prerelease and non-prerelease requirements exist. ([#3634](https://github.com/pdm-project/pdm/issues/3634))
+- Ignore invalid `python` requirement during locking. ([#3635](https://github.com/pdm-project/pdm/issues/3635))
+- Isolate PDM loggers with the root logger to avoid log leakage. ([#3637](https://github.com/pdm-project/pdm/issues/3637))
+- Fix a crash when resolving URL dependencies under `use_uv=true`. ([#3640](https://github.com/pdm-project/pdm/issues/3640))
+
+
 ## Release v2.25.9 (2025-08-22)
 
 No significant changes.
