@@ -209,9 +209,9 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                     # If there are wheels for the given version, we should only return wheels
                     # to avoid build steps.
                     if collected_wheels:
-                        yield from collected_wheels
-                    else:
-                        yield from collected_others
+                        yield collected_wheels[0]
+                    elif collected_others:
+                        yield collected_others[0]
                     current_version = candidate.version
                     collected_wheels.clear()
                     collected_others.clear()
@@ -220,9 +220,9 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                 else:
                     collected_others.append(candidate)
             if collected_wheels:
-                yield from collected_wheels
-            else:
-                yield from collected_others
+                yield collected_wheels[0]
+            elif collected_others:
+                yield collected_others[0]
 
     def find_matches(
         self,
