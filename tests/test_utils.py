@@ -179,7 +179,7 @@ class TestUrlToPath:
         ("", ""),
         ("${FOO}", "hello"),
         ("$FOO", "$FOO"),
-        ("${BAR}", "${BAR}"),
+        ("${BAR}", ""),
         ("%FOO%", "%FOO%"),
         ("${FOO}_${FOO}", "hello_hello"),
     ],
@@ -203,7 +203,7 @@ def test_expand_env_vars(given, expected, monkeypatch):
         ),
         (
             "https://${FOOBAR}@example.org/path?arg=1",
-            "https://%24%7BFOOBAR%7D@example.org/path?arg=1",
+            "https://@example.org/path?arg=1",
         ),
     ],
 )
