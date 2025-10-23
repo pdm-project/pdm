@@ -237,7 +237,7 @@ def expand_env_vars(credential: str, quote: bool = False, env: Mapping[str, str]
         env = os.environ
 
     def replace_func(match: Match) -> str:
-        rv = env.get(match.group(1), match.group(0))
+        rv = env.get(match.group(1), "")
         return parse.quote(rv, "") if quote else rv
 
     return re.sub(r"\$\{(.+?)\}", replace_func, credential)
