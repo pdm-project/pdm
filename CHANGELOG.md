@@ -1,3 +1,11 @@
+## Release v2.26.1 (2025-10-29)
+
+### Bug Fixes
+
+- Substitute missing env vars with empty string in `expand_env_vars`. ([#3653](https://github.com/pdm-project/pdm/issues/3653))
+- Constrained hishel to be less than 1.0.0 due to its refactor ([#3657](https://github.com/pdm-project/pdm/issues/3657))
+
+
 ## Release v2.26.0 (2025-10-11)
 
 ### Features & Improvements
