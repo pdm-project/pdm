@@ -1,6 +1,7 @@
 import pathlib
 import sys
 import unittest.mock as mock
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -513,3 +514,21 @@ def test_hide_url(url, redacted):
     hidden = utils.hide_url(url)
     assert hidden.secret == url
     assert hidden.redacted == str(hidden) == redacted
+
+
+def test_fs_supports_link_method_when_method_doesnt_exist():
+    assert utils.fs_supports_link_method("nonexistent-link-method") is False
+
+
+def test_convert_to_datetime_when_uppercase_t_is_present():
+    original_datetime = "2025-10-30T10:26:29Z"
+    expected_datetime = datetime.fromisoformat("2025-10-30T10:26:29+00:00")
+
+    assert utils.convert_to_datetime(original_datetime) == expected_datetime
+
+
+def test_convert_to_datetime_when_uppercase_t_is_absent():
+    original_datetime = "2025-10-30"
+    expected_datetime = datetime(2025, 10, 30, tzinfo=timezone.utc)
+
+    assert utils.convert_to_datetime(original_datetime) == expected_datetime
