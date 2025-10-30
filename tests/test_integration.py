@@ -91,11 +91,20 @@ def test_init_project_respect_version_file(pdm, project, python_version, via_env
 def test_use_python_write_file_multiple_versions(pdm, project, python_version, monkeypatch):
     no_versions = [p for p in DEFAULT_PYTHON_VERSIONS if p not in PYTHON_VERSIONS]
     project.project_config["python.use_venv"] = True
-    project.root.joinpath(".python-version").write_text("\n".join(no_versions))
+
+    if no_versions and PYTHON_VERSIONS:
+        version_content = f"{no_versions[0]}\n{PYTHON_VERSIONS[0]}"
+    elif no_versions:
+        version_content = "\n".join(no_versions)
+    else:
+        version_content = "\n".join(PYTHON_VERSIONS[:2])
+
+    project.root.joinpath(".python-version").write_text(version_content)
     project._saved_python = None
     project._environment = None
     pdm(["install"], obj=project, strict=True)
-    assert f"{project.python.major}.{project.python.minor}" not in no_versions
+
+    assert f"{project.python.major}.{project.python.minor}" in PYTHON_VERSIONS
 
 
 @pytest.mark.integration
