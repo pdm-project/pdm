@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v5.0.0
 
       - name: Setup Python Versions
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: |
             3.9
@@ -55,7 +55,7 @@ jobs:
           allow-prereleases: true
         if: matrix.os != 'macos-latest'
       - name: Setup Python Versions
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6
         with:
           python-version: |
             3.10
@@ -66,7 +66,7 @@ jobs:
           allow-prereleases: true
         if: matrix.os == 'macos-latest'
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -78,7 +78,7 @@ jobs:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v6.8.0
+        uses: astral-sh/setup-uv@v7.1.2
         with:
           version: "latest"
       - name: Install current PDM via pip
@@ -113,7 +113,7 @@ jobs:
       - uses: actions/checkout@v5.0.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v6.0.0
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.x
       - name: Install PDM
