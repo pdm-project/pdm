@@ -22,7 +22,6 @@ _plat = platform.system()
 MACOS = _plat == "Darwin"
 WINDOWS = _plat == "Windows"
 REPO = os.getenv("PDM_REPO", "https://github.com/pdm-project/pdm")
-JSON_URL = "https://pypi.org/pypi/pdm/json"
 
 FOREGROUND_COLORS = {
     "black": 30,
