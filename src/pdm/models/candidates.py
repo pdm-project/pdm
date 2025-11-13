@@ -551,7 +551,7 @@ class PreparedCandidate:
         except MetaConvertError as e:
             termui.logger.warning("Failed to parse pyproject.toml: %s", e)
             return None
-        metadata = pyproject.metadata.unwrap()
+        metadata = pyproject.metadata
         if not metadata:
             termui.logger.warning("Failed to parse pyproject.toml")
             return None

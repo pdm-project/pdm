@@ -94,7 +94,7 @@ class Command(BaseCommand):
             raise PdmUsageError("Must specify at least one package to remove.")
         group = selection.one()
         lock_groups = project.lockfile.groups
-
+        project.pyproject.open_for_write()
         deps, setter = project.use_pyproject_dependencies(group, selection.dev or False)
         project.core.ui.echo(
             f"Removing {'[bold]global[/] ' if project.is_global else ''}packages from [primary]{group}[/] "

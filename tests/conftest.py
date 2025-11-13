@@ -116,6 +116,7 @@ def fixture_project(project_no_init: Project, request: pytest.FixtureRequest, lo
         source = FIXTURES / "projects" / project_name
         copytree(source, project_no_init.root)
         project_no_init.pyproject.reload()
+        project_no_init.pyproject.open_for_write()
         if "local_finder" in request.fixturenames:
             project_no_init.pyproject.settings["source"] = [
                 {

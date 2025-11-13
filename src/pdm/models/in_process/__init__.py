@@ -10,10 +10,12 @@ import json
 import os
 import subprocess
 import tempfile
-from typing import Any, Generator
+from typing import TYPE_CHECKING, Any, Generator
 
 from pdm.compat import resources_path
-from pdm.models.markers import EnvSpec
+
+if TYPE_CHECKING:
+    from pdm.models.markers import EnvSpec
 
 
 @contextlib.contextmanager
@@ -48,6 +50,7 @@ def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
 def get_env_spec(executable: str) -> EnvSpec:
     """Get the environment spec of the python interpreter"""
     from pdm.core import importlib_metadata
+    from pdm.models.markers import EnvSpec
 
     required_libs = ["dep_logic", "packaging"]
     shared_libs = {str(importlib_metadata.distribution(lib).locate_file("")) for lib in required_libs}

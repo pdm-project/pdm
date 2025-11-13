@@ -74,7 +74,7 @@ class _SetupReader:
         from pdm.project.project_file import PyProject
 
         try:
-            metadata = PyProject(file, ui=termui.UI()).metadata.unwrap()
+            metadata = PyProject(file, ui=termui.UI()).metadata
         except ProjectError:
             return Setup()
         except MetaConvertError as e:

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from pdm.cli.commands import build
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.publish.package import PackageFile
-from pdm.cli.commands.publish.repository import Repository
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import project_option, skip_option, verbose_option
 from pdm.exceptions import PdmUsageError, PublishError
@@ -16,6 +15,7 @@ from pdm.termui import logger
 if TYPE_CHECKING:
     from httpx import Response
 
+    from pdm.cli.commands.publish.repository import Repository
     from pdm.project import Project
 
 
@@ -141,6 +141,8 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_repository(project: Project, options: argparse.Namespace) -> Repository:
+        from pdm.cli.commands.publish.repository import Repository
+
         repository = options.repository or os.getenv("PDM_PUBLISH_REPO", "pypi")
         username = options.username or os.getenv("PDM_PUBLISH_USERNAME")
         password = options.password or os.getenv("PDM_PUBLISH_PASSWORD")

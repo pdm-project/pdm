@@ -46,9 +46,13 @@ def load_lockfile(project: Project, path: str | Path) -> Lockfile:
     except OSError:
         return default_lockfile(path, ui=project.core.ui)
     else:
+        klass: type[Lockfile]
         if data.get("metadata", {}).get("lock_version"):
-            return PDMLock(path, ui=project.core.ui)
+            klass = PDMLock
         elif data.get("lock-version"):
-            return PyLock(path, ui=project.core.ui)
+            klass = PyLock
         else:  # pragma: no cover
-            return default_lockfile(path, ui=project.core.ui)
+            klass = default_lockfile
+        lockfile = klass(path, ui=project.core.ui, parse=False)
+        lockfile._data = data  # type: ignore[assignment]
+        return lockfile

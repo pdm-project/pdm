@@ -22,7 +22,6 @@ from pdm.project.config import DEFAULT_REPOSITORIES
 if TYPE_CHECKING:
     from typing import Callable, Self
 
-    from httpx import Response
     from httpx._multipart import MultipartStream
 
     from pdm._types import RepositoryConfig
@@ -135,7 +134,7 @@ class Repository:
             return set()
         return {f"{base}project/{package.metadata['name']}/{package.metadata['version']}/" for package in packages}
 
-    def upload(self, package: PackageFile) -> Response:
+    def upload(self, package: PackageFile) -> httpx.Response:
         data_fields = package.metadata_dict
         data_fields.update(
             {

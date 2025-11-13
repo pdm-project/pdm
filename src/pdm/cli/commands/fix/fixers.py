@@ -86,6 +86,7 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
 
     def fix(self) -> None:
         # Copy the project settings
+        self.project.pyproject.open_for_write()
         settings = self.project.pyproject.settings.copy()
 
         # Pop the package type and convert it to a distribution type
@@ -120,6 +121,7 @@ class LockStrategyFixer(BaseFixer):
 
     def fix(self) -> None:
         strategies = self.project.lockfile.strategy - {FLAG_CROSS_PLATFORM}
-        self.project.lockfile._data["metadata"]["strategy"] = sorted(strategies)
+        lockfile = self.project.lockfile.open_for_write()
+        lockfile["metadata"]["strategy"] = sorted(strategies)
         self.project.lockfile.write(False)
         self.log("Lock strategy [success]`cross_platform` has been removed.", verbosity=Verbosity.DETAIL)

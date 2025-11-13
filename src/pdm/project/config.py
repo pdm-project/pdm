@@ -9,10 +9,10 @@ from typing import Any, Callable, ClassVar, Iterator, Mapping, MutableMapping, c
 
 import platformdirs
 import rich.theme
-import tomlkit
 
 from pdm import termui
 from pdm._types import RepositoryConfig
+from pdm.compat import tomllib
 from pdm.exceptions import NoConfigError, PdmUsageError
 
 REPOSITORY = "repository"
@@ -51,9 +51,11 @@ def load_config(file_path: Path) -> dict[str, Any]:
                 result.update({k: v})
         return result
 
-    if not file_path.is_file():
+    try:
+        with file_path.open("rb") as fp:
+            return get_item(tomllib.load(fp))
+    except FileNotFoundError:
         return {}
-    return get_item(dict(tomlkit.parse(file_path.read_text("utf-8"))))
 
 
 def ensure_boolean(val: Any) -> bool:
@@ -330,6 +332,8 @@ class Config(MutableMapping[str, str]):
                 yield RepositoryConfig(**data, name=name[len(SOURCE) + 1 :], config_prefix=SOURCE)
 
     def _save_config(self) -> None:
+        import tomlkit
+
         """Save the changed to config file."""
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
         toml_data: dict[str, Any] = {}

@@ -17,7 +17,7 @@ import tomlkit
 from pbs_installer import PythonVersion
 
 from pdm._types import NotSet, NotSetType, RepositoryConfig
-from pdm.compat import CompatibleSequence
+from pdm.compat import CompatibleSequence, tomllib
 from pdm.exceptions import NoPythonVersion, PdmUsageError, ProjectError
 from pdm.models.backends import DEFAULT_BACKEND, BuildBackend, get_backend_by_spec
 from pdm.models.caches import PackageCache
@@ -173,7 +173,7 @@ class Project:
 
     @property
     def name(self) -> str:
-        return self.pyproject.metadata.get("name")
+        return cast(str, self.pyproject.metadata.get("name"))
 
     @property
     def python(self) -> PythonInfo:
@@ -203,7 +203,7 @@ class Project:
         with contextlib.suppress(FileNotFoundError):
             # TODO: remove this in the future
             with self.root.joinpath(".pdm.toml").open("rb") as fp:
-                data = tomlkit.load(fp)
+                data = tomllib.load(fp)
                 if data.get("python", {}).get("path"):
                     return data["python"]["path"]
         return None
@@ -547,7 +547,7 @@ class Project:
 
     def get_locked_repository(self, env_spec: EnvSpec | None = None) -> LockedRepository:
         try:
-            lockfile = self.lockfile._data.unwrap()
+            lockfile = self.lockfile.open_for_read()
         except ProjectError:
             lockfile = {}
 
@@ -744,6 +744,7 @@ class Project:
                 "Passing a requirements map to add_dependencies is deprecated, please pass an iterable", stacklevel=2
             )
             requirements = requirements.values()
+        self.pyproject.open_for_write()
         deps, setter = self.use_pyproject_dependencies(to_group, dev)
         updated_indices: set[int] = set()
 

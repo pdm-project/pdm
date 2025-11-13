@@ -9,7 +9,7 @@ import tomlkit
 
 from pdm import termui
 from pdm.exceptions import PdmUsageError
-from pdm.project.toml_file import TOMLBase
+from pdm.project.toml_file import TOMLFile
 
 if TYPE_CHECKING:
     from pdm.models.repositories import LockedRepository
@@ -31,7 +31,7 @@ class Compatibility(enum.IntEnum):
     FORWARD = 3  # The current version of PDM is older than the lockfile version.
 
 
-class Lockfile(TOMLBase, metaclass=abc.ABCMeta):
+class Lockfile(TOMLFile, metaclass=abc.ABCMeta):
     SUPPORTED_FLAGS: AbstractSet[str]
 
     @property
@@ -86,10 +86,11 @@ class Lockfile(TOMLBase, metaclass=abc.ABCMeta):
         return list(set(groups).difference(self.groups))
 
     def set_data(self, data: Mapping[str, Any]) -> None:
-        self._data = tomlkit.document()
+        doc = tomlkit.document()
         for line in GENERATED_COMMENTS:
-            self._data.append(None, tomlkit.comment(line))
-        self._data.update(data)
+            doc.append(None, tomlkit.comment(line))
+        doc.update(data)
+        super().set_data(doc)
 
     def write(self, show_message: bool = True) -> None:
         super().write()
@@ -97,7 +98,7 @@ class Lockfile(TOMLBase, metaclass=abc.ABCMeta):
             self.ui.echo(f"Changes are written to [success]{self._path.name}[/].", verbosity=termui.Verbosity.NORMAL)
 
     def __getitem__(self, key: str) -> dict:
-        return self._data[key]
+        return self._data[key]  # type: ignore[return-value]
 
     @abc.abstractmethod
     def compatibility(self) -> Compatibility:

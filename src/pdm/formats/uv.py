@@ -34,7 +34,7 @@ class _UvFileBuilder:
         self._enter_path(self.project.root / "uv.lock")
 
     def build_pyproject_toml(self) -> Path:
-        data = self.project.pyproject._data.unwrap()
+        data = self.project.pyproject.open_for_read()
 
         uv_overrides = []
         for override_key, override_value in (
