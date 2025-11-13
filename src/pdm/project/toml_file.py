@@ -12,25 +12,31 @@ from pdm.compat import tomllib
 
 class TOMLFile:
     def __init__(self, path: str | Path, *, parse: bool = True, ui: termui.UI) -> None:
-        self._path = Path(path)
+        from tomlkit.toml_file import TOMLFile as TomlkitTOMLFile
+
+        self._file = TomlkitTOMLFile(path)
         self.ui = ui
         self._data = self._parse() if parse else {}
         self._for_write = False
 
+    @property
+    def _path(self) -> Path:
+        return Path(self._file._path)
+
     def _parse(self) -> dict[str, Any]:
+        # By default, use tomllib for parsing as it is much faster
         try:
-            with self._path.open("rb") as fp:
+            with open(self._path, "rb") as fp:
                 return tomllib.load(fp)
         except FileNotFoundError:
             return {}
 
     def open_for_write(self) -> tomlkit.TOMLDocument:
-        # Ensure the document is parsed by tomlkit for writing with styles preserved
+        # Ensure the document is re-parsed by tomlkit for writing with styles preserved
         if self._for_write:
             return cast(tomlkit.TOMLDocument, self._data)
         try:
-            with self._path.open("rb") as fp:
-                self._data = tomlkit.load(fp)
+            self._data = self._file.read()
         except FileNotFoundError:
             self._data = tomlkit.document()
         self._for_write = True
@@ -55,8 +61,12 @@ class TOMLFile:
         if not self._for_write:
             raise RuntimeError("TOMLFile not opened for write. Call open_for_write() first.")
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        with self._path.open("w", encoding="utf-8") as fp:
-            tomlkit.dump(self._data, fp)
+        if isinstance(self._data, tomlkit.TOMLDocument):
+            data = self._data
+        else:
+            data = tomlkit.document()
+            data.update(self._data)
+        self._file.write(data)
 
     def exists(self) -> bool:
         return self._path.exists()
