@@ -32,9 +32,9 @@ class TOMLFile:
             with self._path.open("rb") as fp:
                 self._data = tomlkit.load(fp)
         except FileNotFoundError:
-            pass
+            self._data = tomlkit.document()
         self._for_write = True
-        return cast(tomlkit.TOMLDocument, self._data)
+        return self._data
 
     def open_for_read(self) -> dict[str, Any]:
         """Get the (read-only) data of the TOML file."""
