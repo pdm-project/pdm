@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Mapping, cast
+from typing import Any, cast
 
-from tomlkit import TOMLDocument, items
+import tomlkit
 
 from pdm import termui
 from pdm.exceptions import ProjectError
-from pdm.project.toml_file import TOMLBase
+from pdm.project.toml_file import TOMLFile
 from pdm.utils import normalize_name
 
 
@@ -20,13 +20,24 @@ def _remove_empty_tables(doc: dict) -> None:
                 del doc[k]
 
 
-class PyProject(TOMLBase):
+class PyProject(TOMLFile):
     """The data object representing th pyproject.toml file"""
 
-    def read(self) -> TOMLDocument:
+    def _parse(self) -> dict[str, Any]:
+        data = super()._parse()
+        self._convert_pyproject(data)
+        return data
+
+    def open_for_write(self) -> tomlkit.TOMLDocument:
+        if self._for_write:
+            return cast(tomlkit.TOMLDocument, self._data)
+        doc = super().open_for_write()
+        self._convert_pyproject(doc)
+        return doc
+
+    def _convert_pyproject(self, data: dict[str, Any]) -> None:
         from pdm.formats import flit, poetry
 
-        data = super().read()
         if "project" not in data and self._path.exists():
             # Try converting from flit and poetry
             for converter in (flit, poetry):
@@ -36,7 +47,6 @@ class PyProject(TOMLBase):
                     if settings:
                         data.setdefault("tool", {}).setdefault("pdm", {}).update(settings)
                     break
-        return data
 
     def write(self, show_message: bool = True) -> None:
         """Write the TOMLDocument to the file."""
@@ -60,11 +70,11 @@ class PyProject(TOMLBase):
         return bool(self._data.get("project"))
 
     @property
-    def metadata(self) -> items.Table:
+    def metadata(self) -> dict[str, Any]:
         return self._data.setdefault("project", {})
 
     @property
-    def dependency_groups(self) -> items.Table:
+    def dependency_groups(self) -> dict[str, Any]:
         return self._data.setdefault("dependency-groups", {})
 
     @property
@@ -81,15 +91,15 @@ class PyProject(TOMLBase):
         return groups
 
     @property
-    def settings(self) -> items.Table:
+    def settings(self) -> dict[str, Any]:
         return self._data.setdefault("tool", {}).setdefault("pdm", {})
 
     @property
-    def build_system(self) -> dict:
+    def build_system(self) -> dict[str, Any]:
         return self._data.get("build-system", {})
 
     @property
-    def resolution(self) -> Mapping[str, Any]:
+    def resolution(self) -> dict[str, Any]:
         """A compatible getter method for the resolution overrides
         in the pyproject.toml file.
         """

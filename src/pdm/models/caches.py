@@ -9,7 +9,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Generic, Iterable, TypeVar
 
-import httpx
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
 from pdm._types import CandidateInfo
@@ -21,6 +20,7 @@ from pdm.termui import logger
 from pdm.utils import atomic_open_for_write, create_tracked_tempdir
 
 if TYPE_CHECKING:
+    from httpx import Client
     from unearth import Link
 
 
@@ -108,7 +108,7 @@ class HashCache:
     def __init__(self, directory: Path | str) -> None:
         self.directory = Path(directory)
 
-    def _read_from_link(self, link: Link, session: httpx.Client) -> Iterable[bytes]:
+    def _read_from_link(self, link: Link, session: Client) -> Iterable[bytes]:
         if link.is_file:
             with open(link.file_path, "rb") as f:
                 yield from f
@@ -122,7 +122,7 @@ class HashCache:
                     raise PdmException(f"Failed to read from {link.redacted}: {e}") from e
                 yield from resp.iter_bytes(chunk_size=8192)
 
-    def _get_file_hash(self, link: Link, session: httpx.Client) -> str:
+    def _get_file_hash(self, link: Link, session: Client) -> str:
         h = hashlib.new(self.FAVORITE_HASH)
         logger.debug("Downloading link %s for calculating hash", link.redacted)
         for chunk in self._read_from_link(link, session):
@@ -134,7 +134,7 @@ class HashCache:
         # We may add more when we know better about it.
         return not link.is_file
 
-    def get_hash(self, link: Link, session: httpx.Client) -> str:
+    def get_hash(self, link: Link, session: Client) -> str:
         # If there is no link hash (i.e., md5, sha256, etc.), we don't want
         # to store it.
         hash_value = self.get(link.url_without_fragment)

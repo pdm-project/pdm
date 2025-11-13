@@ -69,7 +69,7 @@ class Command(BaseCommand):
             options = argparse.Namespace(dev=False, group=None)
         project_data, settings = FORMATS[key].convert(project, filename, options)
         dependency_groups = settings.pop("dev-dependencies", {})  # type: ignore[attr-defined]
-        pyproject = project.pyproject._data
+        pyproject = project.pyproject.open_for_write()
 
         if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
             pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()

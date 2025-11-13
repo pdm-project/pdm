@@ -189,29 +189,17 @@ def test_from_directory_precedence_and_falsy_update(tmp_path):
     assert result.python_requires == ">=3.8"  # from setup.cfg (later non-empty vs pyproject)
 
 
-def test_read_pyproject_toml_project_error_returns_empty(tmp_path, monkeypatch):
+def test_read_pyproject_toml_project_error_returns_empty(tmp_path, mocker):
     # Create a dummy PyProject that raises ProjectError on unwrap()
-    class DummyMeta:
-        def unwrap(self):
-            raise ProjectError("boom")
-
-    class DummyPyProject:
-        def __init__(self, file, ui=None):
-            pass
-
-        @property
-        def metadata(self):
-            return DummyMeta()
-
     import pdm.project.project_file as project_file
 
-    monkeypatch.setattr(project_file, "PyProject", DummyPyProject)
+    mocker.patch.object(project_file.PyProject, "_convert_pyproject", side_effect=ProjectError("boom"))
 
     tmp_path.joinpath("pyproject.toml").write_text("[project]\nname='x'")
     assert Setup.from_directory(tmp_path) == Setup()  # empty due to ProjectError
 
 
-def test_read_pyproject_toml_metaconverter_error_uses_partial_data_and_logs(tmp_path, monkeypatch, caplog):
+def test_read_pyproject_toml_metaconverter_error_uses_partial_data_and_logs(tmp_path, mocker, caplog):
     partial = {
         "name": "foo",
         "version": "0.1.0",
@@ -221,21 +209,11 @@ def test_read_pyproject_toml_metaconverter_error_uses_partial_data_and_logs(tmp_
         "requires-python": ">=3.8",
     }
 
-    class DummyMeta:
-        def unwrap(self):
-            raise MetaConvertError(["e1"], data=partial, settings={})
-
-    class DummyPyProject:
-        def __init__(self, file, ui=None):
-            pass
-
-        @property
-        def metadata(self):
-            return DummyMeta()
-
     import pdm.project.project_file as project_file
 
-    monkeypatch.setattr(project_file, "PyProject", DummyPyProject)
+    mocker.patch.object(
+        project_file.PyProject, "_convert_pyproject", side_effect=MetaConvertError(["e1"], data=partial, settings={})
+    )
 
     caplog.set_level("WARNING")
     logging.getLogger("pdm.termui").addHandler(caplog.handler)

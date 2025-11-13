@@ -415,6 +415,7 @@ def project_no_init(
     monkeypatch.delenv("NO_SITE_PACKAGES", raising=False)
     pythonpath = os.getenv("PYTHONPATH", "")
     pythonpath = remove_pep582_path_from_pythonpath(pythonpath)
+    p.pyproject.open_for_write()
     if pythonpath:
         monkeypatch.setenv("PYTHONPATH", pythonpath)
     return p
@@ -443,7 +444,7 @@ def project(project_no_init: Project) -> Project:
         "build-system": DEFAULT_BACKEND.build_system(),
     }
 
-    merge_dictionary(project_no_init.pyproject._data, data)
+    merge_dictionary(project_no_init.pyproject.open_for_write(), data)
     project_no_init.pyproject.write()
     # Clean the cached property
     project_no_init._environment = None
