@@ -21,8 +21,7 @@ if sys.version_info < (3, 8):  # noqa: UP036
 _plat = platform.system()
 MACOS = _plat == "Darwin"
 WINDOWS = _plat == "Windows"
-REPO = "https://github.com/pdm-project/pdm"
-JSON_URL = "https://pypi.org/pypi/pdm/json"
+REPO = os.getenv("PDM_REPO", "https://github.com/pdm-project/pdm")
 
 FOREGROUND_COLORS = {
     "black": 30,
