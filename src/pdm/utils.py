@@ -25,7 +25,6 @@ from typing import TYPE_CHECKING, Mapping
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version, _cmpkey
-from pbs_installer import PythonVersion
 
 from pdm.compat import importlib_metadata
 from pdm.exceptions import PDMDeprecationWarning, PdmException
@@ -33,6 +32,8 @@ from pdm.exceptions import PDMDeprecationWarning, PdmException
 if TYPE_CHECKING:
     from re import Match
     from typing import IO, Any, Iterator
+
+    from pbs_installer import PythonVersion
 
     from pdm._types import FileHash, HiddenText, RepositoryConfig
     from pdm.compat import Distribution
