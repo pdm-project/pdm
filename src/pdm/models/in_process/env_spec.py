@@ -15,7 +15,7 @@ def get_current_env_spec() -> dict[str, str | bool]:
         "requires_python": f"=={python_version}",
         "platform": str(Platform.current()),
         "implementation": platform.python_implementation().lower(),
-        "gil_disabled": sysconfig.get_config_var("Py_GIL_DISABLED") or False,
+        "gil_disabled": bool(sysconfig.get_config_var("Py_GIL_DISABLED")),
     }
 
 
