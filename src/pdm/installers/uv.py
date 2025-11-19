@@ -6,7 +6,7 @@ from typing import Any
 
 from pdm._types import HiddenText
 from pdm.environments.local import PythonLocalEnvironment
-from pdm.exceptions import PdmUsageError
+from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.installers.base import BaseSynchronizer
 from pdm.models.repositories import LockedRepository
 from pdm.termui import Verbosity
@@ -42,12 +42,15 @@ class UvSynchronizer(BaseSynchronizer):
         with uv_file_builder(
             self.environment.project, str(self.environment.python_requires), requirements, self.locked_repo
         ) as builder:
+            venv_project = self.environment.interpreter.get_venv()
+            if venv_project is None:
+                raise ProjectError("uv mode doesn't support non-virtual environments")
             builder.build_pyproject_toml()
             builder.build_uv_lock(include_self=self.install_self)
             cmd = self._get_sync_command()
             self.environment.project.core.ui.echo(f"Running uv sync command: {cmd}", verbosity=Verbosity.DETAIL)
             real_cmd = [s.secret if isinstance(s, HiddenText) else s for s in cmd]
-            env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(self.environment.interpreter.path.parent.parent)}
+            env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(venv_project.root)}
             subprocess.run(real_cmd, check=True, cwd=self.environment.project.root, env=env)
 
     def _get_sync_command(self) -> list[str | HiddenText]:
