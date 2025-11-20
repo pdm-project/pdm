@@ -54,8 +54,6 @@ $Repo = $env:PDM_REPO -or "pdm-project/pdm"
 $DefaultInstallPath = "$env:LOCALAPPDATA\Programs\pdm"
 
 # Color output - Use Windows-friendly approach
-$PSStyle = if ($null -ne $PSStyle) { $PSStyle } else { $null }
-
 function Write-ColorOutput {
     param(
         [string]$Text,
@@ -64,7 +62,7 @@ function Write-ColorOutput {
     )
     
     # Use PSStyle if available (PowerShell 7.2+)
-    if ($PSStyle -and $PSStyle.OutputRendering -ne 'PlainText') {
+    if (Get-Variable -Name PSStyle -ErrorAction SilentlyContinue) {
         $colorCode = switch ($Color) {
             "Green" { $PSStyle.Foreground.Green }
             "Yellow" { $PSStyle.Foreground.Yellow }
@@ -79,7 +77,7 @@ function Write-ColorOutput {
             Write-Host "${colorCode}$Text$($PSStyle.Reset)" -NoNewline
         }
     } else {
-        # Fallback to no colors
+        # Fallback to no colors for older PowerShell
         Write-Host $Text -NoNewline
     }
 }
