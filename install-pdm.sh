@@ -154,7 +154,7 @@ download_and_install() {
     # First try to download checksum file
     local checksum_url="${url}.sha256"
     local checksum_downloaded=false
-    
+
     if command -v curl >/dev/null 2>&1; then
         if curl -sL -o "$checksum_file" "$checksum_url" 2>/dev/null; then
             if [ -s "$checksum_file" ]; then
@@ -215,8 +215,6 @@ download_and_install() {
 
     # Cleanup
     rm -rf "$temp_dir"
-
-    echo "$install_dir"
 }
 
 # Verify checksum from a checksum file
@@ -247,7 +245,7 @@ verify_checksum_from_file() {
     fi
 
     log "Verifying checksum..."
-    
+
     # Calculate actual checksum
     actual_checksum=$(sha256sum "$file_path" | awk '{print $1}')
 
@@ -408,23 +406,17 @@ main() {
     echo "  Install directory: $install_dir"
 
     # Install
-    local bin_dir
-    bin_dir=$(download_and_install "$download_url" "$install_dir")
+    download_and_install "$download_url" "$install_dir"
     echo
 
     # Verify
-    verify_installation "$bin_dir"
+    verify_installation "$install_dir"
     echo
 
     # Add to PATH
-    add_to_path "$bin_dir"
+    add_to_path "$install_dir"
 
     log "Installation completed successfully!"
-    echo
-    echo -e "${GREEN}PDM is installed at:${NC} $bin_dir/pdm"
-    if [ "$SKIP_ADD_TO_PATH" != "true" ] && ! echo ":$PATH:" | grep -q ":${bin_dir}:"; then
-        echo -e "${YELLOW}Note:${NC} Please restart your terminal or source your shell profile to use PDM"
-    fi
 }
 
 # Run main function

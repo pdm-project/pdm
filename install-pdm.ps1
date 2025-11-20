@@ -53,18 +53,8 @@ $ErrorActionPreference = 'Stop'
 $Repo = $env:PDM_REPO -or "pdm-project/pdm"
 $DefaultInstallPath = "$env:LOCALAPPDATA\Programs\pdm"
 
-# Color output
-$Colors = @{
-    Green = "`e[32m"
-    Yellow = "`e[33m"
-    Cyan = "`e[36m"
-    Red = "`e[31m"
-    Bold = "`e[1m"
-    Reset = "`e[0m"
-}
-
-# Check if ANSI is supported
-$SupportsAnsi = $Host.UI.SupportsVirtualTerminal -or $env:TERM -eq "xterm"
+# Color output - Use Windows-friendly approach
+$PSStyle = if ($null -ne $PSStyle) { $PSStyle } else { $null }
 
 function Write-ColorOutput {
     param(
@@ -73,13 +63,23 @@ function Write-ColorOutput {
         [switch]$Bold
     )
     
-    if ($SupportsAnsi) {
-        $output = $Colors[$Color] + $Text + $Colors.Reset
-        if ($Bold) {
-            $output = $Colors.Bold + $output
+    # Use PSStyle if available (PowerShell 7.2+)
+    if ($PSStyle -and $PSStyle.OutputRendering -ne 'PlainText') {
+        $colorCode = switch ($Color) {
+            "Green" { $PSStyle.Foreground.Green }
+            "Yellow" { $PSStyle.Foreground.Yellow }
+            "Cyan" { $PSStyle.Foreground.Cyan }
+            "Red" { $PSStyle.Foreground.Red }
+            default { $PSStyle.Foreground.Cyan }
         }
-        Write-Host $output -NoNewline
+        
+        if ($Bold) {
+            Write-Host "${colorCode}$($PSStyle.Bold)$Text$($PSStyle.Reset)" -NoNewline
+        } else {
+            Write-Host "${colorCode}$Text$($PSStyle.Reset)" -NoNewline
+        }
     } else {
+        # Fallback to no colors
         Write-Host $Text -NoNewline
     }
 }
