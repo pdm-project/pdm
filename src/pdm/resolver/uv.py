@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pdm._types import HiddenText
+from pdm.exceptions import ProjectError
 from pdm.models.candidates import Candidate
 from pdm.models.markers import get_marker
 from pdm.models.repositories import Package
@@ -191,6 +192,9 @@ class UvResolver(Resolver):
 
         locked_repo = self.locked_repository or self.project.get_locked_repository()
         with uv_file_builder(self.project, str(self.target.requires_python), self.requirements, locked_repo) as builder:
+            venv_project = self.environment.interpreter.get_venv()
+            if venv_project is None:
+                raise ProjectError("uv mode doesn't support non-virtual environments")
             builder.build_pyproject_toml()
             uv_lock_path = self.project.root / "uv.lock"
             if self.update_strategy != "all":
@@ -201,7 +205,7 @@ class UvResolver(Resolver):
                 uv_lock_command = self._build_lock_command()
                 self.project.core.ui.echo(f"Running uv lock command: {uv_lock_command}", verbosity=Verbosity.DETAIL)
                 real_command = [s.secret if isinstance(s, HiddenText) else s for s in uv_lock_command]
-                env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(self.environment.interpreter.path.parent.parent)}
+                env = {**os.environ, "UV_PROJECT_ENVIRONMENT": str(venv_project.root)}
                 subprocess.run(real_command, cwd=self.project.root, check=True, env=env)
             finally:
                 if isinstance(self.reporter, RichLockReporter):
