@@ -34,6 +34,34 @@ PDM requires Python 3.9+ to be installed. It works on multiple platforms includi
 
 ### Recommended installation method
 
+Install the prebuilt binary directly with the installer scripts.
+
+=== "Linux/Mac"
+
+    ```bash
+    curl -sSL https://pdm-project.org/install.sh | bash
+    ```
+
+    To install a specific version:
+
+    ```bash
+    curl -sSL https://pdm-project.org/install.sh | bash -s -- -v <version>
+    ```
+
+=== "Windows"
+
+    ```powershell
+    powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex"
+    ```
+
+    To install a specific version:
+
+    ```powershell
+    powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex -Args '-v <version>'"
+    ```
+
+### Install via Python script
+
 PDM requires python version 3.9 or higher.
 
 Like Pip, PDM provides an installation script that will install PDM into an isolated environment.

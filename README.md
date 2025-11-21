@@ -81,81 +81,23 @@ Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users h
 
 PDM requires python version 3.9 or higher. Alternatively, you can download the standalone binary file from the [release assets](https://github.com/pdm-project/pdm/releases).
 
-### Via Install Script
+### Install Binary via Script (recommended)
 
-Like Pip, PDM provides an installation script that will install PDM into an isolated environment.
+Install the standalone binary directly with the installer scripts:
 
 **For Linux/Mac**
 
 ```bash
-curl -sSL https://pdm-project.org/install-pdm.py | python3 -
+curl -sSL https://pdm-project.org/install.sh | bash
 ```
 
 **For Windows**
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install-pdm.py | py -"
+powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex"
 ```
 
-For security reasons, you should verify the checksum of `install-pdm.py`.
-It can be downloaded from [install-pdm.py.sha256](https://pdm-project.org/install-pdm.py.sha256).
-
-The installer will install PDM into the user site and the location depends on the system:
-
-- `$HOME/.local/bin` for Linux
-- `$HOME/Library/Python/<version>/bin` for MacOS
-- `%APPDATA%\Python\Scripts` on Windows
-
-You can pass additional options to the script to control how PDM is installed:
-
-```
-usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--remove] [-p PATH] [-d DEP]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -v VERSION, --version VERSION | envvar: PDM_VERSION
-                        Specify the version to be installed, or HEAD to install from the main branch
-  --prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
-  --remove | envvar: PDM_REMOVE            Remove the PDM installation
-  -p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
-  -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
-```
-
-You can either pass the options after the script or set the env var value.
-
-### Alternative Installation Methods
-
-If you are on macOS and using `homebrew`, install it by:
-
-```bash
-brew install pdm
-```
-
-If you are on Windows and using [Scoop](https://scoop.sh/), install it by:
-
-```
-scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
-scoop install pdm
-```
-
-Otherwise, it is recommended to install `pdm` in an isolated environment with `pipx`:
-
-```bash
-pipx install pdm
-```
-
-Or you can install it under a user site:
-
-```bash
-pip install --user pdm
-```
-
-With [asdf-vm](https://asdf-vm.com/)
-
-```bash
-asdf plugin add pdm
-asdf install pdm latest
-```
+For alternative installation methods (Python script, package managers, etc.), see the [installation section in documentation](https://pdm-project.org/en/latest/#installation).
 
 ## Quickstart
 

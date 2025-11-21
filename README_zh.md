@@ -71,81 +71,23 @@ PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从�
 
 PDM 需要 Python 3.9 或更高版本。你也可以从 [release assets](https://github.com/pdm-project/pdm/releases) 下载独立的可执行文件来使用。
 
-### 通过安装脚本
+### 推荐：通过脚本安装二进制
 
-像 pip 一样，PDM 也提供了一键安装脚本，用来将 PDM 安装在一个隔离的环境中。
+优先使用预构建的独立二进制，直接运行安装脚本即可：
 
 **Linux/Mac 安装命令**
 
 ```bash
-curl -sSL https://pdm-project.org/install-pdm.py | python3 -
+curl -sSL https://pdm-project.org/install.sh | bash
 ```
 
 **Windows 安装命令**
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install-pdm.py | py -"
+powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex"
 ```
 
-为安全起见，你应该检查 `install-pdm.py` 文件的正确性。
-校验和文件下载地址：[install-pdm.py.sha256](https://pdm-project.org/install-pdm.py.sha256)
-
-默认情况下，此脚本会将 PDM 安装在 Python 的用户目录下，具体位置取决于当前系统：
-
-- Unix 上是 `$HOME/.local/bin`
-- MacOS 上是 `$HOME/Library/Python/<version>/bin`
-- Windows 上是 `%APPDATA%\Python\Scripts`
-
-你还可以通过命令行的选项来改变安装脚本的行为：
-
-```
-usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--remove] [-p PATH] [-d DEP]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -v VERSION, --version VERSION | envvar: PDM_VERSION
-                        Specify the version to be installed, or HEAD to install from the main branch
-  --prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
-  --remove | envvar: PDM_REMOVE            Remove the PDM installation
-  -p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
-  -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
-```
-
-你既可以通过直接增加选项，也可以通过设置对应的环境变量来达到这一效果。
-
-### 其他安装方法
-
-如果你使用的是 macOS 并且安装了 `homebrew`：
-
-```bash
-brew install pdm
-```
-
-如果你在 Windows 上使用 [Scoop](https://scoop.sh/), 运行以下命令安装：
-
-```
-scoop bucket add frostming https://github.com/frostming/scoop-frostming.git
-scoop install pdm
-```
-
-否则，强烈推荐把 `pdm` 安装在一个隔离环境中，用 `pipx` 是最好的。
-
-```bash
-pipx install pdm
-```
-
-或者你可以将它安装在用户目录下：
-
-```bash
-pip install --user pdm
-```
-
-[asdf-vm](https://asdf-vm.com/)
-
-```bash
-asdf plugin add pdm
-asdf install pdm latest
-```
+其他安装方式（Python 安装脚本、包管理器等）请查看[安装文档](https://pdm-project.org/zh-cn/latest/#_3)。
 
 ## 快速上手
 
