@@ -81,18 +81,27 @@ jobs:
 
   binary:
     needs: release-pypi
+    outputs:
+      checksums: ${{ steps.collect-checksums.outputs.checksums-json }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "ubuntu-22.04-arm", "windows-2022", "macos-13", "macos-14"]
+        os:
+          [
+            "ubuntu-22.04",
+            "ubuntu-22.04-arm",
+            "windows-2022",
+            "macos-13",
+            "macos-14",
+          ]
 
     env:
       PYAPP_REPO: pyapp
       PYAPP_VERSION: "0.27.0"
       PYAPP_PROJECT_NAME: pdm
       PYAPP_PROJECT_VERSION: ${{ github.ref_name }}
-      PYAPP_SELF_COMMAND: app  # since `self` has been taken in `pdm`
+      PYAPP_SELF_COMMAND: app # since `self` has been taken in `pdm`
       PYAPP_DISTRIBUTION_EMBED: true
       PYAPP_PROJECT_FEATURES: locked
       SCCACHE_GHA_ENABLED: "true"
@@ -145,10 +154,12 @@ jobs:
           if-no-files-found: error
           retention-days: 15
 
-      - name: Upload to GitHub Release
+      - name: Create and Upload Archive with Checksum
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPLOAD_FILE: pdm-${{ github.ref_name }}-${{ env.TARGET_TRIPLE }}.tar.gz
+          CHECKSUM_FILE: pdm-${{ github.ref_name }}-${{ env.TARGET_TRIPLE }}.tar.gz.sha256
         run: |
           tar -czf $UPLOAD_FILE $TARGET_FILE
-          gh release upload ${{ github.ref_name }} $UPLOAD_FILE --clobber
+          sha256sum $UPLOAD_FILE > $CHECKSUM_FILE
+          gh release upload ${{ github.ref_name }} $UPLOAD_FILE $CHECKSUM_FILE --clobber
