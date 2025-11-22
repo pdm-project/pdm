@@ -124,7 +124,10 @@ class ArgumentParser(argparse.ArgumentParser):
     """A standard argument parser but with title-cased help."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs["formatter_class"] = PdmFormatter
+        if sys.version_info >= (3, 14):
+            kwargs["formatter_class"] = argparse.RawDescriptionHelpFormatter
+        else:
+            kwargs["formatter_class"] = PdmFormatter
         kwargs["add_help"] = False
         super().__init__(*args, **kwargs)
         self.add_argument(
