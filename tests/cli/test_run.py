@@ -924,7 +924,7 @@ def test_run_shortcut_fail_with_usage_if_script_not_found(project, pdm):
     result = pdm(["whatever"], obj=project)
     assert result.exit_code != 0
     assert "Command not found: whatever" in result.stderr
-    assert "Usage" in result.stderr
+    assert "usage" in result.stderr.lower()
 
 
 @pytest.mark.parametrize(
@@ -937,15 +937,15 @@ def test_run_shortcut_fail_with_usage_if_script_not_found(project, pdm):
 def test_empty_positional_args_still_display_usage(project, pdm, args):
     result = pdm(args, obj=project)
     assert result.exit_code != 0
-    assert "Usage" in result.stderr
+    assert "usage" in result.stderr.lower()
 
 
 def test_empty_positional_args_display_help(project, pdm):
     result = pdm([], obj=project)
     assert result.exit_code == 0
-    assert "Usage:" in result.output
-    assert "Commands:" in result.output
-    assert "Options:" in result.output
+    assert "usage:" in result.output.lower()
+    assert "commands:" in result.output.lower()
+    assert "options:" in result.output.lower()
 
 
 def test_run_script_changing_working_dir(project, pdm, capfd):

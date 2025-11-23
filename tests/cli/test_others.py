@@ -29,7 +29,7 @@ def test_project_no_init_error(project_no_init, pdm):
 
 def test_help_option(pdm):
     result = pdm(["--help"])
-    assert "Usage: pdm [-h]" in result.output
+    assert "usage: pdm [-h]" in result.output.lower()
 
 
 def test_pep582_option(pdm):
