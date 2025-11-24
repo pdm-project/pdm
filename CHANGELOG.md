@@ -1,3 +1,27 @@
+## Release v2.26.2 (2025-11-24)
+
+### Features & Improvements
+
+- Only parse TOML document with `tomlkit` when writing is required. ([#3672](https://github.com/pdm-project/pdm/issues/3672))
+- Add SHA256 checksums for binary releases during the release workflow and create an installer script that downloads binaries from GitHub releases with automatic platform detection and checksum verification. ([#3679](https://github.com/pdm-project/pdm/issues/3679))
+
+### Bug Fixes
+
+- Fix test_use_python_write_file_multiple_versions to match PDM's actual behavior. ([#3660](https://github.com/pdm-project/pdm/issues/3660))
+- Correctly calculate the venv path for `UV_PROJECT_ENVIRONMENT` env var when using uv mode. ([#3675](https://github.com/pdm-project/pdm/issues/3675))
+- Ensure `implementation.gil_disabled` is a boolean in `get_current_env_spec`. This fix an issue that free-threaded wheels get rejected incorrectly. ([#3677](https://github.com/pdm-project/pdm/issues/3677))
+- Fix CLI help formatting on Python 3.14+. ([#3683](https://github.com/pdm-project/pdm/issues/3683))
+- Make `PdmBasicAuth` a `cached_property` to accelerate execution. ([#3684](https://github.com/pdm-project/pdm/issues/3684))
+
+### Removals and Deprecations
+
+- Add deprecation warning for `pdm search` command as PyPI no longer supports search API. ([#3674](https://github.com/pdm-project/pdm/issues/3674))
+
+### Miscellany
+
+- Add tests to utils.fs_supports_link_method and utils.convert_to_datetime. ([#3541](https://github.com/pdm-project/pdm/issues/3541))
+
+
 ## Release v2.26.1 (2025-10-29)
 
 ### Bug Fixes
