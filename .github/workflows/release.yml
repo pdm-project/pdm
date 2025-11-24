@@ -161,5 +161,9 @@ jobs:
           CHECKSUM_FILE: pdm-${{ github.ref_name }}-${{ env.TARGET_TRIPLE }}.tar.gz.sha256
         run: |
           tar -czf $UPLOAD_FILE $TARGET_FILE
-          sha256sum $UPLOAD_FILE > $CHECKSUM_FILE
+          if command -v sha256sum &> /dev/null; then
+            sha256sum $UPLOAD_FILE > $CHECKSUM_FILE
+          else
+            shasum -a 256 $UPLOAD_FILE > $CHECKSUM_FILE
+          fi
           gh release upload ${{ github.ref_name }} $UPLOAD_FILE $CHECKSUM_FILE --clobber
