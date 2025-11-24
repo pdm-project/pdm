@@ -76,7 +76,7 @@ pydantic==2.11.7
 pydantic-core==2.33.2
 pydeck==0.9.1
 pyjwt[crypto]==2.10.0
-pypdf==5.1.0
+pypdf==6.4.0
 python-dateutil==2.9.0.post0
 pytz==2024.2
 pywin32==308; platform_system == "Windows"
