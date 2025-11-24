@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from httpx import BaseTransport
 
     from pdm._types import RepositoryConfig
+    from pdm.models.auth import PdmBasicAuth
     from pdm.models.session import PDMPyPIClient
     from pdm.project import Project
 
@@ -40,18 +41,22 @@ class BaseEnvironment(abc.ABC):
         """
         :param project: the project instance
         """
-        from pdm.models.auth import PdmBasicAuth
 
         if isinstance(project, weakref.ProxyTypes):
             self.project = project
         else:
             self.project = weakref.proxy(project)
         self.python_requires = project.python_requires
-        self.auth = PdmBasicAuth(project.core.ui, self.project.sources)
         if python is None:
             self._interpreter = project.python
         else:
             self._interpreter = PythonInfo.from_path(python)
+
+    @cached_property
+    def auth(self) -> PdmBasicAuth:
+        from pdm.models.auth import PdmBasicAuth
+
+        return PdmBasicAuth(self.project.core.ui, self.project.sources)
 
     @property
     def is_global(self) -> bool:
