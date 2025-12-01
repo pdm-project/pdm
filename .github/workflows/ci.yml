@@ -40,7 +40,7 @@ jobs:
             os: ubuntu-latest
             install-via: script
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.0
 
       - name: Setup Python Versions
         uses: actions/setup-python@v6
@@ -78,7 +78,7 @@ jobs:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v7.1.2
+        uses: astral-sh/setup-uv@v7.1.4
         with:
           version: "latest"
       - name: Install current PDM via pip
@@ -110,7 +110,7 @@ jobs:
   Pack:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.0
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v6
