@@ -202,6 +202,7 @@ omit = [
     "*/pdm/pep582/sitecustomize.py",
     "*/pdm/models/in_process/*.py",
     "*/pdm-test-*-env/*",
+    "*/pdm/misc/sysconfig_patcher.py",
 ]
 
 [tool.coverage.report]
@@ -226,7 +227,7 @@ ignore_missing_imports = true
 disallow_incomplete_defs = true
 disallow_untyped_defs = true
 disallow_untyped_decorators = true
-exclude = "pdm/(pep582/|models/in_process/.+\\.py)"
+exclude = "pdm/(pep582/|models/in_process/.+\\.py|misc)"
 namespace_packages = true
 mypy_path = "src"
 explicit_package_bases = true

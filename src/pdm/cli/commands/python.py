@@ -136,6 +136,7 @@ class InstallCommand(BaseCommand):
         from pbs_installer import download, get_download_link, install_file
         from pbs_installer._install import THIS_ARCH
 
+        from pdm.misc import sysconfig_patcher
         from pdm.termui import logger
 
         ui = project.core.ui
@@ -181,7 +182,8 @@ class InstallCommand(BaseCommand):
             interpreter = install_root / "bin" / "python3" if sys.platform != "win32" else install_root / "python.exe"
         if not interpreter.exists():
             raise InstallationError("Installation failed, please try again.")
-
+        # Patch sysconfig and pkgconfig files with correct prefixes
+        sysconfig_patcher.patch(install_root)
         python_info = PythonInfo.from_path(interpreter)
         ui.echo(
             f"[success]Successfully installed[/] {python_info.implementation}@{python_info.version}",
