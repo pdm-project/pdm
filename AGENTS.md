@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding assistants when working with code in this repository.
 
 ## Project Overview
 
@@ -13,10 +13,10 @@ PDM (Python Dependency Manager) is a modern Python package and dependency manage
 1. **Project Management** (`src/pdm/project/`): Handles pyproject.toml parsing, project configuration, and metadata management
 2. **Dependency Resolution** (`src/pdm/resolver/`): Fast dependency resolver using resolvelib with custom optimizations for binary distributions
 3. **Environment Management** (`src/pdm/environments/`): Manages Python environments (virtualenv, PEP 582, system)
-4. **Installer System** (`src/pdm/installers/`): Installs packages using pbs-installer with centralized cache support
+4. **Installer System** (`src/pdm/installers/`): Installs and uninstalls packages into the site-packages directory with centralized cache support
 5. **CLI System** (`src/pdm/cli/commands/`): Command-line interface using argparse with plugin support
 6. **Repository Models** (`src/pdm/models/repositories/`): PyPI repository interaction and package finder
-7. **Build System** (`src/pdm/builders/`): PEP 517 build backend for creating wheels and sdists
+7. **Build System** (`src/pdm/builders/`): PEP 517 build front-end for creating wheels and sdists
 
 ### Command Entry Points
 
