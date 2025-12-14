@@ -92,7 +92,7 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install Dev Dependencies
         run: |
-          pdm install -v -Gtest -Gmsgpack
+          pdm install -v -Gtest
           pdm run pip install -U setuptools
           pdm info
       # - name: Setup tmate session

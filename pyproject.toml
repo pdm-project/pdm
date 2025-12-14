@@ -32,7 +32,7 @@ dependencies = [
     "truststore>=0.10.4; python_version >= \"3.10\"",
     "tomli>=1.1.0; python_version < \"3.11\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
-    "hishel>=0.0.32, < 1.0.0",
+    "hishel[httpx]>=1.0.0",
     "pbs-installer>=2025.10.7",
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
@@ -66,12 +66,11 @@ pytest = [
 copier = ["copier>=8.0.0"]
 cookiecutter = ["cookiecutter"]
 keyring = ["keyring"]
-msgpack = ["msgpack>=1.0"]
 template = [
     "pdm[copier,cookiecutter]",
 ]
 all = [
-    "pdm[keyring,msgpack,template]",
+    "pdm[keyring,template]",
 ]
 
 [project.scripts]
@@ -184,7 +183,6 @@ markers = [
     "path: Tests that compare with the system paths",
     "deprecated: Tests about deprecated features",
     "uv: Tests that require uv to be installed",
-    "msgpack: Tests that require msgpack to be installed",
 ]
 addopts = "-r aR"
 testpaths = [

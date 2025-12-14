@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import hishel
+import hishel.httpx
 import httpx
 from unearth.fetchers import PyPIClient
 
 from pdm.__version__ import __version__
-from pdm.models.serializers import MsgPackSerializer
 from pdm.termui import logger
 
 if TYPE_CHECKING:
@@ -65,11 +66,19 @@ class PDMPyPIClient(PyPIClient):
             def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:
                 return transport
         else:
-            storage = hishel.FileStorage(serializer=MsgPackSerializer(), base_path=cache_dir, ttl=CACHES_TTL)
-            controller = hishel.Controller()
+            # clean up old (pre-hishel 1.0) cache
+            cache_db = cache_dir / "pdm.db"
+            if not cache_db.exists():
+                for f in cache_dir.iterdir():
+                    if not f.name.startswith("pdm.db"):
+                        f.unlink()
+            # open-code SyncSqliteStorage._ensure_connection() to pass check_same_thread=False
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            cache_connection = sqlite3.connect(str(cache_db), check_same_thread=False)
+            storage = hishel.SyncSqliteStorage(connection=cache_connection, default_ttl=CACHES_TTL)
 
             def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:
-                return hishel.CacheTransport(transport, storage, controller)
+                return hishel.httpx.SyncCacheTransport(next_transport=transport, storage=storage)
 
         mounts: dict[str, httpx.BaseTransport] = {"file://": LocalFSTransport()}
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
