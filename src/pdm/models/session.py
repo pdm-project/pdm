@@ -3,11 +3,13 @@ from __future__ import annotations
 import os
 import sqlite3
 import sys
+import threading
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import hishel
+import hishel._utils
 import hishel.httpx
 import httpx
 from unearth.fetchers import PyPIClient
@@ -56,6 +58,54 @@ def _get_transport(
     return httpx.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy, retries=MAX_RETRIES)
 
 
+class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._local_conns: dict[int, sqlite3.Connection] = {}
+        self._local = threading.local()
+        self._lock = threading.Lock()
+        self._initialized = False
+        super().__init__(*args, **kwargs)
+
+    @property
+    def connection(self) -> sqlite3.Connection | None:
+        return getattr(self._local, "conn", None)
+
+    @connection.setter
+    def connection(self, conn: sqlite3.Connection | None) -> None:
+        self._local.conn = conn
+
+    def close(self) -> None:
+        with self._lock:
+            self._local = threading.local()
+            for conn in self._local_conns.values():
+                conn.close()
+            self._local_conns.clear()
+
+    def _ensure_connection(self) -> sqlite3.Connection:
+        """
+        Ensure connection is established and database is initialized.
+
+        We need to create connections with check_same_thread=False for the sake of close(),
+        so we have to open-code the entire implementation here.
+        """
+
+        # we take a lock _despite_ using TLS to protect against concurrent close(), otherwise we have a TOCTOU
+        # this is kinda ugly and defeats the purpose of using TLS, but eh
+        with self._lock:
+            if self.connection is None:
+                # Create cache directory and resolve full path on first connection
+                parent = self.database_path.parent if self.database_path.parent != Path(".") else None
+                full_path = hishel._utils.ensure_cache_dict(parent) / self.database_path.name
+                conn = sqlite3.connect(str(full_path), check_same_thread=False)
+                conn.execute("PRAGMA journal_mode=WAL")
+                self._local_conns[threading.get_ident()] = conn
+                self.connection = conn
+            if not self._initialized:
+                self._initialize_database()
+                self._initialized = True
+            return self.connection
+
+
 class PDMPyPIClient(PyPIClient):
     def __init__(self, *, sources: list[RepositoryConfig], cache_dir: Path | None = None, **kwargs: Any) -> None:
         from httpx._utils import URLPattern
@@ -72,10 +122,7 @@ class PDMPyPIClient(PyPIClient):
                 for f in cache_dir.iterdir():
                     if not f.name.startswith("pdm.db"):
                         f.unlink()
-            # open-code SyncSqliteStorage._ensure_connection() to pass check_same_thread=False
-            cache_dir.mkdir(parents=True, exist_ok=True)
-            cache_connection = sqlite3.connect(str(cache_db), check_same_thread=False)
-            storage = hishel.SyncSqliteStorage(connection=cache_connection, default_ttl=CACHES_TTL)
+            storage = ThreadedSyncSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
 
             def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:
                 return hishel.httpx.SyncCacheTransport(next_transport=transport, storage=storage)
