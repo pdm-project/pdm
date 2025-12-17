@@ -4,7 +4,7 @@
 
 一个现代的 Python 包管理器，支持 PEP 最新标准。[English version README](README.md)
 
-![PDM logo](https://raw.githubusercontents.com/pdm-project/pdm/main/docs/assets/logo_big.png)
+![PDM logo](https://raw.githubusercontent.com/pdm-project/pdm/tree/main/docs/assets/logo_big.png)
 
 [![Docs](https://img.shields.io/badge/Docs-mkdocs-blue?style=for-the-badge)](https://pdm-project.org)
 [![Twitter Follow](https://img.shields.io/twitter/follow/pdm_project?label=get%20updates&logo=twitter&style=for-the-badge)](https://twitter.com/pdm_project)
@@ -61,7 +61,7 @@ Hatch 也可以管理环境（它允许每个项目有多个环境，但不允�
 
 PDM 也可以像 Pipenv 那样在项目或集中的位置管理 venvs。它从一个标准化的 `pyproject.toml` 文件中读取项目元数据，并支持 lockfile。用户可以在插件中添加更多的功能，并将其作为一个发行版上传，以供分享。
 
-此外，与 Poetry 和 Hatch 不同，PDM 并没有被和一个特定的构建后端绑定，你可以选择任何你喜欢的构建后端。
+此外，与 Poetry 和 Hatch 不同，PDM 并没有和任何特定的构建后端绑定，你可以选择任何你喜欢的构建后端。
 
 ## 安装
 
@@ -138,4 +138,4 @@ pdm add requests flask
 
 ## 使用许可
 
-本项目基于 MIT 协议开源，具体可查看 [LICENSE](LICENSE)。
+本项目基于 MIT 协议开源，具体可查看 [LICENSE](./LICENSE)。

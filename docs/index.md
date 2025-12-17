@@ -15,7 +15,7 @@ PDM, as described, is a modern Python package and dependency manager supporting 
 - [PEP 621] project metadata.
 - Flexible and powerful plug-in system.
 - Versatile user scripts.
-- Install Pythons using [indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone).
+- Install Pythons using [indygreg's python-build-standalone](https://github.com/astral-sh/python-build-standalone).
 - Opt-in centralized installation cache like [pnpm].
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
