@@ -52,7 +52,7 @@ llama-index-llms-openai==0.4.7
 llama-index-readers-file==0.4.9
 llama-index-workflows==0.2.2
 markupsafe==3.0.2
-marshmallow==3.23.1
+marshmallow==3.26.2
 msal==1.31.1
 msal-extensions==1.2.0
 multidict==6.1.0
