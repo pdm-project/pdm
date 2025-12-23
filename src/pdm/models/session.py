@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import hishel
-import hishel._utils
 import hishel.httpx
 import httpx
 from unearth.fetchers import PyPIClient
@@ -61,25 +60,24 @@ def _get_transport(
 class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._local_conns: dict[int, sqlite3.Connection] = {}
-        self._local = threading.local()
         self._lock = threading.Lock()
         self._initialized = False
         super().__init__(*args, **kwargs)
 
     @property
     def connection(self) -> sqlite3.Connection | None:
-        return getattr(self._local, "conn", None)
+        return self._local_conns.get(threading.get_ident())
 
     @connection.setter
     def connection(self, conn: sqlite3.Connection | None) -> None:
-        self._local.conn = conn
+        if conn is not None:
+            self._local_conns[threading.get_ident()] = conn
 
     def close(self) -> None:
         with self._lock:
-            self._local = threading.local()
-            for conn in self._local_conns.values():
+            while self._local_conns:
+                _, conn = self._local_conns.popitem()
                 conn.close()
-            self._local_conns.clear()
 
     def _ensure_connection(self) -> sqlite3.Connection:
         """
@@ -94,11 +92,10 @@ class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
         with self._lock:
             if self.connection is None:
                 # Create cache directory and resolve full path on first connection
-                parent = self.database_path.parent if self.database_path.parent != Path(".") else None
-                full_path = hishel._utils.ensure_cache_dict(parent) / self.database_path.name
+                self.database_path.parent.mkdir(parents=True, exist_ok=True)
+                full_path = self.database_path.resolve()
                 conn = sqlite3.connect(str(full_path), check_same_thread=False)
                 conn.execute("PRAGMA journal_mode=WAL")
-                self._local_conns[threading.get_ident()] = conn
                 self.connection = conn
             if not self._initialized:
                 self._initialize_database()
@@ -117,10 +114,10 @@ class PDMPyPIClient(PyPIClient):
                 return transport
         else:
             # clean up old (pre-hishel 1.0) cache
-            cache_db = cache_dir / "pdm.db"
+            cache_db = cache_dir / "http-cache.db"
             if not cache_db.exists():
                 for f in cache_dir.iterdir():
-                    if not f.name.startswith("pdm.db"):
+                    if not f.name.startswith("http-cache.db"):
                         f.unlink()
             storage = ThreadedSyncSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
 
