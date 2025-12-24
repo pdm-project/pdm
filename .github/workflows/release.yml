@@ -81,8 +81,6 @@ jobs:
 
   binary:
     needs: release-pypi
-    outputs:
-      checksums: ${{ steps.collect-checksums.outputs.checksums-json }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
