@@ -1,3 +1,17 @@
+## Release v2.26.3 (2025-12-24)
+
+### Features & Improvements
+
+- Port to `hishel` 1.0.0. ([#3700](https://github.com/pdm-project/pdm/issues/3700))
+
+### Bug Fixes
+
+- Update `.gitignore` file in the default template. ([#3686](https://github.com/pdm-project/pdm/issues/3686))
+- Correct the sysconfig variables for Python standalone build installations. ([#3693](https://github.com/pdm-project/pdm/issues/3693))
+- Ignore `packages.vcs.requested-revision` if it's None when formatting pylock.toml. ([#3694](https://github.com/pdm-project/pdm/issues/3694))
+- Fix test failures with uv test cases using non-venv Python interpreters. ([#3698](https://github.com/pdm-project/pdm/issues/3698))
+
+
 ## Release v2.26.2 (2025-11-24)
 
 ### Features & Improvements
