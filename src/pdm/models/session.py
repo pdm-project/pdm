@@ -65,13 +65,18 @@ class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
         super().__init__(*args, **kwargs)
 
     @property
+    def _ident(self) -> int:
+        thread = threading.current_thread()
+        return id(thread)
+
+    @property
     def connection(self) -> sqlite3.Connection | None:
-        return self._local_conns.get(threading.get_ident())
+        return self._local_conns.get(self._ident)
 
     @connection.setter
     def connection(self, conn: sqlite3.Connection | None) -> None:
         if conn is not None:
-            self._local_conns[threading.get_ident()] = conn
+            self._local_conns[self._ident] = conn
 
     def close(self) -> None:
         with self._lock:
