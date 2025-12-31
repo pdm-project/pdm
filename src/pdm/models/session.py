@@ -4,6 +4,7 @@ import os
 import sqlite3
 import sys
 import threading
+from contextlib import closing
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -95,7 +96,8 @@ class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
                 self.database_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path = self.database_path.resolve()
                 conn = sqlite3.connect(str(full_path), check_same_thread=False)
-                conn.execute("PRAGMA journal_mode=WAL")
+                with closing(conn.cursor()) as cursor:
+                    cursor.execute("PRAGMA foreign_keys=ON")
                 self.connection = conn
             if not self._initialized:
                 self._initialize_database()
