@@ -6,7 +6,6 @@ on:
       - main
       - dev
       - "maintain/*"
-      - "hy/fix_pypy_problem"
     paths-ignore:
       - "docs/**"
       - "news/**"
@@ -16,7 +15,6 @@ on:
       - main
       - dev
       - "maintain/*"
-      - "hy/fix_pypy_problem"
     paths-ignore:
       - "docs/**"
       - "news/**"
