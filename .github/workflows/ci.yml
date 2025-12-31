@@ -6,6 +6,7 @@ on:
       - main
       - dev
       - "maintain/*"
+      - "hy/fix_pypy_problem"
     paths-ignore:
       - "docs/**"
       - "news/**"
@@ -15,6 +16,7 @@ on:
       - main
       - dev
       - "maintain/*"
+      - "hy/fix_pypy_problem"
     paths-ignore:
       - "docs/**"
       - "news/**"
@@ -39,6 +41,9 @@ jobs:
           - python-version: 3.12
             os: ubuntu-latest
             install-via: script
+          - python-version: pypy-3.11
+            os: ubuntu-latest
+            install-via: pip
     steps:
       - uses: actions/checkout@v6.0.0
 
