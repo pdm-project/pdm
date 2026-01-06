@@ -2,7 +2,7 @@
 # Please do not edit it manually.
 
 aiohappyeyeballs==2.4.3
-aiohttp==3.11.7
+aiohttp==3.13.3
 aiosignal==1.3.1
 aiosqlite==0.21.0
 altair==5.4.1
