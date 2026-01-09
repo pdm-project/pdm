@@ -107,6 +107,8 @@ class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
 
 class PDMPyPIClient(PyPIClient):
     def __init__(self, *, sources: list[RepositoryConfig], cache_dir: Path | None = None, **kwargs: Any) -> None:
+        import shutil
+
         from httpx._utils import URLPattern
         from unearth.fetchers.sync import LocalFSTransport
 
@@ -120,7 +122,10 @@ class PDMPyPIClient(PyPIClient):
             if not cache_db.exists():
                 for f in cache_dir.iterdir():
                     if not f.name.startswith("http-cache.db"):
-                        f.unlink()
+                        if f.is_dir():
+                            shutil.rmtree(f, ignore_errors=True)
+                        else:
+                            f.unlink()
             storage = ThreadedSyncSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
 
             def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:
