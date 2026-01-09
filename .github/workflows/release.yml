@@ -104,8 +104,8 @@ jobs:
       PYAPP_PROJECT_FEATURES: locked
       SCCACHE_GHA_ENABLED: "true"
       RUSTC_WRAPPER: "sccache"
-      SOURCE_FILE: ${{ matrix.os != 'windows-2022' && 'pyapp' || 'pyapp.exe' }}
-      TARGET_FILE: ${{ matrix.os != 'windows-2022' && 'pdm' || 'pdm.exe' }}
+      SOURCE_FILE: ${{ matrix.os != 'windows-2025' && 'pyapp' || 'pyapp.exe' }}
+      TARGET_FILE: ${{ matrix.os != 'windows-2025' && 'pdm' || 'pdm.exe' }}
 
     steps:
       - name: Checkout
