@@ -1,3 +1,11 @@
+## Release v2.26.4 (2026-01-09)
+
+### Bug Fixes
+
+- Make sure cursor closing for fixing PyPy different gc mode also add PyPy in CI. ([#3708](https://github.com/pdm-project/pdm/issues/3708))
+- Fix a bug that old HTTP cache directories cause PDM to crash when trying to clear them. ([#3715](https://github.com/pdm-project/pdm/issues/3715))
+
+
 ## Release v2.26.3 (2025-12-24)
 
 ### Features & Improvements
