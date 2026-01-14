@@ -97,6 +97,7 @@ doc = [
     "markdown-exec>=0.7.0",
     "mkdocs-redirects>=1.2.0",
     "mkdocs-version-annotations>=1.0.0",
+    "mkdocs-llmstxt>=0.2.0",
 ]
 workflow = [
     "parver>=0.3.1",

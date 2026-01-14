@@ -1,4 +1,5 @@
 site_name: PDM
+site_url: https://pdm-project.org
 
 repo_url: https://github.com/pdm-project/pdm
 edit_uri: edit/main/docs
@@ -55,6 +56,16 @@ plugins:
         'usage/cli_reference.md': 'reference/cli.md'
         'usage/configuration.md': 'reference/configuration.md'
         'pyproject/pep621.md': 'reference/pep621.md'
+  - llmstxt:
+      full_output: llms-full.txt
+      sections:
+        Usage:
+          - "index.md"
+          - "usage/*.md"
+        Reference:
+          - "reference/*.md"
+        Development:
+          - "dev/*.md"
 
 nav:
   - Usage:
