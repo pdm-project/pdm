@@ -764,7 +764,7 @@ files = [
 
 [[package]]
 name = "hishel"
-version = "1.1.7"
+version = "1.1.8"
 requires_python = ">=3.9"
 summary = "Elegant HTTP Caching for Python"
 groups = ["default"]
@@ -773,13 +773,13 @@ dependencies = [
     "typing-extensions>=4.14.1",
 ]
 files = [
-    {file = "hishel-1.1.7-py3-none-any.whl", hash = "sha256:436c2a5a62d705528e581cbeba85b10d130c47c861906b21262a07ac02463a9f"},
-    {file = "hishel-1.1.7.tar.gz", hash = "sha256:32c625be581e94dc50b773a8cfb9a65cba487660561950fe976ae49945455179"},
+    {file = "hishel-1.1.8-py3-none-any.whl", hash = "sha256:29e45e090c647920b666e9d2b21e494c97dc12f49e7d88fd31d9e4e7e4b75d4d"},
+    {file = "hishel-1.1.8.tar.gz", hash = "sha256:bcd15ad282bd530e97a676b2d16a58e5034750e8a6955e77babfea69fc5b4ad8"},
 ]
 
 [[package]]
 name = "hishel"
-version = "1.1.7"
+version = "1.1.8"
 extras = ["httpx"]
 requires_python = ">=3.9"
 summary = "Elegant HTTP Caching for Python"
@@ -787,12 +787,12 @@ groups = ["default"]
 dependencies = [
     "anyio>=4.9.0",
     "anysqlite>=0.0.5",
-    "hishel==1.1.7",
+    "hishel==1.1.8",
     "httpx>=0.28.1",
 ]
 files = [
-    {file = "hishel-1.1.7-py3-none-any.whl", hash = "sha256:436c2a5a62d705528e581cbeba85b10d130c47c861906b21262a07ac02463a9f"},
-    {file = "hishel-1.1.7.tar.gz", hash = "sha256:32c625be581e94dc50b773a8cfb9a65cba487660561950fe976ae49945455179"},
+    {file = "hishel-1.1.8-py3-none-any.whl", hash = "sha256:29e45e090c647920b666e9d2b21e494c97dc12f49e7d88fd31d9e4e7e4b75d4d"},
+    {file = "hishel-1.1.8.tar.gz", hash = "sha256:bcd15ad282bd530e97a676b2d16a58e5034750e8a6955e77babfea69fc5b4ad8"},
 ]
 
 [[package]]
