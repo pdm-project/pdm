@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from findpython import BaseProvider, PythonVersion
 
 from pdm.exceptions import PdmUsageError
+from pdm.models.venv import VirtualEnv
 
 if TYPE_CHECKING:
     import sys
@@ -18,7 +19,6 @@ if TYPE_CHECKING:
     else:
         from typing_extensions import Self
 
-    from pdm.models.venv import VirtualEnv
     from pdm.project import Project
 
 

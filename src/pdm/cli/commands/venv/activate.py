@@ -10,11 +10,11 @@ import shellingham
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.utils import get_venv_with_name
 from pdm.cli.options import verbose_option
+from pdm.models.venv import VirtualEnv
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
-    from pdm.models.venv import VirtualEnv
     from pdm.project import Project
 
 
