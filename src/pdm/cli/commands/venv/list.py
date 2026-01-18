@@ -20,7 +20,7 @@ class ListCommand(BaseCommand):
 
     def handle(self, project: Project, options: Namespace) -> None:
         project.core.ui.echo("Virtualenvs created with this project:\n")
-        saved_python = project._saved_python
+        saved_python_root = Path(saved_python).parent.parent if (saved_python := project._saved_python) else None
         for ident, venv in iter_venvs(project):
-            mark = "*" if saved_python and Path(saved_python).parent.parent == venv.root else "-"
+            mark = "*" if saved_python_root and saved_python_root == venv.root else "-"
             project.core.ui.echo(f"{mark}  [success]{ident}[/]: {venv.root}")
