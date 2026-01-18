@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -43,9 +45,8 @@ class PurgeCommand(BaseCommand):
             for i, venv in enumerate(all_central_venvs):
                 project.core.ui.echo(f"{i}. [success]{venv[0]}[/]")
 
-        if not options.interactive:
-            if options.force or termui.confirm("continue?", default=True):
-                return self.del_all_venvs(project)
+        if not options.interactive and (options.force or termui.confirm("continue?", default=True)):
+            return self.del_all_venvs(project)
 
         selection = termui.ask(
             "Please select",
