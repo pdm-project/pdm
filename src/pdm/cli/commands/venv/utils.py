@@ -2,14 +2,24 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import typing as t
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from findpython import BaseProvider, PythonVersion
 
 from pdm.exceptions import PdmUsageError
 from pdm.models.venv import VirtualEnv
-from pdm.project import Project
+
+if TYPE_CHECKING:
+    import sys
+    from collections.abc import Iterable
+
+    if sys.version_info >= (3, 11):
+        from typing import Self
+    else:
+        from typing_extensions import Self
+
+    from pdm.project import Project
 
 
 def hash_path(path: str) -> str:
@@ -33,7 +43,7 @@ def get_venv_prefix(project: Project) -> str:
     return f"{path.name}-{name_hash}-"
 
 
-def iter_venvs(project: Project) -> t.Iterable[tuple[str, VirtualEnv]]:
+def iter_venvs(project: Project) -> Iterable[tuple[str, VirtualEnv]]:
     """Return an iterable of venv paths associated with the project"""
     in_project_venv = get_in_project_venv(project.root)
     if in_project_venv is not None:
@@ -47,7 +57,7 @@ def iter_venvs(project: Project) -> t.Iterable[tuple[str, VirtualEnv]]:
             yield ident, venv
 
 
-def iter_central_venvs(project: Project) -> t.Iterable[tuple[str, Path]]:
+def iter_central_venvs(project: Project) -> Iterable[tuple[str, Path]]:
     """Return an iterable of all managed venvs and their paths."""
     venv_parent = Path(project.config["venv.location"])
     for venv in venv_parent.glob("*"):
@@ -62,10 +72,10 @@ class VenvProvider(BaseProvider):
         self.project = project
 
     @classmethod
-    def create(cls) -> t.Self | None:
+    def create(cls) -> Self | None:
         return None
 
-    def find_pythons(self) -> t.Iterable[PythonVersion]:
+    def find_pythons(self) -> Iterable[PythonVersion]:
         for _, venv in iter_venvs(self.project):
             yield PythonVersion(venv.interpreter, _interpreter=venv.interpreter, keep_symlink=True)
 

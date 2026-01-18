@@ -7,13 +7,17 @@ import subprocess
 import sys
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any
 
 from pdm import termui
 from pdm.cli.commands.venv.utils import get_venv_prefix
 from pdm.exceptions import PdmUsageError, ProjectError
-from pdm.models.python import PythonInfo
-from pdm.project import Project
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
+    from pdm.models.python import PythonInfo
+    from pdm.project import Project
 
 
 class VirtualenvCreateError(ProjectError):
@@ -118,10 +122,7 @@ class Backend(abc.ABC):
         with_pip: bool = False,
         venv_name: str | None = None,
     ) -> Path:
-        if in_project:
-            location = self.project.root / ".venv"
-        else:
-            location = self.get_location(name, venv_name)
+        location = (self.project.root / ".venv") if in_project else self.get_location(name, venv_name)
         args = (*self.pip_args(with_pip), *args)
         if prompt is not None:
             prompt = prompt.format(

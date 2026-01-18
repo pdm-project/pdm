@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import argparse
+from typing import TYPE_CHECKING
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.activate import ActivateCommand
@@ -10,7 +10,11 @@ from pdm.cli.commands.venv.purge import PurgeCommand
 from pdm.cli.commands.venv.remove import RemoveCommand
 from pdm.cli.commands.venv.utils import get_venv_with_name
 from pdm.cli.options import project_option
-from pdm.project import Project
+
+if TYPE_CHECKING:
+    from argparse import ArgumentParser, Namespace
+
+    from pdm.project import Project
 
 
 class Command(BaseCommand):
@@ -19,7 +23,7 @@ class Command(BaseCommand):
     name = "venv"
     arguments = (project_option,)
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+    def add_arguments(self, parser: ArgumentParser) -> None:
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--path", help="Show the path to the given virtualenv")
         group.add_argument("--python", help="Show the python interpreter path for the given virtualenv")
@@ -31,7 +35,7 @@ class Command(BaseCommand):
         PurgeCommand.register_to(subparser, "purge")
         self.parser = parser
 
-    def handle(self, project: Project, options: argparse.Namespace) -> None:
+    def handle(self, project: Project, options: Namespace) -> None:
         if options.path:
             venv = get_venv_with_name(project, options.path)
             project.core.ui.echo(str(venv.root))
