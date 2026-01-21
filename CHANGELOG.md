@@ -1,3 +1,16 @@
+## Release v2.26.5 (2026-01-21)
+
+### Bug Fixes
+
+- Respect the project path when using cookiecutter template in `pdm init` command. ([#3721](https://github.com/pdm-project/pdm/issues/3721))
+- Fix a bug that `resolution.excludes` is not applied when evaluating candidates from the lock file. ([#3726](https://github.com/pdm-project/pdm/issues/3726))
+
+### Documentation
+
+- Remove chatbot from the docs page footer. ([#3722](https://github.com/pdm-project/pdm/issues/3722))
+- Generate llms.txt for docs powered by `mkdocs-llmstxt`. ([#3723](https://github.com/pdm-project/pdm/issues/3723))
+
+
 ## Release v2.26.4 (2026-01-09)
 
 ### Bug Fixes
