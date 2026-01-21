@@ -104,13 +104,10 @@ class Command(BaseCommand):
 
         if not options.template:
             raise PdmUsageError("template argument is required when --cookiecutter is passed")
-        if options.project_path:
-            project.core.ui.warn(
-                "Cookiecutter generator does not respect --project option. "
-                "It will always create a project dir under the current directory",
-            )
         try:
-            cookiecutter.main([options.template, *options.generator_args], standalone_mode=False)
+            cookiecutter.main(
+                [options.template, "--output-dir", str(project.root), *options.generator_args], standalone_mode=False
+            )
         except SystemExit as e:
             raise RuntimeError("Cookiecutter exited with an error") from e
 
