@@ -1,12 +1,18 @@
-import argparse
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.utils import iter_central_venvs
 from pdm.cli.options import verbose_option
-from pdm.project import Project
+
+if TYPE_CHECKING:
+    from argparse import ArgumentParser, Namespace
+
+    from pdm.project import Project
 
 
 class PurgeCommand(BaseCommand):
@@ -14,7 +20,7 @@ class PurgeCommand(BaseCommand):
 
     arguments = (verbose_option,)
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "-f",
             "--force",
@@ -28,7 +34,7 @@ class PurgeCommand(BaseCommand):
             help="Interactively purge selected Virtualenvs",
         )
 
-    def handle(self, project: Project, options: argparse.Namespace) -> None:
+    def handle(self, project: Project, options: Namespace) -> None:
         all_central_venvs = list(iter_central_venvs(project))
         if not all_central_venvs:
             project.core.ui.echo("No virtualenvs to purge, quitting.", style="success")
@@ -39,9 +45,8 @@ class PurgeCommand(BaseCommand):
             for i, venv in enumerate(all_central_venvs):
                 project.core.ui.echo(f"{i}. [success]{venv[0]}[/]")
 
-        if not options.interactive:
-            if options.force or termui.confirm("continue?", default=True):
-                return self.del_all_venvs(project)
+        if not options.interactive and (options.force or termui.confirm("continue?", default=True)):
+            return self.del_all_venvs(project)
 
         selection = termui.ask(
             "Please select",

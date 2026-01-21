@@ -1,7 +1,9 @@
-import argparse
+from __future__ import annotations
+
 import platform
 import shlex
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import shellingham
 
@@ -9,7 +11,11 @@ from pdm.cli.commands.base import BaseCommand
 from pdm.cli.commands.venv.utils import get_venv_with_name
 from pdm.cli.options import verbose_option
 from pdm.models.venv import VirtualEnv
-from pdm.project import Project
+
+if TYPE_CHECKING:
+    from argparse import ArgumentParser, Namespace
+
+    from pdm.project import Project
 
 
 class ActivateCommand(BaseCommand):
@@ -17,10 +23,10 @@ class ActivateCommand(BaseCommand):
 
     arguments = (verbose_option,)
 
-    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("env", nargs="?", help="The key of the virtualenv")
 
-    def handle(self, project: Project, options: argparse.Namespace) -> None:
+    def handle(self, project: Project, options: Namespace) -> None:
         if options.env:
             venv = get_venv_with_name(project, options.env)
         else:
