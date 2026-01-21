@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Collection, cast
 
 from dep_logic.markers import AnyMarker, BaseMarker
 
+from pdm.cli.utils import normalize_name
 from pdm.exceptions import CandidateNotFound, PdmException
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec, exclude_multi, get_marker
@@ -254,8 +255,11 @@ class LockedRepository(BaseRepository):
 
     def evaluate_candidates(self, groups: Collection[str], evaluate_markers: bool = True) -> Iterable[Package]:
         extras, dependency_groups = self.environment.project.split_extras_groups(list(groups))
+        excludes = {normalize_name(k) for k in self.environment.project.pyproject.resolution.get("excludes", [])}
         for package in self.packages.values():
             can = package.candidate
+            if package.candidate.req.key in excludes:
+                continue
             if evaluate_markers and can.req.marker and not can.req.marker.matches(self.env_spec):
                 continue
             if not package.marker.evaluate({"extras": set(extras), "dependency_groups": set(dependency_groups)}):
