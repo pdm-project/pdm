@@ -1,3 +1,10 @@
+## Release v2.26.6 (2026-01-22)
+
+### Bug Fixes
+
+- Support `packaging==26.0` changes for version comparison ([#3729](https://github.com/pdm-project/pdm/issues/3729))
+
+
 ## Release v2.26.5 (2026-01-21)
 
 ### Bug Fixes
