@@ -102,8 +102,6 @@ jobs:
       PYAPP_SELF_COMMAND: app # since `self` has been taken in `pdm`
       PYAPP_DISTRIBUTION_EMBED: true
       PYAPP_PROJECT_FEATURES: locked
-      SCCACHE_GHA_ENABLED: "true"
-      RUSTC_WRAPPER: "sccache"
       SOURCE_FILE: ${{ matrix.os != 'windows-2025' && 'pyapp' || 'pyapp.exe' }}
       TARGET_FILE: ${{ matrix.os != 'windows-2025' && 'pdm' || 'pdm.exe' }}
 
@@ -123,6 +121,13 @@ jobs:
 
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
+        if: matrix.os != 'macos-15-intel'
+
+      - name: Set sccache env
+        if: matrix.os != 'macos-15-intel'
+        run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
 
       - name: Download artifacts
         uses: actions/download-artifact@v7.0.0
