@@ -165,10 +165,13 @@ class BaseRepository:
             return [self.make_this_candidate(requirement)]
         requires_python = requirement.requires_python & self.env_spec.requires_python
         cans = LazySequence(self._find_candidates(requirement, minimal_version=minimal_version))
+        check_prereleases = allow_prereleases
+        if check_prereleases is None:
+            check_prereleases = requirement.specifier.prereleases is True
         applicable_cans = LazySequence(
             c
             for c in cans
-            if requirement.specifier.contains(c.version, allow_prereleases)  # type: ignore[arg-type, union-attr]
+            if requirement.specifier.contains(c.version, check_prereleases)  # type: ignore[arg-type, union-attr]
         )
 
         def filter_candidates_with_requires_python(candidates: Iterable[Candidate]) -> Generator[Candidate]:
