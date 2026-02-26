@@ -125,9 +125,8 @@ class ArgumentParser(argparse.ArgumentParser):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if sys.version_info >= (3, 14):
-            kwargs["formatter_class"] = argparse.RawDescriptionHelpFormatter
-        else:
-            kwargs["formatter_class"] = PdmFormatter
+            kwargs["color"] = False
+        kwargs["formatter_class"] = PdmFormatter
         kwargs["add_help"] = False
         super().__init__(*args, **kwargs)
         self.add_argument(
