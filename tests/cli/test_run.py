@@ -410,6 +410,34 @@ def test_run_script_with_dotenv_file(project, pdm, capfd, monkeypatch):
         assert capfd.readouterr()[0].strip() == "bar override"
 
 
+def test_run_script_with_dotenv_file_idetify_by_environment_variable(project, pdm, capfd, monkeypatch):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'), os.getenv('BAR'))")
+    project.pyproject.settings["scripts"] = {
+        "test_default": {"cmd": "python test_script.py"},
+    }
+    (project.root / ".env.local").write_text("FOO=bar\nBAR=local")
+    (project.root / ".env.alpha").write_text("FOO=bar\nBAR=alpha")
+    with cd(project.root):
+        pdm(["run", "test_default"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar local"
+        pdm(["run", "-e", "alpha", "test_default"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar alpha"
+
+
+def test_run_script_with_dotenv_file_with_env_file_option(project, pdm, capfd, monkeypatch):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'), os.getenv('BAR'))")
+    project.pyproject.settings["scripts"] = {
+        "test_default": {"cmd": "python test_script.py"},
+    }
+    (project.root / ".env.local").write_text("FOO=bar\nBAR=local")
+    (project.root / ".env.alpha").write_text("FOO=bar\nBAR=alpha")
+    with cd(project.root):
+        pdm(["run", "test_default"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar local"
+        pdm(["run", "-e", "local", "--env-file", ".env.alpha", "test_default"], obj=project)
+        assert capfd.readouterr()[0].strip() == "bar alpha"
+
+
 def test_run_script_override_global_env(project, pdm, capfd):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {
