@@ -40,7 +40,7 @@ jobs:
           pipx run build
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: pdm-wheel
           path: dist/*.whl
@@ -72,7 +72,7 @@ jobs:
           prerelease: ${{ steps.check_version.outputs.PRERELEASE }}
 
       - name: Trigger Bucket Update
-        uses: benc-uk/workflow-dispatch@v1.2.4
+        uses: benc-uk/workflow-dispatch@v1.3.1
         with:
           workflow: Excavator
           repo: frostming/scoop-frostming
@@ -130,7 +130,7 @@ jobs:
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
 
       - name: Download artifacts
-        uses: actions/download-artifact@v7.0.0
+        uses: actions/download-artifact@v8.0.0
         with:
           name: pdm-wheel
           path: dist
@@ -150,7 +150,7 @@ jobs:
           mv target/release/$SOURCE_FILE ../$TARGET_FILE
 
       - name: Upload Assets
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: pdm-${{ github.ref_name }}-${{ env.TARGET_TRIPLE }}
           path: ${{ env.TARGET_FILE }}
