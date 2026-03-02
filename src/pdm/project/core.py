@@ -714,9 +714,11 @@ class Project:
         deps_setter = [
             (
                 metadata.get("optional-dependencies", {}),
-                lambda x: metadata.setdefault("optional-dependencies", {}).__setitem__(group, x)
-                if x
-                else metadata.setdefault("optional-dependencies", {}).pop(group, None),
+                lambda x: (
+                    metadata.setdefault("optional-dependencies", {}).__setitem__(group, x)
+                    if x
+                    else metadata.setdefault("optional-dependencies", {}).pop(group, None)
+                ),
             ),
             (dev_dependencies, update_dev_dependencies),
         ]
