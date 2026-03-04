@@ -653,6 +653,10 @@ def pdm(core: Core, monkeypatch: pytest.MonkeyPatch) -> PDMCallable:
                 os.environ.update(old_env)
                 if cleanup:
                     core.exit_stack.close()
+                    # Clear the build directory cache to avoid stale references
+                    from pdm.models.candidates import PreparedCandidate
+
+                    PreparedCandidate._build_dir_cache.clear()
 
         result = RunResult(exit_code, stdout.getvalue(), stderr.getvalue(), exception)
 
