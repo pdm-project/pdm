@@ -352,17 +352,27 @@ def comparable_version(version: str) -> Version:
         if hasattr(parsed, "__replace__"):  # packaging >= 26
             parsed = parsed.__replace__(local=None)
         else:
+            # packaging < 26 does not have __replace__ method
+            # In this version, we need to manually update _version and recompute _key
+            # Note: In packaging >= 26, _key is a read-only property, but this else branch
+            # only executes on packaging < 26 where _key is a regular attribute that can be
+            # assigned. We use object.__setattr__() instead of direct assignment to satisfy
+            # type checkers that analyze based on the current packaging version.
             from packaging.version import _cmpkey
 
             parsed._version = parsed._version._replace(local=None)
 
-            parsed._key = _cmpkey(
-                parsed._version.epoch,
-                parsed._version.release,
-                parsed._version.pre,
-                parsed._version.post,
-                parsed._version.dev,
-                parsed._version.local,
+            object.__setattr__(
+                parsed,
+                "_key",
+                _cmpkey(
+                    parsed._version.epoch,
+                    parsed._version.release,
+                    parsed._version.pre,
+                    parsed._version.post,
+                    parsed._version.dev,
+                    parsed._version.local,
+                ),
             )
 
     return parsed
