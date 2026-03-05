@@ -60,9 +60,11 @@ def test_lock_refresh(pdm, project, repository, args, core, mocker):
         core.repository_class,
         "get_hashes",
         side_effect=(
-            lambda c: [{"url": url, "file": Link(url).filename, "hash": hash} for url, hash in url_hashes.items()]
-            if c.identify() == "requests"
-            else []
+            lambda c: (
+                [{"url": url, "file": Link(url).filename, "hash": hash} for url, hash in url_hashes.items()]
+                if c.identify() == "requests"
+                else []
+            )
         ),
     )
     assert not project.is_lockfile_hash_match()
