@@ -1,7 +1,4 @@
 """Tests for the completion command"""
-import pytest
-
-from pdm.exceptions import PdmUsageError
 
 
 def test_completion_bash(pdm):

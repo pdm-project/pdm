@@ -1,7 +1,4 @@
 """Tests for the search command utilities"""
-from unittest import mock
-
-import pytest
 
 from pdm.cli.commands.search import print_results
 

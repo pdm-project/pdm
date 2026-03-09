@@ -1,8 +1,8 @@
 """Additional tests for the show command"""
+
 import pytest
 
 from pdm.cli.commands.show import filter_stable
-from pdm.utils import parse_version
 
 
 def test_filter_stable_with_stable_version(mocker):

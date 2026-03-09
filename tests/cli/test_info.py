@@ -1,7 +1,6 @@
 """Additional tests for the info command to improve coverage"""
-import json
 
-import pytest
+import json
 
 
 def test_info_command_packages_option(project, pdm):
@@ -77,6 +76,7 @@ def test_info_command_default_output(project, pdm):
 def test_info_command_with_global_project(pdm, tmp_path):
     """Test info command with global project"""
     import os
+
     os.chdir(tmp_path)
 
     result = pdm(["info", "-g", "--python"])
