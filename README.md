@@ -131,6 +131,22 @@ Tell people you are using PDM in your project by including the markdown code in 
 
 [Awesome PDM](https://github.com/pdm-project/awesome-pdm) is a curated list of awesome PDM plugins and resources.
 
+## Experimental
+
+Enable [PEP 582](https://peps.python.org/pep-0582/) for a project:
+
+    pdm config python.use_venv False
+
+This makes PDM install packages into a local project folder instead of a venv (similar to how npm installs into node_modules).
+    
+Enable [uv](https://github.com/astral-sh/uv) integration:
+
+    pdm config use_uv true
+
+uv is a very fast Python package installer written in Rust.
+    
+Note: `uv` does not work with `PEP 582`.
+
 ## Sponsors
 
 <p align="center">
