@@ -63,9 +63,9 @@ def test_show_command_with_multiple_metadata_keys(pdm):
 
 def test_show_command_non_distribution_project(project, pdm):
     """Test show command on a non-distribution project raises error"""
-    # Modify project to be non-distribution
-    project.pyproject.settings.setdefault("project", {})["name"] = None
+    # Mark the project as non-distribution
+    project.pyproject.settings["distribution"] = False
 
     result = pdm(["show"], obj=project)
-    # This might fail if project setup doesn't allow this scenario
-    # The test is to check error handling
+    assert result.exit_code != 0
+    assert "not a library" in result.stderr

@@ -73,11 +73,9 @@ def test_info_command_default_output(project, pdm):
     assert "Local Packages" in result.output or "Packages" in result.output
 
 
-def test_info_command_with_global_project(pdm, tmp_path):
+def test_info_command_with_global_project(pdm, tmp_path, monkeypatch):
     """Test info command with global project"""
-    import os
-
-    os.chdir(tmp_path)
+    monkeypatch.chdir(tmp_path)
 
     result = pdm(["info", "-g", "--python"])
     assert result.exit_code == 0
