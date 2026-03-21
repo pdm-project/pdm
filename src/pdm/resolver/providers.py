@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import os
+from collections import defaultdict
 from functools import cached_property
 from typing import TYPE_CHECKING, Callable
 
@@ -39,6 +40,7 @@ if TYPE_CHECKING:
 
 
 _PROVIDER_REGISTRY: dict[str, type[BaseProvider]] = {}
+_CONFLICT_PRIORITY_THRESHOLD = 5
 
 
 def get_provider(strategy: str) -> type[BaseProvider]:
@@ -79,6 +81,8 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         self.excludes = {normalize_name(k) for k in project.pyproject.resolution.get("excludes", [])}
         self.direct_minimal_versions = direct_minimal_versions
         self.locked_repository = locked_repository
+        self._conflict_counts: defaultdict[str, int] = defaultdict(int)
+        self._conflict_promoted: set[str] = set()
 
     def requirement_preference(self, requirement: Requirement) -> Comparable:
         """Return the preference of a requirement to find candidates.
@@ -97,12 +101,49 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
     def identify(self, requirement_or_candidate: Requirement | Candidate) -> str:
         return requirement_or_candidate.identify()
 
+    def narrow_requirement_selection(
+        self,
+        identifiers: Iterable[str],
+        resolutions: Mapping[str, Candidate],
+        candidates: Mapping[str, Iterator[Candidate]],
+        information: Mapping[str, Iterator[RequirementInformation]],
+        backtrack_causes: Sequence[RequirementInformation],
+    ) -> Iterable[str]:
+        backtrack_identifiers: set[str] = set()
+        for requirement, parent in backtrack_causes:
+            names = [requirement.identify()]
+            if parent is not None:
+                names.append(parent.identify())
+            for name in names:
+                backtrack_identifiers.add(name)
+                if name not in resolutions:
+                    self._conflict_counts[name] += 1
+                    if self._conflict_counts[name] >= _CONFLICT_PRIORITY_THRESHOLD:
+                        self._conflict_promoted.add(name)
+
+        current_backtrack_causes: list[str] = []
+        promoted: list[str] = []
+        for identifier in identifiers:
+            if identifier == "python":
+                return [identifier]
+            if identifier in backtrack_identifiers:
+                current_backtrack_causes.append(identifier)
+                continue
+            if identifier in self._conflict_promoted:
+                promoted.append(identifier)
+
+        if current_backtrack_causes:
+            return current_backtrack_causes
+        if promoted:
+            return promoted
+        return identifiers
+
     def get_preference(
         self,
         identifier: str,
-        resolutions: dict[str, Candidate],
-        candidates: dict[str, Iterator[Candidate]],
-        information: dict[str, Iterator[RequirementInformation]],
+        resolutions: Mapping[str, Candidate],
+        candidates: Mapping[str, Iterator[Candidate]],
+        information: Mapping[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
     ) -> tuple[Comparable, ...]:
         is_top = any(parent is None for _, parent in information[identifier])
@@ -123,9 +164,11 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         is_python = identifier == "python"
         is_pinned = any(op[:2] == "==" for op in operators)
         constraints = len(operators)
+        is_conflict_promoted = identifier in self._conflict_promoted
         return (
             not is_python,
             not is_top,
+            not is_conflict_promoted,
             not is_file_or_url,
             not is_pinned,
             not is_backtrack_cause,
@@ -458,9 +501,9 @@ class EagerUpdateProvider(ReusePinProvider):
     def get_preference(
         self,
         identifier: str,
-        resolutions: dict[str, Candidate],
-        candidates: dict[str, Iterator[Candidate]],
-        information: dict[str, Iterator[RequirementInformation]],
+        resolutions: Mapping[str, Candidate],
+        candidates: Mapping[str, Iterator[Candidate]],
+        information: Mapping[str, Iterator[RequirementInformation]],
         backtrack_causes: Sequence[RequirementInformation],
     ) -> tuple[Comparable, ...]:
         # Resolve tracking packages so we have a chance to unpin them first.
