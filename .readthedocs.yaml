@@ -10,11 +10,13 @@ build:
   tools:
     python: "3.12"
   jobs:
-    post_create_environment:
+    install:
       - python install-pdm.py --path ~/.local/pdm
       - ~/.local/pdm/bin/pdm --version
-    post_install:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH ~/.local/pdm/bin/pdm install -dG doc
-
-mkdocs:
-  configuration: mkdocs.yml
+    build:
+      html:
+        - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH ~/.local/pdm/bin/pdm run python tasks/render_reference_docs.py
+        - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH ~/.local/pdm/bin/pdm run zensical build
+        - mkdir --parents $READTHEDOCS_OUTPUT/html/
+        - cp --recursive site/. $READTHEDOCS_OUTPUT/html/

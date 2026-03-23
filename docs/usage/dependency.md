@@ -130,7 +130,8 @@ These variables will be read from the environment variables when installing the 
 
 ### Add development only dependencies
 
-+++ 1.5.0
+!!! tip
+    Added in 1.5.0.
 
 PDM also supports defining groups of dependencies that are useful for development,
 e.g. some for testing and others for linting. We usually don't want these dependencies to appear in the distribution's metadata
@@ -270,7 +271,8 @@ pdm remove -dG test pytest-cov
 
 ## List outdated packages and the latest versions
 
-+++ 2.13.0
+!!! tip
+    Added in 2.13.0.
 
 To list outdated packages and the latest versions:
 
@@ -330,7 +332,8 @@ In PDM, there are two ways to specify overrides:
 
 ### In the project file
 
-+++ 1.12.0
+!!! tip
+    Added in 1.12.0.
 
 You can specify the overrides in the `pyproject.toml` file, under the `[tool.pdm.resolution.overrides]` table:
 
@@ -345,7 +348,8 @@ Each entry in the table is a package name and a version specifier. The version s
 
 ### Via CLI option
 
-+++ 2.17.0
+!!! tip
+    Added in 2.17.0.
 
 PDM also supports reading dependency overrides from a requirements file. The file works similarly to the constraint file in pip(`--constraint constraints.txt`), and the syntax is the same as the requirements file:
 

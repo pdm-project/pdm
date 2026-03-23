@@ -21,7 +21,8 @@ You can choose the backend used by PDM to create a virtualenv. Currently it supp
 
 You can change it by `pdm config venv.backend [virtualenv|venv|conda]`.
 
-+++ 2.13.0
+!!! tip
+    Added in 2.13.0.
 
     Moreover, when `python.use_venv` config is set to `true`, PDM will always try to create a virtualenv when using `pdm use` to switch the Python interpreter.
 

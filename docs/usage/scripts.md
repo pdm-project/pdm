@@ -12,7 +12,8 @@ It will run `flask run -p 54321` in the environment that is aware of packages in
 
 ## Single-file Scripts
 
-+++ 2.16.0
+!!! tip
+    Added in 2.16.0.
 
 PDM can run single-file scripts with [inline script metadata](https://peps.python.org/pep-0723/) specified by PEP 723.
 
@@ -172,7 +173,8 @@ all = {composite = ["lint", "test"]}
 
 Running `pdm run all` will run `lint` first and then `test` if `lint` succeeded.
 
-+++ 2.13.0
+!!! tip
+    Added in 2.13.0.
 
 To override the default behavior and continue the execution of the remaining scripts after a failure,
 set the `keep_going` option to `true`:
@@ -272,7 +274,8 @@ start.env_file.override = ".env"
 
 ### `working_dir`
 
-+++ 2.13.0
+!!! tip
+    Added in 2.13.0.
 
 You can set the current working directory for the script:
 
@@ -284,7 +287,8 @@ start.working_dir = "subdir"
 
 Relative paths are resolved against the project root.
 
-+++ 2.20.2
+!!! tip
+    Added in 2.20.2.
 
 To identify the original calling working directory, each script gets the environment variable `PDM_RUN_CWD` injected.
 

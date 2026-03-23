@@ -7,7 +7,7 @@ A modern Python package and dependency manager supporting the latest PEP standar
 
 ![PDM logo](https://raw.githubusercontent.com/pdm-project/pdm/main/docs/assets/logo_big.png)
 
-[![Docs](https://img.shields.io/badge/Docs-mkdocs-blue?style=for-the-badge)](https://pdm-project.org)
+[![Docs](https://img.shields.io/badge/Docs-zensical-blue?style=for-the-badge)](https://pdm-project.org)
 [![Twitter Follow](https://img.shields.io/twitter/follow/pdm_project?label=get%20updates&logo=twitter&style=for-the-badge)](https://twitter.com/pdm_project)
 [![Discord](https://img.shields.io/discord/824472774965329931?label=discord&logo=discord&style=for-the-badge)](https://discord.gg/Phn8smztpv)
 

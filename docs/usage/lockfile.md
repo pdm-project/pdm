@@ -49,7 +49,8 @@ This command also refreshes _all_ file hashes recorded in the lock file.
 
 PDM supports two lock file formats: `pdm`(default file name is `pdm.lock`) and `pylock`(default file name is `pylock.toml`). The default format is `pdm`.
 
-+++ 2.25.0
+!!! tip
+    Added in 2.25.0.
 
     Added experimental support for the [PEP 751](https://packaging.python.org/en/latest/specifications/pylock-toml/#pylock-toml-spec) pylock file format. It's a standard lock file format designed to minimize discrepancies among different Python package managers, enhancing interoperability with other tools. It is set to become the default in a future version of PDM. Read the specification for more details.
 
@@ -127,7 +128,8 @@ This command makes the lockfile not cross-platform.
 
 ### Cross platform
 
-+++ 2.6.0
+!!! tip
+    Added in 2.6.0.
 
 !!! warning "Deprecated in 2.17.0"
     See [Lock for specific platforms or Python versions](./lock-targets.md) for the new behavior.
@@ -143,7 +145,8 @@ pdm lock --strategy no_cross_platform
 
 ### Static URLs
 
-+++ 2.8.0
+!!! tip
+    Added in 2.8.0.
 
 By default, PDM only stores the filenames of the packages in the lockfile, which benefits the reusability across different package indexes.
 However, if you want to store the static URLs of the packages in the lockfile, you can pass the `--strategy static_urls` option to `pdm lock`:
@@ -156,7 +159,8 @@ The settings will be saved and remembered for the same lockfile. You can also pa
 
 ### Direct minimal versions
 
-+++ 2.10.0
+!!! tip
+    Added in 2.10.0.
 
 When it is enabled by passing `--strategy direct_minimal_versions`, dependencies specified in the `pyproject.toml` will be resolved to the minimal versions available, rather than the latest versions. This is useful when you want to test the compatibility of your project within a range of dependency versions.
 
@@ -168,7 +172,8 @@ For example, if you specified `flask>=2.0` in the `pyproject.toml`, `flask` will
 
 ### Inherit the metadata from parents
 
-+++ 2.11.0
+!!! tip
+    Added in 2.11.0.
 
 Previously, the `pdm lock` command would record package metadata as it is. When installing, PDM would start from the top requirements and traverse down to the leaf node of the dependency tree. It would then evaluate any marker it encounters against the current environment. If a marker is not satisfied, the package would be discarded. In other words, we need an additional "resolution" step in installation.
 
@@ -176,7 +181,8 @@ When the `inherit_metadata` strategy is enabled, PDM will inherit and merge envi
 
 ### Exclude packages newer than specific date
 
-+++ 2.13.0
+!!! tip
+    Added in 2.13.0.
 
 You can exclude packages that are newer than a specified date by passing the `--exclude-newer` option to `pdm lock`. This is useful when you want to lock the dependencies to a specific date, for example, to ensure reproducibility of the build.
 
@@ -262,7 +268,8 @@ pdm export -o requirements.txt
 !!! tip
     You can also run `pdm export` with a [`.pre-commit` hook](./advanced.md#hooks-for-pre-commit).
 
-+++ 2.24.0
+!!! tip
+    Added in 2.24.0.
 
 Additionally, PDM supports exporting to `pylock.toml` format as defined by [PEP 751](https://packaging.python.org/en/latest/specifications/pylock-toml/#pylock-toml-spec). The following command will convert your lock file to a PEP 751 compatible format:
 
