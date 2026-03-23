@@ -5,7 +5,6 @@ repo_url: https://github.com/pdm-project/pdm
 edit_uri: edit/main/docs
 
 theme:
-  name: material
   palette:
     - media: "(prefers-color-scheme)"
       toggle:
@@ -13,15 +12,15 @@ theme:
         name: Switch to light mode
     - scheme: default
       media: "(prefers-color-scheme: light)"
-      primary: deep purple
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
       media: "(prefers-color-scheme: dark)"
-      primary: deep purple
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
@@ -37,35 +36,12 @@ theme:
   custom_dir: docs/overrides
 
 plugins:
-  - search
-  - markdown-exec
-  - "mkdocs-version-annotations":
-      version_added_admonition: "tip"
   - mkdocstrings:
       enable_inventory: true
       handlers:
         python:
           options:
             docstring_style: google
-  - redirects:
-      redirect_maps:
-        'plugin/fixtures.md': 'dev/fixtures.md'
-        'plugin/write.md': 'dev/write.md'
-        'pyproject/build.md': 'reference/build.md'
-        'plugin/reference.md': 'reference/api.md'
-        'usage/cli_reference.md': 'reference/cli.md'
-        'usage/configuration.md': 'reference/configuration.md'
-        'pyproject/pep621.md': 'reference/pep621.md'
-  - llmstxt:
-      full_output: llms-full.txt
-      sections:
-        Usage:
-          - "index.md"
-          - "usage/*.md"
-        Reference:
-          - "reference/*.md"
-        Development:
-          - "dev/*.md"
 
 nav:
   - Usage:

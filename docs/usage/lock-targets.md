@@ -1,6 +1,7 @@
 # Lock for specific platforms or Python versions
 
-+++ 2.17.0
+!!! tip
+    Added in 2.17.0.
 
 By default, PDM will try to make a lock file that works on all platforms within the Python versions specified by [`requires-python` in `pyproject.toml`](./project.md#specify-requires-python). This is very convenient during development. You can generate a lock file in your development environment and then use this lock file to replicate the same dependency versions in CI/CD or production environments.
 

@@ -160,10 +160,20 @@ PDM docs development requires a few additional dependencies. Install them as:
 sudo apt install libffi-dev # Or equivalent with the package manager of your choice
 ```
 
+The Zensical-based docs toolchain currently requires Python 3.10+.
+
 Now, whenever you make some changes to the `docs/` and you want to preview the build result, simply do:
 
 ```bash
 pdm run doc
+```
+
+The CLI and configuration reference pages are generated from
+`tasks/doc_templates/cli.md.in` and `tasks/doc_templates/configuration.md.in`.
+If you change command help text or config metadata, regenerate them with:
+
+```bash
+pdm run python tasks/render_reference_docs.py
 ```
 
 ## Release

@@ -336,7 +336,8 @@ url = "https://pkgs.dev.azure.com/[org name]/_packaging/[feed name]/pypi/simple/
 
 ## Exclude specific packages and their dependencies from the lock file
 
-+++ 2.12.0
+!!! tip
+    Added in 2.12.0.
 
 Sometimes you don't even want to include certain packages in the locked file because you are sure they won't be used by any code. In this case, you can completely skip them and their dependencies during dependency resolution:
 
@@ -349,7 +350,8 @@ With this config, `requests` will not be locked in the lockfile, and its depende
 
 ## Passing constant arguments to every pdm invocation
 
-+++ 2.7.0
+!!! tip
+    Added in 2.7.0.
 
 You can add extra options passed to individual pdm commands by `tool.pdm.options` configuration:
 
@@ -365,7 +367,8 @@ These options will be added right after the command name. For instance, based on
 
 ## Ignore package warnings
 
-+++ 2.10.0
+!!! tip
+    Added in 2.10.0.
 
 You may see some warnings when resolving dependencies like this:
 

@@ -14,7 +14,8 @@
 
 ## Signals
 
-+++ 1.12.0
+!!! tip
+    Added in 1.12.0.
 
 ::: pdm.signals
     options:

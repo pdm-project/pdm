@@ -25,7 +25,8 @@ will be stored in `.pdm-python` and used by subsequent commands. You can also ch
 
 Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
 
-+++ 2.23.0
+!!! tip
+    Added in 2.23.0.
 
 If `.python-version` is present in the project root or `PDM_PYTHON_VERSION` env var is set, PDM will use the Python version specified in it. The file or env var should contain a valid Python version string, such as `3.11`.
 
@@ -34,7 +35,8 @@ If `.python-version` is present in the project root or `PDM_PYTHON_VERSION` env 
 
 ### Install Python interpreters with PDM
 
-+++ 2.13.0
+!!! tip
+    Added in 2.13.0.
 
 PDM supports installing additional Python interpreters from [@indygreg's python-build-standalone](https://github.com/indygreg/python-build-standalone)
 with the `pdm python install` command. For example, to install CPython 3.9.8:
@@ -77,7 +79,8 @@ pdm python install 3.13t
 
 ### Installation strategy based on `requires-python`
 
-+++ 2.16.0
+!!! tip
+    Added in 2.16.0.
 
 If Python `version` is not given, PDM will try to install the best match for the current platform/arch combination
 based on `requires-python` from `pyproject.toml` (if pyproject.toml or requires-python attribute is not available,

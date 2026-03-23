@@ -1,7 +1,87 @@
+:root {
+  --pdm-brand-primary: #9b6bd3;
+  --pdm-brand-primary-light: #cdb2eb;
+  --pdm-brand-primary-dark: #7343a8;
+  --pdm-brand-accent: #0f8f87;
+  --pdm-brand-accent-soft: rgba(15, 143, 135, 0.14);
+  --pdm-brand-link: #7d46c3;
+  --pdm-brand-focus: rgba(155, 107, 211, 0.28);
+}
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--pdm-brand-primary);
+  --md-primary-fg-color--light: var(--pdm-brand-primary-light);
+  --md-primary-fg-color--dark: var(--pdm-brand-primary-dark);
+  --md-accent-fg-color: var(--pdm-brand-accent);
+  --md-accent-fg-color--transparent: var(--pdm-brand-accent-soft);
+  --md-typeset-a-color: var(--pdm-brand-link);
+  --md-default-bg-color: #fcfaff;
+  --md-default-fg-color: #241a33;
+  --md-default-fg-color--light: #6f5a8d;
+  --md-code-bg-color: #f4eefc;
+  --md-code-fg-color: #472d6b;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #b88fe5;
+  --md-primary-fg-color--light: #d6bdf2;
+  --md-primary-fg-color--dark: #9262c8;
+  --md-accent-fg-color: #54d6ca;
+  --md-accent-fg-color--transparent: rgba(84, 214, 202, 0.16);
+  --md-typeset-a-color: #d0b2f2;
+  --md-default-bg-color: #110d19;
+  --md-default-fg-color: #f0ebf8;
+  --md-default-fg-color--light: #b7aacd;
+  --md-code-bg-color: #1d1629;
+  --md-code-fg-color: #e7dbf9;
+}
+
 a.pdm-expansions {
   cursor: pointer;
   font-weight: bold;
   color: currentColor;
+}
+
+.md-typeset a:hover,
+.md-nav__link:hover,
+.md-tabs__link:hover {
+  color: var(--md-accent-fg-color);
+}
+
+.md-search__form,
+.md-search__input {
+  border-radius: 999px;
+}
+
+.md-search__input,
+.md-typeset .md-button,
+.md-header__button.md-logo {
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.md-search__input:focus,
+.md-search__input:focus-visible,
+.md-typeset .md-button:focus-visible,
+.md-nav__link:focus-visible,
+.md-tabs__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem var(--pdm-brand-focus);
+}
+
+.md-typeset .md-button--primary {
+  box-shadow: 0 10px 24px rgba(115, 67, 168, 0.18);
+}
+
+.md-typeset .md-button--primary:hover {
+  transform: translateY(-1px);
+}
+
+.md-tabs {
+  box-shadow: inset 0 -1px 0 var(--md-accent-fg-color--transparent);
+}
+
+.md-typeset code {
+  border-radius: 0.35rem;
 }
 
 .bot-container {

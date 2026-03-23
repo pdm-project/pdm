@@ -90,14 +90,9 @@ tox = [
     "tox-pdm>=0.5",
 ]
 doc = [
-    "mkdocs>=1.1",
-    "mkdocs-material>=7.3",
+    "zensical>=0.0.28; python_version >= '3.10'",
     "mkdocstrings[python]>=0.18",
     "setuptools>=62.3.3",
-    "markdown-exec>=0.7.0",
-    "mkdocs-redirects>=1.2.0",
-    "mkdocs-version-annotations>=1.0.0",
-    "mkdocs-llmstxt>=0.2.0",
 ]
 workflow = [
     "parver>=0.3.1",
@@ -258,6 +253,8 @@ coverage = {shell = """\
                               tests/
                     """}
 tox = "tox"
-doc = {cmd = "mkdocs serve", help = "Start the dev server for docs preview"}
+pre_doc = "python tasks/render_reference_docs.py"
+doc = {cmd= "zensical serve", help = "Start the dev server for docs preview"}
+doc-build = {composite = ["pre_doc", "zensical build"], help = "Build the documentation site"}
 lint = "prek run --all-files"
 complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
