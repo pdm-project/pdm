@@ -278,8 +278,8 @@ Options:
 - `-g`, `--global`: Use the global project, supply the project root with `-p` option
 - `-p`, `--project`: Specify another path as the project root, which changes the base of `pyproject.toml` and `__pypackages__` [env var: `PDM_PROJECT`]
 - `-k`, `--skip`: Skip some tasks and/or hooks by their comma-separated names. Can be supplied multiple times. Use `:all` to skip all hooks. Use `:pre` and `:post` to skip all pre or post hooks.
-- `--copier`: Use Copier to generate project [31m[not installed][0m (default: `builtin`)
-- `--cookiecutter`: Use Cookiecutter to generate project [31m[not installed][0m (default: `builtin`)
+- `--copier`: Use Copier to generate project [not installed] (default: `builtin`)
+- `--cookiecutter`: Use Cookiecutter to generate project [not installed] (default: `builtin`)
 - `-r`, `--overwrite`: Overwrite existing files
 
 Builtin Generator Options:
