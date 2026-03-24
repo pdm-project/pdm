@@ -1,3 +1,18 @@
+## Release v2.26.7 (2026-03-24)
+
+### Features & Improvements
+
+- Speed up dependency resolution when there are complex conflicts. ([#3751](https://github.com/pdm-project/pdm/issues/3751))
+
+### Documentation
+
+- Switch to Zensical as docs generator. ([#3752](https://github.com/pdm-project/pdm/issues/3752))
+
+### Miscellany
+
+- Add comprehensive tests for completion, show, search, and info commands to improve test coverage ([#3541](https://github.com/pdm-project/pdm/issues/3541))
+
+
 ## Release v2.26.6 (2026-01-22)
 
 ### Bug Fixes
