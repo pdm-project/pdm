@@ -142,6 +142,15 @@ def test_add_no_install(project, working_set, pdm):
         assert package not in working_set
 
 
+def test_add_no_sync_frozen_lockfile_skips_resolution(project, pdm, mocker):
+    do_lock = mocker.patch("pdm.cli.actions.do_lock")
+    pdm(["add", "--frozen-lockfile", "--no-sync", "requests"], obj=project, strict=True)
+
+    do_lock.assert_not_called()
+    assert project.pyproject.metadata["dependencies"][0] == "requests"
+    assert not project.lockfile.exists()
+
+
 @pytest.mark.usefixtures("repository")
 def test_add_package_save_exact(project, pdm):
     pdm(["add", "--save-exact", "--no-sync", "requests"], obj=project, strict=True)
