@@ -373,6 +373,34 @@ def test_invoke_pdm_adding_configured_args(project, pdm, mocker):
     parser.assert_called_with(["--verbose", "add", "--no-isolation", "requests"])
 
 
+def test_invoke_pdm_options_loaded_from_target_project(project, pdm, mocker, tmp_path):
+    """Regression test for https://github.com/pdm-project/pdm/issues/3756.
+
+    When -p/--project is used, [tool.pdm.options] must be read from the
+    target project, not from the current working directory.
+    """
+    import tomlkit
+
+    # Set options on the current (cwd) project — these must NOT be applied.
+    project.pyproject.settings["options"] = {"install": ["--no-editable"]}
+    project.pyproject.write()
+
+    # Build a second project at a tmp location with different options.
+    target_root = tmp_path / "target_project"
+    target_root.mkdir()
+    pyproject = target_root / "pyproject.toml"
+    data = tomlkit.loads("[tool.pdm.options]\ninstall = ['--no-self']\n")
+    pyproject.write_text(tomlkit.dumps(data))
+
+    parser = mocker.patch("argparse.ArgumentParser.parse_args")
+    # Invoke WITHOUT obj= so the real project-path resolution path is exercised.
+    pdm(["-p", str(target_root), "install"])
+    # Should use --no-self from target_project, NOT --no-editable from cwd project.
+    args_used = parser.call_args[0][0]
+    assert "--no-self" in args_used, f"Expected --no-self in {args_used}"
+    assert "--no-editable" not in args_used, f"Unexpected --no-editable in {args_used}"
+
+
 @pytest.fixture()
 def prepare_repository(repository, project):
     repository.add_candidate("foo", "3.0", ">=3.8,<3.13")

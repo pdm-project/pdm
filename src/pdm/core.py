@@ -197,13 +197,18 @@ class Core:
     @staticmethod
     def get_command(args: list[str]) -> tuple[int, str]:
         """Get the command name from the arguments"""
-        options_with_values = ("-c", "--config")
+        options_with_values = ("-c", "--config", "-p", "--project")
         need_value = False
         for i, arg in enumerate(args):
             if arg.startswith("-"):
                 if not arg.startswith(options_with_values):
                     continue
-                if (arg.startswith("-c") and arg != "-c") or arg.startswith("--config="):
+                if (
+                    (arg.startswith("-c") and arg != "-c")
+                    or arg.startswith("--config=")
+                    or (arg.startswith("-p") and arg != "-p")
+                    or arg.startswith("--project=")
+                ):
                     continue
                 need_value = True
             elif need_value:
@@ -213,8 +218,24 @@ class Core:
                 return i, arg
         return -1, ""
 
+    @staticmethod
+    def _get_project_path_from_args(args: list[str]) -> str | None:
+        """Extract the -p/--project path from raw CLI args before full parsing."""
+        for i, arg in enumerate(args):
+            if arg in ("-p", "--project") and i + 1 < len(args):
+                return args[i + 1]
+            if arg.startswith("--project="):
+                return arg[len("--project=") :]
+        return None
+
     def _get_cli_args(self, args: list[str], obj: Project | None) -> list[str]:
-        project = self.create_project(is_global=False) if obj is None else obj
+        if obj is not None:
+            project = obj
+        else:
+            # Respect -p/--project so that [tool.pdm.options] is read from the
+            # target project, not the current working directory.
+            project_path = self._get_project_path_from_args(args)
+            project = self.create_project(root_path=project_path, is_global=False)
         if project.is_global:
             return args
         try:
