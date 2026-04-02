@@ -154,6 +154,11 @@ class Command(BaseCommand):
             for req in group_deps:
                 req.specifier = get_specifier("")
 
+        if not sync and not project.enable_write_lockfile:
+            if not dry_run:
+                project.add_dependencies(requirements, group, selection.dev or False)
+            return
+
         reqs = [r for g, deps in all_dependencies.items() for r in deps if lock_groups is None or g in lock_groups]
         with hooks.skipping("post_lock"):
             resolved = do_lock(
