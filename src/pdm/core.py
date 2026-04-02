@@ -197,18 +197,13 @@ class Core:
     @staticmethod
     def get_command(args: list[str]) -> tuple[int, str]:
         """Get the command name from the arguments"""
-        options_with_values = ("-c", "--config", "-p", "--project")
+        options_with_values = ("-c", "--config")
         need_value = False
         for i, arg in enumerate(args):
             if arg.startswith("-"):
                 if not arg.startswith(options_with_values):
                     continue
-                if (
-                    (arg.startswith("-c") and arg != "-c")
-                    or arg.startswith("--config=")
-                    or (arg.startswith("-p") and arg != "-p")
-                    or arg.startswith("--project=")
-                ):
+                if (arg.startswith("-c") and arg != "-c") or arg.startswith("--config="):
                     continue
                 need_value = True
             elif need_value:
@@ -218,26 +213,9 @@ class Core:
                 return i, arg
         return -1, ""
 
-    @staticmethod
-    def _get_project_path_from_args(args: list[str]) -> str | None:
-        """Extract the -p/--project path from raw CLI args before full parsing."""
-        for i, arg in enumerate(args):
-            if arg in ("-p", "--project") and i + 1 < len(args):
-                return args[i + 1]
-            if arg.startswith("--project="):
-                return arg[len("--project=") :]
-        return None
-
-    def _get_cli_args(self, args: list[str], obj: Project | None) -> list[str]:
-        if obj is not None:
-            project = obj
-        else:
-            # Respect -p/--project so that [tool.pdm.options] is read from the
-            # target project, not the current working directory.
-            project_path = self._get_project_path_from_args(args)
-            project = self.create_project(root_path=project_path, is_global=False)
+    def _inject_cli_args(self, project: Project, args: list[str]) -> bool:
         if project.is_global:
-            return args
+            return False
         try:
             config = project.pyproject.settings.get("options", {})
         except tomlkit.exceptions.TOMLKitError as e:  # pragma: no cover
@@ -247,7 +225,8 @@ class Core:
         if command and command in config:
             # add args after the command
             args[pos + 1 : pos + 1] = list(config[command])
-        return args
+            return True
+        return False
 
     def main(
         self,
@@ -259,7 +238,6 @@ class Core:
         """The main entry function"""
         if args is None:
             args = []
-        args = self._get_cli_args(args, obj)
         # Keep it for after project parsing to check if its a defined script
         root_script = None
         try:
@@ -271,8 +249,9 @@ class Core:
             _, root_script = self.get_command(args)
             if not root_script:
                 self.parser.error(str(e.__cause__))
+            args = ["run", *args]
             try:
-                options = self.parser.parse_args(["run", *args])
+                options = self.parser.parse_args(args)
             except PdmArgumentError as e:
                 self.parser.error(str(e.__cause__))
 
@@ -281,6 +260,11 @@ class Core:
             message = format_similar_command(root_script, self.commands, list(project.scripts.keys()))
             message = termui.style(message)
             self.parser.error(message)
+
+        # Inject CLI args from pyproject.toml if exists
+        if self._inject_cli_args(project, args):
+            # Re-parse the arguments after injection
+            options = self.parser.parse_args(args)
 
         try:
             self.handle(project, options)
