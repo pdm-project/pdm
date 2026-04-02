@@ -340,6 +340,27 @@ def test_lock_exclude_newer(project, pdm):
     assert project.get_locked_repository().candidates["zipp"].version == "3.7.0"
 
 
+def test_lock_exclude_newer_accepts_relative_duration(project, pdm, monkeypatch):
+    from datetime import datetime, timezone
+
+    import pdm.utils as pdm_utils
+
+    frozen_now = datetime(2024, 2, 9, 12, 0, tzinfo=timezone.utc)
+
+    class FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            assert tz is timezone.utc
+            return frozen_now
+
+    monkeypatch.setattr(pdm_utils, "datetime", FrozenDateTime)
+    project.pyproject.metadata["requires-python"] = ">=3.9"
+    project.project_config["pypi.url"] = "https://my.pypi.org/json"
+    project.add_dependencies(["zipp"])
+    pdm(["lock", "--exclude-newer", "3w"], strict=True, obj=project, cleanup=False)
+    assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
+
+
 exclusion_cases = [
     pytest.param(("-G", ":all", "--without", "tz,ssl"), id="-G :all --without tz,ssl"),
     pytest.param(("-G", ":all", "--without", "tz", "--without", "ssl"), id="-G :all --without tz --without ssl"),
