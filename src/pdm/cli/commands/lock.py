@@ -66,7 +66,8 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--exclude-newer",
-            help="Exclude packages newer than the given UTC date in format `YYYY-MM-DD[THH:MM:SSZ]`",
+            help="Exclude packages newer than the given UTC date in format `YYYY-MM-DD[THH:MM:SSZ]` "
+            "or relative time `N{d|h|w}`",
             type=convert_to_datetime,
         )
 

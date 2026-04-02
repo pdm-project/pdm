@@ -186,10 +186,17 @@ When the `inherit_metadata` strategy is enabled, PDM will inherit and merge envi
 
 You can exclude packages that are newer than a specified date by passing the `--exclude-newer` option to `pdm lock`. This is useful when you want to lock the dependencies to a specific date, for example, to ensure reproducibility of the build.
 
-The date may be specified as a RFC 3339 timestamp (e.g., `2006-12-02T02:07:43Z`) or UTC date in the same format (e.g., `2006-12-02`).
+The value may be specified as:
+
+- A RFC 3339 timestamp, for example `2006-12-02T02:07:43Z`
+- A UTC date, for example `2006-12-02`
+- A relative duration in the format `N{d|h|w}`, for example `7d`, `12h`, or `3w`
+
+Relative durations are calculated from the current UTC time.
 
 ```bash
 pdm lock --exclude-newer 2024-01-01
+pdm lock --exclude-newer 7d
 ```
 
 !!! note

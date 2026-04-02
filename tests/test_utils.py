@@ -532,3 +532,25 @@ def test_convert_to_datetime_when_uppercase_t_is_absent():
     expected_datetime = datetime(2025, 10, 30, tzinfo=timezone.utc)
 
     assert utils.convert_to_datetime(original_datetime) == expected_datetime
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_datetime"),
+    [
+        ("2d", datetime(2025, 10, 28, 12, 0, tzinfo=timezone.utc)),
+        ("12h", datetime(2025, 10, 30, 0, 0, tzinfo=timezone.utc)),
+        ("3w", datetime(2025, 10, 9, 12, 0, tzinfo=timezone.utc)),
+    ],
+)
+def test_convert_to_datetime_when_relative_duration_is_given(monkeypatch, value, expected_datetime):
+    frozen_now = datetime(2025, 10, 30, 12, 0, tzinfo=timezone.utc)
+
+    class FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            assert tz is timezone.utc
+            return frozen_now
+
+    monkeypatch.setattr(utils, "datetime", FrozenDateTime)
+
+    assert utils.convert_to_datetime(value) == expected_datetime
