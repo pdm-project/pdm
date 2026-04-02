@@ -76,12 +76,12 @@ jobs:
           allow-prereleases: true
 
       - name: Cache venv
-        uses: actions/cache@v5.0.3
+        uses: actions/cache@v5.0.4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('pdm.lock') }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v7.3.1
+        uses: astral-sh/setup-uv@v8.0.0
         with:
           version: "latest"
       - name: Install current PDM via pip
@@ -104,7 +104,7 @@ jobs:
         run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
