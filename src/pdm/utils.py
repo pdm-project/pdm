@@ -605,3 +605,9 @@ def hide_url(url: str) -> HiddenText:
     netloc = f"*****@{netloc}"
     redacted = parse.urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
     return HiddenText(url, redacted)
+
+
+def make_file_executable(path: str | Path) -> None:
+    """Make the file at the provided path executable."""
+    path_ = Path(path)
+    path_.chmod(path_.stat().st_mode | 0o111)
