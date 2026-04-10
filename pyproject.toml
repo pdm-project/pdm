@@ -28,7 +28,7 @@ dependencies = [
     "shellingham>=1.3.2",
     "python-dotenv>=0.15",
     "resolvelib>=1.1",
-    "installer<0.8,>=0.7",
+    "installer>=0.7",
     "truststore>=0.10.4; python_version >= \"3.10\"",
     "tomli>=1.1.0; python_version < \"3.11\"",
     "importlib-metadata>=3.6; python_version < \"3.10\"",
