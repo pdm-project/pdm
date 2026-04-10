@@ -16,6 +16,7 @@ from installer.sources import WheelContentElement, WheelSource
 from installer.sources import WheelFile as _WheelFile
 
 from pdm.models.cached_package import CachedPackage
+from pdm.utils import make_file_executable
 
 if TYPE_CHECKING:
     from typing import Any, BinaryIO, Iterable, Literal
@@ -100,7 +101,7 @@ class InstallDestination(SchemeDictionaryDestination):
 
     def write_to_fs(self, scheme: Scheme, path: str, stream: BinaryIO, is_executable: bool) -> RecordEntry:
         from installer.records import Hash
-        from installer.utils import copyfileobj_with_hashing, make_file_executable
+        from installer.utils import copyfileobj_with_hashing
 
         target_path = os.path.join(self.scheme_dict[scheme], path)
         if os.path.exists(target_path):

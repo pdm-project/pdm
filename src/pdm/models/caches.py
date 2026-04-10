@@ -17,7 +17,7 @@ from pdm.models.cached_package import CachedPackage
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
 from pdm.termui import logger
-from pdm.utils import atomic_open_for_write, create_tracked_tempdir
+from pdm.utils import atomic_open_for_write, create_tracked_tempdir, make_file_executable
 
 if TYPE_CHECKING:
     from httpx import Client
@@ -277,8 +277,6 @@ class PackageCache:
     def cache_wheel(self, wheel: Path) -> CachedPackage:
         """Create a CachedPackage instance from a wheel file"""
         import zipfile
-
-        from installer.utils import make_file_executable
 
         dest = self.root.joinpath(f"{wheel.name}.cache")
         pkg = CachedPackage(dest, original_wheel=wheel)
