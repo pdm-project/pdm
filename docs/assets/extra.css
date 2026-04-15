@@ -124,3 +124,7 @@ a.pdm-expansions {
   width: auto;
   max-width: 200px;
 }
+
+.pdm-latest-docs-banner {
+  margin-top: 0;
+}
