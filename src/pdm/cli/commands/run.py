@@ -243,6 +243,7 @@ class TaskRunner:
             check_project_file(project)
             project_env = project.environment
         this_path = project_env.get_paths()["scripts"]
+        os.environ.pop("PYTHONPATH", None)  # Don't inherit PYTHONPATH from the parent process
         os.environ.update(project_env.process_env)
         if env_file is not None:
             if isinstance(env_file, str):
