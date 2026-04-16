@@ -160,6 +160,8 @@ class PySpecSet(SpecifierSet):
         """Expand the version range to a collection of versions to exclude,
         taking the released python versions into consideration.
         """
+        if lower >= upper:
+            return  # inverted/empty range = universal set, nothing to exclude
         assert lower < upper
         prev = lower
         while prev < upper:
