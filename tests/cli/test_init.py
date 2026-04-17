@@ -107,10 +107,13 @@ def test_init_command_library(project_no_init, pdm, mocker):
         assert tomllib.load(fp) == data
 
 
-@pytest.mark.parametrize("backend_choice,merged_backend", [
-    (0, {"build-backend": "pdm.backend", "requires": ["pdm-backend", "example"]}),
-    (1, {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]}),
-])
+@pytest.mark.parametrize(
+    "backend_choice,merged_backend",
+    [
+        (0, {"build-backend": "pdm.backend", "requires": ["pdm-backend", "example"]}),
+        (1, {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]}),
+    ],
+)
 def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker, backend_choice, merged_backend):
     template_with_backend = tmp_path / "backend-template"
     template_with_backend.mkdir()
