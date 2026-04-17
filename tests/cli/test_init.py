@@ -107,7 +107,11 @@ def test_init_command_library(project_no_init, pdm, mocker):
         assert tomllib.load(fp) == data
 
 
-def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker):
+@pytest.mark.parametrize("backend_choice,merged_backend", [
+    (0, {"build-backend": "pdm.backend", "requires": ["pdm-backend", "example"]}),
+    (1, {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]}),
+])
+def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker, backend_choice, merged_backend):
     template_with_backend = tmp_path / "backend-template"
     template_with_backend.mkdir()
     (template_with_backend / "pyproject.toml").write_text(
@@ -130,7 +134,7 @@ def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker):
     )
     result = pdm(
         ["init", str(template_with_backend)],
-        input="\ntest-project\n\ny\nTest Project\n\n\n\n\n\n",
+        input=f"\ntest-project\n\ny\nTest Project\n{backend_choice}\n\n\n\n\n",
         obj=project_no_init,
     )
     assert result.exit_code == 0
@@ -145,7 +149,7 @@ def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker):
             "requires-python": f">={python_version}",
             "dynamic": ["version"],
         },
-        "build-system": {"build-backend": "pdm.backend", "requires": ["pdm-backend", "example"]},
+        "build-system": merged_backend,
         "tool": {"pdm": {"distribution": True}},
     }
 
