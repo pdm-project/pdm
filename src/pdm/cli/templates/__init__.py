@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -133,12 +134,18 @@ class ProjectTemplate:
         except FileNotFoundError:
             template_content = tomlkit.document()
 
+        # repeated calls to merge_dictionary could extend elements in the template build system, get a deep copy now
+        template_build_system = deepcopy(template_content.get("build-system", {}))
         merge_dictionary(content, template_content)
         if "version" in content.get("project", {}).get("dynamic", []):
             metadata["project"].pop("version", None)
         merge_dictionary(content, metadata)
         if "build-system" in metadata:
-            content["build-system"] = metadata["build-system"]
+            build_system = metadata["build-system"]
+            if template_build_system.get("build-backend") == build_system["build-backend"]:
+                # only merge the build system when the selected build backend matches that of the template
+                merge_dictionary(build_system, template_build_system)
+            content["build-system"] = build_system
         else:
             content.pop("build-system", None)
         with open(path, "w", encoding="utf-8") as fp:

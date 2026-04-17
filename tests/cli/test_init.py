@@ -1,4 +1,5 @@
 import sys
+from textwrap import dedent
 from unittest.mock import ANY
 
 import pytest
@@ -99,6 +100,59 @@ def test_init_command_library(project_no_init, pdm, mocker):
             "version": "0.1.0",
         },
         "build-system": {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]},
+        "tool": {"pdm": {"distribution": True}},
+    }
+
+    with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        assert tomllib.load(fp) == data
+
+
+@pytest.mark.parametrize(
+    "backend_choice,merged_backend",
+    [
+        (0, {"build-backend": "pdm.backend", "requires": ["pdm-backend", "example"]}),
+        (1, {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]}),
+    ],
+)
+def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker, backend_choice, merged_backend):
+    template_with_backend = tmp_path / "backend-template"
+    template_with_backend.mkdir()
+    (template_with_backend / "pyproject.toml").write_text(
+        dedent(
+            """
+            [project]
+            dynamic = ["version"]
+            name = "backend-template"
+
+            [build-system]
+            requires = ["pdm-backend", "example"]
+            build-backend = "pdm.backend"
+            """
+        )
+    )
+
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+    result = pdm(
+        ["init", str(template_with_backend)],
+        input=f"\ntest-project\n\ny\nTest Project\n{backend_choice}\n\n\n\n\n",
+        obj=project_no_init,
+    )
+    assert result.exit_code == 0
+    python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
+    data = {
+        "project": {
+            "authors": [{"email": "me@example.org", "name": "Testing"}],
+            "dependencies": [],
+            "description": "Test Project",
+            "license": {"text": "MIT"},
+            "name": "test-project",
+            "requires-python": f">={python_version}",
+            "dynamic": ["version"],
+        },
+        "build-system": merged_backend,
         "tool": {"pdm": {"distribution": True}},
     }
 
