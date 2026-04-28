@@ -26,6 +26,8 @@ class Version:
     focused on supporting PEP 440 version identifiers, not specifiers.
     """
 
+    MIN: Version
+    MAX: Version
     # Pre-release may follow version with {a|b|rc}N
     # https://docs.python.org/3/faq/general.html#how-does-the-python-version-numbering-scheme-work
     pre: tuple[str, int] | None = None
