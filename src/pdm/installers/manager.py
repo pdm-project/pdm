@@ -16,9 +16,6 @@ if TYPE_CHECKING:
 class InstallManager:
     """The manager that performs the installation and uninstallation actions."""
 
-    # The packages below are needed to load paths and thus should not be cached.
-    NO_CACHE_PACKAGES = ("editables",)
-
     def __init__(
         self, environment: BaseEnvironment, *, use_install_cache: bool = False, rename_pth: bool = False
     ) -> None:

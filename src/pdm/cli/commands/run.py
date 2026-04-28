@@ -54,9 +54,6 @@ def merge_options(*options: TaskOptions | None) -> TaskOptions:
     )
 
 
-exec_opts = merge_options  # Alias for merge_options
-
-
 RE_ARGS_PLACEHOLDER = re.compile(r"\{args(?::(?P<default>[^}]*))?\}")
 RE_PDM_PLACEHOLDER = re.compile(r"\{pdm\}")
 
