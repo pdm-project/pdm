@@ -155,11 +155,6 @@ class DummySpinner:
         pass
 
 
-class SilentSpinner(DummySpinner):
-    def _show(self) -> None:
-        pass
-
-
 class TruncatedIO:
     """A wrapper for IO that truncates output after certain length."""
 

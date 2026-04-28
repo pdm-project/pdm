@@ -3,13 +3,10 @@ from __future__ import annotations
 import itertools
 from dataclasses import dataclass, field
 from email.message import Message
-from typing import TYPE_CHECKING, Any, Iterator, cast
+from typing import TYPE_CHECKING, Iterator, cast
 
 if TYPE_CHECKING:
     from pdm.compat import Distribution
-
-
-DYNAMIC = "DYNAMIC"
 
 
 @dataclass
@@ -53,29 +50,6 @@ class ProjectInfo:
             keywords=keywords,
             homepage=metadata.get("Home-page", ""),
             project_urls=[": ".join(parts) for parts in project_urls.items()],
-        )
-
-    @classmethod
-    def from_metadata(cls, metadata: dict[str, Any]) -> ProjectInfo:
-        def get_str(key: str) -> str:
-            if key in metadata.get("dynamic", []):
-                return DYNAMIC
-            return metadata.get(key, "")
-
-        authors = metadata.get("authors", [])
-        author = authors[0]["name"] if authors else ""
-        email = authors[0]["email"] if authors else ""
-
-        return cls(
-            name=metadata["name"],
-            version=get_str("version"),
-            summary=get_str("description"),
-            author=author,
-            email=email,
-            license=metadata.get("license", {}).get("text", ""),
-            requires_python=get_str("requires-python"),
-            keywords=",".join(get_str("keywords")),
-            project_urls=[": ".join(parts) for parts in metadata.get("urls", {}).items()],
         )
 
     def generate_rows(self) -> Iterator[tuple[str, str]]:

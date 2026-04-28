@@ -70,7 +70,6 @@ class Project:
     """
 
     PYPROJECT_FILENAME = "pyproject.toml"
-    DEPENDENCIES_RE = re.compile(r"(?:(.+?)-)?dependencies")
 
     def __init__(
         self,

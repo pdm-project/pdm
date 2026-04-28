@@ -72,7 +72,6 @@ class PySpecSet(SpecifierSet):
     """A custom SpecifierSet that supports merging with logic operators (&, |)."""
 
     PY_MAX_MINOR_VERSION = _read_max_versions()
-    MAX_MAJOR_VERSION = max(PY_MAX_MINOR_VERSION)[:1].bump()
 
     __slots__ = ("_logic", "_prereleases", "_specs")
 
