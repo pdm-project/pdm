@@ -5,7 +5,6 @@ import hashlib
 import itertools
 import operator
 import os
-import re
 import shutil
 import sys
 from copy import deepcopy
