@@ -99,6 +99,11 @@ class InstallDestination(SchemeDictionaryDestination):
         self.link_method = link_method
         self.rename_pth = rename_pth
 
+    def _compile_bytecode(self, scheme: Scheme, record: RecordEntry) -> None:
+        if self.link_method == "symlink":
+            return
+        super()._compile_bytecode(scheme, record)
+
     def write_to_fs(self, scheme: Scheme, path: str, stream: BinaryIO, is_executable: bool) -> RecordEntry:
         from installer.records import Hash
         from installer.utils import copyfileobj_with_hashing

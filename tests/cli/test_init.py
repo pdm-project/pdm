@@ -56,7 +56,11 @@ def test_new_command(project_no_init, pdm, mocker):
         return_value=("Testing", "me@example.org"),
     )
     with cd(project_no_init.root):
-        pdm(["new", "myproject"], input="\ntest-project\n\n\n\n\n\n\n", strict=True)
+        pdm(
+            ["new", "--name", "test-project", "--python", sys.executable, "myproject"],
+            input="\n\n\n\n\n\n",
+            strict=True,
+        )
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     data = {
         "project": {

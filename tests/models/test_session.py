@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
 
 def test_session_sources_all_proxy(project: Project, mocker, monkeypatch):
+    for key in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "no_proxy", "NO_PROXY"):
+        monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("all_proxy", "http://localhost:8888")
     mock_get_transport = mocker.patch("pdm.models.session._get_transport")
 
