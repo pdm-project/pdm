@@ -104,6 +104,33 @@ class InstallDestination(SchemeDictionaryDestination):
             return
         super()._compile_bytecode(scheme, record)
 
+    def finalize_installation(
+        self,
+        scheme: Scheme,
+        record_file_path: str,
+        records: Iterable[tuple[Scheme, RecordEntry]],
+    ) -> None:
+        if os.name != "nt":
+            return super().finalize_installation(scheme, record_file_path, records)
+
+        from installer.destinations import construct_record_file
+
+        def prefix_for_scheme(file_scheme: Scheme) -> str | None:
+            if file_scheme == scheme:
+                return None
+            try:
+                path = os.path.relpath(self.scheme_dict[file_scheme], start=self.scheme_dict[scheme])
+            except ValueError:
+                path = os.path.abspath(self.scheme_dict[file_scheme])
+            return path + "/"
+
+        record_list = list(records)
+        with construct_record_file(record_list, prefix_for_scheme) as record_stream:
+            self.write_to_fs(scheme, record_file_path, record_stream, is_executable=False)
+
+        for file_scheme, record in record_list:
+            self._compile_bytecode(file_scheme, record)
+
     def write_to_fs(self, scheme: Scheme, path: str, stream: BinaryIO, is_executable: bool) -> RecordEntry:
         from installer.records import Hash
         from installer.utils import copyfileobj_with_hashing
