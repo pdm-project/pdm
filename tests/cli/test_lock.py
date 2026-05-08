@@ -343,18 +343,25 @@ def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
         assert key in working_set
 
 
-def test_lock_exclude_newer(project, pdm):
+@pytest.mark.parametrize("source", ["cli", "pyproject"])
+def test_lock_exclude_newer(project, pdm, source):
     project.pyproject.metadata["requires-python"] = ">=3.9"
     project.project_config["pypi.url"] = "https://my.pypi.org/json"
     project.add_dependencies(["zipp"])
-    pdm(["lock", "--exclude-newer", "2024-01-01"], obj=project, strict=True, cleanup=False)
-    assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
-
     pdm(["lock"], obj=project, strict=True, cleanup=False)
     assert project.get_locked_repository().candidates["zipp"].version == "3.7.0"
 
+    cmd = ["lock", "--exclude-newer", "2024-01-01"]
+    if source == "pyproject":
+        project.pyproject.settings["resolution"] = {"exclude-newer": "2024-01-01"}
+        cmd = ["lock"]
 
-def test_lock_exclude_newer_accepts_relative_duration(project, pdm, monkeypatch):
+    pdm(cmd, obj=project, strict=True, cleanup=False)
+    assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
+
+
+@pytest.mark.parametrize("source", ["cli", "pyproject"])
+def test_lock_exclude_newer_accepts_relative_duration(project, pdm, monkeypatch, source):
     from datetime import datetime, timezone
 
     import pdm.utils as pdm_utils
@@ -368,10 +375,16 @@ def test_lock_exclude_newer_accepts_relative_duration(project, pdm, monkeypatch)
             return frozen_now
 
     monkeypatch.setattr(pdm_utils, "datetime", FrozenDateTime)
+
+    cmd = ["lock", "--exclude-newer", "3w"]
+    if source == "pyproject":
+        project.pyproject.settings["resolution"] = {"exclude-newer": "3w"}
+        cmd = ["lock"]
+
     project.pyproject.metadata["requires-python"] = ">=3.9"
     project.project_config["pypi.url"] = "https://my.pypi.org/json"
     project.add_dependencies(["zipp"])
-    pdm(["lock", "--exclude-newer", "3w"], strict=True, obj=project, cleanup=False)
+    pdm(cmd, strict=True, obj=project, cleanup=False)
     assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
 
 
