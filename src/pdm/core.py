@@ -158,7 +158,6 @@ class Core:
         """Called before command invocation"""
         from pdm.cli.commands.fix import Command as FixCommand
         from pdm.cli.hooks import HookManager
-        from pdm.cli.utils import use_venv
 
         self.ui.set_verbosity(options.verbose)
         self.ui.set_theme(project.global_config.load_theme())
@@ -183,12 +182,6 @@ class Core:
 
         for callback in getattr(options, "callbacks", []):
             callback(project, options)
-
-        if lockfile := getattr(options, "lockfile", None):
-            project.set_lockfile(cast(str, lockfile))
-
-        if getattr(options, "use_venv", None):
-            use_venv(project, cast(str, options.use_venv))
 
         if overrides := getattr(options, "override", None):
             self.state.overrides = overrides

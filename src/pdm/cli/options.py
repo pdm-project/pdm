@@ -167,12 +167,19 @@ dry_run_option = Option(
 )
 
 
-lockfile_option = Option(
+@Option(
     "-L",
     "--lockfile",
     default=os.getenv("PDM_LOCKFILE"),
     help="Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]",
 )
+def lockfile_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
+    project.set_lockfile(cast(str, values))
 
 
 @Option(
@@ -465,7 +472,7 @@ unconstrained_option = Option(
 )
 
 
-venv_option = Option(
+@Option(
     "--venv",
     dest="use_venv",
     metavar="NAME",
@@ -474,6 +481,16 @@ venv_option = Option(
     help="Run the command in the virtual environment with the given key. [env var: PDM_IN_VENV]",
     default=os.getenv("PDM_IN_VENV"),
 )
+def venv_option(
+    project: Project,
+    namespace: argparse.Namespace,
+    values: str | Sequence[Any] | None,
+    option_string: str | None = None,
+) -> None:
+    from pdm.cli.utils import use_venv
+
+    if values is not None:
+        use_venv(project, cast(str, values))
 
 
 lock_strategy_group = ArgumentGroup("Lock Strategy")
