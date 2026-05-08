@@ -134,7 +134,6 @@ class Core:
                 is_global=global_project,
                 global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
-        self.state.build_isolation = project.config["build_isolation"]
         return project
 
     def create_project(
@@ -177,6 +176,11 @@ class Core:
         if not isinstance(command, FixCommand):
             FixCommand.check_problems(project)
 
+        self.state.build_isolation = project.config["build_isolation"]
+
+        if exclude_newer := project.pyproject.resolution.get("exclude-newer"):
+            self.state.exclude_newer = convert_to_datetime(exclude_newer)
+
         for callback in getattr(options, "callbacks", []):
             callback(project, options)
 
@@ -188,9 +192,6 @@ class Core:
 
         if overrides := getattr(options, "override", None):
             self.state.overrides = overrides
-
-        if exclude_newer := project.pyproject.resolution.get("exclude-newer"):
-            self.state.exclude_newer = convert_to_datetime(exclude_newer)
 
         if command is None:
             self.parser.print_help()
