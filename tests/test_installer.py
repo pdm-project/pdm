@@ -277,6 +277,31 @@ def test_install_wheel_with_data_scripts(project, use_install_cache):
     assert not os.path.exists(bin_path)
 
 
+def test_windows_record_uses_relative_paths_for_data_scripts(tmp_path, mocker):
+    from installer.records import RecordEntry
+
+    from pdm.installers.installers import InstallDestination
+
+    mocker.patch("pdm.installers.installers.os.name", "nt")
+    destination = InstallDestination(
+        scheme_dict={
+            "purelib": str(tmp_path / "Lib" / "site-packages"),
+            "scripts": str(tmp_path / "Scripts"),
+        },
+        interpreter="python",
+        script_kind="posix",
+    )
+
+    destination.finalize_installation(
+        "purelib",
+        "jmespath-0.10.0.dist-info/RECORD",
+        [("scripts", RecordEntry("jp.py", None, 1685))],
+    )
+
+    record = tmp_path.joinpath("Lib", "site-packages", "jmespath-0.10.0.dist-info", "RECORD").read_text()
+    assert record.splitlines()[0] == "../../Scripts/jp.py,,1685"
+
+
 def test_compress_file_list_for_rename():
     from pdm.installers.uninstallers import compress_for_rename
 

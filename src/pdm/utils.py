@@ -409,6 +409,7 @@ def pdm_scheme(base: str) -> dict[str, str]:
             "prefix": "{pep582_base}",
             "headers": "{pep582_base}/include",
         }
+    sysconfig.get_config_vars()["pep582_base"] = base
     return sysconfig.get_paths("pep582", vars={"pep582_base": base}, expand=True)
 
 

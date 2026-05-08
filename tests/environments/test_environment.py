@@ -1,5 +1,6 @@
 import os
 import sys
+import sysconfig
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
@@ -38,6 +39,12 @@ def test_local_get_paths_headers_override(local_env):
     scheme = pdm_scheme(local_env.packages_path.as_posix())
     for k in ("purelib", "platlib", "scripts", "data"):
         assert paths[k].startswith(scheme[k])
+
+
+def test_pdm_scheme_can_be_read_without_explicit_vars(tmp_path):
+    scheme = pdm_scheme(tmp_path.as_posix())
+
+    assert sysconfig.get_paths("pep582") == scheme
 
 
 def test_pip_command_uses_existing_module(monkeypatch, project):
