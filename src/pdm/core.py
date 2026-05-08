@@ -135,8 +135,6 @@ class Core:
                 global_config=options.config or os.getenv("PDM_CONFIG_FILE"),
             )
         self.state.build_isolation = project.config["build_isolation"]
-        if exclude_newer := project.pyproject.resolution.get("exclude-newer"):
-            self.state.exclude_newer = convert_to_datetime(exclude_newer)
         return project
 
     def create_project(
@@ -190,6 +188,9 @@ class Core:
 
         if overrides := getattr(options, "override", None):
             self.state.overrides = overrides
+
+        if exclude_newer := project.pyproject.resolution.get("exclude-newer"):
+            self.state.exclude_newer = convert_to_datetime(exclude_newer)
 
         if command is None:
             self.parser.print_help()
