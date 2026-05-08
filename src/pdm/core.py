@@ -34,7 +34,7 @@ from pdm.installers import InstallManager
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config
-from pdm.utils import is_in_zipapp
+from pdm.utils import convert_to_datetime, is_in_zipapp
 
 if TYPE_CHECKING:
     from typing import Any, Iterable
@@ -188,6 +188,9 @@ class Core:
 
         if overrides := getattr(options, "override", None):
             self.state.overrides = overrides
+
+        if exclude_newer := project.pyproject.resolution.get("exclude-newer"):
+            self.state.exclude_newer = convert_to_datetime(exclude_newer)
 
         if command is None:
             self.parser.print_help()

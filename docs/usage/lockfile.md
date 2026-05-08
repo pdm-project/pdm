@@ -199,6 +199,16 @@ pdm lock --exclude-newer 2024-01-01
 pdm lock --exclude-newer 7d
 ```
 
+!!! tip
+    Added in 2.26.9.
+
+`exclude-newer` may also be set in the `pyproject.toml` file under the `[tool.pdm.resolution]` table:
+
+```toml
+[tool.pdm.resolution]
+exclude-newer = "7d"
+```
+
 !!! note
     The package index must support the `upload-time` field as specified in [PEP 700]. If the field is not present for a given distribution, the distribution will be treated as unavailable.
 

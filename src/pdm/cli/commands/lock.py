@@ -104,10 +104,12 @@ class Command(BaseCommand):
         selection = GroupSelection.from_options(project, options)
         strategy = options.update_strategy
         if options.exclude_newer:
+            # cli args override pyproject config if present
+            project.core.state.exclude_newer = options.exclude_newer
+        if project.core.state.exclude_newer:
             strategy = "all"
             if strategy != options.update_strategy:
                 project.core.ui.info("--exclude-newer is set, forcing --update-all")
-        project.core.state.exclude_newer = options.exclude_newer
         env_spec: EnvSpec | None = None
         if any([options.python, options.platform, options.implementation]):
             replace_dict = {}
