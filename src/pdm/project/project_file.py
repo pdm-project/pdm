@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, Union, cast
 
 import tomlkit
 
@@ -200,10 +200,10 @@ ResolutionTable = TypedDict(
         "allow-prereleases": bool,
         "exclude-newer": str,
         "excludes": list[str],
-        "no-binary": str | list[str],
-        "only-binary": str | list[str],
+        "no-binary": Union[str, list[str]],
+        "only-binary": Union[str, list[str]],
         "overrides": dict[str, str],
-        "prefer-binary": str | list[str],
+        "prefer-binary": Union[str, list[str]],
     },
     total=False,
 )
@@ -290,7 +290,7 @@ ToolPDMTable = TypedDict(
         # Add parameters to every pdm cli call
         "resolution": ResolutionTable,
         # Rules governing lockfile resolution
-        "scripts": dict[str, str | UserScript],
+        "scripts": dict[str, Union[str, UserScript]],
         # See [pdm-scripts][pdm-scripts]
         "source": list[SourceTable],
         # Repositories where packages may be found
