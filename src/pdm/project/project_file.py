@@ -102,7 +102,7 @@ class PyProject(TOMLFile):
         return self._data.get("build-system", {})
 
     @property
-    def resolution(self) -> dict[str, Any]:
+    def resolution(self) -> ResolutionTable:
         """A compatible getter method for the resolution overrides
         in the pyproject.toml file.
         """
@@ -294,7 +294,7 @@ ToolPDMTable = TypedDict(
         # Repositories where packages may be found
         "version": VersionTable,
         # Dynamic Versioning
-        "dev-dependencies": dict[str, dict[str, str]],
+        "dev-dependencies": dict[str, list[str]],
         # Development-only dependencies
     },
     total=False,
