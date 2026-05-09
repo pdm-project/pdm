@@ -62,6 +62,7 @@ nav:
       - usage/template.md
   - Reference:
       - reference/pep621.md
+      - reference/tool.md
       - reference/configuration.md
       - reference/build.md
       - reference/cli.md

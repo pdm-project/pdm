@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 import tomlkit
 
@@ -10,6 +10,9 @@ from pdm import termui
 from pdm.exceptions import ProjectError
 from pdm.project.toml_file import TOMLFile
 from pdm.utils import normalize_name
+
+if TYPE_CHECKING:
+    from os import PathLike
 
 
 def _remove_empty_tables(doc: dict) -> None:
@@ -91,7 +94,7 @@ class PyProject(TOMLFile):
         return groups
 
     @property
-    def settings(self) -> dict[str, Any]:
+    def settings(self) -> ToolPDMTable:
         return self._data.setdefault("tool", {}).setdefault("pdm", {})
 
     @property
@@ -129,3 +132,170 @@ class PyProject(TOMLFile):
     @property
     def plugins(self) -> list[str]:
         return self.settings.get("plugins", [])
+
+
+class ToolPDMTable(TypedDict, total=False):
+    """
+    Root table for setting pdm options within pyproject.toml
+    """
+
+    distribution: bool
+    plugins: list[str]
+
+    build: BuildTable
+    """Control how pdm-backend builds the package"""
+    options: OptionsTable
+    """Add parameters to every pdm cli call"""
+    resolution: ResolutionTable
+    """Rules governing lockfile resolution"""
+    scripts: dict[str, str | UserScript]
+    """See [pdm-scripts][pdm-scripts]"""
+    source: list[SourceTable]
+    """Repositories where packages may be found"""
+    version: VersionTable
+    """Dynamic Versioning"""
+    # TODO: add dev-dependencies once we figure out how to document functional form typeddicts,
+    # leaving to demo pending guidance.
+
+
+BuildTable = TypedDict(
+    "BuildTable",
+    {
+        "custom-hook": str,
+        "editable-backend": Literal["editables", "path"],
+        "excludes": list[str],
+        "includes": list[str],
+        "is-purelib": bool,
+        "package-dir": str,
+        "run-setuptools": bool,
+        "source-includes": list[str],
+        "wheel-data": dict[
+            Literal["data", "include", "platinclude", "platlib", "purelib", "scripts"],
+            dict[Literal["path", "relative-to"], str],
+        ],
+    },
+)
+"""
+`[tool.pdm.build]`
+
+References:
+    <https://backend.pdm-project.org/build_config/>
+"""
+
+
+class OptionsTable(TypedDict, total=False):
+    """
+    `[tool.pdm.options]`
+
+    References:
+        [Passing constant arguments to every pdm invocation][passing-constant-arguments-to-every-pdm-invocation]
+    """
+
+    add: list[str]
+    build: list[str]
+    cache: list[str]
+    completion: list[str]
+    config: list[str]
+    export: list[str]
+    fix: list[str]
+    info: list[str]
+    init: list[str]
+    install: list[str]
+    list: list[str]
+    lock: list[str]
+    new: list[str]
+    outdated: list[str]
+    publish: list[str]
+    python: list[str]
+    remove: list[str]
+    run: list[str]
+    search: list[str]
+    self: list[str]
+    show: list[str]
+    sync: list[str]
+    update: list[str]
+    use: list[str]
+    venv: list[str]
+
+
+ResolutionTable = TypedDict(
+    "ResolutionTable",
+    {
+        "allow-prereleases": bool,
+        "exclude-newer": str,
+        "no-binary": str | list[str],
+        "only-binary": str | list[str],
+        "overrides": dict[str, str],
+        "prefer-binary": str | list[str],
+    },
+    total=False,
+)
+
+
+class SourceTable(TypedDict, total=False):
+    """
+    A repository where PDM can find packages during lockfile resolution
+
+    References:
+        [Configure the package indexes][configure-the-package-indexes]
+    """
+
+    name: str
+    url: str
+    verify_ssl: bool
+    username: str
+    password: str
+    type: Literal["index", "find_links"]
+    include_packages: list[str]
+    exclude_packages: list[str]
+
+
+class VersionTable(TypedDict, total=False):
+    """
+    Specify how PDM computes dynamic versions.
+
+    References:
+        [Dynamic project version](https://backend.pdm-project.org/metadata/#dynamic-project-version)
+    """
+
+    source: Literal["call", "file", "scm"]
+    getter: str
+    path: PathLike[str]
+    pattern: str
+    fallback_version: str
+    tag_filter: str
+    tag_regex: str
+    version_format: str
+    write_to: str
+    write_template: str
+
+
+class UserScript(TypedDict, total=False):
+    """
+    The value of an item within `[tool.pdm.scripts]` .
+
+    An individual script may be a simple string, or a dictionary of this form.
+
+    Examples:
+
+        [tool.pdm.scripts]
+        list-files = "ls ."
+        start = {cmd = "flask run -p 54321"}
+        mytask.composite = [
+            "echo 'Hello'",
+            "echo 'World'"
+        ]
+        mytask.keep_going = true
+
+    References:
+        [PDM Scripts][pdm-scripts]
+    """
+
+    call: str
+    composite: list[str]
+    cmd: str
+    env: dict[str, str]
+    env_file: str | dict[Literal["override"], str]
+    keep_going: bool
+    shell: str
+    working_dir: str
