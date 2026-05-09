@@ -134,30 +134,6 @@ class PyProject(TOMLFile):
         return self.settings.get("plugins", [])
 
 
-class ToolPDMTable(TypedDict, total=False):
-    """
-    Root table for setting pdm options within pyproject.toml
-    """
-
-    distribution: bool
-    plugins: list[str]
-
-    build: BuildTable
-    """Control how pdm-backend builds the package"""
-    options: OptionsTable
-    """Add parameters to every pdm cli call"""
-    resolution: ResolutionTable
-    """Rules governing lockfile resolution"""
-    scripts: dict[str, str | UserScript]
-    """See [pdm-scripts][pdm-scripts]"""
-    source: list[SourceTable]
-    """Repositories where packages may be found"""
-    version: VersionTable
-    """Dynamic Versioning"""
-    # TODO: add dev-dependencies once we figure out how to document functional form typeddicts,
-    # leaving to demo pending guidance.
-
-
 BuildTable = TypedDict(
     "BuildTable",
     {
@@ -299,3 +275,30 @@ class UserScript(TypedDict, total=False):
     keep_going: bool
     shell: str
     working_dir: str
+
+
+ToolPDMTable = TypedDict(
+    "ToolPDMTable",
+    {
+        "distribution": bool,
+        "plugins": list[str],
+        "build": BuildTable,
+        # Control how pdm-backend builds the package
+        "options": OptionsTable,
+        # Add parameters to every pdm cli call
+        "resolution": ResolutionTable,
+        # Rules governing lockfile resolution
+        "scripts": dict[str, str | UserScript],
+        # See [pdm-scripts][pdm-scripts]
+        "source": list[SourceTable],
+        # Repositories where packages may be found
+        "version": VersionTable,
+        # Dynamic Versioning
+        "dev-dependencies": dict[str, dict[str, str]],
+        # Development-only dependencies
+    },
+    total=False,
+)
+"""
+Root table for setting pdm options within pyproject.toml
+"""

@@ -33,8 +33,6 @@
       summary:
         attributes: true
 
-(placeholder pending figuring out rendering docs for functional form typeddicts)
-
 ::: pdm.project.project_file.OptionsTable
     options:
       heading: "[tool.pdm.options]"
@@ -60,8 +58,6 @@
       show_if_no_docstring: true
       summary:
         attributes: true
-
-(placeholder pending figuring out rendering docs for functional form typeddicts)
 
 ::: pdm.project.project_file.UserScript
     options:
@@ -101,21 +97,3 @@
       show_if_no_docstring: true
       summary:
         attributes: true
-
-## Functional TypedDicts
-
-::: pdm.project.project_file
-    options:
-      show_root_heading: false
-      show_root_toc_entry: false
-      show_source: false
-      heading_level: 3
-      group_by_category: false
-      show_bases: false
-      show_if_no_docstring: true
-      show_labels: false
-      show_signature_annotations: true
-      signature_crossrefs: true
-      members:
-      - BuildTable
-      - ResolutionTable
