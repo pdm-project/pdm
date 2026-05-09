@@ -199,6 +199,7 @@ ResolutionTable = TypedDict(
     {
         "allow-prereleases": bool,
         "exclude-newer": str,
+        "excludes": list[str],
         "no-binary": str | list[str],
         "only-binary": str | list[str],
         "overrides": dict[str, str],
@@ -281,6 +282,7 @@ ToolPDMTable = TypedDict(
     "ToolPDMTable",
     {
         "distribution": bool,
+        "ignore_package_warnings": list[str],
         "plugins": list[str],
         "build": BuildTable,
         # Control how pdm-backend builds the package
