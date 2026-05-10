@@ -1,3 +1,14 @@
+## Release v2.26.9 (2026-05-10)
+
+### Features & Improvements
+
+- Support `exclude-newer` in `pyproject.toml` in the `[tool.pdm.resolution]` table ([#3776](https://github.com/pdm-project/pdm/issues/3776))
+
+### Bug Fixes
+
+- Preserve pylock package markers when refreshing lockfile hashes. ([#3773](https://github.com/pdm-project/pdm/issues/3773))
+
+
 ## Release v2.26.8 (2026-04-21)
 
 ### Features & Improvements
