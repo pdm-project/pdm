@@ -282,7 +282,7 @@ def test_windows_record_uses_relative_paths_for_data_scripts(tmp_path, mocker):
 
     from pdm.installers.installers import InstallDestination
 
-    mocker.patch("pdm.installers.installers.os.name", "nt")
+    mocker.patch("pdm.installers.installers._WINDOWS", True)
     destination = InstallDestination(
         scheme_dict={
             "purelib": str(tmp_path / "Lib" / "site-packages"),
