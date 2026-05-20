@@ -79,7 +79,7 @@ Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users h
     <img src="https://repology.org/badge/vertical-allrepos/pdm.svg" alt="Packaging status" align="right">
 </a>
 
-PDM requires python version 3.9 or higher. Alternatively, you can download the standalone binary file from the [release assets](https://github.com/pdm-project/pdm/releases).
+PDM requires python version 3.10 or higher. Alternatively, you can download the standalone binary file from the [release assets](https://github.com/pdm-project/pdm/releases).
 
 ### Install Binary via Script (recommended)
 
@@ -138,13 +138,13 @@ Enable [PEP 582](https://peps.python.org/pep-0582/) for a project:
     pdm config python.use_venv False
 
 This makes PDM install packages into a local project folder instead of a venv (similar to how npm installs into node_modules).
-    
+
 Enable [uv](https://github.com/astral-sh/uv) integration:
 
     pdm config use_uv true
 
 uv is a very fast Python package installer written in Rust.
-    
+
 Note: `uv` does not work with `PEP 582`.
 
 ## Sponsors

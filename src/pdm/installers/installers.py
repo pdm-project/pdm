@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Iterator
 
 from installer import install as _install
 from installer._core import _process_WHEEL_file
-from installer.destinations import SchemeDictionaryDestination, WheelDestination
+from installer.destinations import SchemeDictionaryDestination
 from installer.exceptions import InvalidWheelSource
 from installer.records import RecordEntry
 from installer.sources import WheelContentElement, WheelSource
@@ -18,11 +18,13 @@ from installer.sources import WheelFile as _WheelFile
 from pdm.models.cached_package import CachedPackage
 from pdm.utils import make_file_executable
 
+_WINDOWS = os.name == "nt"
+
 if TYPE_CHECKING:
     from typing import Any, BinaryIO, Iterable, Literal
 
-    from installer.destinations import Scheme
     from installer.sources import WheelContentElement
+    from installer.utils import Scheme
 
     from pdm.environments import BaseEnvironment
 
@@ -47,7 +49,7 @@ class PackageWheelSource(WheelSource):
         distribution, version = package.path.name.split("-")[:2]
         super().__init__(distribution, version)
 
-    @cached_property
+    @property
     def dist_info_dir(self) -> str:
         return self.package.dist_info.name
 
@@ -110,7 +112,7 @@ class InstallDestination(SchemeDictionaryDestination):
         record_file_path: str,
         records: Iterable[tuple[Scheme, RecordEntry]],
     ) -> None:
-        if os.name != "nt":
+        if not _WINDOWS:
             return super().finalize_installation(scheme, record_file_path, records)
 
         from installer.destinations import construct_record_file
@@ -135,16 +137,16 @@ class InstallDestination(SchemeDictionaryDestination):
         from installer.records import Hash
         from installer.utils import copyfileobj_with_hashing
 
-        target_path = os.path.join(self.scheme_dict[scheme], path)
-        if os.path.exists(target_path):
-            os.unlink(target_path)
+        target_path = self._path_with_destdir(scheme, path)
+        if target_path.exists():
+            target_path.unlink()
 
-        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if self.rename_pth and target_path.endswith(".pth") and "/" not in path:
+        if self.rename_pth and target_path.name.endswith(".pth") and "/" not in path:
             # Postpone the creation of pth files since it may cause race condition
             # when multiple packages are installed at the same time.
-            target_path += ".pdmtmp"
+            target_path = target_path.with_name(target_path.name + ".pdmtmp")
         if self.link_method == "copy" or not hasattr(stream, "name"):
             with open(target_path, "wb") as f:
                 hash_, size = copyfileobj_with_hashing(stream, f, self.hash_algorithm)
@@ -226,7 +228,7 @@ def install_wheel(
 
 
 def install(
-    source: WheelSource, destination: WheelDestination, additional_metadata: dict[str, bytes] | None = None
+    source: WheelSource, destination: SchemeDictionaryDestination, additional_metadata: dict[str, bytes] | None = None
 ) -> str:
     """A lower level installation method that is copied from installer
     but is controlled by extra parameters.
