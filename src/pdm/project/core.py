@@ -120,6 +120,12 @@ class Project:
         return Path(self.config.get("cache_dir", "")).expanduser()
 
     @cached_property
+    def project_plugins_dir(self) -> Path:
+        name = self.root.name or "project"
+        root_hash = hashlib.sha224(os.path.normcase(str(self.root)).encode("utf-8")).hexdigest()
+        return self.cache_dir / "plugins" / f"{name}-{root_hash[:12]}"
+
+    @cached_property
     def pyproject(self) -> PyProject:
         return PyProject(self.root / self.PYPROJECT_FILENAME, ui=self.core.ui)
 

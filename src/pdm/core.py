@@ -308,14 +308,15 @@ class Core:
         Config.add_config(name, config_item)
 
     def _add_project_plugins_library(self) -> None:
-        project = self.create_project(is_global=False)
-        if project.is_global or not project.root.joinpath(".pdm-plugins").exists():
+        project = self.create_project(is_global=False, global_config=os.getenv("PDM_CONFIG_FILE"))
+        plugin_root = project.project_plugins_dir
+        if project.is_global or not plugin_root.exists():
             return
 
         import site
         import sysconfig
 
-        base = str(project.root / ".pdm-plugins")
+        base = str(plugin_root)
         replace_vars = {"base": base, "platbase": base}
 
         scheme_names = sysconfig.get_scheme_names()

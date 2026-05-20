@@ -51,7 +51,7 @@ class Command(BaseCommand):
         plugins = [parse_line(r) for r in project.pyproject.plugins]
         if not plugins:
             return
-        plugin_root = project.root / ".pdm-plugins"
+        plugin_root = project.project_plugins_dir
         extra_paths = list({sysconfig.get_path("purelib"), sysconfig.get_path("platlib")})
         environment = PythonEnvironment(
             project, python=sys.executable, prefix=str(plugin_root), extra_paths=extra_paths
@@ -61,10 +61,7 @@ class Command(BaseCommand):
                 install_requirements(
                     plugins, environment, clean=True, use_install_cache=project.config["install.cache"], allow_uv=False
                 )
-            if not plugin_root.joinpath(".gitignore").exists():
-                plugin_root.mkdir(exist_ok=True)
-                plugin_root.joinpath(".gitignore").write_text("*\n")
-        project.core.ui.echo("Plugins are installed successfully into [primary].pdm-plugins[/].")
+        project.core.ui.echo(f"Plugins are installed successfully into [primary]{plugin_root}[/].")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         if not project.pyproject.is_valid and termui.is_interactive():

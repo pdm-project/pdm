@@ -110,9 +110,12 @@ def test_old_entry_point_compatibility(pdm, mocker, core):
 @pytest.mark.usefixtures("local_finder")
 def test_project_plugin_library(pdm, project, core, monkeypatch):
     monkeypatch.setattr(sys, "path", sys.path[:])
+    monkeypatch.setenv("PDM_CONFIG_FILE", project.global_config.config_file.as_posix())
     project.pyproject.settings["plugins"] = ["pdm-hello"]
     pdm(["install", "--plugins"], obj=project, strict=True)
-    assert project.root.joinpath(".pdm-plugins").exists()
+    assert project.project_plugins_dir.exists()
+    assert not project.root.joinpath(".pdm-plugins").exists()
+    assert project.project_plugins_dir.parent == project.cache_dir / "plugins"
     assert "pdm-hello" not in project.environment.get_working_set()
     with cd(project.root):
         core.load_plugins()
@@ -128,11 +131,12 @@ def test_project_plugin_library(pdm, project, core, monkeypatch):
     ],
 )
 @pytest.mark.usefixtures("local_finder")
-def test_install_local_plugin_without_name(pdm, project, core, req_str):
+def test_install_local_plugin_without_name(pdm, project, core, monkeypatch, req_str):
     import shutil
 
     from . import FIXTURES
 
+    monkeypatch.setenv("PDM_CONFIG_FILE", project.global_config.config_file.as_posix())
     test_plugin_path = FIXTURES / "projects" / "test-plugin-pdm"
     project.root.joinpath("plugins").mkdir(exist_ok=True)
     shutil.copytree(test_plugin_path, project.root / "plugins" / "test-plugin-pdm", dirs_exist_ok=True)
@@ -142,7 +146,18 @@ def test_install_local_plugin_without_name(pdm, project, core, req_str):
     with cd(project.root):
         result = pdm(["install", "--plugins", "-vv"], obj=project, strict=True)
 
-        assert project.root.joinpath(".pdm-plugins").exists()
+        assert project.project_plugins_dir.exists()
+        assert not project.root.joinpath(".pdm-plugins").exists()
         core.load_plugins()
         result = pdm(["hello", "--name", "Frost"], strict=True)
     assert result.stdout.strip() == "Hello, Frost"
+
+
+def test_project_plugin_directory_is_isolated_by_project_root(project, tmp_path):
+    other_project = project.core.create_project(
+        tmp_path / project.root.name,
+        global_config=project.global_config.config_file,
+    )
+
+    assert project.project_plugins_dir != other_project.project_plugins_dir
+    assert project.project_plugins_dir.parent == other_project.project_plugins_dir.parent
