@@ -40,6 +40,7 @@ from pdm.utils import (
     is_conda_base_python,
     is_path_relative_to,
     normalize_name,
+    open_for_write_no_symlink,
 )
 
 if TYPE_CHECKING:
@@ -214,7 +215,8 @@ class Project:
             with contextlib.suppress(FileNotFoundError):
                 python_file.unlink()
             return
-        python_file.write_text(value, "utf-8")
+        with open_for_write_no_symlink(python_file) as fp:
+            fp.write(value)
 
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""

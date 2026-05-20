@@ -554,3 +554,37 @@ def test_convert_to_datetime_when_relative_duration_is_given(monkeypatch, value,
     monkeypatch.setattr(utils, "datetime", FrozenDateTime)
 
     assert utils.convert_to_datetime(value) == expected_datetime
+
+
+def test_open_for_write_no_symlink_writes_regular_file(tmp_path):
+    target = tmp_path / "file.txt"
+    with utils.open_for_write_no_symlink(target) as fp:
+        fp.write("hello")
+    assert target.read_text() == "hello"
+    assert not target.is_symlink()
+
+
+def test_open_for_write_no_symlink_truncates_existing_file(tmp_path):
+    target = tmp_path / "file.txt"
+    target.write_text("stale content")
+    with utils.open_for_write_no_symlink(target) as fp:
+        fp.write("new")
+    assert target.read_text() == "new"
+
+
+def test_open_for_write_no_symlink_refuses_symlinked_target(tmp_path):
+    real = tmp_path / "real.txt"
+    real.write_text("untouched")
+    link = tmp_path / "link.txt"
+    try:
+        link.symlink_to(real)
+    except OSError as e:
+        pytest.skip(f"symlink is not supported: {e}")
+
+    with pytest.raises(PdmUsageError, match="symlink"):
+        with utils.open_for_write_no_symlink(link):
+            pass
+
+    # The symlink and its target are both left intact.
+    assert link.is_symlink()
+    assert real.read_text() == "untouched"

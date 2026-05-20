@@ -11,7 +11,7 @@ from pbs_installer import PythonVersion
 from pytest_httpserver import HTTPServer
 
 from pdm.environments import PythonEnvironment
-from pdm.exceptions import PdmException, ProjectError
+from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
@@ -593,3 +593,21 @@ def test_select_lockfile_format(project, pdm, capsys):
         pdm(["export", "-f", "pylock", "-o", "pylock.toml"], strict=True)
     project._lockfile = None
     assert project.lockfile._path.name == "pylock.toml"
+
+
+def test_saved_python_refuses_symlinked_pdm_python(project):
+    real = project.root / "real-state.txt"
+    real.write_text("untouched")
+    link = project.root / ".pdm-python"
+    link.unlink(missing_ok=True)
+    try:
+        link.symlink_to(real)
+    except OSError as e:
+        pytest.skip(f"symlink is not supported: {e}")
+
+    with pytest.raises(PdmUsageError, match="symlink"):
+        project._saved_python = "/some/python"
+
+    # The symlink target outside .pdm-python is left untouched.
+    assert real.read_text() == "untouched"
+    assert link.is_symlink()

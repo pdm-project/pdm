@@ -11,7 +11,7 @@ from pdm.models.caches import JSONFileCache
 from pdm.models.python import PythonInfo
 from pdm.models.venv import get_venv_python
 from pdm.project import Project
-from pdm.utils import is_conda_base_python
+from pdm.utils import is_conda_base_python, open_for_write_no_symlink
 
 
 class Command(BaseCommand):
@@ -185,7 +185,7 @@ class Command(BaseCommand):
         )
         project.python = selected_python
         if version_file and project.config["python.use_python_version"]:
-            with project.root.joinpath(".python-version").open("w") as f:
+            with open_for_write_no_symlink(project.root.joinpath(".python-version")) as f:
                 f.write(f"{selected_python.major}.{selected_python.minor}\n")
         if project.environment.is_local:
             assert isinstance(project.environment, PythonLocalEnvironment)

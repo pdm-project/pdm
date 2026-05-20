@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import atexit
 import contextlib
+import errno
 import functools
 import inspect
 import json
@@ -27,7 +28,7 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version
 
 from pdm.compat import importlib_metadata
-from pdm.exceptions import PDMDeprecationWarning, PdmException
+from pdm.exceptions import PDMDeprecationWarning, PdmException, PdmUsageError
 
 if TYPE_CHECKING:
     from re import Match
@@ -168,6 +169,34 @@ def atomic_open_for_write(filename: str | Path, *, mode: str = "w", encoding: st
         shutil.copyfile(name, str(filename))
     finally:
         os.unlink(name)
+
+
+@contextlib.contextmanager
+def open_for_write_no_symlink(filename: str | Path, *, encoding: str = "utf-8") -> Iterator[IO[str]]:
+    """Open *filename* for writing text, refusing to follow a symlink.
+
+    Project-local state and config files (``pdm.toml``, ``.pdm-python``,
+    ``.python-version``) may be planted as symlinks by an untrusted repository to
+    redirect the write onto a file outside the project root. This helper rejects
+    such writes: on POSIX it passes ``O_NOFOLLOW`` so the kernel rejects the open
+    atomically (no TOCTOU window); on platforms lacking ``O_NOFOLLOW`` it falls
+    back to a best-effort ``lstat`` pre-check.
+    """
+    path = Path(filename)
+    nofollow = getattr(os, "O_NOFOLLOW", 0)
+    if not nofollow and path.is_symlink():
+        raise PdmUsageError(f"Refusing to write to {path} because it is a symlink.")
+    try:
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | nofollow, 0o666)
+    except OSError as exc:
+        if exc.errno in (errno.ELOOP, errno.EMLINK):
+            raise PdmUsageError(f"Refusing to write to {path} because it is a symlink.") from exc
+        raise
+    fp = open(fd, "w", encoding=encoding)
+    try:
+        yield fp
+    finally:
+        fp.close()
 
 
 @contextlib.contextmanager

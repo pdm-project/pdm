@@ -14,6 +14,7 @@ from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.compat import tomllib
 from pdm.exceptions import NoConfigError, PdmUsageError
+from pdm.utils import open_for_write_no_symlink
 
 REPOSITORY = "repository"
 SOURCE = "pypi"
@@ -302,7 +303,9 @@ class Config(MutableMapping[str, str]):
 
     def __init__(self, config_file: Path, is_global: bool = False):
         self.is_global = is_global
-        self.config_file = config_file.resolve()
+        # Keep the path as given (only made absolute) instead of resolving symlinks,
+        # so a symlinked destination can still be detected and refused on write.
+        self.config_file = config_file.absolute()
         self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
         self._data = collections.ChainMap(
@@ -332,9 +335,9 @@ class Config(MutableMapping[str, str]):
                 yield RepositoryConfig(**data, name=name[len(SOURCE) + 1 :], config_prefix=SOURCE)
 
     def _save_config(self) -> None:
+        """Save the changes to the config file."""
         import tomlkit
 
-        """Save the changed to config file."""
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
         toml_data: dict[str, Any] = {}
         for key, value in self._file_data.items():
@@ -346,7 +349,15 @@ class Config(MutableMapping[str, str]):
                 temp = temp[part]
             temp[last] = value
 
-        with self.config_file.open("w", encoding="utf-8") as fp:
+        # A project-local pdm.toml may be planted as a symlink by an untrusted
+        # repository to clobber a file outside the project (GHSA-ghq2-5c67-fprm).
+        # The global config lives in the user's own config directory and is not
+        # attacker-controlled, so a user-managed symlink there is honored.
+        if self.is_global:
+            writer: Any = self.config_file.open("w", encoding="utf-8")
+        else:
+            writer = open_for_write_no_symlink(self.config_file)
+        with writer as fp:
             tomlkit.dump(toml_data, fp)
 
     def __getitem__(self, key: str) -> Any:

@@ -1,6 +1,7 @@
 import pytest
 
 from pdm.exceptions import PdmUsageError
+from pdm.project.config import Config
 from pdm.utils import cd
 
 
@@ -231,3 +232,56 @@ def test_keyring_operation_error_disables_itself(project, keyring, mocker):
     assert not keyring.enabled
     assert keyring.get_auth_info("pdm-pypi-extra", "foo") is None
     assert keyring.get_auth_info("pdm-repository-pypi", None) is None
+
+
+def _symlink_or_skip(link, target):
+    try:
+        link.symlink_to(target)
+    except OSError as e:
+        pytest.skip(f"symlink is not supported: {e}")
+
+
+def test_config_keeps_symlink_path(tmp_path):
+    target = tmp_path / "target.toml"
+    target.write_text("python.use_pyenv = false\n")
+    link = tmp_path / "config.toml"
+    _symlink_or_skip(link, target)
+
+    config = Config(link)
+
+    # The symlink path is kept (only made absolute), not resolved to the target.
+    assert config.config_file == link.absolute()
+    assert config.config_file.is_symlink()
+    assert config["python.use_pyenv"] is False
+
+
+def test_config_refuses_to_write_symlinked_file(tmp_path):
+    target = tmp_path / "target.toml"
+    target.write_text("python.use_pyenv = true\n")
+    link = tmp_path / "config.toml"
+    _symlink_or_skip(link, target)
+
+    config = Config(link)
+
+    with pytest.raises(PdmUsageError, match="symlink"):
+        config["python.use_pyenv"] = False
+
+    # The symlink target outside the intended file is left untouched.
+    assert target.read_text() == "python.use_pyenv = true\n"
+    assert link.is_symlink()
+
+
+def test_global_config_writes_through_symlink(tmp_path):
+    target = tmp_path / "target.toml"
+    target.write_text("python.use_pyenv = true\n")
+    link = tmp_path / "config.toml"
+    _symlink_or_skip(link, target)
+
+    # The global config is the user's own file; a user-managed symlink (e.g. a
+    # dotfiles-managed config) is honored rather than refused.
+    config = Config(link, is_global=True)
+    config["python.use_pyenv"] = False
+
+    assert link.is_symlink()
+    assert config["python.use_pyenv"] is False
+    assert "use_pyenv = false" in target.read_text()
