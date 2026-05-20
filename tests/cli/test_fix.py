@@ -46,3 +46,28 @@ def test_fix_project_config(project, pdm):
     assert not old_config.exists()
     assert project.root.joinpath("pdm.toml").read_text() == "[python]\nuse_pyenv = false\n"
     assert project.root.joinpath(".pdm-python").read_text().strip() == Path(sys.executable).as_posix()
+
+
+def test_fix_project_plugins(project, pdm):
+    old_plugin_dir = project.root / ".pdm-plugins"
+    old_plugin_dir.mkdir()
+    old_plugin_dir.joinpath("plugin.py").write_text("value = 1\n")
+
+    pdm(["fix", "project-plugins"], obj=project, strict=True)
+
+    assert not old_plugin_dir.exists()
+    assert project.project_plugins_dir.joinpath("plugin.py").read_text() == "value = 1\n"
+
+
+def test_fix_project_plugins_replaces_existing_cache_dir(project, pdm):
+    old_plugin_dir = project.root / ".pdm-plugins"
+    old_plugin_dir.mkdir()
+    old_plugin_dir.joinpath("plugin.py").write_text("value = 1\n")
+    project.project_plugins_dir.mkdir(parents=True)
+    project.project_plugins_dir.joinpath("stale.py").write_text("value = 0\n")
+
+    pdm(["fix", "project-plugins"], obj=project, strict=True)
+
+    assert not old_plugin_dir.exists()
+    assert not project.project_plugins_dir.joinpath("stale.py").exists()
+    assert project.project_plugins_dir.joinpath("plugin.py").read_text() == "value = 1\n"

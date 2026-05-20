@@ -1,5 +1,7 @@
 import abc
 import re
+import shutil
+from pathlib import Path
 
 from pdm.project import Config, Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM
@@ -68,6 +70,36 @@ class ProjectConfigFixer(BaseFixer):
 
     def check(self) -> bool:
         return self.project.root.joinpath(".pdm.toml").exists()
+
+
+class ProjectPluginFixer(BaseFixer):
+    """Move project plugins to the cache directory."""
+
+    identifier = "project-plugins"
+
+    @property
+    def old_plugin_dir(self) -> Path:
+        return self.project.root / ".pdm-plugins"
+
+    def get_message(self) -> str:
+        return "Project plugins need to be moved from [info].pdm-plugins[/] to the PDM cache directory."
+
+    def check(self) -> bool:
+        return self.old_plugin_dir.is_dir()
+
+    def fix(self) -> None:
+        plugin_root = self.project.project_plugins_dir
+        self.log(
+            f"Moving .pdm-plugins to {plugin_root.as_posix()}...",
+            verbosity=Verbosity.DETAIL,
+        )
+        plugin_root.parent.mkdir(parents=True, exist_ok=True)
+        if plugin_root.exists():
+            if plugin_root.is_dir():
+                shutil.rmtree(plugin_root)
+            else:
+                plugin_root.unlink()
+        shutil.move(self.old_plugin_dir, plugin_root)
 
 
 class PackageTypeFixer(BaseFixer):  # pragma: no cover
