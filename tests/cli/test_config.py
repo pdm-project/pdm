@@ -1,7 +1,15 @@
 import pytest
 
 from pdm.exceptions import PdmUsageError
+from pdm.project.config import Config
 from pdm.utils import cd
+
+
+def symlink_to(source, target):
+    try:
+        source.symlink_to(target)
+    except OSError as e:
+        pytest.skip(f"symlink is not supported: {e}")
 
 
 def test_config_command(project, pdm):
@@ -84,6 +92,32 @@ def test_specify_config_file(tmp_path, pdm, monkeypatch):
         result = pdm(["config", "strategy.resolve_max_rounds"])
         assert result.exit_code == 0
         assert result.output.strip() == "1000"
+
+
+def test_config_keeps_symlink_path(tmp_path):
+    target = tmp_path / "target.toml"
+    target.write_text("python.use_pyenv = false\n")
+    link = tmp_path / "config.toml"
+    symlink_to(link, target)
+
+    config = Config(link)
+
+    assert config.config_file == link.absolute()
+    assert config.config_file.is_symlink()
+    assert config["python.use_pyenv"] is False
+
+
+def test_config_refuses_to_write_symlink_file(tmp_path):
+    target = tmp_path / "target.toml"
+    target.write_text("python.use_pyenv = true\n")
+    link = tmp_path / "config.toml"
+    symlink_to(link, target)
+
+    config = Config(link)
+
+    with pytest.raises(PdmUsageError, match="is a symlink"):
+        config["python.use_pyenv"] = False
+    assert target.read_text() == "python.use_pyenv = true\n"
 
 
 def test_default_repository_setting(project):

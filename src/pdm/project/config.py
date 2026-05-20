@@ -302,7 +302,7 @@ class Config(MutableMapping[str, str]):
 
     def __init__(self, config_file: Path, is_global: bool = False):
         self.is_global = is_global
-        self.config_file = config_file.resolve()
+        self.config_file = config_file.absolute()
         self.deprecated = {v.replace: k for k, v in self._config_map.items() if v.replace}
         self._file_data = load_config(self.config_file)
         self._data = collections.ChainMap(
@@ -332,9 +332,11 @@ class Config(MutableMapping[str, str]):
                 yield RepositoryConfig(**data, name=name[len(SOURCE) + 1 :], config_prefix=SOURCE)
 
     def _save_config(self) -> None:
+        """Save the changed to config file."""
         import tomlkit
 
-        """Save the changed to config file."""
+        if self.config_file.is_symlink():
+            raise PdmUsageError(f"Config file {self.config_file} is a symlink, refusing to write to it.")
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
         toml_data: dict[str, Any] = {}
         for key, value in self._file_data.items():
