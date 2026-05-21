@@ -65,13 +65,14 @@ class Command(BaseCommand):
     def do_init(self, project: Project, options: argparse.Namespace) -> None:
         """Bootstrap the project and create a pyproject.toml"""
         hooks = HookManager(project, options.skip)
-        if options.generator == "copier":
-            self._init_copier(project, options)
-        elif options.generator == "cookiecutter":
-            self._init_cookiecutter(project, options)
-        else:
-            self.set_python(project, options.python, hooks)
-            self._init_builtin(project, options)
+        match options.generator:
+            case "copier":
+                self._init_copier(project, options)
+            case "cookiecutter":
+                self._init_cookiecutter(project, options)
+            case _:
+                self.set_python(project, options.python, hooks)
+                self._init_builtin(project, options)
 
         if options.init_git:
             self.initialize_git(project)

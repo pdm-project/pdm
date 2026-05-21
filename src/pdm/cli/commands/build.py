@@ -5,8 +5,8 @@ import os
 import shutil
 import tarfile
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager

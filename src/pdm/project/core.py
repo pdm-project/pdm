@@ -7,10 +7,11 @@ import operator
 import os
 import shutil
 import sys
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from copy import deepcopy
 from functools import cached_property, reduce
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import tomlkit
 from pbs_installer import PythonVersion

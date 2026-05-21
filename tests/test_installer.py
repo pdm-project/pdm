@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 import os
 import venv
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import pytest
 from unearth import Link

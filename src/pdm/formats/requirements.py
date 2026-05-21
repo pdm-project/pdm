@@ -4,8 +4,9 @@ import argparse
 import hashlib
 import shlex
 import urllib.parse
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pdm.environments import BareEnvironment
 from pdm.exceptions import PdmException, PdmUsageError
@@ -229,12 +230,13 @@ def export(
     for source in project.get_sources(expand_env=options.expandvars, include_stored=False):
         url = cast(str, source.url)
         source_type = source.type or "index"
-        if source_type == "index":
-            prefix = "--index-url" if source.name == "pypi" else "--extra-index-url"
-        elif source_type == "find_links":
-            prefix = "--find-links"
-        else:
-            raise ValueError(f"Unknown source type: {source_type}")
+        match source_type:
+            case "index":
+                prefix = "--index-url" if source.name == "pypi" else "--extra-index-url"
+            case "find_links":
+                prefix = "--find-links"
+            case _:
+                raise ValueError(f"Unknown source type: {source_type}")
         lines.append(f"{prefix} {url}\n")
         if source.verify_ssl is False:
             host = urllib.parse.urlparse(url).hostname

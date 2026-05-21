@@ -78,5 +78,6 @@ class Command(BaseCommand):
                     project.root.as_posix(),
                     str(packages_path),
                 ],
+                strict=True,
             ):
                 project.core.ui.echo(f"{name}\n  {value}")

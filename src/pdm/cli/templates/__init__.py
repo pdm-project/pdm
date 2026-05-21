@@ -14,8 +14,9 @@ from pdm.exceptions import PdmException
 from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from importlib.resources.abc import Traversable
-    from typing import Callable, TypeVar
+    from typing import TypeVar
 
     ST = TypeVar("ST", Traversable, Path)
 

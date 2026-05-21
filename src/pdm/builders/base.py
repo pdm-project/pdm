@@ -7,9 +7,10 @@ import shutil
 import subprocess
 import textwrap
 import threading
+from collections.abc import Iterable
 from logging import Logger
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Iterable, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from pyproject_hooks import (
     BackendInvalid,
@@ -28,7 +29,8 @@ from pdm.models.working_set import WorkingSet
 from pdm.termui import logger
 
 if TYPE_CHECKING:
-    from typing import Callable, ParamSpec, TypeVar
+    from collections.abc import Callable
+    from typing import ParamSpec, TypeVar
 
     from pdm.environments import BaseEnvironment
 

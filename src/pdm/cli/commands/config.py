@@ -1,7 +1,8 @@
 import argparse
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from pdm import termui
 from pdm._types import RepositoryConfig

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import abc
 import enum
+from collections.abc import Iterable, Mapping, Set
 from functools import cached_property
-from typing import TYPE_CHECKING, AbstractSet, Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any
 
 import tomlkit
 
@@ -32,7 +33,7 @@ class Compatibility(enum.IntEnum):
 
 
 class Lockfile(TOMLFile, metaclass=abc.ABCMeta):
-    SUPPORTED_FLAGS: AbstractSet[str]
+    SUPPORTED_FLAGS: Set[str]
 
     @property
     @abc.abstractmethod

@@ -112,7 +112,7 @@ def patch_sysconfig_ast(obj, real_prefix, variable_updates=None):
     if not all(isinstance(value, ast.Constant) and isinstance(value.value, (str, int)) for value in dict_ast.values):
         raise ValueError("Expected all str and int values dict")
     # index because we are modifying
-    for key_ast, value_ast in zip(dict_ast.keys, dict_ast.values):
+    for key_ast, value_ast in zip(dict_ast.keys, dict_ast.values, strict=True):
         if not (isinstance(key_ast, ast.Constant) and isinstance(key_ast.value, str)):
             raise ValueError("Expected all str keys dict")
         if not (isinstance(value_ast, ast.Constant) and isinstance(value_ast.value, (str, int))):

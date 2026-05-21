@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import importlib.resources
 import sys
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.compat import resources_read_text
 from pdm.exceptions import PdmUsageError
 from pdm.project import Project
 
@@ -29,6 +29,6 @@ class Command(BaseCommand):
         if shell not in self.SUPPORTED_SHELLS:
             raise PdmUsageError(f"Unsupported shell: {shell}")
         suffix = "ps1" if shell in {"powershell", "pwsh"} else shell
-        completion = resources_read_text("pdm.cli.completions", f"pdm.{suffix}")
+        completion = importlib.resources.read_text("pdm.cli.completions", f"pdm.{suffix}")
         # Can't use rich print or otherwise the rich markups will be interpreted
         print(completion.replace("%{python_executable}", sys.executable))

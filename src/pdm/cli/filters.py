@@ -8,7 +8,7 @@ from pdm.exceptions import PdmUsageError
 from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
-    from typing import Iterator, Sequence
+    from collections.abc import Iterator, Sequence
 
     from pdm.project import Project
 

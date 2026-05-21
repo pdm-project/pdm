@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import importlib.metadata as im
 import os
 import re
 import warnings
@@ -15,7 +16,6 @@ from packaging.version import InvalidVersion
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
-from pdm.compat import importlib_metadata as im
 from pdm.exceptions import BuildError, CandidateNotFound, InvalidPyVersion, PDMWarning, RequirementError
 from pdm.models.backends import get_backend, get_backend_by_spec
 from pdm.models.reporter import CandidateReporter

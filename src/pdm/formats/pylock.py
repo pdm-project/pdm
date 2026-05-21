@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
 
 import tomlkit
 from dep_logic.markers import AnyMarker, BaseMarker, MarkerUnion, parse_marker

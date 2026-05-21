@@ -23,7 +23,7 @@ from pdm.cli.options import (
 from pdm.exceptions import PdmUsageError, ProjectError
 
 if TYPE_CHECKING:
-    from typing import Collection
+    from collections.abc import Collection
 
     from pdm.models.requirements import Requirement
     from pdm.project import Project

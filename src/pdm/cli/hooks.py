@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 from pdm.project.core import Project
 from pdm.signals import pdm_signals

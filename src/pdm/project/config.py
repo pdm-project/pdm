@@ -3,9 +3,10 @@ from __future__ import annotations
 import collections
 import dataclasses
 import os
+from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Iterator, Mapping, MutableMapping, cast
+from typing import Any, ClassVar, cast
 
 import platformdirs
 import rich.theme

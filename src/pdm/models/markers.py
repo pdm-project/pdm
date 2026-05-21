@@ -125,24 +125,26 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
         op = marker.op
         version = marker.value
         if name == "python_version":
-            if op == ">":
-                int_versions = [int(ver) for ver in version.split(".")]
-                if len(int_versions) < 2:
-                    int_versions.append(0)
-                int_versions[-1] += 1
-                version = ".".join(str(v) for v in int_versions)
-                op = ">="
-            elif op in ("==", "!="):
-                if len(version.split(".")) < 3:
-                    version += ".*"
-            elif op in ("in", "not in"):
-                version = " ".join(v + ".*" for v in split_version(version))
-        if op == "in":
-            pyspec = reduce(operator.or_, (PySpecSet(f"=={v}") for v in split_version(version)))
-        elif op == "not in":
-            pyspec = reduce(operator.and_, (PySpecSet(f"!={v}") for v in split_version(version)))
-        else:
-            pyspec = PySpecSet(f"{op}{version}")
+            match op:
+                case ">":
+                    int_versions = [int(ver) for ver in version.split(".")]
+                    if len(int_versions) < 2:
+                        int_versions.append(0)
+                    int_versions[-1] += 1
+                    version = ".".join(str(v) for v in int_versions)
+                    op = ">="
+                case "==" | "!=":
+                    if len(version.split(".")) < 3:
+                        version += ".*"
+                case "in" | "not in":
+                    version = " ".join(v + ".*" for v in split_version(version))
+        match op:
+            case "in":
+                pyspec = reduce(operator.or_, (PySpecSet(f"=={v}") for v in split_version(version)))
+            case "not in":
+                pyspec = reduce(operator.and_, (PySpecSet(f"!={v}") for v in split_version(version)))
+            case _:
+                pyspec = PySpecSet(f"{op}{version}")
         return pyspec
     elif isinstance(marker, MultiMarker):
         return reduce(operator.and_, (_build_pyspec_from_marker(m) for m in marker.markers))

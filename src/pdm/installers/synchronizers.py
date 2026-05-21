@@ -14,9 +14,9 @@ from pdm.models.reporter import CandidateReporter, InstallationStatus, RichProgr
 from pdm.models.requirements import strip_extras
 
 if TYPE_CHECKING:
-    from rich.progress import Progress
+    from importlib.metadata import Distribution
 
-    from pdm.compat import Distribution
+    from rich.progress import Progress
 
 
 class Synchronizer(BaseSynchronizer):

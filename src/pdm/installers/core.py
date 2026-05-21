@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from pdm.environments import BaseEnvironment
 from pdm.models.requirements import Requirement

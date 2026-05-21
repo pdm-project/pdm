@@ -9,9 +9,10 @@ import shlex
 import signal
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Mapping, NamedTuple, Sequence, cast
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from rich import print_json
 
@@ -25,8 +26,9 @@ from pdm.signals import pdm_signals
 from pdm.utils import deprecation_warning, expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from types import FrameType
-    from typing import Any, Iterator, TypedDict
+    from typing import Any, TypedDict
 
     from pdm.environments import BaseEnvironment
     from pdm.project import Project

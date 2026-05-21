@@ -9,15 +9,16 @@ import posixpath
 import re
 import secrets
 import urllib.parse as urlparse
+from collections.abc import Sequence
+from importlib.metadata import Distribution
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Sequence, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
 
-from pdm.compat import Distribution
 from pdm.exceptions import RequirementError
 from pdm.models.backends import BuildBackend, get_relative_path
 from pdm.models.markers import Marker, get_marker
@@ -63,7 +64,7 @@ def strip_extras(line: str) -> tuple[str, tuple[str, ...] | None]:
     return name, extras
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _get_random_key(req: Requirement) -> str:
     return f":empty:{secrets.token_urlsafe(8)}"
 

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import dataclasses
 import json
+from collections.abc import Collection, Iterable
 from functools import cached_property
+from importlib.metadata import Distribution
 from itertools import chain
-from typing import Collection, Iterable
 
 from pdm import termui
-from pdm.compat import Distribution
 from pdm.environments import BaseEnvironment
 from pdm.exceptions import BuildError
 from pdm.installers.manager import InstallManager

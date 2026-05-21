@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import ast
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pdm.compat import tomllib
 from pdm.formats.base import (

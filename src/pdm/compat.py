@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import importlib.resources
 import sys
-from collections.abc import Iterator
-from pathlib import Path
-from typing import TYPE_CHECKING, ContextManager, Sequence, TypeVar
+from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
-    from typing import IO, Protocol
+    from typing import Protocol
 
     class SupportsIdentify(Protocol):
         def identify(self) -> str: ...
@@ -19,35 +17,6 @@ else:
     import tomli as tomllib
 
 T = TypeVar("T", bound="SupportsIdentify")
-
-if (
-    not (sys.version_info[:2] == (3, 9) and sys.platform == "win32")
-    # a bug on windows+py39 that zipfile path is not normalized
-):
-
-    def resources_open_binary(package: str, resource: str) -> IO[bytes]:
-        return (importlib.resources.files(package) / resource).open("rb")
-
-    def resources_read_text(package: str, resource: str, encoding: str = "utf-8", errors: str = "strict") -> str:
-        with (importlib.resources.files(package) / resource).open("r", encoding=encoding, errors=errors) as f:
-            return f.read()
-
-    def resources_path(package: str, resource: str) -> ContextManager[Path]:
-        return importlib.resources.as_file(importlib.resources.files(package) / resource)
-
-else:
-    resources_open_binary = importlib.resources.open_binary
-    resources_read_text = importlib.resources.read_text
-    resources_path = importlib.resources.path
-
-
-if sys.version_info >= (3, 10):
-    import importlib.metadata as importlib_metadata
-else:
-    import importlib_metadata
-
-
-Distribution = importlib_metadata.Distribution
 
 
 class CompatibleSequence(Sequence[T]):  # pragma: no cover
@@ -102,4 +71,4 @@ class CompatibleSequence(Sequence[T]):  # pragma: no cover
             yield r.identify(), r
 
 
-__all__ = ["CompatibleSequence", "Distribution", "importlib_metadata", "tomllib"]
+__all__ = ["CompatibleSequence", "tomllib"]

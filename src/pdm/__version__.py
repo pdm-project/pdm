@@ -1,11 +1,12 @@
-from pdm.compat import importlib_metadata, resources_read_text
+import importlib.metadata
+import importlib.resources
 
 
 def read_version() -> str:
     try:
-        return importlib_metadata.version(__package__ or "pdm")
-    except importlib_metadata.PackageNotFoundError:
-        return resources_read_text("pdm", "VERSION").strip()
+        return importlib.metadata.version(__package__ or "pdm")
+    except importlib.metadata.PackageNotFoundError:
+        return importlib.resources.read_text("pdm", "VERSION").strip()
 
 
 __version__ = read_version()

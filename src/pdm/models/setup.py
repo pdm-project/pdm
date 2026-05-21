@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import ast
 import os
+from collections.abc import Iterable
 from configparser import ConfigParser
 from dataclasses import asdict, dataclass, field, fields
+from importlib.metadata import Distribution
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, no_type_check
-
-from pdm.compat import Distribution
+from typing import TYPE_CHECKING, Any, no_type_check
 
 if TYPE_CHECKING:
     from importlib.metadata import _SimplePath
@@ -299,7 +299,7 @@ class _SetupReader:
             return extras_require
 
         if isinstance(value, ast.Dict):
-            for key, val in zip(value.keys, value.values):
+            for key, val in zip(value.keys, value.values, strict=True):
                 if isinstance(val, ast.Name):
                     val = cls._find_variable_in_body(body, val.id)
 
@@ -313,7 +313,7 @@ class _SetupReader:
             if variable is None or not isinstance(variable, ast.Dict):
                 return extras_require
 
-            for key, val in zip(variable.keys, variable.values):
+            for key, val in zip(variable.keys, variable.values, strict=True):
                 if isinstance(val, ast.Name):
                     val = cls._find_variable_in_body(body, val.id)
 
@@ -394,7 +394,7 @@ class _SetupReader:
 
     @staticmethod
     def _find_in_dict(dict_: ast.Dict, name: str) -> Any | None:
-        for key, val in zip(dict_.keys, dict_.values):
+        for key, val in zip(dict_.keys, dict_.values, strict=True):
             if isinstance(key, ast.Constant) and key.value == name:
                 return val
         return None

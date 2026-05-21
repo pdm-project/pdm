@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import os
 import sqlite3
-import sys
 import threading
 from contextlib import closing
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -24,9 +23,6 @@ if TYPE_CHECKING:
 
 
 def _create_truststore_ssl_context() -> SSLContext | None:
-    if sys.version_info < (3, 10):
-        return None
-
     try:
         import ssl
     except ImportError:
@@ -49,7 +45,7 @@ CACHES_TTL = 7 * 24 * 60 * 60  # 7 days
 MAX_RETRIES = 4
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_transport(
     verify: bool | SSLContext | str = True,
     cert: tuple[str, str | None] | None = None,

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import argparse
 from argparse import _SubParsersAction
-from typing import Any, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Any, TypeVar
 
 from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.project import Project

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 from urllib.parse import unquote, urlparse
 
 import pytest

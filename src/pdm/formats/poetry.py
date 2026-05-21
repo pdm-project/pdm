@@ -4,8 +4,9 @@ import functools
 import operator
 import os
 import re
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pdm.compat import tomllib
 from pdm.formats.base import (

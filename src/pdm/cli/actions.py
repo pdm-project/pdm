@@ -8,7 +8,8 @@ import json
 import os
 import sys
 import textwrap
-from typing import TYPE_CHECKING, Collection, Iterable, cast
+from collections.abc import Collection, Iterable
+from typing import TYPE_CHECKING, cast
 
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 
@@ -195,7 +196,7 @@ def resolve_from_lockfile(
                 loose_compatible_target = next(
                     (
                         target
-                        for (target, compat) in zip(lock_targets, compatibilities)
+                        for (target, compat) in zip(lock_targets, compatibilities, strict=True)
                         if compat == EnvCompatibility.HIGHER
                     ),
                     None,
@@ -357,34 +358,35 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
     if shell == "AUTO":
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()
-    if shell in ("zsh", "bash", "sh", "dash"):
-        result = textwrap.dedent(
-            f"""
-            if [ -n "$PYTHONPATH" ]; then
-                export PYTHONPATH='{lib_path}':$PYTHONPATH
-            else
-                export PYTHONPATH='{lib_path}'
-            fi
-            """
-        ).strip()
-    elif shell == "fish":
-        result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
-    elif shell in ("tcsh", "csh"):
-        result = textwrap.dedent(
-            f"""
-            if ( $?PYTHONPATH ) then
-                if ( "$PYTHONPATH" != "" ) then
-                    setenv PYTHONPATH '{lib_path}':$PYTHONPATH
+    match shell:
+        case "zsh" | "bash" | "sh" | "dash":
+            result = textwrap.dedent(
+                f"""
+                if [ -n "$PYTHONPATH" ]; then
+                    export PYTHONPATH='{lib_path}':$PYTHONPATH
+                else
+                    export PYTHONPATH='{lib_path}'
+                fi
+                """
+            ).strip()
+        case "fish":
+            result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
+        case "tcsh" | "csh":
+            result = textwrap.dedent(
+                f"""
+                if ( $?PYTHONPATH ) then
+                    if ( "$PYTHONPATH" != "" ) then
+                        setenv PYTHONPATH '{lib_path}':$PYTHONPATH
+                    else
+                        setenv PYTHONPATH '{lib_path}'
+                    endif
                 else
                     setenv PYTHONPATH '{lib_path}'
                 endif
-            else
-                setenv PYTHONPATH '{lib_path}'
-            endif
-            """
-        ).strip()
-    else:
-        raise PdmUsageError(f"Unsupported shell: {shell}, please specify another shell via `--pep582 <SHELL>`")
+                """
+            ).strip()
+        case _:
+            raise PdmUsageError(f"Unsupported shell: {shell}, please specify another shell via `--pep582 <SHELL>`")
     ui.echo(result)
 
 

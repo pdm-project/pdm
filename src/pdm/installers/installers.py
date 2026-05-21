@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 import os
 import stat
+from collections.abc import Iterator
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from installer import install as _install
 from installer._core import _process_WHEEL_file
@@ -21,7 +22,8 @@ from pdm.utils import make_file_executable
 _WINDOWS = os.name == "nt"
 
 if TYPE_CHECKING:
-    from typing import Any, BinaryIO, Iterable, Literal
+    from collections.abc import Iterable
+    from typing import Any, BinaryIO, Literal
 
     from installer.sources import WheelContentElement
     from installer.utils import Scheme

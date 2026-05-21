@@ -1,10 +1,10 @@
+import importlib.metadata
 import sys
 from unittest import mock
 
 import pytest
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.compat import importlib_metadata
 from pdm.project.config import ConfigItem
 from pdm.utils import cd
 
@@ -40,7 +40,7 @@ def make_entry_point(plugin):
 
 def test_plugin_new_command(pdm, mocker, project, core):
     mocker.patch.object(
-        importlib_metadata,
+        importlib.metadata,
         "entry_points",
         return_value=[make_entry_point(new_command)],
     )
@@ -58,7 +58,7 @@ def test_plugin_new_command(pdm, mocker, project, core):
 
 def test_plugin_replace_command(pdm, mocker, project, core):
     mocker.patch.object(
-        importlib_metadata,
+        importlib.metadata,
         "entry_points",
         return_value=[make_entry_point(replace_command)],
     )
@@ -74,7 +74,7 @@ def test_plugin_replace_command(pdm, mocker, project, core):
 
 def test_load_multiple_plugins(pdm, mocker, core):
     mocker.patch.object(
-        importlib_metadata,
+        importlib.metadata,
         "entry_points",
         return_value=[make_entry_point(new_command), make_entry_point(add_new_config)],
     )
@@ -96,7 +96,7 @@ def test_old_entry_point_compatibility(pdm, mocker, core):
             return [make_entry_point(add_new_config)]
         return []
 
-    mocker.patch.object(importlib_metadata, "entry_points", side_effect=get_entry_points)
+    mocker.patch.object(importlib.metadata, "entry_points", side_effect=get_entry_points)
     core.init_parser()
     core.load_plugins()
 

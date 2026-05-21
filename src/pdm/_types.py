@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses as dc
 import re
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar
 
 if TYPE_CHECKING:
     from typing import Protocol
@@ -89,7 +89,7 @@ class RepositoryConfig:
         return hide_url(url)
 
 
-RequirementDict = Union[str, dict[str, Union[str, bool]]]
+RequirementDict = str | dict[str, str | bool]
 CandidateInfo = tuple[list[str], str, str]
 
 
