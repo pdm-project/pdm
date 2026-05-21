@@ -1,3 +1,23 @@
+## Release v2.27.0 (2026-05-21)
+
+### Breaking Changes
+
+- Update the minimum required Python version to 3.10. ([#3787](https://github.com/pdm-project/pdm/issues/3787))
+
+### Features & Improvements
+
+- Respect existing values of `pyproject.toml` when running `pdm init` or `pdm new`. ([#3786](https://github.com/pdm-project/pdm/issues/3786))
+- Move project plugin installations from `.pdm-plugins` under the project root to an isolated cache directory, and add a fixer to migrate existing plugin directories. ([#3790](https://github.com/pdm-project/pdm/issues/3790))
+- Remove legacy importlib compatibility wrappers and use standard-library `importlib.metadata` and `importlib.resources` APIs directly. ([#3796](https://github.com/pdm-project/pdm/issues/3796))
+
+### Bug Fixes
+
+- Fix a security issue with the installer to disallow installing to paths outside of the scheme directory. ([#3787](https://github.com/pdm-project/pdm/issues/3787))
+- Refuse to write project-local config and state files (`pdm.toml`, `.pdm-python`, `.python-version`) when the destination is a symlink, preventing an untrusted repository from clobbering files outside the project root. ([#3788](https://github.com/pdm-project/pdm/issues/3788))
+- Fix a regression issue that `PDM_LOCKFILE` env var is not respected. ([#3794](https://github.com/pdm-project/pdm/issues/3794))
+- Allow configuring the default lock `--exclude-newer` value with `strategy.exclude-newer`. ([#3795](https://github.com/pdm-project/pdm/issues/3795))
+
+
 ## Release v2.26.9 (2026-05-10)
 
 ### Features & Improvements
