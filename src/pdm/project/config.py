@@ -421,7 +421,7 @@ class Config(MutableMapping[str, str]):
         if not self.is_global and config.global_only:
             raise ValueError(f"Config item '{key}' is not allowed to set in project config.")
 
-        value = config.coerce(value)
+        config.coerce(value)
         if key in self.env_map:
             ui.warn(f"the config is shadowed by env var '{config.env_var}', the value set won't take effect.")
         self._file_data[config_key] = value
