@@ -14,7 +14,7 @@ from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.compat import tomllib
 from pdm.exceptions import NoConfigError, PdmUsageError
-from pdm.utils import open_for_write_no_symlink
+from pdm.utils import convert_to_datetime, open_for_write_no_symlink
 
 REPOSITORY = "repository"
 SOURCE = "pypi"
@@ -170,7 +170,9 @@ class Config(MutableMapping[str, str]):
         "strategy.update": ConfigItem("The default strategy for updating packages", "reuse", False),
         "strategy.save": ConfigItem("Specify how to save versions when a package is added", "minimum", False),
         "strategy.exclude-newer": ConfigItem(
-            "Exclude packages newer than the given UTC date or relative duration", global_only=False
+            "Exclude packages newer than the given UTC date or relative duration",
+            global_only=False,
+            coerce=convert_to_datetime,
         ),
         "strategy.resolve_max_rounds": ConfigItem(
             "Specify the max rounds of resolution process",
