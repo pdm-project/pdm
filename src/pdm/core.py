@@ -177,6 +177,8 @@ class Core:
 
         self.state.build_isolation = project.config["build_isolation"]
 
+        if exclude_newer := project.config.get("strategy.exclude-newer"):
+            self.state.exclude_newer = exclude_newer
         if exclude_newer := project.pyproject.resolution.get("exclude-newer"):
             self.state.exclude_newer = convert_to_datetime(exclude_newer)
 

@@ -343,7 +343,7 @@ def test_lock_inherit_metadata_strategy(project, pdm, mocker, working_set):
         assert key in working_set
 
 
-@pytest.mark.parametrize("source", ["cli", "pyproject"])
+@pytest.mark.parametrize("source", ["cli", "pyproject", "config"])
 def test_lock_exclude_newer(project, pdm, source):
     project.pyproject.metadata["requires-python"] = ">=3.9"
     project.project_config["pypi.url"] = "https://my.pypi.org/json"
@@ -355,12 +355,15 @@ def test_lock_exclude_newer(project, pdm, source):
     if source == "pyproject":
         project.pyproject.settings["resolution"] = {"exclude-newer": "2024-01-01"}
         cmd = ["lock"]
+    elif source == "config":
+        project.project_config["strategy.exclude-newer"] = "2024-01-01"
+        cmd = ["lock"]
 
     pdm(cmd, obj=project, strict=True, cleanup=False)
     assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
 
 
-@pytest.mark.parametrize("source", ["cli", "pyproject"])
+@pytest.mark.parametrize("source", ["cli", "pyproject", "config"])
 def test_lock_exclude_newer_accepts_relative_duration(project, pdm, monkeypatch, source):
     from datetime import datetime, timezone
 
@@ -380,12 +383,26 @@ def test_lock_exclude_newer_accepts_relative_duration(project, pdm, monkeypatch,
     if source == "pyproject":
         project.pyproject.settings["resolution"] = {"exclude-newer": "3w"}
         cmd = ["lock"]
+    elif source == "config":
+        project.project_config["strategy.exclude-newer"] = "3w"
+        cmd = ["lock"]
 
     project.pyproject.metadata["requires-python"] = ">=3.9"
     project.project_config["pypi.url"] = "https://my.pypi.org/json"
     project.add_dependencies(["zipp"])
     pdm(cmd, strict=True, obj=project, cleanup=False)
     assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
+
+
+def test_pyproject_exclude_newer_overrides_config(project, pdm):
+    project.pyproject.metadata["requires-python"] = ">=3.9"
+    project.project_config["pypi.url"] = "https://my.pypi.org/json"
+    project.project_config["strategy.exclude-newer"] = "2024-01-01"
+    project.pyproject.settings["resolution"] = {"exclude-newer": "2025-01-01"}
+    project.add_dependencies(["zipp"])
+
+    pdm(["lock"], obj=project, strict=True, cleanup=False)
+    assert project.get_locked_repository().candidates["zipp"].version == "3.7.0"
 
 
 exclusion_cases = [

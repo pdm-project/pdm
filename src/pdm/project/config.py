@@ -14,7 +14,7 @@ from pdm import termui
 from pdm._types import RepositoryConfig
 from pdm.compat import tomllib
 from pdm.exceptions import NoConfigError, PdmUsageError
-from pdm.utils import open_for_write_no_symlink
+from pdm.utils import convert_to_datetime, open_for_write_no_symlink
 
 REPOSITORY = "repository"
 SOURCE = "pypi"
@@ -169,6 +169,11 @@ class Config(MutableMapping[str, str]):
         "global_project.user_site": ConfigItem("Whether to install to user site", False, True, coerce=ensure_boolean),
         "strategy.update": ConfigItem("The default strategy for updating packages", "reuse", False),
         "strategy.save": ConfigItem("Specify how to save versions when a package is added", "minimum", False),
+        "strategy.exclude-newer": ConfigItem(
+            "Exclude packages newer than the given UTC date or relative duration",
+            global_only=False,
+            coerce=convert_to_datetime,
+        ),
         "strategy.resolve_max_rounds": ConfigItem(
             "Specify the max rounds of resolution process",
             10000,
@@ -416,7 +421,7 @@ class Config(MutableMapping[str, str]):
         if not self.is_global and config.global_only:
             raise ValueError(f"Config item '{key}' is not allowed to set in project config.")
 
-        value = config.coerce(value)
+        config.coerce(value)
         if key in self.env_map:
             ui.warn(f"the config is shadowed by env var '{config.env_var}', the value set won't take effect.")
         self._file_data[config_key] = value
