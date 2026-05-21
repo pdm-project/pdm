@@ -167,7 +167,7 @@ class UvResolver(Resolver):
                 req = FileRequirement.create(path=filepath, name=package["name"])
             else:
                 req = NamedRequirement.create(name=package["name"], specifier=f"=={package['version']}")
-            candidate = Candidate(req, name=package["name"], version=package["version"])
+            candidate = Candidate(req, name=package["name"], version=package.get("version", "0.0.0"))
 
             fallback_url = package["source"].get("url")
             for wheel in package.get("wheels", []):
