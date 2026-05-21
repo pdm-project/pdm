@@ -24,7 +24,7 @@ complete -c pdm -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -l versi
 # commands
 # add
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a add -d 'Add package(s) to pyproject.toml and install them'
-complete -c pdm -A -n '__fish_seen_subcommand_from add' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from add' -l config-setting -d 'Pass options to the builder. Options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l dev -d 'Add packages into dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l dry-run -d 'Show the difference only and don\'t perform any action'
 complete -c pdm -A -n '__fish_seen_subcommand_from add' -l editable -d 'Specify editable packages'
@@ -59,7 +59,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from add' -l verbose -d 'Use `-v` 
 
 # build
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a build -d 'Build artifacts for distribution'
-complete -c pdm -A -n '__fish_seen_subcommand_from build' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from build' -l config-setting -d 'Pass options to the builder. Options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l dest -d 'Target directory to put artifacts'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from build' -l no-clean -d 'Do not clean the target directory'
@@ -177,13 +177,13 @@ complete -c pdm -A -n '__fish_seen_subcommand_from info' -l where -d 'Show the p
 # init
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a init -d 'Initialize a pyproject.toml for PDM.
 
-    Built-in templates:
-    - default: `pdm init`, A simple template with a basic structure.
-    - minimal: `pdm init minimal`, A minimal template with only `pyproject.toml`.
-    '
+Built-in templates:
+- default: `pdm init`, A simple template with a basic structure.
+- minimal: `pdm init minimal`, A minimal template with only `pyproject.toml`.
+'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l backend -d 'Specify the build backend, which implies --dist'
-complete -c pdm -A -n '__fish_seen_subcommand_from init' -l cookiecutter -d 'Use Cookiecutter to generate project [32m[installed][0m'
-complete -c pdm -A -n '__fish_seen_subcommand_from init' -l copier -d 'Use Copier to generate project [32m[installed][0m'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l cookiecutter -d 'Use Cookiecutter to generate project [31m[not installed][0m'
+complete -c pdm -A -n '__fish_seen_subcommand_from init' -l copier -d 'Use Copier to generate project [31m[not installed][0m'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l dist -d 'Create a package for distribution'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l global -d 'Use the global project, supply the project root with `-p` option'
 complete -c pdm -A -n '__fish_seen_subcommand_from init' -l help -d 'Show this help message and exit.'
@@ -202,7 +202,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from init' -l verbose -d 'Use `-v`
 # install
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a install -d 'Install dependencies from lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l check -d 'Check if the lock file is up to date and fail otherwise'
-complete -c pdm -A -n '__fish_seen_subcommand_from install' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from install' -l config-setting -d 'Pass options to the builder. Options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l dry-run -d 'Show the difference only and don\'t perform any action'
 complete -c pdm -A -n '__fish_seen_subcommand_from install' -l fail-fast -d 'Abort on first installation error'
@@ -249,7 +249,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from list' -l verbose -d 'Use `-v`
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a lock -d 'Resolve and lock dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l append -d 'Append the result to the current lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l check -d 'Check if the lock file is up to date and quit'
-complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l config-setting -d 'Pass options to the builder. Options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l exclude-newer -d 'Exclude packages newer than the given UTC date in format `YYYY-MM-DD[THH:MM:SSZ]` or relative time `N{d|h|w}`'
 complete -c pdm -A -n '__fish_seen_subcommand_from lock' -l global -d 'Use the global project, supply the project root with `-p` option'
@@ -440,7 +440,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from python; and __fish_seen_subco
 
 # remove
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a remove -d 'Remove packages from pyproject.toml'
-complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l config-setting -d 'Pass options to the builder. Options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l dev -d 'Remove packages from dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l dry-run -d 'Show the difference only and don\'t perform any action'
 complete -c pdm -A -n '__fish_seen_subcommand_from remove' -l fail-fast -d 'Abort on first installation error'
@@ -475,7 +475,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from run' -l venv -d 'Run the comm
 complete -c pdm -A -n '__fish_seen_subcommand_from run' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
 
 # search
-complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a search -d 'Search for PyPI packages'
+complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a search -d '[DEPRECATED] Search for PyPI packages'
 complete -c pdm -A -n '__fish_seen_subcommand_from search' -l help -d 'Show this help message and exit.'
 complete -c pdm -A -n '__fish_seen_subcommand_from search' -l quiet -d 'Suppress output'
 complete -c pdm -A -n '__fish_seen_subcommand_from search' -l verbose -d 'Use `-v` for detailed output and `-vv` for more detailed'
@@ -538,7 +538,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from show' -l version -d 'Show ver
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a sync -d 'Synchronize the current working set with lock file'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l clean -d 'Clean packages not in the lockfile'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l clean-unselected -d 'Only keep the selected packages'
-complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l config-setting -d 'Pass options to the builder. Options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l dry-run -d 'Show the difference only and don\'t perform any action'
 complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l fail-fast -d 'Abort on first installation error'
@@ -561,7 +561,7 @@ complete -c pdm -A -n '__fish_seen_subcommand_from sync' -l without -d 'Exclude 
 
 # update
 complete -c pdm -f -n '__fish_pdm_a919b69078acdf0a_complete_no_subcommand' -a update -d 'Update package(s) in pyproject.toml'
-complete -c pdm -A -n '__fish_seen_subcommand_from update' -l config-setting -d 'Pass options to the builder. options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
+complete -c pdm -A -n '__fish_seen_subcommand_from update' -l config-setting -d 'Pass options to the builder. Options with a value must be specified after "=": `--config-setting=key(=value)` or `-Ckey(=value)`'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l dev -d 'Select dev dependencies'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l fail-fast -d 'Abort on first installation error'
 complete -c pdm -A -n '__fish_seen_subcommand_from update' -l frozen-lockfile -d 'Don\'t try to create or update the lockfile. [env var: PDM_FROZEN_LOCKFILE]'
