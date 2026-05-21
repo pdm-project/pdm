@@ -199,6 +199,12 @@ pdm lock --exclude-newer 2024-01-01
 pdm lock --exclude-newer 7d
 ```
 
+You can also configure the default value with `strategy.exclude-newer`:
+
+```bash
+pdm config strategy.exclude-newer 7d
+```
+
 !!! tip
     Added in 2.26.9.
 
@@ -208,6 +214,8 @@ pdm lock --exclude-newer 7d
 [tool.pdm.resolution]
 exclude-newer = "7d"
 ```
+
+The precedence is: the `--exclude-newer` command line option, then `[tool.pdm.resolution]` in `pyproject.toml`, then `strategy.exclude-newer` in PDM config.
 
 !!! note
     The package index must support the `upload-time` field as specified in [PEP 700]. If the field is not present for a given distribution, the distribution will be treated as unavailable.

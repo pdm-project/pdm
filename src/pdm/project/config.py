@@ -169,6 +169,9 @@ class Config(MutableMapping[str, str]):
         "global_project.user_site": ConfigItem("Whether to install to user site", False, True, coerce=ensure_boolean),
         "strategy.update": ConfigItem("The default strategy for updating packages", "reuse", False),
         "strategy.save": ConfigItem("Specify how to save versions when a package is added", "minimum", False),
+        "strategy.exclude-newer": ConfigItem(
+            "Exclude packages newer than the given UTC date or relative duration", global_only=False
+        ),
         "strategy.resolve_max_rounds": ConfigItem(
             "Specify the max rounds of resolution process",
             10000,
