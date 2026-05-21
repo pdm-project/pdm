@@ -74,6 +74,8 @@ class Command(BaseCommand):
                 self.set_python(project, options.python, hooks)
                 self._init_builtin(project, options)
 
+        if options.init_git and self.interactive:
+            options.init_git = termui.confirm("Do you want to initialize a git repository?", default=True)
         if options.init_git:
             self.initialize_git(project)
 

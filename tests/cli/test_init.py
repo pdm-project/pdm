@@ -32,7 +32,7 @@ def test_init_command(project_no_init, pdm, mocker):
         "pdm.cli.commands.init.get_user_email_from_git",
         return_value=("Testing", "me@example.org"),
     )
-    pdm(["init"], input="\ntest-project\n\n\n\n\n\n\n", strict=True, obj=project_no_init)
+    pdm(["init"], input="\ntest-project\n\n\n\n\n\n\n\n", strict=True, obj=project_no_init)
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
     data = {
         "project": {
@@ -160,6 +160,36 @@ def test_init_preserves_existing_pyproject_values(project_no_init, pdm, mocker):
     assert data["tool"]["pdm"]["distribution"] is False
 
 
+def test_init_asks_whether_to_initialize_git(project_no_init, pdm, mocker):
+    initialize_git = mocker.patch("pdm.cli.commands.init.Command.initialize_git")
+
+    result = pdm(["init"], input="\ntest-project\n\n\n\n\n\n\nn\n", obj=project_no_init)
+
+    assert result.exit_code == 0
+    initialize_git.assert_not_called()
+
+
+def test_init_no_git_does_not_initialize_git(project_no_init, pdm, mocker):
+    initialize_git = mocker.spy(Command, "initialize_git")
+
+    result = pdm(["init", "--no-git"], input="\ntest-project\n\n\n\n\n\n\n", obj=project_no_init)
+
+    assert result.exit_code == 0
+    initialize_git.assert_not_called()
+
+
+def test_init_non_interactive_initializes_git_by_default(project_no_init, pdm, mocker):
+    initialize_git = mocker.patch("pdm.cli.commands.init.Command.initialize_git")
+    confirm = mocker.patch("pdm.cli.commands.init.termui.confirm")
+    mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
+
+    result = pdm(["init", "-n"], obj=project_no_init)
+
+    assert result.exit_code == 0
+    confirm.assert_not_called()
+    initialize_git.assert_called_once_with(project_no_init)
+
+
 def test_new_command(project_no_init, pdm, mocker):
     mocker.patch(
         "pdm.cli.commands.init.get_user_email_from_git",
@@ -168,7 +198,7 @@ def test_new_command(project_no_init, pdm, mocker):
     with cd(project_no_init.root):
         pdm(
             ["new", "--name", "test-project", "--python", sys.executable, "myproject"],
-            input="\n\n\n\n\n\n",
+            input="\n\n\n\n\n\n\n",
             strict=True,
         )
     python_version = f"{project_no_init.python.major}.{project_no_init.python.minor}"
@@ -197,7 +227,7 @@ def test_init_command_library(project_no_init, pdm, mocker):
     )
     result = pdm(
         ["init"],
-        input="\ntest-project\n\ny\nTest Project\n1\n\n\n\n\n",
+        input="\ntest-project\n\ny\nTest Project\n1\n\n\n\n\n\n",
         obj=project_no_init,
     )
     assert result.exit_code == 0
@@ -251,7 +281,7 @@ def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker, back
     )
     result = pdm(
         ["init", str(template_with_backend)],
-        input=f"\ntest-project\n\ny\nTest Project\n{backend_choice}\n\n\n\n\n",
+        input=f"\ntest-project\n\ny\nTest Project\n{backend_choice}\n\n\n\n\n\n",
         obj=project_no_init,
     )
     assert result.exit_code == 0
@@ -313,7 +343,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
 def test_init_auto_create_venv(project_no_init, pdm, mocker):
     mocker.patch("pdm.models.python.PythonInfo.get_venv", return_value=None)
     project_no_init.project_config["python.use_venv"] = True
-    result = pdm(["init"], input="\ntest-project\n\ny\nTest Project\n1\n\n\n\n\n", obj=project_no_init)
+    result = pdm(["init"], input="\ntest-project\n\ny\nTest Project\n1\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
     assert project_no_init.python.executable.parent.parent == project_no_init.root / ".venv"
     assert ".pdm-python" in (project_no_init.root / ".gitignore").read_text()
@@ -324,7 +354,7 @@ def test_init_auto_create_venv_specify_python(project_no_init, pdm, mocker):
     project_no_init.project_config["python.use_venv"] = True
     result = pdm(
         ["init", f"--python={PYTHON_VERSION}"],
-        input="\n\n\n\n\n\n\n",
+        input="\n\n\n\n\n\n\n\n",
         obj=project_no_init,
     )
     assert result.exit_code == 0
