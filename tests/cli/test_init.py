@@ -1,9 +1,11 @@
+import argparse
 import sys
 from textwrap import dedent
 from unittest.mock import ANY
 
 import pytest
 
+from pdm.cli.commands.init import Command
 from pdm.compat import tomllib
 from pdm.models.python import PythonInfo
 from pdm.utils import cd
@@ -48,6 +50,114 @@ def test_init_command(project_no_init, pdm, mocker):
 
     with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
         assert tomllib.load(fp) == data
+
+
+def test_init_uses_existing_pyproject_values_as_defaults(project_no_init, mocker):
+    project_no_init.pyproject._path.write_text(
+        dedent(
+            """
+            [project]
+            name = "existing-project"
+            version = "2.1.0"
+            description = "Existing description"
+            authors = [{name = "Existing Author", email = "author@example.org"}]
+            license = {text = "Apache-2.0"}
+            requires-python = ">=3.10"
+
+            [build-system]
+            requires = ["hatchling"]
+            build-backend = "hatchling.build"
+
+            [tool.pdm]
+            distribution = true
+            """
+        )
+    )
+    project_no_init.pyproject.reload()
+    defaults = {}
+
+    def ask_with_default(question, default, **kwargs):
+        defaults[question] = default
+        return default
+
+    mocker.patch("pdm.cli.commands.init.termui.ask", side_effect=ask_with_default)
+    confirm = mocker.patch(
+        "pdm.cli.commands.init.termui.confirm", side_effect=lambda *args, **kwargs: kwargs["default"]
+    )
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Git User", "git@example.org"),
+    )
+    command = Command()
+    options = argparse.Namespace(
+        name=None,
+        project_version=None,
+        dist=False,
+        backend=None,
+        license=None,
+    )
+
+    command.get_metadata_from_input(project_no_init, options)
+
+    assert defaults == {
+        "Project name": "existing-project",
+        "Project version": "2.1.0",
+        "Project description": "Existing description",
+        "Please select": 3,
+        "License(SPDX name)": "Apache-2.0",
+        "Author name": "Existing Author",
+        "Author email": "author@example.org",
+        "Python requires('*' to allow any)": ">=3.10",
+    }
+    confirm.assert_called_once_with(
+        "Do you want to build this project for distribution(such as wheel)?\n"
+        "If yes, it will be installed by default when running `pdm install`.",
+        default=True,
+    )
+
+
+def test_init_preserves_existing_pyproject_values(project_no_init, pdm, mocker):
+    project_no_init.pyproject._path.write_text(
+        dedent(
+            """
+            [project]
+            name = "existing-project"
+            version = "2.1.0"
+            description = "Existing description"
+            authors = [{name = "Existing Author", email = "author@example.org"}]
+            license = {text = "Apache-2.0"}
+            requires-python = ">=3.10"
+            dependencies = ["requests"]
+
+            [build-system]
+            requires = ["hatchling"]
+            build-backend = "hatchling.build"
+
+            [tool.pdm]
+            distribution = false
+            """
+        )
+    )
+    project_no_init.pyproject.reload()
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+
+    result = pdm(["init"], input="\n\n\n\n\n\n\n\n\n", obj=project_no_init)
+
+    assert result.exit_code == 0
+    with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        data = tomllib.load(fp)
+    assert data["project"]["name"] == "existing-project"
+    assert data["project"]["version"] == "2.1.0"
+    assert data["project"]["description"] == "Existing description"
+    assert data["project"]["authors"] == [{"name": "Existing Author", "email": "author@example.org"}]
+    assert data["project"]["license"] == {"text": "Apache-2.0"}
+    assert data["project"]["requires-python"] == ">=3.10"
+    assert data["project"]["dependencies"] == ["requests"]
+    assert data["build-system"] == {"requires": ["hatchling"], "build-backend": "hatchling.build"}
+    assert data["tool"]["pdm"]["distribution"] is False
 
 
 def test_new_command(project_no_init, pdm, mocker):
