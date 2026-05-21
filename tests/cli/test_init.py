@@ -160,6 +160,60 @@ def test_init_preserves_existing_pyproject_values(project_no_init, pdm, mocker):
     assert data["tool"]["pdm"]["distribution"] is False
 
 
+def test_init_updates_existing_pyproject_with_explicit_values(project_no_init, pdm, mocker):
+    project_no_init.pyproject._path.write_text(
+        dedent(
+            """
+            [project]
+            name = "existing-project"
+            version = "2.1.0"
+            license = {text = "Apache-2.0"}
+            requires-python = ">=3.10"
+            dependencies = ["requests"]
+
+            [build-system]
+            requires = ["hatchling"]
+            build-backend = "hatchling.build"
+
+            [tool.pdm]
+            distribution = false
+            """
+        )
+    )
+    project_no_init.pyproject.reload()
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+
+    result = pdm(
+        [
+            "init",
+            "--name",
+            "updated-project",
+            "--project-version",
+            "3.0.0",
+            "--license",
+            "MIT",
+            "--backend",
+            "setuptools",
+        ],
+        input="\n\nUpdated description\n\n\n\n\n\n",
+        obj=project_no_init,
+    )
+
+    assert result.exit_code == 0
+    with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        data = tomllib.load(fp)
+    assert data["project"]["name"] == "updated-project"
+    assert data["project"]["version"] == "3.0.0"
+    assert data["project"]["description"] == "Updated description"
+    assert data["project"]["license"] == {"text": "MIT"}
+    assert data["project"]["dependencies"] == ["requests"]
+    assert data["build-system"] == {"requires": ["setuptools>=61"], "build-backend": "setuptools.build_meta"}
+    assert data["tool"]["pdm"]["distribution"] is True
+
+
 def test_init_asks_whether_to_initialize_git(project_no_init, pdm, mocker):
     initialize_git = mocker.patch("pdm.cli.commands.init.Command.initialize_git")
 

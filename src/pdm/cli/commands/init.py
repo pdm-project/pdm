@@ -141,7 +141,7 @@ class Command(BaseCommand):
             err=True,
             style="warning",
         )
-        return self.ask_project(project)
+        return self.ask_project(project, default)
 
     def get_metadata_from_input(self, project: Project, options: argparse.Namespace) -> dict[str, Any]:
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
