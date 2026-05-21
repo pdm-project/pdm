@@ -133,7 +133,9 @@ class Project:
     def lockfile(self) -> Lockfile:
         if self._lockfile is None:
             enable_pylock = self.config["lock.format"] == "pylock"
-            if (path := self.root / "pylock.toml").exists() and enable_pylock:
+            if env_lockfile := os.getenv("PDM_LOCKFILE"):
+                self.set_lockfile(env_lockfile)
+            elif (path := self.root / "pylock.toml").exists() and enable_pylock:
                 self.set_lockfile(path)
             elif (path := self.root / "pdm.lock").exists():
                 if enable_pylock:  # pragma: no cover

@@ -170,7 +170,6 @@ dry_run_option = Option(
 @Option(
     "-L",
     "--lockfile",
-    default=os.getenv("PDM_LOCKFILE"),
     help="Specify another lockfile path. Default: pdm.lock. [env var: PDM_LOCKFILE]",
 )
 def lockfile_option(
