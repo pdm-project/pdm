@@ -26,19 +26,13 @@ import json
 import os
 import shutil
 import sys
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, MutableMapping
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Generator,
-    Iterable,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    Union,
     cast,
 )
 
@@ -286,7 +280,7 @@ IndexMap = dict[str, Path]
 """Path some root-relative http paths to some local paths"""
 IndexOverrides = dict[str, bytes]
 """PyPI indexes overrides fixture format"""
-IndexesDefinition = dict[str, Union[tuple[IndexMap, IndexOverrides, bool], IndexMap]]
+IndexesDefinition = dict[str, tuple[IndexMap, IndexOverrides, bool] | IndexMap]
 """Mock PyPI indexes format"""
 
 

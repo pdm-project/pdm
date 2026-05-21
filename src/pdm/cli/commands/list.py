@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import importlib.metadata as im
 import io
 import json
 from collections import defaultdict
+from collections.abc import Iterable, Mapping, Sequence
 from fnmatch import fnmatch
-from typing import Iterable, Mapping, Sequence
 
 from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
@@ -20,7 +21,6 @@ from pdm.cli.utils import (
     normalize_pattern,
     show_dependency_graph,
 )
-from pdm.compat import importlib_metadata as im
 from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import Requirement
 from pdm.project import Project

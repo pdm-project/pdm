@@ -4,9 +4,10 @@ import abc
 import glob
 import os
 import shutil
+from collections.abc import Iterable
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Iterable, NewType, TypeVar, cast
+from typing import TYPE_CHECKING, NewType, TypeVar, cast
 
 from pdm import termui
 from pdm.exceptions import UninstallError
@@ -14,7 +15,8 @@ from pdm.models.cached_package import CachedPackage
 from pdm.utils import is_egg_link, is_path_relative_to
 
 if TYPE_CHECKING:
-    from pdm.compat import Distribution
+    from importlib.metadata import Distribution
+
     from pdm.environments import BaseEnvironment
 
 _T = TypeVar("_T", bound="BaseRemovePaths")

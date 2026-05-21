@@ -19,7 +19,8 @@ from rich.theme import Theme
 from pdm.exceptions import PDMWarning
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator, Sequence
+    from collections.abc import Iterator, Sequence
+    from typing import Any
 
     from pdm._types import RichProtocol, Spinner, SpinnerT
 

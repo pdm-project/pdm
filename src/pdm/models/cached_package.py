@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import os
 import shutil
+from contextlib import AbstractContextManager
 from functools import cached_property
 from pathlib import Path
-from typing import Any, ClassVar, ContextManager
+from typing import Any, ClassVar
 
 from pdm.termui import logger
 
@@ -30,7 +31,7 @@ class CachedPackage:
         self.original_wheel = original_wheel
         self._referrers: set[str] | None = None
 
-    def lock(self) -> ContextManager[Any]:
+    def lock(self) -> AbstractContextManager[Any]:
         import filelock
 
         return filelock.FileLock(self.path / ".lock")

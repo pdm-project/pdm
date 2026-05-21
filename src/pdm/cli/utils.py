@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import argparse
 import dataclasses as dc
+import importlib.resources
 import json
 import os
 import re
 import sys
 from collections import OrderedDict
+from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from fnmatch import fnmatch
 from gettext import gettext as _
 from json import dumps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, MutableMapping, cast, no_type_check
+from typing import TYPE_CHECKING, Any, cast, no_type_check
 
 from packaging.specifiers import SpecifierSet
 from resolvelib.structs import DirectedGraph
@@ -23,13 +25,13 @@ from pdm.models.specifiers import PySpecSet, get_specifier
 from pdm.utils import comparable_version, is_path_relative_to, normalize_name, url_to_path
 
 if TYPE_CHECKING:
+    import importlib.metadata as im
     from argparse import Action, _ArgumentGroup
+    from importlib.metadata import Distribution
 
     from packaging.version import Version
     from resolvelib.resolvers import RequirementInformation, ResolutionImpossible
 
-    from pdm.compat import Distribution
-    from pdm.compat import importlib_metadata as im
     from pdm.models.candidates import Candidate
     from pdm.models.markers import EnvSpec
     from pdm.models.requirements import Requirement
@@ -707,8 +709,6 @@ def get_dist_location(dist: Distribution) -> str:
 
 
 def get_pep582_path(project: Project) -> str:
-    from pdm.compat import resources_open_binary
-
     script_dir = Path(__file__).parent.parent / "pep582"
     if script_dir.exists():
         return str(script_dir)
@@ -717,7 +717,7 @@ def get_pep582_path(project: Project) -> str:
     if script_dir.joinpath("sitecustomize.py").exists():
         return str(script_dir)
     script_dir.mkdir(parents=True, exist_ok=True)
-    with resources_open_binary("pdm.pep582", "sitecustomize.py") as f:
+    with importlib.resources.open_binary("pdm.pep582", "sitecustomize.py") as f:
         script_dir.joinpath("sitecustomize.py").write_bytes(f.read())
     return str(script_dir)
 

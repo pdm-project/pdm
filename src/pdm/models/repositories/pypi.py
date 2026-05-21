@@ -9,7 +9,7 @@ from pdm.models.requirements import Requirement, filter_requirements_with_extras
 from pdm.models.search import SearchResultParser
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable
+    from collections.abc import Callable, Iterable
 
     from pdm._types import SearchResults
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, Iterable, cast
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse, urlunparse
 
 import httpx
@@ -20,7 +21,8 @@ from pdm.project import Project
 from pdm.project.config import DEFAULT_REPOSITORIES
 
 if TYPE_CHECKING:
-    from typing import Callable, Self
+    from collections.abc import Callable
+    from typing import Self
 
     from httpx._multipart import MultipartStream
 

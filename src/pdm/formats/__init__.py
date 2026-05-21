@@ -7,14 +7,15 @@ from pdm.formats.base import MetaConvertError as MetaConvertError
 
 if TYPE_CHECKING:
     from argparse import Namespace
+    from collections.abc import Iterable, Mapping
     from pathlib import Path
-    from typing import Iterable, Mapping, Protocol, Union
+    from typing import Protocol
 
     from pdm.models.candidates import Candidate
     from pdm.models.requirements import Requirement
     from pdm.project import Project
 
-    ExportItems = Union[Iterable[Candidate], Iterable[Requirement]]
+    ExportItems = Iterable[Candidate] | Iterable[Requirement]
 
     class _Format(Protocol):
         def check_fingerprint(self, project: Project | None, filename: str | Path) -> bool: ...

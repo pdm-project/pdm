@@ -5,9 +5,10 @@ import hashlib
 import json
 import os
 import stat
-from functools import lru_cache
+from collections.abc import Iterable
+from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Generic, Iterable, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
@@ -265,7 +266,7 @@ class WheelCache:
         return max_compatible_candidate[1]
 
 
-@lru_cache(maxsize=None)
+@cache
 def get_wheel_cache(directory: Path | str) -> WheelCache:
     return WheelCache(directory)
 

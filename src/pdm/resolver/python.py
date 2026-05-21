@@ -4,7 +4,8 @@ Special requirement and candidate classes to describe a requires-python constrai
 
 from __future__ import annotations
 
-from typing import Iterable, Iterator, Mapping, cast
+from collections.abc import Iterable, Iterator, Mapping
+from typing import cast
 
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import NamedRequirement, Requirement

@@ -6,13 +6,13 @@ from __future__ import annotations
 
 import contextlib
 import functools
+import importlib.resources
 import json
 import os
 import subprocess
 import tempfile
-from typing import TYPE_CHECKING, Any, Generator
-
-from pdm.compat import resources_path
+from collections.abc import Generator
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pdm.models.markers import EnvSpec
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 @contextlib.contextmanager
 def _in_process_script(name: str) -> Generator[str, None, None]:
-    with resources_path(__name__, name) as script:
+    with importlib.resources.path(__name__, name) as script:
         yield str(script)
 
 
@@ -49,11 +49,12 @@ def parse_setup_py(executable: str, path: str) -> dict[str, Any]:
 @functools.lru_cache
 def get_env_spec(executable: str) -> EnvSpec:
     """Get the environment spec of the python interpreter"""
-    from pdm.core import importlib_metadata
+    import importlib.metadata
+
     from pdm.models.markers import EnvSpec
 
     required_libs = ["dep_logic", "packaging"]
-    shared_libs = {str(importlib_metadata.distribution(lib).locate_file("")) for lib in required_libs}
+    shared_libs = {str(importlib.metadata.distribution(lib).locate_file("")) for lib in required_libs}
 
     with _in_process_script("env_spec.py") as script:
         return EnvSpec.from_spec(**json.loads(subprocess.check_output([executable, "-EsS", script, *shared_libs])))

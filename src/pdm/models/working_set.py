@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import importlib.metadata as im
 import itertools
 import sys
 from collections import ChainMap
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import Iterable, Iterator, Mapping
 
-from pdm.compat import importlib_metadata as im
 from pdm.utils import normalize_name
 
 default_context = im.DistributionFinder.Context()

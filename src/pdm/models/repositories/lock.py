@@ -3,9 +3,10 @@ from __future__ import annotations
 import dataclasses
 import itertools
 import posixpath
+from collections.abc import Collection
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Collection, cast
+from typing import TYPE_CHECKING, cast
 
 from dep_logic.markers import AnyMarker, BaseMarker
 
@@ -18,7 +19,8 @@ from pdm.models.requirements import FileRequirement, Requirement, parse_line
 from pdm.utils import cd, url_to_path, url_without_fragments
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Iterable, Mapping
+    from collections.abc import Callable, Iterable, Mapping
+    from typing import Any
 
     from pdm._types import FileHash, RepositoryConfig
     from pdm.environments import BaseEnvironment

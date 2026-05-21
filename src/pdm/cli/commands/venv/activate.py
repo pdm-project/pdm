@@ -52,14 +52,15 @@ class ActivateCommand(BaseCommand):
             shell, _ = shellingham.detect_shell()
         except shellingham.ShellDetectionFailure:
             shell = ""
-        if shell == "fish":
-            command, filename = "source", "activate.fish"
-        elif shell in ["csh", "tcsh"]:
-            command, filename = "source", "activate.csh"
-        elif shell in ["powershell", "pwsh"]:
-            command, filename = ".", "Activate.ps1"
-        else:
-            command, filename = "source", "activate"
+        match shell:
+            case "fish":
+                command, filename = "source", "activate.fish"
+            case "csh" | "tcsh":
+                command, filename = "source", "activate.csh"
+            case "powershell" | "pwsh":
+                command, filename = ".", "Activate.ps1"
+            case _:
+                command, filename = "source", "activate"
         activate_script = venv.interpreter.with_name(filename)
         if activate_script.exists():
             if platform.system() == "Windows":

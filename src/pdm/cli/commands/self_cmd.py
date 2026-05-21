@@ -4,6 +4,7 @@ import argparse
 import shlex
 import subprocess
 import sys
+from importlib.metadata import Distribution
 from typing import Any
 
 from pdm import termui
@@ -11,7 +12,6 @@ from pdm.cli.actions import get_latest_pdm_version_from_pypi
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
 from pdm.cli.utils import PackageNode, build_dependency_graph
-from pdm.compat import Distribution
 from pdm.environments import BareEnvironment
 from pdm.models.markers import EnvSpec
 from pdm.models.working_set import WorkingSet

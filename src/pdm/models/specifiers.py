@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import dataclasses
+import importlib.resources
 import itertools
 import json
 import re
 import warnings
+from collections.abc import Iterable
 from functools import lru_cache
 from operator import attrgetter
-from typing import Any, Iterable, Match, cast
+from re import Match
+from typing import Any, cast
 
 from dep_logic.specifiers import (
     BaseSpecifier,
@@ -25,9 +28,7 @@ from pdm.utils import parse_version
 
 
 def _read_max_versions() -> dict[Version, int]:
-    from pdm.compat import resources_open_binary
-
-    with resources_open_binary("pdm.models", "python_max_versions.json") as fp:
+    with importlib.resources.open_binary("pdm.models", "python_max_versions.json") as fp:
         return {Version(k): v for k, v in json.load(fp).items()}
 
 
@@ -126,7 +127,7 @@ class PySpecSet(SpecifierSet):
             include_max=spec.ranges[-1].include_max,
         )
         parts = [] if whole_range.is_any() else [str(whole_range)]
-        for left, right in zip(ranges, next_ranges):
+        for left, right in zip(ranges, next_ranges, strict=False):
             assert left.max is not None and right.min is not None
             start = Version(left.max.release).complete()
             end = Version(right.min.release).complete()

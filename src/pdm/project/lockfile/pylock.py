@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from functools import cached_property
-from typing import Iterable
 
 from pdm.exceptions import PdmUsageError
 from pdm.models.repositories.lock import LockedRepository

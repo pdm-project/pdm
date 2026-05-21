@@ -19,7 +19,7 @@ from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
-    from typing import Collection
+    from collections.abc import Collection
 
     from pdm.project import Project
 

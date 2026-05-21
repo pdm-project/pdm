@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, overload
 from pdm.exceptions import InvalidPyVersion
 
 if TYPE_CHECKING:
-    from typing import Any, Literal, Union
+    from typing import Any, Literal
 
-    VersionBit = Union[int, Literal["*"]]
+    VersionBit = int | Literal["*"]
 
 PRE_RELEASE_SEGMENT_RE = re.compile(
     r"(?P<digit>\d+)(?P<type>a|b|rc)(?P<n>\d*)",

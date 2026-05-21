@@ -3,8 +3,9 @@ from __future__ import annotations
 import dataclasses
 import os
 from collections import defaultdict
+from collections.abc import Callable
 from functools import cached_property
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from packaging.specifiers import InvalidSpecifier
 from packaging.version import InvalidVersion
@@ -27,7 +28,8 @@ from pdm.utils import (
 )
 
 if TYPE_CHECKING:
-    from typing import Iterable, Iterator, Mapping, Sequence, TypeVar
+    from collections.abc import Iterable, Iterator, Mapping, Sequence
+    from typing import TypeVar
 
     from resolvelib.resolvers import RequirementInformation
 

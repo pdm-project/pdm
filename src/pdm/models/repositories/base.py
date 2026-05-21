@@ -4,8 +4,9 @@ import fnmatch
 import re
 import sys
 import warnings
+from collections.abc import Generator
 from functools import wraps
-from typing import TYPE_CHECKING, Generator, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, NamedTuple, TypeVar, cast
 
 from pdm import termui
 from pdm._types import NotSet, NotSetType
@@ -17,7 +18,7 @@ from pdm.models.specifiers import PySpecSet
 from pdm.utils import deprecation_warning, filtered_sources, normalize_name
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable
+    from collections.abc import Callable, Iterable
 
     from unearth import Link
 

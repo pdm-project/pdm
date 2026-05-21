@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import itertools
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from email.message import Message
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
-    from pdm.compat import Distribution
+    from importlib.metadata import Distribution
 
 
 @dataclass

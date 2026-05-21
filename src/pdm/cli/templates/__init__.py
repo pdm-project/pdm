@@ -14,10 +14,10 @@ from pdm.exceptions import PdmException
 from pdm.utils import normalize_name
 
 if TYPE_CHECKING:
-    from importlib.resources.abc import Traversable
-    from typing import Callable, TypeVar
+    from collections.abc import Callable
+    from typing import TypeVar
 
-    ST = TypeVar("ST", Traversable, Path)
+    ST = TypeVar("ST", bound=Path)
 
 TEMPLATE_PACKAGE = "pdm.cli.templates"
 BUILTIN_TEMPLATES = ["default", "minimal"]
@@ -114,9 +114,8 @@ class ProjectTemplate:
             copyfunc(src, dst)
 
     @staticmethod
-    def _copy_package_file(src: Traversable, dst: Path) -> Path:
-        with importlib.resources.as_file(src) as f:
-            return shutil.copyfile(f, dst)
+    def _copy_package_file(src: Path, dst: Path) -> Path:
+        return shutil.copyfile(src, dst)
 
     def _generate_pyproject(self, path: Path, metadata: dict[str, Any]) -> None:
         import tomlkit
@@ -152,9 +151,15 @@ class ProjectTemplate:
             fp.write(tomlkit.dumps(content))
 
     def _prepare_package_template(self, import_name: str) -> None:
-        files = importlib.resources.files(import_name)
+        package, _, template = import_name.rpartition(".")
 
-        self.mirror(files, self._path, skip=[files / "__init__.py"], copyfunc=self._copy_package_file)
+        with importlib.resources.path(package, template) as template_path:
+            self.mirror(
+                template_path,
+                self._path,
+                skip=[template_path / "__init__.py"],
+                copyfunc=self._copy_package_file,
+            )
 
     def _prepare_git_template(self, url: str) -> None:
         left, amp, right = url.rpartition("@")

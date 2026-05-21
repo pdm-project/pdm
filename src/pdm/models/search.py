@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import functools
+from collections.abc import Callable
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from typing import Callable
 
 from pdm._types import SearchResult
 

@@ -8,10 +8,11 @@ import subprocess
 import sys
 import tempfile
 import weakref
+from collections.abc import Generator
 from contextlib import contextmanager
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 
 from pdm._types import NotSet, NotSetType
 from pdm.exceptions import BuildError, PdmUsageError

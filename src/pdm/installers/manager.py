@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from importlib.metadata import Distribution
 from typing import TYPE_CHECKING
 
 from pdm import termui
-from pdm.compat import Distribution
 from pdm.exceptions import UninstallError
 from pdm.installers.installers import install_wheel
 from pdm.installers.uninstallers import BaseRemovePaths, StashedRemovePaths
