@@ -10,7 +10,7 @@ from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.cli.templates import ProjectTemplate
 from pdm.exceptions import PdmUsageError, ProjectError
-from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend
+from pdm.models.backends import _BACKENDS, DEFAULT_BACKEND, BuildBackend, get_backend, get_backend_by_spec
 from pdm.models.specifiers import get_specifier
 from pdm.utils import (
     get_user_email_from_git,
@@ -74,6 +74,8 @@ class Command(BaseCommand):
                 self.set_python(project, options.python, hooks)
                 self._init_builtin(project, options)
 
+        if options.init_git and self.interactive:
+            options.init_git = termui.confirm("Do you want to initialize a git repository?", default=True)
         if options.init_git:
             self.initialize_git(project)
 
@@ -129,8 +131,8 @@ class Command(BaseCommand):
             return default
         return termui.ask(question, default=default)
 
-    def ask_project(self, project: Project) -> str:
-        default = sanitize_project_name(project.root.name)
+    def ask_project(self, project: Project, default: str | None = None) -> str:
+        default = default or sanitize_project_name(project.root.name)
         name = self.ask("Project name", default)
         if default == name or validate_project_name(name):
             return name
@@ -139,33 +141,43 @@ class Command(BaseCommand):
             err=True,
             style="warning",
         )
-        return self.ask_project(project)
+        return self.ask_project(project, default)
 
     def get_metadata_from_input(self, project: Project, options: argparse.Namespace) -> dict[str, Any]:
         from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
+
+        existing_data = project.pyproject.open_for_read()
+        existing_project = existing_data.get("project", {})
+        existing_settings = existing_data.get("tool", {}).get("pdm", {})
 
         if options.name:
             if not validate_project_name(options.name):
                 raise ProjectError("Project name is not valid, it should follow PEP 426")
             name = options.name
         else:
-            name = self.ask_project(project)
-        version = self.ask("Project version", options.project_version or "0.1.0")
-        is_dist = options.dist or bool(options.backend)
-        if not is_dist and self.interactive:
+            name = self.ask_project(project, existing_project.get("name"))
+        version = self.ask("Project version", options.project_version or existing_project.get("version", "0.1.0"))
+        is_dist = options.dist or bool(options.backend) or bool(existing_settings.get("distribution", False))
+        if not (options.dist or options.backend) and self.interactive:
             is_dist = termui.confirm(
                 "Do you want to build this project for distribution(such as wheel)?\n"
-                "If yes, it will be installed by default when running `pdm install`."
+                "If yes, it will be installed by default when running `pdm install`.",
+                default=is_dist,
             )
         options.dist = is_dist
         build_backend: type[BuildBackend] | None = None
+        existing_build_system = existing_data.get("build-system", {})
         python = project.python
         if is_dist:
-            description = self.ask("Project description", "")
+            description = self.ask("Project description", existing_project.get("description", ""))
             if options.backend:
                 build_backend = get_backend(options.backend)
             elif self.interactive:
                 all_backends = list(_BACKENDS)
+                default_backend = get_backend_by_spec(existing_build_system)
+                default_backend_index = next(
+                    (i for i, backend in enumerate(all_backends) if get_backend(backend) is default_backend), 0
+                )
                 project.core.ui.echo("Which build backend to use?")
                 for i, backend in enumerate(all_backends):
                     project.core.ui.echo(f"{i}. [success]{backend}[/]")
@@ -174,21 +186,31 @@ class Command(BaseCommand):
                     prompt_type=int,
                     choices=[str(i) for i in range(len(all_backends))],
                     show_choices=False,
-                    default=0,
+                    default=default_backend_index,
                 )
                 build_backend = get_backend(all_backends[int(selected_backend)])
             else:
-                build_backend = DEFAULT_BACKEND
+                build_backend = get_backend_by_spec(existing_build_system) if existing_build_system else DEFAULT_BACKEND
             default_python_requires = f">={python.major}.{python.minor}"
         else:
             description = ""
             default_python_requires = f"=={python.major}.{python.minor}.*"
-        license = self.ask("License(SPDX name)", options.license or "MIT")
+
+        existing_license = existing_project.get("license", {})
+        if isinstance(existing_license, dict):
+            default_license = existing_license.get("text") or existing_license.get("file") or "MIT"
+        else:
+            default_license = existing_license or "MIT"
+        license = self.ask("License(SPDX name)", options.license or default_license)
 
         git_user, git_email = get_user_email_from_git()
-        author = self.ask("Author name", git_user)
-        email = self.ask("Author email", git_email)
-        python_requires = self.ask("Python requires('*' to allow any)", default_python_requires)
+        existing_authors = existing_project.get("authors", [])
+        existing_author = existing_authors[0] if existing_authors else {}
+        author = self.ask("Author name", existing_author.get("name", git_user))
+        email = self.ask("Author email", existing_author.get("email", git_email))
+        python_requires = self.ask(
+            "Python requires('*' to allow any)", existing_project.get("requires-python", default_python_requires)
+        )
 
         data = {
             "project": {

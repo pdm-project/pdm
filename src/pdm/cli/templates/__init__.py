@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections.abc import Mapping, MutableMapping
 from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -22,6 +23,26 @@ if TYPE_CHECKING:
 
 TEMPLATE_PACKAGE = "pdm.cli.templates"
 BUILTIN_TEMPLATES = ["default", "minimal"]
+
+
+def merge_dictionary_defaults(target: MutableMapping[Any, Any], input: Mapping[Any, Any]) -> None:
+    """Merge input into target without replacing existing values."""
+    for key, value in input.items():
+        if key not in target:
+            target[key] = deepcopy(value)
+        elif isinstance(target[key], MutableMapping) and isinstance(value, Mapping):
+            merge_dictionary_defaults(target[key], value)
+
+
+def merge_project_metadata(target: MutableMapping[Any, Any], input: Mapping[Any, Any]) -> None:
+    """Merge init metadata while preserving existing dependency lists."""
+    for key, value in input.items():
+        if isinstance(target.get(key), MutableMapping) and isinstance(value, Mapping):
+            merge_project_metadata(target[key], value)
+        elif key == "dependencies" and not value and key in target:
+            continue
+        else:
+            target[key] = deepcopy(value)
 
 
 class ProjectTemplate:
@@ -135,19 +156,20 @@ class ProjectTemplate:
         except FileNotFoundError:
             template_content = tomlkit.document()
 
+        has_existing_build_system = "build-system" in content
         # repeated calls to merge_dictionary could extend elements in the template build system, get a deep copy now
         template_build_system = deepcopy(template_content.get("build-system", {}))
-        merge_dictionary(content, template_content)
+        merge_dictionary_defaults(content, template_content)
         if "version" in content.get("project", {}).get("dynamic", []):
             metadata["project"].pop("version", None)
-        merge_dictionary(content, metadata)
+        merge_project_metadata(content, metadata)
         if "build-system" in metadata:
             build_system = metadata["build-system"]
             if template_build_system.get("build-backend") == build_system["build-backend"]:
                 # only merge the build system when the selected build backend matches that of the template
                 merge_dictionary(build_system, template_build_system)
             content["build-system"] = build_system
-        else:
+        elif not has_existing_build_system:
             content.pop("build-system", None)
         with open(path, "w", encoding="utf-8") as fp:
             fp.write(tomlkit.dumps(content))
