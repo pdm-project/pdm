@@ -72,7 +72,7 @@ jobs:
           prerelease: ${{ steps.check_version.outputs.PRERELEASE }}
 
       - name: Trigger Bucket Update
-        uses: benc-uk/workflow-dispatch@v1.3.1
+        uses: benc-uk/workflow-dispatch@v1.3.2
         with:
           workflow: Excavator
           repo: frostming/scoop-frostming
