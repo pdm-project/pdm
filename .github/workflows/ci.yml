@@ -103,7 +103,7 @@ jobs:
         run: pdm run pytest -n auto --cov=pdm --cov-config=pyproject.toml --cov-report=xml tests
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v6.0.0
+        uses: codecov/codecov-action@v6.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
