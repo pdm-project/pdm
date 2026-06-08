@@ -57,7 +57,7 @@ Install the prebuilt binary directly with the installer scripts.
     To install a specific version:
 
     ```powershell
-    powershell -ExecutionPolicy ByPass -c "irm https://pdm-project.org/install.ps1 | iex -Args '-v <version>'"
+    powershell -ExecutionPolicy ByPass -c "$env:PDM_VERSION='<version>'; irm https://pdm-project.org/install.ps1 | iex"
     ```
 
 ### Install via Python script
