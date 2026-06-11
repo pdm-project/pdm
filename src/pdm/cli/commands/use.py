@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from typing import TYPE_CHECKING
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
@@ -8,10 +9,10 @@ from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
 from pdm.exceptions import NoPythonVersion
 from pdm.models.caches import JSONFileCache
-from pdm.models.python import PythonInfo
-from pdm.models.venv import get_venv_python
 from pdm.project import Project
-from pdm.utils import is_conda_base_python, open_for_write_no_symlink
+
+if TYPE_CHECKING:
+    from pdm.models.python import PythonInfo
 
 
 class Command(BaseCommand):
@@ -66,6 +67,7 @@ class Command(BaseCommand):
     ) -> PythonInfo:
         from pdm.cli.commands.python import InstallCommand
         from pdm.cli.commands.venv.utils import get_venv_with_name
+        from pdm.models.python import PythonInfo
 
         def version_matcher(py_version: PythonInfo) -> bool:
             return py_version.valid and (
@@ -151,6 +153,9 @@ class Command(BaseCommand):
         The python can be a version string or interpreter path.
         """
         from pdm.environments import PythonLocalEnvironment
+        from pdm.models.python import PythonInfo
+        from pdm.models.venv import get_venv_python
+        from pdm.utils import is_conda_base_python, open_for_write_no_symlink
 
         selected_python = self.select_python(
             project,

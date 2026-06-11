@@ -5,23 +5,22 @@ import shlex
 import subprocess
 import sys
 from importlib.metadata import Distribution
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pdm import termui
-from pdm.cli.actions import get_latest_pdm_version_from_pypi
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.cli.utils import PackageNode, build_dependency_graph
-from pdm.environments import BareEnvironment
-from pdm.models.markers import EnvSpec
-from pdm.models.working_set import WorkingSet
-from pdm.project import Project
-from pdm.utils import is_in_zipapp, normalize_name, parse_version
+from pdm.utils import is_in_zipapp
+
+if TYPE_CHECKING:
+    from pdm.project import Project
 
 PDM_REPO = "https://github.com/pdm-project/pdm"
 
 
 def list_distributions(plugin_only: bool = False) -> list[Distribution]:
+    from pdm.models.working_set import WorkingSet
+
     result: list[Distribution] = []
     working_set = WorkingSet()
     for dist in working_set.values():
@@ -37,6 +36,8 @@ def run_pip(project: Project, args: list[str]) -> subprocess.CompletedProcess[st
             args[(i := args.index("--upgrade-strategy")) : i + 2] = []
         run_args = [*project.core.uv_cmd, "pip", *args, "--python", sys.executable]
     else:
+        from pdm.environments import BareEnvironment
+
         env = BareEnvironment(project)
         project.environment = env
         run_args = [*env.pip_command, *args]
@@ -161,6 +162,11 @@ class RemoveCommand(BaseCommand):
 
     def _resolve_dependencies_to_remove(self, packages: list[str]) -> list[str]:
         """Perform a BFS to find all unneeded dependencies"""
+        from pdm.cli.utils import PackageNode, build_dependency_graph
+        from pdm.models.markers import EnvSpec
+        from pdm.models.working_set import WorkingSet
+        from pdm.utils import normalize_name
+
         result: set[str] = set()
         to_resolve = list(packages)
 
@@ -237,6 +243,8 @@ class UpdateCommand(BaseCommand):
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         from pdm.__version__ import __version__, read_version
+        from pdm.cli.actions import get_latest_pdm_version_from_pypi
+        from pdm.utils import parse_version
 
         locked = "[locked]" if options.frozen_deps else ""
 

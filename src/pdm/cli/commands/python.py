@@ -10,16 +10,14 @@ from typing import TYPE_CHECKING, cast
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
-from pdm.environments import BareEnvironment
 from pdm.exceptions import InstallationError, PdmArgumentError
-from pdm.models.python import PythonInfo
 from pdm.termui import Verbosity
-from pdm.utils import get_all_installable_python_versions
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace, _SubParsersAction
     from typing import Any
 
+    from pdm.models.python import PythonInfo
     from pdm.project.core import Project
 
 
@@ -116,6 +114,8 @@ class InstallCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pdm.utils import get_all_installable_python_versions
+
         if options.list:
             for version in get_all_installable_python_versions(build_dir=False):
                 project.core.ui.echo(str(version))
@@ -136,7 +136,9 @@ class InstallCommand(BaseCommand):
         from pbs_installer import download, get_download_link, install_file
         from pbs_installer._install import THIS_ARCH
 
+        from pdm.environments import BareEnvironment
         from pdm.misc import sysconfig_patcher
+        from pdm.models.python import PythonInfo
         from pdm.termui import logger
 
         ui = project.core.ui
@@ -204,6 +206,8 @@ class LinkCommand(BaseCommand):
         parser.add_argument("--name", help="The name of the link")
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pdm.models.python import PythonInfo
+
         python_info = PythonInfo.from_path(options.interpreter)
         if not python_info.valid:
             raise PdmArgumentError("Invalid Python interpreter")
