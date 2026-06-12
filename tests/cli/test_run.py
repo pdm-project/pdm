@@ -546,26 +546,23 @@ def test_run_with_another_project_root(project, pdm, capfd, explicit_python):
             assert out.strip() == "1"
 
 
-def test_import_another_sitecustomize(project, pdm, capfd):
-    project.pyproject.metadata["requires-python"] = ">=2.7"
-    project.pyproject.write()
-    # a script for checking another sitecustomize is imported
-    project.root.joinpath("foo.py").write_text("import os;print(os.getenv('FOO'))")
-    # ensure there have at least one sitecustomize can be imported
-    # there may have more than one sitecustomize.py in sys.path
-    project.root.joinpath("sitecustomize.py").write_text("import os;os.environ['FOO'] = 'foo'")
-    env = os.environ.copy()
-    paths = env.get("PYTHONPATH")
-    this_path = str(project.root)
-    new_paths = [this_path] if not paths else [this_path, paths]
-    env["PYTHONPATH"] = os.pathsep.join(new_paths)
-    project._environment = None
+def test_run_does_not_inherit_parent_pythonpath(project, pdm, capfd):
+    inherited_path = project.root / "inherited-pythonpath"
+    inherited_path.mkdir()
+    inherited_path.joinpath("sitecustomize.py").write_text("import os;os.environ['PDM_RUN_PYTHONPATH_MARKER'] = '1'")
+    check_cmd = "import os;print(os.getenv('PDM_RUN_PYTHONPATH_MARKER'));print(os.getenv('PYTHONPATH'))"
     capfd.readouterr()
-    with cd(project.root):
-        result = pdm(["run", "python", "foo.py"], env=env)
+    result = pdm(
+        ["run", "python", "-c", check_cmd],
+        obj=project,
+        env={"PYTHONPATH": str(inherited_path)},
+    )
     assert result.exit_code == 0, result.stderr
     out, _ = capfd.readouterr()
-    assert out.strip() == "foo"
+    marker, pythonpath = out.strip().splitlines()
+    assert marker == "None"
+    assert pythonpath == get_pep582_path(project)
+    assert str(inherited_path) not in pythonpath
 
 
 def test_run_with_patched_sysconfig(project, pdm, capfd):
