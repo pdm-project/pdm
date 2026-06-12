@@ -224,7 +224,7 @@ class Core:
         (pos, command) = self.get_command(args)
         if command and command in config:
             # add args after the command
-            args[pos + 1 : pos + 1] = list(config[command])
+            args[pos + 1 : pos + 1] = list(config[command])  # type: ignore[literal-required]
             return True
         return False
 
