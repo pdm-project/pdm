@@ -26,13 +26,13 @@ def mock_pip(mocker):
 
 @pytest.fixture()
 def mock_all_distributions(mocker):
-    mocker.patch("pdm.cli.commands.self_cmd.WorkingSet", return_value=DISTRIBUTIONS)
+    mocker.patch("pdm.models.working_set.WorkingSet", return_value=DISTRIBUTIONS)
 
 
 @pytest.fixture()
 def mock_latest_pdm_version(mocker):
     return mocker.patch(
-        "pdm.cli.commands.self_cmd.get_latest_pdm_version_from_pypi",
+        "pdm.cli.actions.get_latest_pdm_version_from_pypi",
     )
 
 
