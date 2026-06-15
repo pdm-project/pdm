@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.venv.utils import get_venv_with_name
 from pdm.cli.options import verbose_option
 
 if TYPE_CHECKING:
@@ -30,6 +29,8 @@ class RemoveCommand(BaseCommand):
         parser.add_argument("env", help="The key of the virtualenv")
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pdm.cli.commands.venv.utils import get_venv_with_name
+
         project.core.ui.echo("Virtualenvs created with this project:")
         venv = get_venv_with_name(project, options.env)
         if options.yes or termui.confirm(f"[warning]Will remove: [success]{venv.root}[/], continue?", default=True):

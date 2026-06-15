@@ -4,13 +4,15 @@ import argparse
 from typing import TYPE_CHECKING
 
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.venv.backends import BACKENDS
 from pdm.cli.options import verbose_option
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
     from pdm.project import Project
+
+
+BACKEND_CHOICES = ("virtualenv", "venv", "conda", "uv")
 
 
 class CreateCommand(BaseCommand):
@@ -27,7 +29,7 @@ class CreateCommand(BaseCommand):
             "-w",
             "--with",
             dest="backend",
-            choices=BACKENDS.keys(),
+            choices=BACKEND_CHOICES,
             help="Specify the backend to create the virtualenv",
         )
         parser.add_argument(
@@ -50,6 +52,8 @@ class CreateCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pdm.cli.commands.venv.backends import BACKENDS
+
         in_project = project.config["venv.in_project"] and not options.name
         backend: str = options.backend or project.config["venv.backend"]
         venv_backend = BACKENDS[backend](project, options.python)
