@@ -2,6 +2,8 @@
 
 # PDM
 
+[![Support Frost's Python packaging ecosystem](https://img.shields.io/badge/Sponsor-Python%20packaging%20ecosystem-ea4aaa?logo=githubsponsors&logoColor=white&style=for-the-badge)](https://github.com/sponsors/frostming)
+
 A modern Python package and dependency manager supporting the latest PEP standards.
 [中文版本说明](README_zh.md)
 
