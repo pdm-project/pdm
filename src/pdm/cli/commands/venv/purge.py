@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from pdm import termui
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.venv.utils import iter_central_venvs
 from pdm.cli.options import verbose_option
 
 if TYPE_CHECKING:
@@ -35,6 +34,8 @@ class PurgeCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pdm.cli.commands.venv.utils import iter_central_venvs
+
         all_central_venvs = list(iter_central_venvs(project))
         if not all_central_venvs:
             project.core.ui.echo("No virtualenvs to purge, quitting.", style="success")
@@ -64,6 +65,8 @@ class PurgeCommand(BaseCommand):
             project.core.ui.echo("Purged successfully!")
 
     def del_all_venvs(self, project: Project) -> None:
+        from pdm.cli.commands.venv.utils import iter_central_venvs
+
         saved_python = project._saved_python
         for _, venv in iter_central_venvs(project):
             shutil.rmtree(venv)

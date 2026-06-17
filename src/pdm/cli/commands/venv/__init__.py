@@ -8,7 +8,6 @@ from pdm.cli.commands.venv.create import CreateCommand
 from pdm.cli.commands.venv.list import ListCommand
 from pdm.cli.commands.venv.purge import PurgeCommand
 from pdm.cli.commands.venv.remove import RemoveCommand
-from pdm.cli.commands.venv.utils import get_venv_with_name
 from pdm.cli.options import project_option
 
 if TYPE_CHECKING:
@@ -36,6 +35,8 @@ class Command(BaseCommand):
         self.parser = parser
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pdm.cli.commands.venv.utils import get_venv_with_name
+
         if options.path:
             venv = get_venv_with_name(project, options.path)
             project.core.ui.echo(str(venv.root))

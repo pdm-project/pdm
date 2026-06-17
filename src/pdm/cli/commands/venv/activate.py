@@ -5,16 +5,13 @@ import shlex
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import shellingham
-
 from pdm.cli.commands.base import BaseCommand
-from pdm.cli.commands.venv.utils import get_venv_with_name
 from pdm.cli.options import verbose_option
-from pdm.models.venv import VirtualEnv
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
+    from pdm.models.venv import VirtualEnv
     from pdm.project import Project
 
 
@@ -27,6 +24,9 @@ class ActivateCommand(BaseCommand):
         parser.add_argument("env", nargs="?", help="The key of the virtualenv")
 
     def handle(self, project: Project, options: Namespace) -> None:
+        from pdm.cli.commands.venv.utils import get_venv_with_name
+        from pdm.models.venv import VirtualEnv
+
         if options.env:
             venv = get_venv_with_name(project, options.env)
         else:
@@ -48,6 +48,8 @@ class ActivateCommand(BaseCommand):
         project.core.ui.echo(self.get_activate_command(venv))
 
     def get_activate_command(self, venv: VirtualEnv) -> str:  # pragma: no cover
+        import shellingham
+
         try:
             shell, _ = shellingham.detect_shell()
         except shellingham.ShellDetectionFailure:
