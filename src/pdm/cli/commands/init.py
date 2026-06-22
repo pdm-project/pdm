@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from typing import TYPE_CHECKING, Any, cast
 
 from pdm import termui
@@ -65,16 +66,25 @@ class Command(BaseCommand):
     def do_init(self, project: Project, options: argparse.Namespace) -> None:
         """Bootstrap the project and create a pyproject.toml"""
         hooks = HookManager(project, options.skip)
+        workspace_project = project.parent_workspace_project
+        is_workspace_member = workspace_project is not None
+        gitignore_file = project.root / ".gitignore"
+        has_gitignore = gitignore_file.exists()
         match options.generator:
             case "copier":
                 self._init_copier(project, options)
             case "cookiecutter":
                 self._init_cookiecutter(project, options)
             case _:
-                self.set_python(project, options.python, hooks)
+                if not is_workspace_member:
+                    self.set_python(project, options.python, hooks)
                 self._init_builtin(project, options)
+        if is_workspace_member and not has_gitignore:
+            gitignore_file.unlink(missing_ok=True)
 
-        if options.init_git and self.interactive:
+        if is_workspace_member:
+            options.init_git = False
+        elif options.init_git and self.interactive:
             options.init_git = termui.confirm("Do you want to initialize a git repository?", default=True)
         if options.init_git:
             self.initialize_git(project)
@@ -167,7 +177,9 @@ class Command(BaseCommand):
         options.dist = is_dist
         build_backend: type[BuildBackend] | None = None
         existing_build_system = existing_data.get("build-system", {})
-        python = project.python
+        workspace_project = project.parent_workspace_project
+        python = None if workspace_project is not None else project.python
+        python_major, python_minor = (python.major, python.minor) if python is not None else sys.version_info[:2]
         if is_dist:
             description = self.ask("Project description", existing_project.get("description", ""))
             if options.backend:
@@ -191,10 +203,14 @@ class Command(BaseCommand):
                 build_backend = get_backend(all_backends[int(selected_backend)])
             else:
                 build_backend = get_backend_by_spec(existing_build_system) if existing_build_system else DEFAULT_BACKEND
-            default_python_requires = f">={python.major}.{python.minor}"
+            default_python_requires = f">={python_major}.{python_minor}"
         else:
             description = ""
-            default_python_requires = f"=={python.major}.{python.minor}.*"
+            default_python_requires = f"=={python_major}.{python_minor}.*"
+        if workspace_project is not None:
+            default_python_requires = workspace_project.pyproject.metadata.get(
+                "requires-python", default_python_requires
+            )
 
         existing_license = existing_project.get("license", {})
         if isinstance(existing_license, dict):
@@ -310,6 +326,7 @@ class Command(BaseCommand):
             project.core.ui.echo("Creating a pyproject.toml for PDM...", style="primary")
         self.set_interactive(not options.non_interactive and termui.is_interactive())
         self.do_init(project, options=options)
+        project.maybe_add_to_workspace()
         project.core.ui.echo("Project is initialized successfully", style="primary")
         if self.interactive:
             actions.ask_for_import(project)

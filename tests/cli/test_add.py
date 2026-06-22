@@ -3,10 +3,25 @@ import shutil
 import pytest
 from unearth import Link
 
+from pdm.cli.commands.add import Command
+from pdm.cli.filters import GroupSelection
 from pdm.models.markers import EnvSpec
 from pdm.models.specifiers import PySpecSet
 from pdm.pytest import Distribution
+from pdm.utils import cd
 from tests import FIXTURES
+
+
+def make_workspace_member(project, core):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = []\n',
+        encoding="utf-8",
+    )
+    return core.create_project(member_path, global_config=project.global_config.config_file.as_posix())
 
 
 def test_add_package(project, working_set, dev_option, pdm):
@@ -34,6 +49,47 @@ def test_add_command(project, pdm, mocker):
     do_add = mocker.patch("pdm.cli.commands.add.Command.do_add")
     pdm(["add", "requests"], obj=project)
     do_add.assert_called_once()
+
+
+def test_add_workspace_member_updates_root_lockfile(project, core, repository):
+    member_project = make_workspace_member(project, core)
+
+    Command.do_add(
+        member_project,
+        selection=GroupSelection(member_project),
+        packages=["requests"],
+        sync=False,
+    )
+
+    assert (project.root / "pdm.lock").exists()
+    assert not (member_project.root / "pdm.lock").exists()
+    locked_candidates = member_project.get_locked_repository().candidates
+    assert "foo" in locked_candidates
+    assert "requests" in locked_candidates
+
+
+def test_add_subdirectory_path_updates_workspace(project, repository):
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = []\n',
+        encoding="utf-8",
+    )
+
+    with cd(project.root):
+        Command.do_add(
+            project,
+            selection=GroupSelection(project),
+            packages=["packages/foo"],
+            sync=False,
+        )
+
+    project.pyproject.reload()
+    assert project.pyproject.settings["workspace"]["members"] == ["packages/foo"]
+    assert project.pyproject.metadata["dependencies"] == ["foo @ file:///${PROJECT_ROOT}/packages/foo"]
+    locked_candidates = project.get_locked_repository().candidates
+    assert locked_candidates["foo"].req.editable
+    assert locked_candidates["foo"].req.str_path == "./packages/foo"
 
 
 def test_add_package_to_custom_group(project, working_set, pdm):

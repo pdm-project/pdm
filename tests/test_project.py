@@ -71,6 +71,108 @@ def test_project_config_set_invalid_key(project):
         config["foo"] = "bar"
 
 
+def test_workspace_member_detection(project, core):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+
+    member_project = core.create_project(member_path)
+
+    assert [path.name for path in project.iter_members()] == ["foo"]
+    assert project.has_member(member_path)
+    assert member_project.workspace_project is not None
+    assert member_project.workspace_project.root == project.root
+    assert member_project.lockfile._path == project.root / "pdm.lock"
+    assert member_project.environment.project.root == project.root
+    assert member_project.environment.packages_path == project.environment.packages_path
+
+
+def test_workspace_root_adds_members_as_implicit_editable_dependencies(project):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+
+    dependencies = project.get_dependencies("default")
+
+    member_dependency = dependencies[-1]
+    assert member_dependency.name == "foo"
+    assert member_dependency.editable
+    assert member_dependency.str_path == "./packages/foo"
+
+
+def test_add_member_to_workspace(project):
+    project.pyproject.settings["workspace"] = {"members": []}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+
+    project.add_member(member_path, show_message=False)
+    project.add_member(member_path, show_message=False)
+    project.pyproject.reload()
+
+    assert project.pyproject.settings["workspace"]["members"] == ["packages/foo"]
+
+
+def test_add_member_from_workspace_member_updates_root(project, core):
+    project.pyproject.settings["workspace"] = {"members": ["packages/foo"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+    new_member_path = project.root / "packages" / "bar"
+    new_member_path.mkdir(parents=True)
+    new_member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "bar"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+    member_project = core.create_project(member_path)
+
+    member_project.add_member(new_member_path, show_message=False)
+
+    project.pyproject.reload()
+    assert project.pyproject.settings["workspace"]["members"] == ["packages/foo", "packages/bar"]
+
+
+def test_remove_member_from_workspace_member_updates_root(project, core):
+    project.pyproject.settings["workspace"] = {"members": ["packages/foo", "packages/bar", "packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+    removed_member_path = project.root / "packages" / "bar"
+    removed_member_path.mkdir(parents=True)
+    removed_member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "bar"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+    member_project = core.create_project(member_path)
+
+    assert member_project.remove_member(removed_member_path, show_message=False)
+
+    project.pyproject.reload()
+    assert project.pyproject.settings["workspace"]["members"] == ["packages/foo", "packages/*"]
+
+
 def test_project_sources_overriding_pypi(project):
     project.project_config["pypi.url"] = "https://test.pypi.org/simple"
     assert project.sources[0].url == "https://test.pypi.org/simple"

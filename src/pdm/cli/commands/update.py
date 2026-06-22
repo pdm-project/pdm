@@ -172,6 +172,8 @@ class Command(BaseCommand):
                 for dep in deps:
                     dep.specifier = get_specifier("")
         reqs = [r for g, deps in all_dependencies.items() for r in deps if locked_groups is None or g in locked_groups]
+        if locked_groups is None or "default" in locked_groups:
+            reqs = project.with_workspace_dependencies(reqs)
         # Since dry run is always true in the locking,
         # we need to emit the hook manually with the real dry_run value
         hooks.try_emit("pre_lock", requirements=reqs, dry_run=dry_run)

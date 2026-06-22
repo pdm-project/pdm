@@ -10,6 +10,7 @@ from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM
 from pdm.project.lockfile.base import Compatibility
+from pdm.signals import pre_lock
 from pdm.utils import parse_version
 from tests import FIXTURES
 
@@ -27,6 +28,101 @@ def test_lock_command(project, pdm, mocker):
         append=False,
         env_spec=None,
     )
+
+
+class FakeResolver:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def resolve(self):
+        return [], set()
+
+
+def make_workspace_member(project, core):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests"]\n',
+        encoding="utf-8",
+    )
+    return core.create_project(member_path, global_config=project.global_config.config_file.as_posix())
+
+
+def make_workspace_members(project, core, members):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    for name, dependencies in members.items():
+        member_path = project.root / "packages" / name
+        member_path.mkdir(parents=True)
+        dependency_lines = ", ".join(f'"{dependency}"' for dependency in dependencies)
+        member_path.joinpath("pyproject.toml").write_text(
+            f'[project]\nname = "{name}"\nversion = "0.1.0"\ndependencies = [{dependency_lines}]\n',
+            encoding="utf-8",
+        )
+    return core.create_project(project.root, global_config=project.global_config.config_file.as_posix())
+
+
+def capture_pre_lock_requirements():
+    captured = {}
+
+    def capture_requirements(sender, requirements, **kwargs):
+        captured["requirements"] = requirements
+
+    pre_lock.connect(capture_requirements, weak=False)
+    return captured, capture_requirements
+
+
+def test_do_lock_adds_workspace_members_to_explicit_member_requirements(project, core, mocker):
+    member_project = make_workspace_member(project, core)
+    mocker.patch.object(member_project, "get_resolver", return_value=FakeResolver)
+    captured, receiver = capture_pre_lock_requirements()
+
+    try:
+        actions.do_lock(
+            member_project,
+            requirements=[parse_requirement("requests")],
+            groups=["default"],
+            dry_run=True,
+        )
+    finally:
+        pre_lock.disconnect(receiver)
+
+    requirements = captured["requirements"]
+    assert [req.identify() for req in requirements] == ["requests", "foo"]
+    assert requirements[-1].editable
+    assert requirements[-1].str_path == "./packages/foo"
+    assert member_project.lockfile._path == project.root / "pdm.lock"
+
+
+def test_do_lock_adds_workspace_members_to_member_resolved_requirements(project, core, mocker):
+    member_project = make_workspace_member(project, core)
+    mocker.patch.object(member_project, "get_resolver", return_value=FakeResolver)
+    captured, receiver = capture_pre_lock_requirements()
+
+    try:
+        actions.do_lock(member_project, groups=["default"], dry_run=True)
+    finally:
+        pre_lock.disconnect(receiver)
+
+    requirements = captured["requirements"]
+    assert [req.identify() for req in requirements] == ["requests", "foo"]
+    assert requirements[-1].editable
+    assert requirements[-1].str_path == "./packages/foo"
+    assert member_project.lockfile._path == project.root / "pdm.lock"
+
+
+def test_lock_workspace_members_depend_on_each_other(project, core, repository):
+    workspace_project = make_workspace_members(project, core, {"foo": ["bar"], "bar": []})
+
+    actions.do_lock(workspace_project)
+
+    locked_candidates = workspace_project.get_locked_repository().candidates
+    assert locked_candidates["foo"].req.editable
+    assert locked_candidates["bar"].req.editable
+    assert locked_candidates["foo"].req.str_path == "./packages/foo"
+    assert locked_candidates["bar"].req.str_path == "./packages/bar"
 
 
 @pytest.mark.usefixtures("repository")

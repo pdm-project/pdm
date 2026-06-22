@@ -1,5 +1,20 @@
 import pytest
 
+from pdm.cli.commands.update import Command
+from pdm.cli.filters import GroupSelection
+
+
+def make_workspace_member(project, core):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests"]\n',
+        encoding="utf-8",
+    )
+    return core.create_project(member_path, global_config=project.global_config.config_file.as_posix())
+
 
 @pytest.mark.usefixtures("working_set")
 def test_update_packages_with_top(project, pdm):
@@ -12,6 +27,35 @@ def test_update_command(project, pdm, mocker):
     do_update = mocker.patch("pdm.cli.commands.update.Command.do_update")
     pdm(["update"], obj=project)
     do_update.assert_called_once()
+
+
+def test_update_workspace_member_updates_root_lockfile(project, core, repository):
+    member_project = make_workspace_member(project, core)
+    repository.add_candidate("requests", "2.20.0")
+    repository.add_dependencies(
+        "requests",
+        "2.20.0",
+        [
+            "certifi>=2017.4.17",
+            "chardet<3.1.0,>=3.0.2",
+            "idna<2.8,>=2.5",
+            "urllib3<1.24,>=1.21.1",
+        ],
+    )
+
+    Command.do_update(
+        member_project,
+        selection=GroupSelection(member_project),
+        packages=["requests"],
+        sync=False,
+        strategy="all",
+    )
+
+    assert (project.root / "pdm.lock").exists()
+    assert not (member_project.root / "pdm.lock").exists()
+    locked_candidates = member_project.get_locked_repository().candidates
+    assert "foo" in locked_candidates
+    assert locked_candidates["requests"].version == "2.20.0"
 
 
 @pytest.mark.usefixtures("working_set")

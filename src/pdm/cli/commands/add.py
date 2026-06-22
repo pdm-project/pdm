@@ -108,7 +108,7 @@ class Command(BaseCommand):
         from pdm.cli.utils import check_project_file, save_version_specifiers
         from pdm.models.requirements import parse_requirement
         from pdm.models.specifiers import get_specifier
-        from pdm.utils import normalize_name
+        from pdm.utils import is_path_relative_to, normalize_name
 
         hooks = hooks or HookManager(project)
         check_project_file(project)
@@ -131,6 +131,17 @@ class Command(BaseCommand):
             if project.is_distribution and normalize_name(name := project.name) == r.key and not r.extras:
                 project.core.ui.warn(f"Package [req]{name}[/] is the project itself.")
                 continue
+            if (
+                r.is_file_or_url
+                and r.is_local_dir  # type: ignore[attr-defined]
+                and not (
+                    r.path is not None  # type: ignore[attr-defined]
+                    and not r.path.is_absolute()  # type: ignore[attr-defined]
+                    and r.path.parts[:1] == ("..",)  # type: ignore[attr-defined]
+                )
+                and is_path_relative_to(r.absolute_path, project.root)  # type: ignore[attr-defined]
+            ):
+                project.add_member(r.absolute_path)  # type: ignore[attr-defined]
             if r.is_file_or_url:
                 r.relocate(project.backend)  # type: ignore[attr-defined]
             key = r.identify()

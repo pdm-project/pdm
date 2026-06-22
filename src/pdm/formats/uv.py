@@ -30,6 +30,15 @@ class _UvFileBuilder:
     def default_source(self) -> str:
         return cast(str, self.project.sources[0].url)
 
+    @cached_property
+    def workspace_members(self) -> list[str]:
+        workspace = self.project.pyproject.settings.get("workspace") or {}
+        return [str(member) for member in workspace.get("members", [])]
+
+    @cached_property
+    def workspace_dependency_names(self) -> set[str]:
+        return {req.identify() for req in self.project.iter_workspace_dependencies()}
+
     def __post_init__(self) -> None:
         self._enter_path(self.project.root / "uv.lock")
 
@@ -50,10 +59,16 @@ class _UvFileBuilder:
         data.setdefault("project", {})["requires-python"] = self.requires_python
         data.pop("dependency-groups", None)
         data.setdefault("project", {}).pop("optional-dependencies", None)
+        if self.workspace_members:
+            uv_workspace = data.setdefault("tool", {}).setdefault("uv", {}).setdefault("workspace", {})
+            uv_workspace["members"] = self.workspace_members
         sources = {}
         collected_deps: dict[str, list[str]] = {}
         for dep in self.requirements:
-            if isinstance(dep, FileRequirement):
+            if workspace_name := self._get_workspace_name(dep):
+                entry = dep.as_line() if dep.is_named else workspace_name
+                sources[workspace_name] = {"workspace": True}
+            elif isinstance(dep, FileRequirement):
                 entry = self._get_name(dep)
                 sources[entry] = self._build_source(dep)
             else:
@@ -139,6 +154,12 @@ class _UvFileBuilder:
             return req.key
         can = Candidate(req).prepare(self.project.environment)
         return normalize_name(can.metadata.name)
+
+    def _get_workspace_name(self, req: Requirement) -> str | None:
+        name = strip_extras(req.identify())[0]
+        if name in self.workspace_dependency_names:
+            return name
+        return None
 
     def _build_source(self, req: FileRequirement) -> dict[str, Any]:
         result: dict[str, Any]
