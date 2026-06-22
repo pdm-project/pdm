@@ -5,7 +5,7 @@ of a Python project lifecycle and PDM provides commands to perform the expected 
 
 It also provides hooks attached to these steps allowing for:
 
-- plugins to listen to the [signals][pdm.signals] of the same name.
+- plugins to listen to the `pdm.signals` of the same name.
 - developers to define custom scripts with the same name.
 
 Besides, `pre_invoke` signal is emitted before ANY command is invoked, allowing plugins to modify the project or options beforehand.
@@ -28,7 +28,7 @@ command to initialize an existing project (prompt to fill the `pyproject.toml` f
 
 They trigger the following hooks:
 
-- [`post_init`][pdm.signals.post_init]
+- `post_init`
 
 ```mermaid
 flowchart LR
@@ -59,10 +59,10 @@ All those steps are directly available with the following commands:
 
 They trigger the following hooks:
 
-- [`pre_install`][pdm.signals.pre_install]
-- [`post_install`][pdm.signals.post_install]
-- [`pre_lock`][pdm.signals.pre_lock]
-- [`post_lock`][pdm.signals.post_lock]
+- `pre_install`
+- `post_install`
+- `pre_lock`
+- `post_lock`
 
 ```mermaid
 flowchart LR
@@ -91,7 +91,7 @@ flowchart LR
 
 This is a special case in dependency management:
 you can switch the current Python version using [`pdm use`](../reference/cli.md#use)
-and it will emit the [`post_use`][pdm.signals.post_use] signal with the new Python interpreter.
+and it will emit the `post_use` signal with the new Python interpreter.
 
 ```mermaid
 flowchart LR
@@ -116,10 +116,10 @@ All those steps are available with the following commands:
 
 They trigger the following hooks:
 
-- [`pre_publish`][pdm.signals.pre_publish]
-- [`post_publish`][pdm.signals.post_publish]
-- [`pre_build`][pdm.signals.pre_build]
-- [`post_build`][pdm.signals.post_build]
+- `pre_publish`
+- `post_publish`
+- `pre_build`
+- `post_build`
 
 ```mermaid
 flowchart LR
@@ -151,8 +151,8 @@ Execution will stop at first failure, hooks included.
 [User scripts are detailed in their own section](scripts.md) but you should know that:
 
 - each user script can define a `pre_*` and `post_*` script, including composite scripts.
-- each `run` execution will trigger the [`pre_run`][pdm.signals.pre_run] and [`post_run`][pdm.signals.post_run] hooks
-- each script execution will trigger the [`pre_script`][pdm.signals.pre_script] and [`post_script`][pdm.signals.post_script] hooks
+- each `run` execution will trigger the `pre_run` and `post_run` hooks
+- each script execution will trigger the `pre_script` and `post_script` hooks
 
 Given the following `scripts` definition:
 
