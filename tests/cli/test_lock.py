@@ -127,6 +127,36 @@ def test_lock_workspace_members_depend_on_each_other(project, core, repository):
 
 @pytest.mark.usefixtures("repository")
 @pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_hash_tracks_workspace_member_pyproject(project, core, lock_format):
+    project.project_config["lock.format"] = lock_format
+    workspace_project = make_workspace_members(project, core, {"foo": []})
+
+    actions.do_lock(workspace_project)
+
+    assert workspace_project.is_lockfile_hash_match()
+
+    member_pyproject = workspace_project.root / "packages" / "foo" / "pyproject.toml"
+    member_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests"]\n',
+        encoding="utf-8",
+    )
+    fresh_project = core.create_project(
+        workspace_project.root, global_config=workspace_project.global_config.config_file.as_posix()
+    )
+    fresh_member_project = core.create_project(
+        member_pyproject.parent, global_config=workspace_project.global_config.config_file.as_posix()
+    )
+
+    assert not fresh_project.is_lockfile_hash_match()
+    assert not fresh_member_project.is_lockfile_hash_match()
+
+    actions.do_lock(fresh_project)
+
+    assert fresh_project.is_lockfile_hash_match()
+
+
+@pytest.mark.usefixtures("repository")
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
 def test_lock_dependencies(project, lock_format):
     project.add_dependencies(["requests"])
     project.project_config["lock.format"] = lock_format

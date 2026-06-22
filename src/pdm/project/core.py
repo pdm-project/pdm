@@ -206,10 +206,29 @@ class Project:
             seen.add(req.identify())
         return result
 
-    def add_member(self, path: str | Path, *, show_message: bool = True) -> None:
+    def pyproject_content_hash(self, algo: str = "sha256") -> str:
+        """Return a lockfile content hash including workspace members."""
+        workspace_project = self.workspace_project or self
+        root_hash = workspace_project.pyproject.content_hash(algo)
+        if not workspace_project.is_workspace_root:
+            return root_hash
+
+        hasher = hashlib.new(algo)
+        hasher.update(root_hash.encode("utf-8"))
+        root = workspace_project.root.resolve()
+        for member in sorted(workspace_project.iter_members(), key=lambda path: path.relative_to(root).as_posix()):
+            member_project = workspace_project.core.create_project(member)
+            member_path = member.relative_to(root).as_posix()
+            hasher.update(b"\0")
+            hasher.update(member_path.encode("utf-8"))
+            hasher.update(b"\0")
+            hasher.update(member_project.pyproject.content_hash(algo).encode("utf-8"))
+        return hasher.hexdigest()
+
+    def add_member(self, path: str | Path, *, show_message: bool = True, dry_run: bool = False) -> None:
         """Add a project path to the workspace members."""
         if workspace_project := self.workspace_project:
-            workspace_project.add_member(path, show_message=show_message)
+            workspace_project.add_member(path, show_message=show_message, dry_run=dry_run)
             return
         member = Path(path).absolute().resolve()
         try:
@@ -221,7 +240,8 @@ class Project:
         existing_members = [str(item) for item in members]
         if member_path not in existing_members:
             members.append(member_path)
-            self.pyproject.write(show_message=show_message)
+            if not dry_run:
+                self.pyproject.write(show_message=show_message)
 
     def remove_member(self, path: str | Path, *, show_message: bool = True, dry_run: bool = False) -> bool:
         """Remove an exact project path from the workspace members."""
@@ -791,8 +811,7 @@ class Project:
                 "Passing toml_data to write_lockfile is deprecated, please use `format_lockfile` instead", stacklevel=2
             )
             self.lockfile.set_data(toml_data)
-        hash_project = self.workspace_project or self
-        self.lockfile.update_hash(hash_project.pyproject.content_hash("sha256"))
+        self.lockfile.update_hash(self.pyproject_content_hash("sha256"))
         if write and self.enable_write_lockfile:
             self.lockfile.write(show_message)
 
@@ -812,8 +831,7 @@ class Project:
         algo, hash_value = self.lockfile.hash
         if not hash_value:
             return False
-        hash_project = self.workspace_project or self
-        content_hash = hash_project.pyproject.content_hash(algo)
+        content_hash = self.pyproject_content_hash(algo)
         return content_hash == hash_value
 
     def use_pyproject_dependencies(

@@ -141,7 +141,7 @@ class Command(BaseCommand):
                 )
                 and is_path_relative_to(r.absolute_path, project.root)  # type: ignore[attr-defined]
             ):
-                project.add_member(r.absolute_path)  # type: ignore[attr-defined]
+                project.add_member(r.absolute_path, dry_run=dry_run)  # type: ignore[attr-defined]
             if r.is_file_or_url:
                 r.relocate(project.backend)  # type: ignore[attr-defined]
             key = r.identify()
