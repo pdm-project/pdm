@@ -3,7 +3,10 @@ from argparse import Namespace
 
 import pytest
 
+from pdm.compat import tomllib
 from pdm.formats import MetaConvertError, flit, pipfile, poetry, requirements, setup_py
+from pdm.formats.uv import uv_file_builder
+from pdm.models.repositories import LockedRepository
 from pdm.models.requirements import parse_requirement
 from pdm.utils import cd
 from tests import FIXTURES
@@ -69,6 +72,32 @@ def test_convert_requirements_file_without_name(project, vcs):
     result, _ = requirements.convert(project, str(req_file), ns())
 
     assert result["dependencies"] == ["demo @ git+https://github.com/test-root/demo.git"]
+
+
+def test_build_uv_pyproject_toml_with_workspace(project):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    for name in ("foo", "bar"):
+        member_path = project.root / "packages" / name
+        member_path.mkdir(parents=True)
+        member_path.joinpath("pyproject.toml").write_text(
+            f'[project]\nname = "{name}"\nversion = "0.1.0"\n',
+            encoding="utf-8",
+        )
+    req = parse_requirement("foo>=0.1")
+    req.groups = ["default"]
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+
+    with uv_file_builder(project, ">=3.10", project.with_workspace_dependencies([req]), locked_repo) as builder:
+        path = builder.build_pyproject_toml()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+
+    assert data["project"]["requires-python"] == ">=3.10"
+    assert set(data["project"]["dependencies"]) == {"foo>=0.1", "bar"}
+    assert data["tool"]["uv"]["workspace"]["members"] == ["packages/*"]
+    assert data["tool"]["uv"]["sources"]["foo"] == {"workspace": True}
+    assert data["tool"]["uv"]["sources"]["bar"] == {"workspace": True}
 
 
 def test_convert_poetry(project):

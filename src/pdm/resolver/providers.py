@@ -214,6 +214,20 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         all_dependencies = chain.from_iterable(project.all_dependencies.values())
         return any(r.is_named and requirement.identify() == r.identify() for r in all_dependencies)
 
+    @cached_property
+    def workspace_candidates(self) -> dict[str, Candidate]:
+        project = self.repository.environment.project
+        return {req.identify(): Candidate(req) for req in project.iter_workspace_dependencies()}
+
+    def _find_workspace_candidates(self, identifier: str) -> Iterable[Candidate]:
+        if candidate := self.workspace_candidates.get(identifier):
+            yield candidate
+            return
+        name, extras = strip_extras(identifier)
+        if extras and (candidate := self.workspace_candidates.get(name)):
+            req = dataclasses.replace(candidate.req, extras=extras)
+            yield Candidate(req, name=candidate.name, version=candidate.version)
+
     def _find_candidates(self, requirement: Requirement) -> Iterable[Candidate]:
         if not requirement.is_named and not isinstance(self.repository, LockedRepository):
             can = Candidate(requirement)
@@ -296,6 +310,12 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                 # We should consider the requirements for both foo and foo[extra]
                 reqs.extend(requirements[bare_name])
             reqs.sort(key=self.requirement_preference)
+            if workspace_candidates := list(self._find_workspace_candidates(identifier)):
+                return (
+                    can
+                    for can in workspace_candidates
+                    if can not in incompat and all(self.is_satisfied_by(r, can) for r in reqs)
+                )
             candidates = self._find_candidates(reqs[0])
             return (
                 # In some cases we will use candidates from the bare requirement,
@@ -447,6 +467,9 @@ class ReusePinProvider(BaseProvider):
         super_find = super().find_matches(identifier, requirements, incompatibilities)
 
         def matches_gen() -> Iterator[Candidate]:
+            if list(self._find_workspace_candidates(identifier)):
+                yield from super_find()
+                return
             requested_req = next(filter(lambda r: r.is_named, requirements[identifier]), None)
             for pin in self.iter_reuse_candidates(identifier, requested_req):
                 if identifier not in self.overrides and pin.req.is_named:

@@ -27,6 +27,7 @@ def clean_help(help_text: str | None) -> str:
     help_text = help_text.replace(r"\[", "[").replace(r"\]", "]")
     help_text = re.sub(r"__([\w\d_]+)__", r"`__\1__`", help_text)
     help_text = re.sub(r"env var: ([A-Z_]+)", r"env var: `\1`", help_text)
+    help_text = re.sub(r"\[([^\]]+)\]", r"\\[\1\\]", help_text)
     for monospaced in MONOSPACED:
         help_text = re.sub(rf"\s(['\"]?{re.escape(monospaced)}['\"]?)", f" `{monospaced}`", help_text)
     return help_text
@@ -35,7 +36,7 @@ def clean_help(help_text: str | None) -> str:
 def render_parser(parser: argparse.ArgumentParser, title: str, heading_level: int = 2) -> str:
     result = [f"{'#' * heading_level} {title}\n"]
     if parser.description and title != "pdm":
-        result.append("> " + parser.description + "\n")
+        result.append("> " + clean_help(parser.description) + "\n")
 
     for group in sorted(parser._action_groups, key=lambda item: item.title.lower(), reverse=True):
         if not any(

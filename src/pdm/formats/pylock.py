@@ -161,7 +161,7 @@ class PyLockConverter:
 
         doc["tool"] = {
             "pdm": {
-                "hashes": make_inline_table({"sha256": project.pyproject.content_hash()}),
+                "hashes": make_inline_table({"sha256": project.pyproject_content_hash()}),
                 "targets": [spec.as_dict() for spec in repository.targets],
             },
         }

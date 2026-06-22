@@ -56,6 +56,7 @@ nav:
       - usage/config.md
       - usage/scripts.md
       - usage/hooks.md
+      - usage/workspace.md
       - usage/advanced.md
       - usage/venv.md
       - usage/pep582.md
@@ -111,8 +112,6 @@ extra:
       link: https://twitter.com/pdm_project
     - icon: fontawesome/brands/discord
       link: https://discord.gg/Phn8smztpv
-  chatbot:
-    url: https://2prxfnwkygf4vexczrbpcq.streamlit.app/?embed=true
   alternate:
     - name: '🇬🇧 English'
       link: /en/

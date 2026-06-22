@@ -1,7 +1,22 @@
 import pytest
 
 from pdm.cli import actions
+from pdm.cli.commands.remove import Command
+from pdm.cli.filters import GroupSelection
 from pdm.models.specifiers import PySpecSet
+from pdm.utils import cd
+
+
+def make_workspace_member(project, core):
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests"]\n',
+        encoding="utf-8",
+    )
+    return core.create_project(member_path, global_config=project.global_config.config_file.as_posix())
 
 
 def test_remove_command(project, pdm, mocker):
@@ -105,6 +120,73 @@ def test_remove_group_not_in_lockfile(project, pdm, mocker):
     pdm(["remove", "--group", "tz", "pytz"], obj=project, strict=True)
     assert "optional-dependencies" not in project.pyproject.metadata
     locker.assert_not_called()
+
+
+def test_remove_workspace_member_updates_root_lockfile(project, core, repository):
+    member_project = make_workspace_member(project, core)
+    actions.do_lock(member_project)
+    assert "requests" in member_project.get_locked_repository().candidates
+
+    Command.do_remove(
+        member_project,
+        selection=GroupSelection(member_project),
+        packages=["requests"],
+        sync=False,
+    )
+
+    assert (project.root / "pdm.lock").exists()
+    assert not (member_project.root / "pdm.lock").exists()
+    locked_candidates = member_project.get_locked_repository().candidates
+    assert "foo" in locked_candidates
+    assert "requests" not in locked_candidates
+
+
+def test_remove_subdirectory_path_dependency_keeps_workspace_member(project, repository):
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = []\n',
+        encoding="utf-8",
+    )
+    project.pyproject.settings["workspace"] = {"members": ["packages/foo"]}
+    project.pyproject.metadata["dependencies"] = ["foo @ file:///${PROJECT_ROOT}/packages/foo"]
+    project.pyproject.write()
+
+    Command.do_remove(
+        project,
+        selection=GroupSelection(project),
+        packages=["foo"],
+        sync=False,
+    )
+
+    project.pyproject.reload()
+    assert project.pyproject.settings["workspace"]["members"] == ["packages/foo"]
+    assert project.pyproject.metadata["dependencies"] == []
+    assert "foo" in project.get_locked_repository().candidates
+
+
+def test_remove_workspace_member_not_in_dependencies(project, repository):
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = []\n',
+        encoding="utf-8",
+    )
+    project.pyproject.settings["workspace"] = {"members": ["packages/foo"]}
+    project.pyproject.write()
+
+    with cd(project.root):
+        Command.do_remove(
+            project,
+            selection=GroupSelection(project),
+            packages=["packages/foo"],
+            sync=False,
+        )
+
+    project.pyproject.reload()
+    assert project.pyproject.settings["workspace"]["members"] == []
+    assert project.pyproject.metadata["dependencies"] == []
+    assert "foo" not in project.get_locked_repository().candidates
 
 
 @pytest.mark.usefixtures("working_set")

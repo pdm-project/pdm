@@ -84,6 +84,8 @@ def do_lock(
     if not requirements:
         all_deps = project._resolve_dependencies(groups)
         requirements = [r for group in groups for r in project.get_dependencies(group, all_deps)]
+    if "default" in groups:
+        requirements = project.with_workspace_dependencies(requirements)
     ui = project.core.ui
     supports_env_spec = "env_spec" in inspect.signature(project.get_provider).parameters
     # The repository to store the lock result

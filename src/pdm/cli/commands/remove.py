@@ -103,6 +103,8 @@ class Command(BaseCommand):
         tracked_names: set[str] = set()
         with cd(project.root):
             for name in packages:
+                if project.remove_member(name, show_message=False, dry_run=dry_run):
+                    continue
                 req = parse_requirement(name)
                 matched_indexes = sorted((i for i, r in enumerate(deps) if req.matches(r)), reverse=True)
                 if not matched_indexes:

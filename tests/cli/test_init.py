@@ -274,6 +274,132 @@ def test_new_command(project_no_init, pdm, mocker):
         assert tomllib.load(fp) == data
 
 
+def test_init_adds_project_to_parent_workspace(project_no_init, pdm, mocker):
+    do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
+    project_no_init.pyproject.settings["workspace"] = {"members": []}
+    project_no_init.pyproject.write()
+
+    with cd(project_no_init.root):
+        result = pdm(
+            ["init", "-n", "--no-git", "-p", "packages/foo", "--name", "foo"],
+            cleanup=False,
+        )
+
+    assert result.exit_code == 0
+    do_use.assert_not_called()
+    project_no_init.pyproject.reload()
+    assert project_no_init.pyproject.settings["workspace"]["members"] == ["packages/foo"]
+    assert not project_no_init.root.joinpath("packages/foo/.pdm-python").exists()
+
+
+def test_init_creates_parent_workspace_table(project_no_init, pdm, mocker):
+    do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
+    project_no_init.pyproject.write()
+
+    with cd(project_no_init.root):
+        result = pdm(
+            ["init", "-n", "--no-git", "-p", "packages/foo", "--name", "foo"],
+            cleanup=False,
+        )
+
+    assert result.exit_code == 0
+    do_use.assert_not_called()
+    project_no_init.pyproject.reload()
+    assert project_no_init.pyproject.settings["workspace"]["members"] == ["packages/foo"]
+    assert not project_no_init.root.joinpath("packages/foo/.pdm-python").exists()
+
+
+def test_init_workspace_member_does_not_persist_uv_workspace(project_no_init, pdm, mocker):
+    do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
+    project_no_init.project_config["use_uv"] = True
+    project_no_init.pyproject.write()
+
+    with cd(project_no_init.root):
+        result = pdm(
+            ["init", "-n", "--no-git", "-p", "packages/foo", "--name", "foo"],
+            cleanup=False,
+        )
+
+    assert result.exit_code == 0
+    do_use.assert_not_called()
+    with project_no_init.root.joinpath("pyproject.toml").open("rb") as fp:
+        data = tomllib.load(fp)
+    assert data["tool"]["pdm"]["workspace"]["members"] == ["packages/foo"]
+    assert "uv" not in data["tool"]
+
+
+def test_init_workspace_member_skips_git_and_gitignore(project_no_init, pdm, mocker):
+    initialize_git = mocker.patch("pdm.cli.commands.init.Command.initialize_git")
+    project_no_init.pyproject.settings["workspace"] = {"members": []}
+    project_no_init.pyproject.write()
+
+    with cd(project_no_init.root):
+        result = pdm(
+            ["init", "-n", "-p", "packages/foo", "--name", "foo"],
+            cleanup=False,
+        )
+
+    assert result.exit_code == 0
+    initialize_git.assert_not_called()
+    assert not project_no_init.root.joinpath("packages/foo/.git").exists()
+    assert not project_no_init.root.joinpath("packages/foo/.gitignore").exists()
+
+
+def test_init_workspace_member_keeps_existing_gitignore(project_no_init, pdm):
+    project_no_init.pyproject.settings["workspace"] = {"members": []}
+    project_no_init.pyproject.write()
+    member_path = project_no_init.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    gitignore = member_path / ".gitignore"
+    gitignore.write_text("local-cache/\n", encoding="utf-8")
+
+    with cd(project_no_init.root):
+        result = pdm(
+            ["init", "-n", "-p", "packages/foo", "--name", "foo"],
+            cleanup=False,
+        )
+
+    assert result.exit_code == 0
+    assert gitignore.read_text(encoding="utf-8") == "local-cache/\n"
+
+
+def test_init_workspace_member_reuses_root_requires_python(project_no_init, pdm, mocker):
+    do_use = mocker.patch("pdm.cli.commands.use.Command.do_use", return_value=PythonInfo.from_path(sys.executable))
+    project_no_init.pyproject.metadata["requires-python"] = ">=3.11"
+    project_no_init.pyproject.settings["workspace"] = {"members": []}
+    project_no_init.pyproject.write()
+
+    with cd(project_no_init.root):
+        result = pdm(
+            ["init", "-n", "--no-git", "-p", "packages/foo", "--name", "foo"],
+            cleanup=False,
+        )
+
+    assert result.exit_code == 0
+    do_use.assert_not_called()
+    with open(project_no_init.root.joinpath("packages/foo/pyproject.toml"), "rb") as fp:
+        data = tomllib.load(fp)
+    assert data["project"]["requires-python"] == ">=3.11"
+    assert not project_no_init.root.joinpath("packages/foo/.pdm-python").exists()
+
+
+def test_root_only_command_rejects_workspace_member(project_no_init, pdm):
+    project_no_init.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project_no_init.pyproject.write()
+    member_path = project_no_init.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+
+    with cd(member_path):
+        result = pdm(["install"], cleanup=False)
+
+    assert result.exit_code == 1
+    assert "can only be run from the workspace root" in result.stderr
+
+
 def test_init_command_library(project_no_init, pdm, mocker):
     mocker.patch(
         "pdm.cli.commands.init.get_user_email_from_git",

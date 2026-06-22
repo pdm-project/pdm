@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from pdm.project.config import ConfigItem
 
 COMMANDS_MODULE_PATH = importlib.import_module("pdm.cli.commands").__path__
+WORKSPACE_ROOT_ONLY_COMMANDS = frozenset({"info", "install", "lock", "outdated", "sync"})
 
 
 @dc.dataclass
@@ -172,6 +173,11 @@ class Core:
 
         hooks = HookManager(project, getattr(options, "skip", None))
         hooks.try_emit("pre_invoke", command=command.name if command else None, options=options)
+
+        if command and command.name in WORKSPACE_ROOT_ONLY_COMMANDS and project.workspace_project is not None:
+            raise PdmUsageError(
+                f"`pdm {command.name}` can only be run from the workspace root: {project.workspace_project.root}"
+            )
 
         if not isinstance(command, FixCommand):
             FixCommand.check_problems(project)
