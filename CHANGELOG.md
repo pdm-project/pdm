@@ -1,3 +1,20 @@
+## Release v2.28.0 (2026-06-23)
+
+### Features & Improvements
+
+- Add experimental workspace support for managing local member projects in a shared root lock file. ([#1505](https://github.com/pdm-project/pdm/issues/1505))
+- Defer startup-time imports for Python, virtualenv, and self-management commands. ([#3673](https://github.com/pdm-project/pdm/issues/3673))
+
+### Bug Fixes
+
+- Fix `pdm completion bash` printing `__ltrim_colon_completions: command not found` (and a similar error for `_get_comp_words_by_ref`) when the generated script is sourced in a bash without the `bash-completion` package loaded, such as Git Bash on Windows or minimal Linux containers. The script now defines small fallbacks for both helpers when they are not already available. ([#3793](https://github.com/pdm-project/pdm/issues/3793))
+- Avoid forwarding duplicate SIGINT in pdm run on POSIX. ([#3808](https://github.com/pdm-project/pdm/issues/3808))
+
+### Documentation
+
+- Fix the Windows installation instructions for a specific version. `Invoke-Expression` (`iex`) does not accept an `-Args` parameter and cannot forward arguments to a piped script, so the documented command failed. Use the `$env:PDM_VERSION` environment variable, which the install script reads, instead. ([#3792](https://github.com/pdm-project/pdm/issues/3792))
+
+
 ## Release v2.27.0 (2026-05-21)
 
 ### Breaking Changes
