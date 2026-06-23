@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from pdm.installers.base import BaseSynchronizer
     from pdm.models.caches import CandidateInfoCache, HashCache, WheelCache
     from pdm.models.candidates import Candidate
+    from pdm.project.project_file import UserScript
     from pdm.resolver.base import Resolver
     from pdm.resolver.providers import BaseProvider
     from pdm.resolver.reporters import RichLockReporter
@@ -316,7 +317,7 @@ class Project:
         return collections.ChainMap(self.project_config, self.global_config)
 
     @property
-    def scripts(self) -> dict[str, str | dict[str, str]]:
+    def scripts(self) -> dict[str, str | UserScript]:
         return self.pyproject.settings.get("scripts", {})
 
     @cached_property
@@ -664,8 +665,8 @@ class Project:
 
     def get_sources(self, expand_env: bool = True, include_stored: bool = False) -> list[RepositoryConfig]:
         result: dict[str, RepositoryConfig] = {}
-        for source in self.pyproject.settings.get("source", []):
-            result[source["name"]] = RepositoryConfig(**source, config_prefix="pypi")
+        for project_source in self.pyproject.settings.get("source", []):
+            result[project_source["name"]] = RepositoryConfig(**project_source, config_prefix="pypi")
 
         def merge_sources(other_sources: Iterable[RepositoryConfig]) -> None:
             for source in other_sources:
@@ -1127,7 +1128,7 @@ class Project:
             return False
         settings = self.pyproject.settings
         if "package-type" in settings:
-            return settings["package-type"] == "library"
+            return settings["package-type"] == "library"  # type: ignore[typeddict-item]
         elif "distribution" in settings:
             return cast(bool, settings["distribution"])
         else:
@@ -1140,7 +1141,7 @@ class Project:
         Returns `None` if the key does not exists.
         """
         try:
-            return reduce(operator.getitem, key.split("."), self.pyproject.settings)
+            return reduce(operator.getitem, key.split("."), self.pyproject.settings)  # type: ignore[arg-type]
         except KeyError:
             return None
 

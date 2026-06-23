@@ -36,12 +36,16 @@ theme:
   custom_dir: docs/overrides
 
 plugins:
+  - autorefs
   - mkdocstrings:
       enable_inventory: true
       handlers:
         python:
           options:
             docstring_style: google
+            extensions:
+              - docs/_ext/typeddict.py:TypedDictExtension:
+                  modules: ["pdm.project.project_file"]
 
 nav:
   - Usage:
@@ -63,6 +67,7 @@ nav:
       - usage/template.md
   - Reference:
       - reference/pep621.md
+      - reference/tool.md
       - reference/configuration.md
       - reference/build.md
       - reference/cli.md
