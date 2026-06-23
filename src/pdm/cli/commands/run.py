@@ -293,13 +293,21 @@ class TaskRunner:
 
         process_env = os.environ.copy()
         process_env.update({"PDM_RUN_CWD": str(Path.cwd())})
-        handle_term = signal.signal(signal.SIGTERM, forward_signal)
-        handle_int = signal.signal(signal.SIGINT, forward_signal)
         process = subprocess.Popen(process_cmd, cwd=cwd, shell=shell, bufsize=0, close_fds=False, env=process_env)
-        retcode = process.wait()
-        signal.signal(signal.SIGTERM, handle_term)
-        signal.signal(signal.SIGINT, handle_int)
-        return retcode
+
+        # On POSIX, an interactive Ctrl-C is delivered by the terminal to every
+        # process in the foreground process group.  The child therefore receives
+        # SIGINT directly.  If PDM also forwards the parent's SIGINT handler to
+        # the child, the child receives two SIGINTs (gh-3732).  Keep forwarding
+        # SIGTERM, which is commonly sent only to the parent process, but avoid
+        # duplicating SIGINT on POSIX.
+        handle_term = signal.signal(signal.SIGTERM, forward_signal)
+        handle_int = signal.signal(signal.SIGINT, signal.SIG_IGN if sys.platform != "win32" else forward_signal)
+        try:
+            return process.wait()
+        finally:
+            signal.signal(signal.SIGTERM, handle_term)
+            signal.signal(signal.SIGINT, handle_int)
 
     def run_task(
         self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None, seen: set[str] | None = None

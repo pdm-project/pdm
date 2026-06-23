@@ -1,6 +1,8 @@
 import json
 import os
+import signal
 import subprocess
+import sys
 import textwrap
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -60,6 +62,33 @@ def test_auto_isolate_site_packages(project, pdm):
         strict=True,
     )
     assert not any("site-packages" in path for path in result.stdout.splitlines())
+
+
+def test_run_does_not_forward_posix_sigint(project, monkeypatch):
+    from pdm.cli.commands.run import TaskRunner
+    from pdm.cli.hooks import HookManager
+
+    class DummyProcess:
+        def wait(self):
+            return 0
+
+        def send_signal(self, signum):  # pragma: no cover
+            raise AssertionError("SIGINT should not be forwarded on POSIX")
+
+    signal_calls = []
+
+    def fake_signal(signum, handler):
+        signal_calls.append((signum, handler))
+        return signal.SIG_DFL
+
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(subprocess, "Popen", lambda *args, **kwargs: DummyProcess())
+    monkeypatch.setattr(signal, "signal", fake_signal)
+
+    runner = TaskRunner(project, HookManager(project, []))
+    assert runner._run_process(["python", "-c", "pass"], chdir=True) == 0
+
+    assert (signal.SIGINT, signal.SIG_IGN) in signal_calls
 
 
 def test_run_with_site_packages(project, pdm):
