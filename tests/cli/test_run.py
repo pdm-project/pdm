@@ -424,6 +424,35 @@ def test_run_composite_script_with_cwd_placeholder_and_spaces_in_path(project, p
     assert out.strip() == str(spaced_dir)
 
 
+def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_path):
+    """Shell scripts are handed straight to cmd.exe on Windows, so a cwd with
+    spaces must be quoted the way cmd.exe understands (double quotes) instead of
+    with POSIX ``shlex.quote`` (single quotes), which cmd.exe does not parse.
+    CI runs on Linux and cannot spawn a real cmd.exe, so assert on the
+    interpolated string directly."""
+    from pdm.cli.commands import run as run_module
+
+    spaced_dir = tmp_path / "Jane Doe" / "Project"
+    spaced_dir.mkdir(parents=True)
+    monkeypatch.chdir(spaced_dir)
+    monkeypatch.setattr(run_module.sys, "platform", "win32")
+
+    # for_shell=True targets cmd.exe -> must use double-quote quoting.
+    shell_result, interpolated = run_module.interpolate("echo {PDM_RUN_CWD}", [], for_shell=True)
+    assert interpolated
+    assert shell_result == f"echo {subprocess.list2cmdline([str(spaced_dir)])}"
+    assert shell_result == f'echo "{spaced_dir}"'
+    assert "'" not in shell_result
+
+    # cmd/composite parts are re-parsed with shlex.split, so POSIX quoting stays
+    # correct even when simulating Windows.
+    cmd_result, _ = run_module.interpolate("echo {PDM_RUN_CWD}", [])
+    import shlex
+
+    assert cmd_result == f"echo {shlex.quote(str(spaced_dir))}"
+    assert shlex.split(cmd_result)[1] == str(spaced_dir)
+
+
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {
