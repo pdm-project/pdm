@@ -58,6 +58,7 @@ def merge_options(*options: TaskOptions | None) -> TaskOptions:
 
 RE_ARGS_PLACEHOLDER = re.compile(r"\{args(?::(?P<default>[^}]*))?\}")
 RE_PDM_PLACEHOLDER = re.compile(r"\{pdm\}")
+RE_CWD_PLACEHOLDER = re.compile(r"\{PDM_RUN_CWD\}")
 
 
 def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
@@ -81,11 +82,20 @@ def _interpolate_pdm(script: str) -> str:
     return interpolated
 
 
+def _interpolate_cwd(script: str) -> str:
+    """Interpolate the `{PDM_RUN_CWD} placeholder in a string"""
+    cwd = shlex.quote(str(Path.cwd()))
+
+    interpolated = RE_CWD_PLACEHOLDER.sub(cwd, script)
+    return interpolated
+
+
 def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
     """Interpolate the `{args:[defaults]} placeholder in a string"""
 
     script, args_interpolated = _interpolate_args(script, args)
     script = _interpolate_pdm(script)
+    script = _interpolate_cwd(script)
     return script, args_interpolated
 
 
@@ -359,6 +369,7 @@ class TaskRunner:
             args = list(args)
             should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
             should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
+            should_interpolate = should_interpolate or any(RE_CWD_PLACEHOLDER.search(script) for script in value)
             composite_code = 0
             keep_going = options.pop("keep_going", False) if options else False
             for script in value:

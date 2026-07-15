@@ -351,6 +351,33 @@ def test_run_shell_script_with_pdm_placeholder(project, pdm):
     assert (project.root / "output.txt").read_text().strip().startswith("PDM, version")
 
 
+def test_run_shell_script_with_cwd_placeholder(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {
+            "shell": "echo {PDM_RUN_CWD} > output.txt",
+            "help": "test it won't fail",
+        }
+    }
+    project.pyproject.write()
+    with cd(project.root):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "output.txt").read_text().strip() == str(project.root)
+
+
+def test_run_cmd_script_with_cwd_placeholder(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "test_script": ["python", "-c", "import sys; print(sys.argv[1])", "{PDM_RUN_CWD}"],
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    with cd(project.root):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert out.strip() == str(project.root)
+
+
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {
