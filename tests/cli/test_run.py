@@ -378,6 +378,52 @@ def test_run_cmd_script_with_cwd_placeholder(project, pdm, capfd):
     assert out.strip() == str(project.root)
 
 
+def test_run_shell_script_with_cwd_placeholder_and_spaces_in_path(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {
+            "shell": "echo {PDM_RUN_CWD} > output.txt",
+            "help": "test cwd placeholder with spaces in path",
+        }
+    }
+    project.pyproject.write()
+    spaced_dir = project.root / "sub dir"
+    spaced_dir.mkdir()
+    with cd(spaced_dir):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "output.txt").read_text().strip() == str(spaced_dir)
+
+
+def test_run_cmd_script_with_cwd_placeholder_and_spaces_in_path(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "test_script": ["python", "-c", "import sys; print(sys.argv[1])", "{PDM_RUN_CWD}"],
+    }
+    project.pyproject.write()
+    spaced_dir = project.root / "sub dir"
+    spaced_dir.mkdir()
+    capfd.readouterr()
+    with cd(spaced_dir):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert out.strip() == str(spaced_dir)
+
+
+def test_run_composite_script_with_cwd_placeholder_and_spaces_in_path(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {"composite": ["echo {PDM_RUN_CWD}"]},
+    }
+    project.pyproject.write()
+    spaced_dir = project.root / "sub dir"
+    spaced_dir.mkdir()
+    capfd.readouterr()
+    with cd(spaced_dir):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert out.strip() == str(spaced_dir)
+
+
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {

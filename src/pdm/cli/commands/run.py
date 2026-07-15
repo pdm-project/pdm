@@ -82,21 +82,21 @@ def _interpolate_pdm(script: str) -> str:
     return interpolated
 
 
-def _interpolate_cwd(script: str) -> str:
-    """Interpolate the `{PDM_RUN_CWD} placeholder in a string"""
+def _interpolate_cwd(script: str) -> tuple[str, bool]:
+    """Interpolate the `{PDM_RUN_CWD}` placeholder in a string"""
     cwd = shlex.quote(str(Path.cwd()))
 
-    interpolated = RE_CWD_PLACEHOLDER.sub(cwd, script)
-    return interpolated
+    interpolated, count = RE_CWD_PLACEHOLDER.subn(cwd, script)
+    return interpolated, count > 0
 
 
 def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
-    """Interpolate the `{args:[defaults]} placeholder in a string"""
+    """Interpolate the `{args:[defaults]}`, `{pdm}` and `{PDM_RUN_CWD}` placeholders in a string."""
 
     script, args_interpolated = _interpolate_args(script, args)
     script = _interpolate_pdm(script)
-    script = _interpolate_cwd(script)
-    return script, args_interpolated
+    script, cwd_interpolated = _interpolate_cwd(script)
+    return script, args_interpolated or cwd_interpolated
 
 
 _METADATA_REGEX = r"(?m)^# /// (?P<type>[a-zA-Z0-9-]+)$\s(?P<content>(^#(| .*)$\s)+)^# ///$"
