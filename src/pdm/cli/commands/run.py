@@ -82,20 +82,31 @@ def _interpolate_pdm(script: str) -> str:
     return interpolated
 
 
-def _interpolate_cwd(script: str) -> tuple[str, bool]:
-    """Interpolate the `{PDM_RUN_CWD}` placeholder in a string"""
-    cwd = shlex.quote(str(Path.cwd()))
+def _interpolate_cwd(script: str, for_shell: bool = False) -> tuple[str, bool]:
+    """Interpolate the `{PDM_RUN_CWD}` placeholder in a string.
+
+    When ``for_shell`` is true the result is handed directly to the OS shell, so
+    on Windows the path must be quoted the way ``cmd.exe`` understands (double
+    quotes) rather than with POSIX-only ``shlex.quote``. For the other kinds the
+    string is re-parsed with ``shlex.split`` before use, so POSIX quoting is the
+    correct format on every platform.
+    """
+    path = str(Path.cwd())
+    if for_shell and sys.platform == "win32":
+        cwd = subprocess.list2cmdline([path])
+    else:
+        cwd = shlex.quote(path)
 
     interpolated, count = RE_CWD_PLACEHOLDER.subn(cwd, script)
     return interpolated, count > 0
 
 
-def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
+def interpolate(script: str, args: Sequence[str], for_shell: bool = False) -> tuple[str, bool]:
     """Interpolate the `{args:[defaults]}`, `{pdm}` and `{PDM_RUN_CWD}` placeholders in a string."""
 
     script, args_interpolated = _interpolate_args(script, args)
     script = _interpolate_pdm(script)
-    script, cwd_interpolated = _interpolate_cwd(script)
+    script, cwd_interpolated = _interpolate_cwd(script, for_shell=for_shell)
     return script, args_interpolated or cwd_interpolated
 
 
@@ -348,7 +359,7 @@ class TaskRunner:
             args = value if interpolated else [*value, *args]
         elif kind == "shell":
             assert isinstance(value, str)
-            script, interpolated = interpolate(value, args)
+            script, interpolated = interpolate(value, args, for_shell=True)
             args = script if interpolated else " ".join([script, *args])
             shell = True
         elif kind == "call":
