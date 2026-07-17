@@ -481,6 +481,17 @@ def test_comparable_version():
     assert utils.comparable_version("1.2.3a1+local1") == utils.parse_version("1.2.3a1")
 
 
+def test_comparable_version_keeps_parsed_version_intact():
+    # parse_version() is lru_cached, so stripping the local segment in place would
+    # rewrite the instance every other caller shares.
+    cached = utils.parse_version("4.5.6+cu118")
+
+    assert str(utils.comparable_version("4.5.6+cu118")) == "4.5.6"
+
+    assert str(cached) == "4.5.6+cu118"
+    assert utils.parse_version("4.5.6+cu118") > utils.parse_version("4.5.6")
+
+
 @pytest.mark.parametrize("name", ["foO", "f", "3d", "f3", "333", "foo.bar", "foo-bar", "foo_bar", "foo-_.bar"])
 def test_validate_project_name(name):
     assert utils.validate_project_name(name)
