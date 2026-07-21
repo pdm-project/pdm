@@ -110,6 +110,30 @@ def test_workspace_root_adds_members_as_implicit_editable_dependencies(project):
     assert member_dependency.str_path == "./packages/foo"
 
 
+def test_workspace_member_declared_in_dev_group_not_forced_into_default(project):
+    """Workspace members already in other groups must not be re-added to default (#3816)."""
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+    # Declare the member only in a dev/test group, not in main dependencies.
+    project.add_dependencies(
+        [parse_requirement("./packages/foo", True)],
+        "test",
+        True,
+    )
+
+    default_deps = project.get_dependencies("default")
+    assert all(getattr(dep, "name", None) != "foo" for dep in default_deps)
+
+    test_deps = project.get_dependencies("test")
+    assert any(getattr(dep, "name", None) == "foo" for dep in test_deps)
+
+
 def test_add_member_to_workspace(project):
     project.pyproject.settings["workspace"] = {"members": []}
     project.pyproject.write()
