@@ -650,14 +650,9 @@ class Project:
             # Do not force workspace members that are already declared in other
             # groups into default (keeps lockfile groups accurate) (#3816).
             declared_elsewhere = {
-                req.identify()
-                for group, deps in group_deps.items()
-                if group != "default"
-                for req in deps
+                req.identify() for group, deps in group_deps.items() if group != "default" for req in deps
             }
-            group_deps["default"] = self.with_workspace_dependencies(
-                group_deps["default"], exclude=declared_elsewhere
-            )
+            group_deps["default"] = self.with_workspace_dependencies(group_deps["default"], exclude=declared_elsewhere)
         return group_deps
 
     @property
