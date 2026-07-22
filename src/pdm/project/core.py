@@ -225,6 +225,22 @@ class Project:
             hasher.update(member_project.pyproject.content_hash(algo).encode("utf-8"))
         return hasher.hexdigest()
 
+    def lock_inputs(self) -> dict[str, Any]:
+        """Return the canonical project inputs that determine a lock resolution."""
+        from pdm.project.lockfile.freshness import build_lock_inputs
+
+        return build_lock_inputs(self)
+
+    def lock_inputs_enabled(self) -> bool:
+        """Return whether canonical lock inputs should be validated and persisted."""
+        from pdm.project.lockfile.base import LockInputsState
+
+        workspace_project = self.workspace_project or self
+        return (
+            self.lockfile.lock_inputs_state is not LockInputsState.LEGACY
+            or workspace_project.pyproject.resolution.get("lock_inputs") is True
+        )
+
     def add_member(self, path: str | Path, *, show_message: bool = True, dry_run: bool = False) -> None:
         """Add a project path to the workspace members."""
         if workspace_project := self.workspace_project:
@@ -804,6 +820,8 @@ class Project:
         self, toml_data: Any = None, show_message: bool = True, write: bool = True, **_kwds: Any
     ) -> None:
         """Write the lock file to disk."""
+        from pdm.project.lockfile.base import LockInputsState
+
         if _kwds:  # pragma: no cover
             deprecation_warning("Extra arguments have been moved to `format_lockfile` function", stacklevel=2)
         if toml_data is not None:  # pragma: no cover
@@ -811,7 +829,8 @@ class Project:
                 "Passing toml_data to write_lockfile is deprecated, please use `format_lockfile` instead", stacklevel=2
             )
             self.lockfile.set_data(toml_data)
-        self.lockfile.update_hash(self.pyproject_content_hash("sha256"))
+        if self.lockfile.lock_inputs_state is LockInputsState.LEGACY:
+            self.lockfile.update_hash(self.pyproject_content_hash("sha256"))
         if write and self.enable_write_lockfile:
             self.lockfile.write(show_message)
 
@@ -833,6 +852,21 @@ class Project:
             return False
         content_hash = self.pyproject_content_hash(algo)
         return content_hash == hash_value
+
+    def is_lockfile_fresh(self) -> bool:
+        """Return whether the lockfile satisfies the current project inputs."""
+        from pdm.project.lockfile.base import LockInputsState
+
+        lock_inputs_state = self.lockfile.lock_inputs_state
+        if lock_inputs_state is LockInputsState.LEGACY:
+            return not self.lock_inputs_enabled() and self.is_lockfile_hash_match()
+        if lock_inputs_state is not LockInputsState.SUPPORTED:
+            return False
+        if (lock_inputs := self.lockfile.lock_inputs) is None:
+            return False
+        from pdm.project.lockfile.freshness import lock_inputs_match
+
+        return lock_inputs_match(self, lock_inputs)
 
     def use_pyproject_dependencies(
         self, group: str, dev: bool = False

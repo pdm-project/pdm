@@ -155,9 +155,27 @@ def test_install_with_lockfile(project, pdm):
 
     project.add_dependencies(["pytz"], "default")
     result = pdm(["install"], obj=project)
-    assert "Lockfile hash doesn't match" in result.stderr
+    assert "Lockfile doesn't satisfy the project requirements" in result.stderr
     assert "pytz" in project.get_locked_repository().candidates
     assert project.is_lockfile_hash_match()
+
+
+def test_install_with_compatible_specifier_change(project, pdm, mocker, repository):
+    project.add_dependencies(["requests"])
+    project.pyproject.settings.setdefault("resolution", {})["lock_inputs"] = True
+    project.pyproject.write(show_message=False)
+    pdm(["lock"], obj=project, strict=True)
+    project.add_dependencies(["requests>=2"])
+    project.lockfile.reload()
+    do_lock = mocker.patch.object(actions, "do_lock")
+    do_sync = mocker.patch.object(actions, "do_sync")
+
+    result = pdm(["install"], obj=project)
+
+    assert result.exit_code == 0
+    assert "Lockfile doesn't satisfy" not in result.stderr
+    do_lock.assert_not_called()
+    do_sync.assert_called_once()
 
 
 def test_install_with_dry_run(project, pdm, repository):
