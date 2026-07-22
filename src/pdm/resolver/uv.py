@@ -133,7 +133,7 @@ class UvResolver(Resolver):
             return req.as_line()
 
         def make_hash(item: dict[str, Any], fallback_url: str | None = None) -> FileHash:
-            url = item.get("url") or fallback_url
+            url = item.get("url") or fallback_url or item.get("filename")
             if url is None:
                 raise KeyError("url")
             link = Link(url)

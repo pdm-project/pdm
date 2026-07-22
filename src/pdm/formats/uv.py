@@ -181,6 +181,8 @@ class _UvFileBuilder:
         elif isinstance(req, FileRequirement):
             if req.editable:
                 return {"editable": req.str_path}
+            elif req.path:
+                return {"path": req.str_path}
             else:
                 return {"url": req.url}
         else:
@@ -195,10 +197,14 @@ class _UvFileBuilder:
             "version": candidate.version,
             "source": self._build_lock_source(req),
         }
+        is_local = isinstance(req, FileRequirement) and req.path
         for file_hash in candidate.hashes:
             filename = file_hash.get("url", file_hash.get("file", ""))
             is_wheel = filename.endswith(".whl")
-            item = {"url": file_hash.get("url", filename), "hash": file_hash["hash"]}
+            if is_local:
+                item = {"filename": file_hash.get("file", filename), "hash": file_hash["hash"]}
+            else:
+                item = {"url": file_hash.get("url", filename), "hash": file_hash["hash"]}
             if is_wheel:
                 result.setdefault("wheels", []).append(item)
             else:
