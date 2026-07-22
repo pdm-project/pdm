@@ -356,8 +356,9 @@ def _project_specifiers_match(
     overrides: Mapping[str, Requirement],
     excludes: frozenset[str],
     managed_paths: frozenset[Path],
+    groups: Sequence[str],
 ) -> bool:
-    dependencies = project._resolve_dependencies()
+    dependencies = project._resolve_dependencies(list(groups))
     for group, requirements in dependencies.items():
         for requirement in requirements:
             if _requirement_is_excluded(requirement, excludes):
@@ -379,6 +380,7 @@ def _project_specifiers_match(
                 overrides,
                 excludes,
                 managed_paths | {path},
+                ["default"],
             ):
                 return False
     return True
@@ -396,7 +398,14 @@ def _all_specifiers_match(project: Project, repository: LockedRepository) -> boo
     if overrides is None:
         return False
     excludes = frozenset(normalize_name(name) for name in project.pyproject.resolution.get("excludes", []))
-    if not _project_specifiers_match(project, repository, overrides, excludes, managed_paths):
+    if not _project_specifiers_match(
+        project,
+        repository,
+        overrides,
+        excludes,
+        managed_paths,
+        project.lockfile.groups or ["default"],
+    ):
         return False
     return all(
         _project_specifiers_match(
@@ -405,6 +414,7 @@ def _all_specifiers_match(project: Project, repository: LockedRepository) -> boo
             overrides,
             excludes,
             managed_paths,
+            ["default"],
         )
         for member in members
     )

@@ -425,6 +425,21 @@ def test_lock_inputs_omit_named_specifiers(pdm, project, repository, lock_format
 
 
 @pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_validates_only_locked_groups(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.pyproject.metadata["optional-dependencies"] = {"http": ["requests"]}
+    enable_lock_inputs(project)
+
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile.groups == ["default"]
+    assert "requests" not in project.get_locked_repository().candidates
+    assert project.is_lockfile_fresh()
+    result = pdm(["lock", "--check"], obj=project)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
 def test_lock_check_allows_compatible_specifier_change(pdm, project, repository, lock_format):
     project.project_config["lock.format"] = lock_format
     project.add_dependencies(["requests"])
