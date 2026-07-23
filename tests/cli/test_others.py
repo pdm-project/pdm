@@ -216,7 +216,7 @@ def test_export_doesnt_include_dep_with_extras(pdm, fixture_project, extra_opt):
 def test_completion_command(pdm):
     result = pdm(["completion", "bash"])
     assert result.exit_code == 0
-    assert "(completion)" in result.output
+    assert "_python_argcomplete" in result.output
 
 
 @pytest.mark.network
