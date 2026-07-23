@@ -3,11 +3,11 @@ from __future__ import annotations
 import argparse
 import contextlib
 import io
-import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from argcomplete.completers import DirectoriesCompleter, FilesCompleter
 from packaging.requirements import InvalidRequirement, Requirement
 
 from pdm.compat import tomllib
@@ -39,34 +39,6 @@ _PACKAGE_PATHS = {
     ("update",),
 }
 _SHELLS = ("bash", "zsh", "fish", "powershell", "pwsh")
-
-
-class _PathCompleter:
-    def __init__(self, directories_only: bool = False) -> None:
-        self.directories_only = directories_only
-
-    def __call__(self, prefix: str, **_: Any) -> list[str]:
-        directory, incomplete = os.path.split(prefix)
-        search_directory = os.path.expanduser(directory or ".")
-        try:
-            with os.scandir(search_directory) as iterator:
-                entries = sorted(iterator, key=lambda entry: entry.name.lower())
-        except OSError:
-            return []
-
-        completions: list[str] = []
-        for entry in entries:
-            if not entry.name.startswith(incomplete):
-                continue
-            try:
-                is_directory = entry.is_dir()
-            except OSError:
-                continue
-            if self.directories_only and not is_directory:
-                continue
-            candidate = os.path.join(directory, entry.name) if directory else entry.name
-            completions.append(candidate + os.sep if is_directory else candidate)
-        return completions
 
 
 def _project_root(parsed_args: argparse.Namespace) -> Path:
@@ -192,8 +164,8 @@ def _set_completer(action: argparse.Action, completer: Callable[..., object]) ->
 
 def configure_parser(core: Core) -> None:
     """Attach value completers to PDM's fully constructed argument parser."""
-    files_completer = _PathCompleter()
-    directories_completer = _PathCompleter(directories_only=True)
+    files_completer = FilesCompleter()
+    directories_completer = DirectoriesCompleter()
 
     def visit(parser: argparse.ArgumentParser, path: tuple[str, ...] = ()) -> None:
         for action in parser._actions:
