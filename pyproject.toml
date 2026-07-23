@@ -15,6 +15,7 @@ requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
+    "argcomplete>=3.6.3",
     "blinker",
     "packaging>22.0",
     "platformdirs",
@@ -96,7 +97,6 @@ doc = [
 workflow = [
     "parver>=0.3.1",
     "towncrier>=20",
-    "pycomplete~=0.3",
 ]
 
 [tool.ruff]
@@ -256,4 +256,4 @@ pre_doc = "python tasks/render_reference_docs.py"
 doc = {cmd= "zensical serve", help = "Start the dev server for docs preview"}
 doc-build = {composite = ["pre_doc", "zensical build"], help = "Build the documentation site"}
 lint = "prek run --all-files"
-complete = {call = "tasks.complete:main", help = "Create autocomplete files for bash and fish"}
+complete = {call = "tasks.complete:main", help = "Create autocomplete files with argcomplete"}

@@ -4,8 +4,8 @@
 [metadata]
 groups = ["default", "all", "doc", "keyring", "pytest", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
-lock_version = "4.5.0"
-content_hash = "sha256:c5ac645ac857f1851ca1d165b5468fa9701e247248032fb355a4beb7e5d4f9ef"
+lock_version = "4.5.1"
+content_hash = "sha256:c3f6d458b99d53437990fe3a5789d402dba4b471df42276a1492a80baf130777"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -48,6 +48,17 @@ groups = ["workflow"]
 files = [
     {file = "Arpeggio-2.0.3-py2.py3-none-any.whl", hash = "sha256:9374d9c531b62018b787635f37fd81c9a6ee69ef2d28c5db3cd18791b1f7db2f"},
     {file = "Arpeggio-2.0.3.tar.gz", hash = "sha256:9e85ad35cfc6c938676817c7ae9a1000a7c72a34c71db0c687136c460d12b85e"},
+]
+
+[[package]]
+name = "argcomplete"
+version = "3.7.0"
+requires_python = ">=3.8"
+summary = "Bash tab completion for argparse"
+groups = ["default"]
+files = [
+    {file = "argcomplete-3.7.0-py3-none-any.whl", hash = "sha256:d8f0f22d2a8a7caa383be1e22b6caf1ecaf0ebd10d8f83cc125e36540c95830c"},
+    {file = "argcomplete-3.7.0.tar.gz", hash = "sha256:afde224f753f874807b1dc1414e883ab8fe0cda9c04807b6047dcb8e1ac23913"},
 ]
 
 [[package]]
@@ -1263,17 +1274,6 @@ groups = ["pytest", "test", "tox"]
 files = [
     {file = "pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"},
     {file = "pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3"},
-]
-
-[[package]]
-name = "pycomplete"
-version = "0.4.0"
-requires_python = ">=3.7"
-summary = "A Python library to generate static completion scripts for your CLI app"
-groups = ["workflow"]
-files = [
-    {file = "pycomplete-0.4.0-py3-none-any.whl", hash = "sha256:aedeccb742a9cc8f86cc22563b92dc7edd8a3ee200e2eefb5c7a66a90bbf5f34"},
-    {file = "pycomplete-0.4.0.tar.gz", hash = "sha256:8ae83fb5883c78da157d208aefdad4a989e0695e289ef738d05c9d14cb9a13b3"},
 ]
 
 [[package]]

@@ -393,6 +393,17 @@ class Core:
 
 def main(args: list[str] | None = None) -> None:
     """The CLI entry function"""
+    import argcomplete
+    from argcomplete.completers import SuppressCompleter
+
+    from pdm.cli.completions import configure_parser
+
     core = Core()
+    configure_parser(core)
+    argcomplete.autocomplete(
+        core.parser,
+        always_complete_options=False,
+        default_completer=SuppressCompleter(),
+    )
     with core.exit_stack:
         return core.main(args or sys.argv[1:])
