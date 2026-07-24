@@ -9,7 +9,6 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from fnmatch import fnmatch
 
-from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import venv_option
 from pdm.cli.utils import (
@@ -154,6 +153,8 @@ class Command(BaseCommand):
         # Resolve all the requirements. Map the candidates to distributions.
         requirements = [r for g in selected_groups if g != SUBDEP_GROUP_LABEL for r in project.get_dependencies(g)]
         if options.resolve:
+            from pdm.cli import actions
+
             candidates = actions.resolve_candidates_from_lockfile(
                 project, requirements, groups=selected_groups - {SUBDEP_GROUP_LABEL}
             )

@@ -59,6 +59,26 @@ if loaded:
     assert result.returncode == 0, result.stdout or result.stderr
 
 
+def test_core_registration_does_not_import_command_actions():
+    code = """
+import sys
+from pdm.core import Core
+
+Core()
+if "pdm.cli.actions" in sys.modules:
+    raise SystemExit("pdm.cli.actions was imported during command registration")
+"""
+    env = os.environ.copy()
+    src = Path(__file__).resolve().parents[2] / "src"
+    pythonpath = [str(src)]
+    if env.get("PYTHONPATH"):
+        pythonpath.append(env["PYTHONPATH"])
+    env["PYTHONPATH"] = os.pathsep.join(pythonpath)
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, env=env, text=True)
+
+    assert result.returncode == 0, result.stdout or result.stderr
+
+
 @pytest.mark.usefixtures("fake_create")
 def test_venv_create(pdm, project):
     project._saved_python = None

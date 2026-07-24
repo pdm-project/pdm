@@ -1,6 +1,5 @@
 import argparse
 
-from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
@@ -39,6 +38,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        from pdm.cli import actions
+
         actions.check_lockfile(project)
         selection = GroupSelection.from_options(project, options)
         actions.do_sync(

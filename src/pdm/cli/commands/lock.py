@@ -4,7 +4,6 @@ import sys
 from typing import cast
 
 from pdm import termui
-from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.filters import GroupSelection
 from pdm.cli.hooks import HookManager
@@ -85,6 +84,8 @@ class Command(BaseCommand):
         target_group.add_argument("--append", action="store_true", help="Append the result to the current lock file")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
+        from pdm.cli import actions
+
         if options.check:
             strategy = actions.check_lockfile(project, False)
             if strategy:
