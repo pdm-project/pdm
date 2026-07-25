@@ -311,11 +311,8 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                 reqs.extend(requirements[bare_name])
             reqs.sort(key=self.requirement_preference)
             if workspace_candidates := list(self._find_workspace_candidates(identifier)):
-                # Associate the original requirement so lock metadata groups match
-                # the declared dependency group (not the implicit workspace "default")
-                # (#3816).
                 return (
-                    can.copy_with(original_req)
+                    can.copy_with(dataclasses.replace(can.req, groups=original_req.groups))
                     for can in workspace_candidates
                     if can not in incompat and all(self.is_satisfied_by(r, can) for r in reqs)
                 )
