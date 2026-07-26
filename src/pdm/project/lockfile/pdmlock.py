@@ -13,6 +13,7 @@ from pdm.project.lockfile.base import (
     FLAG_STATIC_URLS,
     Compatibility,
     Lockfile,
+    LockInputsState,
 )
 from pdm.utils import parse_version
 
@@ -24,12 +25,13 @@ class PDMLock(Lockfile):
     SUPPORTED_FLAGS = frozenset(
         (FLAG_STATIC_URLS, FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA)
     )
-    spec_version = parse_version("4.5.0")
+    spec_version = parse_version("4.5.1")
 
     @property
     def hash(self) -> tuple[str, str]:
         content_hash = self._data.get("metadata", {}).get("content_hash", "")
-        return content_hash.split(":", 1)
+        algo, separator, hash_value = content_hash.partition(":")
+        return (algo, hash_value) if separator else ("", "")
 
     @property
     def file_version(self) -> str:
@@ -58,6 +60,17 @@ class PDMLock(Lockfile):
 
     def update_hash(self, hash_value: str, algo: str = "sha256") -> None:
         self._data.setdefault("metadata", {})["content_hash"] = f"{algo}:{hash_value}"
+
+    @property
+    def lock_inputs(self) -> object | None:
+        return self._data.get("metadata", {}).get("lock_inputs")
+
+    @property
+    def lock_inputs_state(self) -> LockInputsState:
+        metadata = self._data.get("metadata", {})
+        if "lock_inputs" not in metadata:
+            return LockInputsState.LEGACY
+        return LockInputsState.SUPPORTED if self.lock_inputs is not None else LockInputsState.INVALID
 
     def compatibility(self) -> Compatibility:
         """We use a three-part versioning scheme for lockfiles:
@@ -122,6 +135,8 @@ class PDMLock(Lockfile):
                 "lock_version": str(self.spec_version),
             }
         )
+        if project.lock_inputs_enabled():
+            metadata["lock_inputs"] = project.lock_inputs()
         metadata.pop(FLAG_STATIC_URLS, None)
         metadata.pop(FLAG_CROSS_PLATFORM, None)
         doc.add("metadata", metadata)

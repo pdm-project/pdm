@@ -5,7 +5,6 @@ import sys
 from typing import TYPE_CHECKING, Any, cast
 
 from pdm import termui
-from pdm.cli import actions
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.hooks import HookManager
 from pdm.cli.options import skip_option
@@ -329,4 +328,6 @@ class Command(BaseCommand):
         project.maybe_add_to_workspace()
         project.core.ui.echo("Project is initialized successfully", style="primary")
         if self.interactive:
+            from pdm.cli import actions
+
             actions.ask_for_import(project)

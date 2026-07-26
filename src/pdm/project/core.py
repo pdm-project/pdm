@@ -29,6 +29,7 @@ from pdm.models.specifiers import PySpecSet
 from pdm.project.config import Config, ensure_boolean
 from pdm.project.lockfile import FLAG_INHERIT_METADATA, Lockfile, load_lockfile
 from pdm.project.project_file import PyProject
+from pdm.project.workspace import WorkspaceManager
 from pdm.utils import (
     cd,
     deprecation_warning,
@@ -131,69 +132,34 @@ class Project:
         return PyProject(self.root / self.PYPROJECT_FILENAME, ui=self.core.ui)
 
     @cached_property
+    def workspace(self) -> WorkspaceManager:
+        return WorkspaceManager(self)
+
+    @property
     def workspace_project(self) -> Project | None:
         """Return the parent workspace project if this project is a member."""
-        if self.is_global:
-            return None
-        for parent in self.root.parents:
-            if not parent.joinpath(self.PYPROJECT_FILENAME).exists():
-                continue
-            project = self.core.create_project(parent)
-            if project.pyproject.settings.get("workspace") and project.has_member(self.root):
-                return project
-        return None
+        return self.workspace.project
 
     @property
     def parent_workspace_project(self) -> Project | None:
         """Return the nearest parent project that can host a workspace."""
-        if self.is_global:
-            return None
-        for parent in self.root.parents:
-            if not parent.joinpath(self.PYPROJECT_FILENAME).exists():
-                continue
-            return self.core.create_project(parent)
-        return None
+        return self.workspace.parent_project
 
     @property
     def is_workspace_root(self) -> bool:
-        return bool(self.pyproject.settings.get("workspace"))
+        return self.workspace.is_root
 
     def iter_members(self) -> Iterable[Path]:
         """Iterate over resolved workspace member paths."""
-        if self.is_global:
-            return
-        workspace = self.pyproject.settings.get("workspace") or {}
-        members = workspace.get("members", [])
-        seen: set[Path] = set()
-        for pattern in members:
-            paths = self.root.glob(pattern) if any(char in pattern for char in "*?[") else [self.root / pattern]
-            for path in paths:
-                path = path.resolve()
-                if path in seen or not path.is_dir() or not path.joinpath(self.PYPROJECT_FILENAME).is_file():
-                    continue
-                seen.add(path)
-                yield path
+        yield from self.workspace.iter_members()
 
     def has_member(self, path: str | Path) -> bool:
         """Check if the given path is configured as a workspace member."""
-        candidate = Path(path).absolute().resolve()
-        return any(candidate == member for member in self.iter_members())
+        return self.workspace.has_member(path)
 
     def iter_workspace_dependencies(self) -> Iterable[Requirement]:
         """Iterate over implicit editable requirements for workspace members."""
-        workspace_project = self.workspace_project or self
-        if not workspace_project.is_workspace_root:
-            return
-        for member in workspace_project.iter_members():
-            member_project = workspace_project.core.create_project(member)
-            if not member_project.name or not member_project.is_distribution:
-                continue
-            with cd(workspace_project.root):
-                req = parse_requirement("./" + member.relative_to(workspace_project.root).as_posix(), True)
-                req.relocate(workspace_project.backend)  # type: ignore[attr-defined]
-            req.name = member_project.name
-            req.groups = ["default"]
-            yield req
+        yield from self.workspace.iter_dependencies()
 
     def with_workspace_dependencies(
         self,
@@ -207,88 +173,39 @@ class Project:
         keep those groups in the lockfile instead of being forced into
         ``default`` (#3816).
         """
-        result = list(requirements)
-        seen = {req.identify() for req in result}
-        if exclude:
-            seen.update(exclude)
-        for req in self.iter_workspace_dependencies():
-            if req.identify() in seen:
-                continue
-            result.append(req)
-            seen.add(req.identify())
-        return result
+        return self.workspace.with_dependencies(requirements, exclude=exclude)
 
     def pyproject_content_hash(self, algo: str = "sha256") -> str:
         """Return a lockfile content hash including workspace members."""
-        workspace_project = self.workspace_project or self
-        root_hash = workspace_project.pyproject.content_hash(algo)
-        if not workspace_project.is_workspace_root:
-            return root_hash
+        return self.workspace.content_hash(algo)
 
-        hasher = hashlib.new(algo)
-        hasher.update(root_hash.encode("utf-8"))
-        root = workspace_project.root.resolve()
-        for member in sorted(workspace_project.iter_members(), key=lambda path: path.relative_to(root).as_posix()):
-            member_project = workspace_project.core.create_project(member)
-            member_path = member.relative_to(root).as_posix()
-            hasher.update(b"\0")
-            hasher.update(member_path.encode("utf-8"))
-            hasher.update(b"\0")
-            hasher.update(member_project.pyproject.content_hash(algo).encode("utf-8"))
-        return hasher.hexdigest()
+    def lock_inputs(self) -> dict[str, Any]:
+        """Return the canonical project inputs that determine a lock resolution."""
+        from pdm.project.lockfile.freshness import build_lock_inputs
+
+        return build_lock_inputs(self)
+
+    def lock_inputs_enabled(self) -> bool:
+        """Return whether canonical lock inputs should be validated and persisted."""
+        from pdm.project.lockfile.base import LockInputsState
+
+        workspace_project = self.workspace_project or self
+        return (
+            self.lockfile.lock_inputs_state is not LockInputsState.LEGACY
+            or workspace_project.pyproject.resolution.get("lock_inputs") is True
+        )
 
     def add_member(self, path: str | Path, *, show_message: bool = True, dry_run: bool = False) -> None:
         """Add a project path to the workspace members."""
-        if workspace_project := self.workspace_project:
-            workspace_project.add_member(path, show_message=show_message, dry_run=dry_run)
-            return
-        member = Path(path).absolute().resolve()
-        try:
-            member_path = member.relative_to(self.root.resolve()).as_posix()
-        except ValueError as e:
-            raise PdmUsageError(f"Workspace member {member} must be under {self.root}") from e
-        self.pyproject.open_for_write()
-        members = self.pyproject.settings.setdefault("workspace", {}).setdefault("members", tomlkit.array())
-        existing_members = [str(item) for item in members]
-        if member_path not in existing_members:
-            members.append(member_path)
-            if not dry_run:
-                self.pyproject.write(show_message=show_message)
+        self.workspace.add_member(path, show_message=show_message, dry_run=dry_run)
 
     def remove_member(self, path: str | Path, *, show_message: bool = True, dry_run: bool = False) -> bool:
         """Remove an exact project path from the workspace members."""
-        if workspace_project := self.workspace_project:
-            return workspace_project.remove_member(path, show_message=show_message, dry_run=dry_run)
-        member = Path(path).absolute().resolve()
-        try:
-            member_path = member.relative_to(self.root.resolve()).as_posix()
-        except ValueError:
-            return False
-        self.pyproject.open_for_write()
-        workspace = self.pyproject.settings.get("workspace")
-        if not workspace:
-            return False
-        members = workspace.get("members", [])
-        removed = False
-        for index in reversed([i for i, item in enumerate(members) if str(item) == member_path]):
-            del members[index]
-            removed = True
-        if removed and not dry_run:
-            self.pyproject.write(show_message=show_message)
-        return removed
+        return self.workspace.remove_member(path, show_message=show_message, dry_run=dry_run)
 
     def maybe_add_to_workspace(self) -> Project | None:
         """Add this project to the nearest parent workspace when applicable."""
-        workspace_project = self.workspace_project
-        if workspace_project is not None:
-            return workspace_project
-        if project := self.parent_workspace_project:
-            project.add_member(self.root)
-            self.__dict__.pop("workspace_project", None)
-            self._lockfile = None
-            self._environment = None
-            return project
-        return None
+        return self.workspace.maybe_add()
 
     @property
     def lockfile(self) -> Lockfile:
@@ -821,6 +738,8 @@ class Project:
         self, toml_data: Any = None, show_message: bool = True, write: bool = True, **_kwds: Any
     ) -> None:
         """Write the lock file to disk."""
+        from pdm.project.lockfile.base import LockInputsState
+
         if _kwds:  # pragma: no cover
             deprecation_warning("Extra arguments have been moved to `format_lockfile` function", stacklevel=2)
         if toml_data is not None:  # pragma: no cover
@@ -828,7 +747,8 @@ class Project:
                 "Passing toml_data to write_lockfile is deprecated, please use `format_lockfile` instead", stacklevel=2
             )
             self.lockfile.set_data(toml_data)
-        self.lockfile.update_hash(self.pyproject_content_hash("sha256"))
+        if self.lockfile.lock_inputs_state is LockInputsState.LEGACY:
+            self.lockfile.update_hash(self.pyproject_content_hash("sha256"))
         if write and self.enable_write_lockfile:
             self.lockfile.write(show_message)
 
@@ -850,6 +770,21 @@ class Project:
             return False
         content_hash = self.pyproject_content_hash(algo)
         return content_hash == hash_value
+
+    def is_lockfile_fresh(self) -> bool:
+        """Return whether the lockfile satisfies the current project inputs."""
+        from pdm.project.lockfile.base import LockInputsState
+
+        lock_inputs_state = self.lockfile.lock_inputs_state
+        if lock_inputs_state is LockInputsState.LEGACY:
+            return not self.lock_inputs_enabled() and self.is_lockfile_hash_match()
+        if lock_inputs_state is not LockInputsState.SUPPORTED:
+            return False
+        if (lock_inputs := self.lockfile.lock_inputs) is None:
+            return False
+        from pdm.project.lockfile.freshness import lock_inputs_match
+
+        return lock_inputs_match(self, lock_inputs)
 
     def use_pyproject_dependencies(
         self, group: str, dev: bool = False

@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import ANY
 
@@ -9,7 +10,8 @@ from pdm.exceptions import PdmUsageError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM
-from pdm.project.lockfile.base import Compatibility
+from pdm.project.lockfile.base import Compatibility, LockInputsState
+from pdm.project.lockfile.freshness import lock_inputs_match
 from pdm.signals import pre_lock
 from pdm.utils import parse_version
 from tests import FIXTURES
@@ -74,6 +76,12 @@ def capture_pre_lock_requirements():
     return captured, capture_requirements
 
 
+def enable_lock_inputs(project):
+    project.pyproject.open_for_write()
+    project.pyproject.settings.setdefault("resolution", {})["lock_inputs"] = True
+    project.pyproject.write(show_message=False)
+
+
 def test_do_lock_adds_workspace_members_to_explicit_member_requirements(project, core, mocker):
     member_project = make_workspace_member(project, core)
     mocker.patch.object(member_project, "get_resolver", return_value=FakeResolver)
@@ -134,6 +142,7 @@ def test_lock_hash_tracks_workspace_member_pyproject(project, core, lock_format)
     actions.do_lock(workspace_project)
 
     assert workspace_project.is_lockfile_hash_match()
+    assert workspace_project.is_lockfile_fresh()
 
     member_pyproject = workspace_project.root / "packages" / "foo" / "pyproject.toml"
     member_pyproject.write_text(
@@ -149,10 +158,146 @@ def test_lock_hash_tracks_workspace_member_pyproject(project, core, lock_format)
 
     assert not fresh_project.is_lockfile_hash_match()
     assert not fresh_member_project.is_lockfile_hash_match()
+    assert not fresh_project.is_lockfile_fresh()
+    assert not fresh_member_project.is_lockfile_fresh()
 
     actions.do_lock(fresh_project)
 
     assert fresh_project.is_lockfile_hash_match()
+
+
+@pytest.mark.usefixtures("repository")
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_inputs_track_workspace_member_version(project, core, pdm, lock_format):
+    project.project_config["lock.format"] = lock_format
+    workspace_project = make_workspace_members(project, core, {"foo": []})
+    enable_lock_inputs(workspace_project)
+    actions.do_lock(workspace_project)
+
+    member_pyproject = workspace_project.root / "packages" / "foo" / "pyproject.toml"
+    member_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.2.0"\ndependencies = []\n',
+        encoding="utf-8",
+    )
+    fresh_project = core.create_project(
+        workspace_project.root, global_config=workspace_project.global_config.config_file.as_posix()
+    )
+
+    assert not fresh_project.is_lockfile_hash_match()
+    assert not fresh_project.is_lockfile_fresh()
+    result = pdm(["lock", "--check"], obj=fresh_project)
+    assert result.exit_code == 1
+
+
+@pytest.mark.usefixtures("repository")
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+@pytest.mark.parametrize("dependency_kind", ["direct-url", "editable-url"])
+def test_lock_inputs_track_local_directory_dependencies(project, lock_format, dependency_kind):
+    project.project_config["lock.format"] = lock_format
+    local_path = project.root / "local" / "foo"
+    local_path.mkdir(parents=True)
+    local_pyproject = local_path / "pyproject.toml"
+    local_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = []\n',
+        encoding="utf-8",
+    )
+    dependency = "file:///${PROJECT_ROOT}/local/foo"
+    if dependency_kind == "direct-url":
+        project.add_dependencies([f"foo @ {dependency}"])
+    else:
+        project.add_dependencies([f"-e {dependency}"], to_group="dev", dev=True)
+    enable_lock_inputs(project)
+    actions.do_lock(project)
+    project.lockfile.reload()
+
+    assert project.is_lockfile_fresh()
+    local_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests"]\n',
+        encoding="utf-8",
+    )
+
+    assert not project.is_lockfile_hash_match()
+    assert not project.is_lockfile_fresh()
+
+
+@pytest.mark.usefixtures("repository")
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_validates_local_project_specifiers(project, lock_format):
+    project.project_config["lock.format"] = lock_format
+    local_path = project.root / "local" / "foo"
+    local_path.mkdir(parents=True)
+    local_pyproject = local_path / "pyproject.toml"
+    local_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests"]\n',
+        encoding="utf-8",
+    )
+    project.add_dependencies(["foo @ file:///${PROJECT_ROOT}/local/foo"])
+    enable_lock_inputs(project)
+    actions.do_lock(project)
+    project.lockfile.reload()
+
+    local_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests>=2"]\n',
+        encoding="utf-8",
+    )
+    assert project.is_lockfile_fresh()
+
+    local_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests<2"]\n',
+        encoding="utf-8",
+    )
+    assert not project.is_lockfile_fresh()
+
+
+def test_lock_inputs_track_relative_editable_directory(project):
+    local_path = project.root / "local" / "foo"
+    local_path.mkdir(parents=True)
+    local_pyproject = local_path / "pyproject.toml"
+    local_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = []\n',
+        encoding="utf-8",
+    )
+    project.pyproject.settings["dev-dependencies"] = {"dev": ["-e ./local/foo"]}
+    project.pyproject.write(show_message=False)
+    previous_inputs = project.lock_inputs()
+
+    local_pyproject.write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests"]\n',
+        encoding="utf-8",
+    )
+
+    assert project.lock_inputs() != previous_inputs
+
+
+def test_dynamic_local_directory_is_volatile(project):
+    local_path = project.root / "local" / "foo"
+    local_path.mkdir(parents=True)
+    local_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\ndynamic = ["version", "dependencies"]\n',
+        encoding="utf-8",
+    )
+    project.add_dependencies(["foo @ file:///${PROJECT_ROOT}/local/foo"])
+    lock_inputs = project.lock_inputs()
+
+    assert not lock_inputs_match(project, lock_inputs)
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_inputs_track_local_file_content(project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    local_file = project.root / "demo-0.0.1-py2.py3-none-any.whl"
+    local_file.write_bytes((FIXTURES / "artifacts" / "demo-0.0.1-py2.py3-none-any.whl").read_bytes())
+    project.add_dependencies(["demo @ file:///${PROJECT_ROOT}/demo-0.0.1-py2.py3-none-any.whl"])
+    enable_lock_inputs(project)
+    actions.do_lock(project)
+    project.lockfile.reload()
+
+    assert project.is_lockfile_fresh()
+    with local_file.open("ab") as file_handler:
+        file_handler.write(b"changed")
+
+    assert not project.is_lockfile_hash_match()
+    assert not project.is_lockfile_fresh()
 
 
 @pytest.mark.usefixtures("repository")
@@ -243,6 +388,405 @@ def test_lock_check_no_change_success(pdm, project, repository):
     assert result.exit_code == 0
 
 
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_uses_canonical_inputs(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests", "pytz"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile.lock_inputs == project.lock_inputs()
+    assert project.lockfile.lock_inputs_state is LockInputsState.SUPPORTED
+    if lock_format == "pdm":
+        assert project.lockfile.file_version == str(project.lockfile.spec_version)
+        assert "content_hash" not in project.lockfile._data["metadata"]
+    else:
+        assert "hashes" not in project.lockfile._data["tool"]["pdm"]
+        assert "lock_inputs_version" not in project.lockfile._path.read_text(encoding="utf-8")
+    project.pyproject.metadata["dependencies"] = ["pytz", "requests"]
+    project.pyproject.write(show_message=False)
+    project.lockfile.reload()
+
+    assert not project.is_lockfile_hash_match()
+    assert project.is_lockfile_fresh()
+    result = pdm(["lock", "--check"], obj=project)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_inputs_omit_named_specifiers(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests>=2"])
+    enable_lock_inputs(project)
+
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile.lock_inputs["project"]["groups"]["default"] == ["requests"]
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_validates_only_locked_groups(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.pyproject.metadata["optional-dependencies"] = {"http": ["requests"]}
+    enable_lock_inputs(project)
+
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile.groups == ["default"]
+    assert "requests" not in project.get_locked_repository().candidates
+    assert project.is_lockfile_fresh()
+    result = pdm(["lock", "--check"], obj=project)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_allows_compatible_specifier_change(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+
+    project.add_dependencies(["requests>=2"])
+    project.lockfile.reload()
+
+    assert not project.is_lockfile_hash_match()
+    assert project.is_lockfile_fresh()
+    result = pdm(["lock", "--check"], obj=project)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_rejects_incompatible_specifier_change(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+
+    project.add_dependencies(["requests<2"])
+    project.lockfile.reload()
+
+    assert not project.is_lockfile_fresh()
+    result = pdm(["lock", "--check"], obj=project)
+    assert result.exit_code == 1
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_always_validates_current_specifier(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests>=2"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+
+    packages = project.lockfile._data["package"] if lock_format == "pdm" else project.lockfile._data["packages"]
+    package = next(package for package in packages if package["name"] == "requests")
+    package["version"] = "1.0.0"
+    project.lockfile.write(show_message=False)
+    project.lockfile.reload()
+
+    assert project.lockfile.lock_inputs == project.lock_inputs()
+    assert not project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_uses_effective_override_specifier(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.pyproject.settings["resolution"] = {
+        "lock_inputs": True,
+        "overrides": {"requests": "2.19.1"},
+    }
+    project.add_dependencies(["requests>=3"])
+
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+@pytest.mark.parametrize("dependency_kind", ["direct", "override"])
+@pytest.mark.parametrize("corruption", ["missing", "source"])
+def test_lock_check_validates_effective_file_source(
+    pdm,
+    project,
+    repository,
+    lock_format,
+    dependency_kind,
+    corruption,
+):
+    project.project_config["lock.format"] = lock_format
+    url = "http://fixtures.test/artifacts/demo-0.0.1-py2.py3-none-any.whl"
+    if dependency_kind == "direct":
+        project.add_dependencies([f"demo @ {url}"])
+    else:
+        project.pyproject.settings["resolution"] = {"overrides": {"demo": url}}
+        project.add_dependencies(["demo"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+
+    packages = project.lockfile._data["package"] if lock_format == "pdm" else project.lockfile._data["packages"]
+    package = next(package for package in packages if package["name"] == "demo")
+    if corruption == "missing":
+        packages.remove(package)
+    elif lock_format == "pdm":
+        package["url"] = f"{url}?tampered=1"
+    else:
+        package["archive"]["url"] = f"{url}?tampered=1"
+    project.lockfile.write(show_message=False)
+    project.lockfile.reload()
+
+    assert project.lockfile.lock_inputs == project.lock_inputs()
+    assert not project.is_lockfile_fresh()
+
+
+@pytest.mark.usefixtures("vcs")
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_validates_vcs_source(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["demo @ git+https://github.com/test-root/demo.git@1234567890abcdef"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.is_lockfile_fresh()
+    packages = project.lockfile._data["package"] if lock_format == "pdm" else project.lockfile._data["packages"]
+    package = next(package for package in packages if package["name"] == "demo")
+    if lock_format == "pdm":
+        package["git"] = "https://github.com/test-root/demo-tampered.git"
+    else:
+        package["vcs"]["url"] = "https://github.com/test-root/demo-tampered.git"
+    project.lockfile.write(show_message=False)
+    project.lockfile.reload()
+
+    assert project.lockfile.lock_inputs == project.lock_inputs()
+    assert not project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_matches_specifiers_by_marker_context(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.pyproject.metadata["dependencies"] = [
+        'django<2; sys_platform == "win32"',
+        'django>=2; sys_platform != "win32"',
+    ]
+    project.pyproject.settings.setdefault("resolution", {})["lock_inputs"] = True
+    project.pyproject.write(show_message=False)
+
+    pdm(["lock", "--platform", "windows"], obj=project, strict=True)
+    pdm(["lock", "--platform", "linux", "--append"], obj=project, strict=True)
+
+    assert project.is_lockfile_fresh()
+    project.pyproject.metadata["dependencies"][1] = 'django>=999; sys_platform != "win32"'
+    project.pyproject.write(show_message=False)
+    project.lockfile.reload()
+    assert not project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_requires_candidate_coverage_for_all_targets(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    repository.add_candidate("forked", "1.0", "<3.11")
+    repository.add_candidate("forked", "2.0", ">=3.11")
+    project.add_dependencies(["forked"])
+    enable_lock_inputs(project)
+
+    pdm(["lock", "--python", ">=3.10,<3.11"], obj=project, strict=True)
+    pdm(["lock", "--python", ">=3.12,<3.13", "--append"], obj=project, strict=True)
+
+    packages = project.lockfile._data["package"] if lock_format == "pdm" else project.lockfile._data["packages"]
+    candidates = [package for package in packages if package["name"] == "forked"]
+    assert len(candidates) == 2
+    assert project.is_lockfile_fresh()
+
+    packages.remove(candidates[0])
+    project.lockfile.write(show_message=False)
+    project.lockfile.reload()
+
+    assert project.lockfile.lock_inputs == project.lock_inputs()
+    assert not project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_skips_excluded_named_dependency(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.pyproject.settings["resolution"] = {"excludes": ["requests"], "lock_inputs": True}
+    local_path = project.root / "local" / "foo"
+    local_path.mkdir(parents=True)
+    local_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\ndependencies = ["requests>=999"]\n',
+        encoding="utf-8",
+    )
+    project.add_dependencies(["foo @ file:///${PROJECT_ROOT}/local/foo"])
+
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+@pytest.mark.parametrize("lock_inputs_setting", [None, False])
+def test_lock_check_falls_back_to_legacy_hash(pdm, project, repository, lock_format, lock_inputs_setting):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests"])
+    if lock_inputs_setting is not None:
+        project.pyproject.open_for_write()
+        project.pyproject.settings.setdefault("resolution", {})["lock_inputs"] = lock_inputs_setting
+        project.pyproject.write(show_message=False)
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile.lock_inputs is None
+    assert project.lockfile.lock_inputs_state is LockInputsState.LEGACY
+    assert project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_inputs_setting_requires_regeneration(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests"])
+    pdm(["lock"], obj=project, strict=True)
+
+    enable_lock_inputs(project)
+    project.lockfile.reload()
+
+    assert not project.is_lockfile_hash_match()
+    assert not project.is_lockfile_fresh()
+
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile.lock_inputs_state is LockInputsState.SUPPORTED
+    assert project.lockfile.lock_inputs is not None
+    assert "lock_inputs" not in project.lockfile.lock_inputs["project"]["resolution"]
+    assert not project.is_lockfile_hash_match()
+    assert project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_existing_lock_inputs_remain_enabled(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+
+    project.pyproject.settings["resolution"].pop("lock_inputs")
+    project.pyproject.write(show_message=False)
+    project.lockfile.reload()
+
+    assert not project.is_lockfile_hash_match()
+    assert project.lock_inputs_enabled()
+    assert project.is_lockfile_fresh()
+
+    pdm(["lock"], obj=project, strict=True)
+
+    assert project.lockfile.lock_inputs_state is LockInputsState.SUPPORTED
+    assert project.lockfile.lock_inputs is not None
+    assert not project.is_lockfile_hash_match()
+    assert project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_version", ["", "4.5.0", "4.5.1", "4.5.2", "4.6.0"])
+def test_pdmlock_uses_present_inputs_regardless_of_version(pdm, project, repository, lock_version):
+    project.add_dependencies(["requests"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+    project.lockfile._data["metadata"]["lock_version"] = lock_version
+    project.pyproject.settings["resolution"].pop("lock_inputs")
+    project.pyproject.write(show_message=False)
+
+    assert project.lockfile.lock_inputs is not None
+    assert project.lockfile.lock_inputs_state is LockInputsState.SUPPORTED
+    assert not project.is_lockfile_hash_match()
+    assert project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_lock_check_rejects_malformed_inputs(pdm, project, repository, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+    project.pyproject.settings["resolution"].pop("lock_inputs")
+    project.pyproject.write(show_message=False)
+    pdm(["lock"], obj=project, strict=True)
+    if lock_format == "pdm":
+        lock_inputs = project.lockfile._data["metadata"]["lock_inputs"]
+    else:
+        lock_inputs = project.lockfile._data["tool"]["pdm"]["lock_inputs"]
+    lock_inputs["project"]["groups"]["default"] = [42]
+
+    assert not project.is_lockfile_fresh()
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+@pytest.mark.parametrize("malformed_inputs", [{}, "invalid", datetime(2026, 1, 1)])
+def test_lock_check_does_not_fallback_for_invalid_lock_inputs(pdm, project, repository, lock_format, malformed_inputs):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["requests"])
+    enable_lock_inputs(project)
+    pdm(["lock"], obj=project, strict=True)
+    project.pyproject.settings["resolution"].pop("lock_inputs")
+    project.pyproject.write(show_message=False)
+    pdm(["lock"], obj=project, strict=True)
+    if lock_format == "pdm":
+        project.lockfile._data["metadata"]["lock_inputs"] = malformed_inputs
+    else:
+        project.lockfile._data["tool"]["pdm"]["lock_inputs"] = malformed_inputs
+
+    assert not project.is_lockfile_hash_match()
+    assert not project.is_lockfile_fresh()
+
+
+def test_lock_check_rejects_nested_temporal_value(project):
+    timestamp = "2026-01-01T00:00:00"
+    project.pyproject.settings["source"] = [{"name": timestamp, "url": "https://example.org/simple"}]
+    lock_inputs = project.lock_inputs()
+    lock_inputs["project"]["sources"][0]["name"] = datetime.fromisoformat(timestamp)
+
+    assert not lock_inputs_match(project, lock_inputs)
+
+
+def test_lock_inputs_redact_credentials(project):
+    project.pyproject.settings["source"] = [
+        {
+            "name": "private",
+            "url": "https://url-user:url-password@example.org/source-path-secret?token=source-query-secret",
+            "username": "config-user",
+            "password": "config-password",
+        }
+    ]
+    project.pyproject.metadata["dependencies"] = [
+        "demo @ https://dependency-user:dependency-password@example.org/dependency-path-secret/demo.whl"
+        "?token=dependency-query-secret"
+    ]
+    project.pyproject.settings["resolution"] = {
+        "overrides": {
+            "demo": "https://example.org/override-path-secret/demo.whl?token=override-query-secret",
+        }
+    }
+
+    lock_inputs = repr(project.lock_inputs())
+
+    assert "url-user" not in lock_inputs
+    assert "url-password" not in lock_inputs
+    assert "config-user" not in lock_inputs
+    assert "config-password" not in lock_inputs
+    assert "dependency-user" not in lock_inputs
+    assert "dependency-password" not in lock_inputs
+    assert "source-path-secret" not in lock_inputs
+    assert "source-query-secret" not in lock_inputs
+    assert "dependency-path-secret" not in lock_inputs
+    assert "dependency-query-secret" not in lock_inputs
+    assert "override-path-secret" not in lock_inputs
+    assert "override-query-secret" not in lock_inputs
+    assert "sha256:" in lock_inputs
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+def test_write_lockfile_does_not_add_lock_inputs(project, lock_format):
+    project.project_config["lock.format"] = lock_format
+    project.lockfile.open_for_write()
+
+    project.write_lockfile(show_message=False)
+
+    assert project.lockfile.lock_inputs is None
+
+
 def test_lock_check_change_fails(pdm, project, repository):
     project.add_dependencies(["requests"])
     result = pdm(["lock"], obj=project)
@@ -294,7 +838,7 @@ def test_lock_self_referencing_dev_groups(project, pdm, to_dev):
     name = project.name
     project.add_dependencies(["requests"], to_group="http", dev=to_dev)
     project.add_dependencies(
-        {"pytz": parse_requirement("pytz"), f"{name}[http]": parse_requirement(f"{name}[http]")},
+        [parse_requirement("pytz"), parse_requirement(f"{name}[http]")],
         to_group="dev",
         dev=True,
     )
@@ -314,7 +858,7 @@ def test_lock_self_referencing_optional_groups(project, pdm):
     name = project.name
     project.add_dependencies(["requests"], to_group="http")
     project.add_dependencies(
-        {"pytz": parse_requirement("pytz"), f"{name}[http]": parse_requirement(f"{name}[http]")},
+        [parse_requirement("pytz"), parse_requirement(f"{name}[http]")],
         to_group="all",
     )
     pdm(["lock", "-G", "all"], obj=project, strict=True)

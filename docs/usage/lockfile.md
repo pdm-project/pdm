@@ -27,11 +27,25 @@ There are a few similar commands to do this job with slight differences:
 - `--clean-unselected` (or `--only-keep`): more thorough version of `--clean` that will also remove packages not in the groups specified by the `-G`, `-d`, and `--prod` options.
   Note: by default, `pdm sync` selects all groups from the lockfile, so `--clean-unselected` is identical to `--clean` unless `-G`, `-d`, and `--prod` are used.
 
-## Hashes in the lock file
+## Lock file freshness
 
-By default, `pdm install` will check if the lock file matches the content of `pyproject.toml`, this is done by storing a content hash of `pyproject.toml` in the lock file.
+!!! tip
+    Changed in 2.28.1.
 
-To check if the hash in the lock file is up-to-date:
+Lock files that do not already contain canonical inputs use the legacy content hash by default. Canonical lock inputs can be enabled in `pyproject.toml`:
+
+```toml
+[tool.pdm.resolution]
+lock_inputs = true
+```
+
+With canonical lock inputs enabled, formatting and dependency ordering changes do not invalidate the lock file. If only a version specifier changes, the lock file remains valid when all matching locked versions still satisfy the new specifier.
+
+Local file and directory dependencies are treated as mutable inputs. PDM fingerprints local files and records static project metadata for local directories recursively. A local project with resolution-relevant dynamic metadata is conservatively treated as out of date because its dependencies cannot be validated without invoking the build backend.
+
+Lock files with canonical inputs omit the legacy content hash. Once a lock file contains canonical inputs, PDM keeps using and writing them even if the setting is later removed. If a lock file does not contain canonical inputs, setting `lock_inputs = true` marks it as out of date until `pdm lock` records them; without the setting, PDM falls back to the content hash. Present but invalid canonical inputs are always treated as out of date.
+
+To check if the lock file is up-to-date:
 
 ```bash
 pdm lock --check
