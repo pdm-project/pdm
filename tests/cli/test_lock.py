@@ -838,7 +838,7 @@ def test_lock_self_referencing_dev_groups(project, pdm, to_dev):
     name = project.name
     project.add_dependencies(["requests"], to_group="http", dev=to_dev)
     project.add_dependencies(
-        {"pytz": parse_requirement("pytz"), f"{name}[http]": parse_requirement(f"{name}[http]")},
+        [parse_requirement("pytz"), parse_requirement(f"{name}[http]")],
         to_group="dev",
         dev=True,
     )
@@ -858,7 +858,7 @@ def test_lock_self_referencing_optional_groups(project, pdm):
     name = project.name
     project.add_dependencies(["requests"], to_group="http")
     project.add_dependencies(
-        {"pytz": parse_requirement("pytz"), f"{name}[http]": parse_requirement(f"{name}[http]")},
+        [parse_requirement("pytz"), parse_requirement(f"{name}[http]")],
         to_group="all",
     )
     pdm(["lock", "-G", "all"], obj=project, strict=True)

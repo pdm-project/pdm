@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import sys
 import tarfile
 import tempfile
 from collections.abc import Mapping
@@ -71,7 +72,10 @@ class Command(BaseCommand):
                         sdist_out = tempfile.mkdtemp(prefix="pdm-build-via-sdist-")
                         try:
                             with tarfile.open(sdist_file, "r:gz") as tf:
-                                tf.extractall(sdist_out)
+                                if sys.version_info >= (3, 12):
+                                    tf.extractall(sdist_out, filter="data")
+                                else:  # pragma: no cover
+                                    tf.extractall(sdist_out)
                                 sdist_name = os.path.basename(sdist_file)[: -len(".tar.gz")]
                                 whl = WheelBuilder(os.path.join(sdist_out, sdist_name), project.environment).build(dest)
                                 project.core.ui.echo(f"[info]Built wheel at {whl}")
