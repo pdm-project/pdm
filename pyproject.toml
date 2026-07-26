@@ -170,7 +170,7 @@ underlines = ["", "", ""]
 
 [tool.pytest.ini_options]
 filterwarnings = [
-  "ignore::DeprecationWarning"
+  "default::DeprecationWarning",
 ]
 markers = [
     "network: Tests that require network",
@@ -199,6 +199,7 @@ omit = [
 ]
 
 [tool.coverage.report]
+fail_under = 84
 # Regexes for lines to exclude from consideration
 exclude_lines = [
     "pragma: no cover",
