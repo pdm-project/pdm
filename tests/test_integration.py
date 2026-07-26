@@ -24,6 +24,7 @@ PYTHON_VERSIONS = get_python_versions()
 
 
 @pytest.mark.integration
+@pytest.mark.filterwarnings("ignore::pdm.exceptions.PackageWarning")
 @pytest.mark.network
 @pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("python_version", PYTHON_VERSIONS)

@@ -63,13 +63,6 @@ def pytest_runtest_setup(item):
         pytest.skip("uv command not found")
 
 
-def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    package_warning_filter = pytest.mark.filterwarnings("ignore::pdm.exceptions.PackageWarning")
-    for item in items:
-        if "integration" in item.keywords:
-            item.add_marker(package_warning_filter)
-
-
 class MockGit(Git):
     def fetch_new(self, location, url, rev, args):
         path = os.path.splitext(os.path.basename(unquote(urlparse(str(url)).path)))[0]
