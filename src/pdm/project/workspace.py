@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -87,9 +87,16 @@ class WorkspaceManager:
             req.groups = ["default"]
             yield req
 
-    def with_dependencies(self, requirements: Iterable[Requirement]) -> list[Requirement]:
+    def with_dependencies(
+        self,
+        requirements: Iterable[Requirement],
+        *,
+        exclude: Collection[str] | None = None,
+    ) -> list[Requirement]:
         result = list(requirements)
         seen = {req.identify() for req in result}
+        if exclude:
+            seen.update(exclude)
         for req in self.iter_dependencies():
             if req.identify() in seen:
                 continue

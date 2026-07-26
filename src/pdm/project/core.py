@@ -7,7 +7,7 @@ import operator
 import os
 import shutil
 import sys
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from copy import deepcopy
 from functools import cached_property, reduce
 from pathlib import Path
@@ -161,9 +161,19 @@ class Project:
         """Iterate over implicit editable requirements for workspace members."""
         yield from self.workspace.iter_dependencies()
 
-    def with_workspace_dependencies(self, requirements: Iterable[Requirement]) -> list[Requirement]:
-        """Return requirements with implicit workspace member dependencies included."""
-        return self.workspace.with_dependencies(requirements)
+    def with_workspace_dependencies(
+        self,
+        requirements: Iterable[Requirement],
+        *,
+        exclude: Collection[str] | None = None,
+    ) -> list[Requirement]:
+        """Return requirements with implicit workspace member dependencies included.
+
+        Members already declared in other dependency groups are skipped so they
+        keep those groups in the lockfile instead of being forced into
+        ``default`` (#3816).
+        """
+        return self.workspace.with_dependencies(requirements, exclude=exclude)
 
     def pyproject_content_hash(self, algo: str = "sha256") -> str:
         """Return a lockfile content hash including workspace members."""
@@ -554,7 +564,12 @@ class Project:
             for group, deps in extra_deps.items():
                 group_deps[group].extend(deps)
         if "default" in group_deps and self.is_workspace_root:
-            group_deps["default"] = self.with_workspace_dependencies(group_deps["default"])
+            # Do not force workspace members that are already declared in other
+            # groups into default (keeps lockfile groups accurate) (#3816).
+            declared_elsewhere = {
+                req.identify() for group, deps in group_deps.items() if group != "default" for req in deps
+            }
+            group_deps["default"] = self.with_workspace_dependencies(group_deps["default"], exclude=declared_elsewhere)
         return group_deps
 
     @property
