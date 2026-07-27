@@ -100,6 +100,43 @@ def test_build_uv_pyproject_toml_with_workspace(project):
     assert data["tool"]["uv"]["sources"]["bar"] == {"workspace": True}
 
 
+def test_build_uv_lock_with_local_path_wheel(project):
+    from pdm.models.candidates import Candidate
+    from pdm.models.repositories import Package
+    from pdm.models.requirements import FileRequirement
+
+    wheel_name = "first-2.0.2-py2.py3-none-any.whl"
+    wheel_path = FIXTURES / "artifacts" / wheel_name
+    req = FileRequirement.create(path=str(wheel_path), name="first")
+    req.groups = ["default"]
+    candidate = Candidate(req, name="first", version="2.0.2")
+    candidate.hashes.append(
+        {
+            "url": wheel_name,
+            "file": wheel_name,
+            "hash": "sha256:dummy",
+        }
+    )
+    package = Package(candidate, [], "")
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    locked_repo.add_package(package)
+
+    with uv_file_builder(project, ">=3.8", [req], locked_repo) as builder:
+        path = builder.build_uv_lock()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+
+    pkg = next(p for p in data["package"] if p["name"] == "first")
+    assert "path" in pkg["source"], "local wheel source should use 'path', not 'url'"
+    assert "url" not in pkg["source"]
+    wheel_entry = pkg["wheels"][0]
+    assert "filename" in wheel_entry, "local wheel entry should use 'filename', not 'url'"
+    assert "url" not in wheel_entry
+    assert wheel_entry["filename"] == wheel_name
+    assert wheel_entry["hash"] == "sha256:dummy"
+
+
 def test_convert_poetry(project):
     golden_file = FIXTURES / "pyproject.toml"
     assert poetry.check_fingerprint(project, golden_file)

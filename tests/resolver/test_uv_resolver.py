@@ -122,3 +122,45 @@ def test_parse_uv_lock_with_source_url_fallback(project):
         "file": "mdformat-py-edu-fr.tar.gz",
         "hash": "sha256:124488d1796a7ad5f98b1365fe00ff3e71846fd1f91d46e54f8b73c0cdbd78a1",
     }
+
+
+def test_parse_uv_lock_with_local_path_wheel(project):
+    from pdm.resolver.uv import UvResolver
+
+    lock_path = project.root / "uv.lock"
+    lock_path.write_text(
+        dedent(
+            """
+            version = 1
+            requires-python = ">=3.8"
+
+            [[package]]
+            name = "my-local-pkg"
+            version = "0.1.0"
+            source = { path = "./wheels/my_local_pkg-0.1.0-py3-none-any.whl" }
+
+            [[package.wheels]]
+            filename = "my_local_pkg-0.1.0-py3-none-any.whl"
+            hash = "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+            """
+        ).strip(),
+        encoding="utf-8",
+    )
+
+    resolver = UvResolver(
+        project.environment,
+        requirements=[],
+        target=project.environment.spec,
+        update_strategy="all",
+        strategies=set(),
+    )
+    resolution = resolver._parse_uv_lock(lock_path)
+    candidate = next(iter(resolution.packages)).candidate
+
+    assert candidate.req.path is not None
+    assert candidate.name == "my-local-pkg"
+    assert candidate.hashes[0] == {
+        "url": "my_local_pkg-0.1.0-py3-none-any.whl",
+        "file": "my_local_pkg-0.1.0-py3-none-any.whl",
+        "hash": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+    }
