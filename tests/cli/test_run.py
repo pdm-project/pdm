@@ -453,6 +453,15 @@ def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_p
     assert shlex.split(cmd_result)[1] == str(spaced_dir)
 
 
+def test_interpolate_cwd_with_backslash_u_in_path(monkeypatch):
+    from pdm.cli.commands.run import _interpolate_cwd
+
+    monkeypatch.setattr(Path, "cwd", staticmethod(lambda: Path(r"C:\Users\pdm")))
+    interpolated, replaced = _interpolate_cwd("echo {PDM_RUN_CWD}")
+    assert replaced
+    assert r"C:\Users\pdm" in interpolated
+
+
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {
