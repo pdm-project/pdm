@@ -97,7 +97,7 @@ def _interpolate_cwd(script: str, for_shell: bool = False) -> tuple[str, bool]:
     else:
         cwd = shlex.quote(path)
 
-    interpolated, count = RE_CWD_PLACEHOLDER.subn(cwd, script)
+    interpolated, count = RE_CWD_PLACEHOLDER.subn(lambda _: cwd, script)
     return interpolated, count > 0
 
 
