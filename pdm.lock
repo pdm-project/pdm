@@ -5,28 +5,10 @@
 groups = ["default", "all", "doc", "keyring", "pytest", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.1"
+content_hash = "sha256:c3f6d458b99d53437990fe3a5789d402dba4b471df42276a1492a80baf130777"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
-
-[metadata.lock_inputs.project]
-requires-python = ">=3.10"
-sources = []
-
-[metadata.lock_inputs.project.groups]
-all = ["keyring"]
-cookiecutter = ["cookiecutter"]
-copier = ["copier"]
-default = ["argcomplete", "blinker", "certifi", "dep-logic", "filelock", "findpython", "hishel[httpx]", "httpcore", "httpx[socks]", "id", "installer", "packaging", "pbs-installer", "platformdirs", "pyproject-hooks", "python-dotenv", "resolvelib", "rich", "shellingham", "tomli; python_version < \"3.11\"", "tomlkit", "truststore", "unearth", "virtualenv"]
-doc = ["mkdocstrings[python]", "setuptools", "zensical; python_version >= \"3.10\""]
-keyring = ["keyring"]
-pytest = ["pytest", "pytest-mock"]
-template = ["cookiecutter", "copier"]
-test = ["pytest", "pytest-cov", "pytest-httpserver", "pytest-httpx", "pytest-mock", "pytest-rerunfailures", "pytest-xdist"]
-tox = ["tox", "tox-pdm"]
-workflow = ["parver", "towncrier"]
-
-[metadata.lock_inputs.project.resolution]
 
 [[package]]
 name = "anyio"
