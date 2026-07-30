@@ -492,6 +492,23 @@ def venv_option(
     if values is not None:
         use_venv(project, cast(str, values))
 
+environment_option = Option(
+    "-e",
+    "--environment",
+    dest="environment",
+    action="store",
+    default=os.getenv("PDM_ENVIRONMENT", "local"),
+    help="Specify the environment name to use. [env var: PDM_ENVIRONMENT]",
+)
+
+env_file_option = Option(
+    "--env-file",
+    dest="env_file",
+    action="store",
+    help="Specify the environment file to use. [env var: PDM_ENV_FILE]",
+    default=os.getenv("PDM_ENV_FILE", ""),
+)
+
 
 lock_strategy_group = ArgumentGroup("Lock Strategy")
 lock_strategy_group.add_argument(
