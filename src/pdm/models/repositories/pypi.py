@@ -82,7 +82,7 @@ class PyPIRepository(BaseRepository):
 
         session = self.environment.session
         resp = session.get(search_url, params={"q": query})
-        if resp.status_code == 404:  # pragma: no cover
+        if resp.status_code == 404:
             self.environment.project.core.ui.warn(
                 f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
                 f"to {self.DEFAULT_INDEX_URL!r} now.\n"

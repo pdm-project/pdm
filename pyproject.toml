@@ -192,9 +192,7 @@ branch = true
 source = ["pdm"]
 omit = [
     "*/pdm/__main__.py",
-    "*/pdm/cli/commands/search.py",
     "*/pdm/pep582/sitecustomize.py",
-    "*/pdm/models/search.py",
     "*/pdm/models/in_process/*.py",
     "*/pdm-test-*-env/*",
     "*/pdm/misc/sysconfig_patcher.py",
