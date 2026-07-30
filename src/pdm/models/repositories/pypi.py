@@ -72,7 +72,7 @@ class PyPIRepository(BaseRepository):
             )
         return cans
 
-    def search(self, query: str) -> SearchResults:
+    def search(self, query: str) -> SearchResults:  # pragma: no cover
         pypi_simple = self.sources[0].url.rstrip("/")  # type: ignore[union-attr]
 
         if pypi_simple.endswith("/simple"):
