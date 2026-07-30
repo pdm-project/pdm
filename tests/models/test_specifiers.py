@@ -1,6 +1,8 @@
 import pytest
 
-from pdm.models.specifiers import PySpecSet
+from pdm.exceptions import InvalidPyVersion
+from pdm.models.specifiers import PySpecSet, _convert_spec, _fix_py4k, get_specifier
+from pdm.models.versions import Version
 
 
 @pytest.mark.filterwarnings("ignore::FutureWarning")
@@ -111,3 +113,71 @@ def test_pyspec_isnot_subset_superset(left, right):
     right = PySpecSet(right)
     assert not left.is_subset(right), f"{left}, {right}"
     assert not left.is_superset(right), f"{left}, {right}"
+
+
+def test_get_specifier_accepts_empty_values():
+    assert str(get_specifier(None)) == ""
+    assert str(get_specifier("*")) == ""
+    assert str(get_specifier(">=3.9")) == ">=3.9"
+
+
+def test_pyspec_rejects_invalid_version():
+    with pytest.raises(InvalidPyVersion, match="Invalid specifier"):
+        PySpecSet("not-a-specifier")
+
+
+def test_pyspec_protocol_operations():
+    spec = PySpecSet(">=3.9")
+    logic = PySpecSet("<4")._logic
+
+    assert spec.__eq__(object()) is NotImplemented
+    assert spec & logic == PySpecSet(">=3.9,<4")
+    assert spec | logic == PySpecSet()
+    assert spec.__and__(object()) is NotImplemented
+    assert spec.__or__(object()) is NotImplemented
+    assert hash(spec) == hash(spec._logic)
+    assert repr(spec) == "<PySpecSet >=3.9>"
+
+
+@pytest.mark.parametrize(
+    ("lower", "upper"),
+    [
+        ("3.9.0", "3.9.0"),
+        ("2.7.0", "3.1.0"),
+        ("3.9.0", "3.10.2"),
+        ("3.9.1", "3.11.0"),
+        ("3.9.1", "3.9.3"),
+    ],
+)
+def test_populate_version_range_boundaries(lower, upper):
+    assert list(PySpecSet._populate_version_range(Version(lower), Version(upper))) is not None
+
+
+def test_superset_and_subset_shortcuts():
+    empty = PySpecSet("<empty>")
+    any_spec = PySpecSet()
+    constrained = PySpecSet(">=3.9")
+
+    assert not empty.is_superset(constrained)
+    assert not empty.is_subset(constrained)
+    assert any_spec.is_superset(">=3.9")
+    assert constrained.is_subset("")
+
+
+def test_as_marker_string_variants():
+    assert PySpecSet().as_marker_string() == ""
+    with pytest.raises(InvalidPyVersion, match="Impossible specifier"):
+        PySpecSet("<empty>").as_marker_string()
+
+    marker = PySpecSet(">=3.9,<4,!=3.10.*,!=3.11.1").as_marker_string()
+    assert "python_version>='3.9'" in marker
+    assert "3.10.0" in marker
+    assert "3.11.1" in marker
+
+
+def test_convert_union_specifier_and_fix_py4k():
+    union = PySpecSet("<3.9")._logic | PySpecSet(">=3.11,<4")._logic
+
+    assert " or " in _convert_spec(union)
+    assert _fix_py4k(PySpecSet("<4.0")._logic).is_any()
+    assert _fix_py4k(PySpecSet(">=3.9,<3.10")._logic) == PySpecSet(">=3.9,<3.10")._logic

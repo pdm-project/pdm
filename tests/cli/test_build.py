@@ -1,5 +1,6 @@
 import tarfile
 import zipfile
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -172,3 +173,59 @@ def test_build_ignoring_pip_environment(fixture_project, monkeypatch):
     project = fixture_project("demo-module")
     monkeypatch.setenv("PIP_REQUIRE_VIRTUALENV", "1")
     Command.do_build(project)
+
+
+@pytest.mark.parametrize(
+    ("verbose", "sdist", "wheel", "verbosity_arg"),
+    [
+        (-1, False, True, "-q"),
+        (2, True, False, "-vv"),
+    ],
+)
+def test_uv_build_filters_artifacts(tmp_path, mocker, verbose, sdist, wheel, verbosity_arg):
+    dest = tmp_path / "dist"
+    dest.mkdir()
+    (dest / ".gitignore").write_text("*\n")
+    sdist_file = dest / "demo-1.0.tar.gz"
+    wheel_file = dest / "demo-1.0-py3-none-any.whl"
+    sdist_file.touch()
+    wheel_file.touch()
+    ui = mocker.MagicMock()
+    project = SimpleNamespace(
+        is_global=False,
+        is_distribution=True,
+        root=tmp_path,
+        environment=mocker.sentinel.environment,
+        config={"use_uv": True},
+        core=SimpleNamespace(
+            state=SimpleNamespace(config_settings={"key": "value"}),
+            ui=ui,
+            uv_cmd=["uv"],
+        ),
+    )
+    hooks = mocker.Mock()
+    run = mocker.patch("subprocess.run")
+
+    Command.do_build(
+        project,
+        sdist=sdist,
+        wheel=wheel,
+        dest=str(dest),
+        clean=False,
+        verbose=verbose,
+        hooks=hooks,
+    )
+
+    run.assert_called_once_with(
+        ["uv", "build", "--out-dir", str(dest), verbosity_arg],
+        check=True,
+    )
+    assert sdist_file.exists() is sdist
+    assert wheel_file.exists() is wheel
+    assert not (dest / ".gitignore").exists()
+    expected_artifact = str(sdist_file if sdist else wheel_file)
+    hooks.try_emit.assert_any_call(
+        "post_build",
+        artifacts=[expected_artifact],
+        config_settings={"key": "value"},
+    )
