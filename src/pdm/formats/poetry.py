@@ -167,9 +167,9 @@ class PoetryMetaConverter(MetaConverter):
             optional = getattr(req_dict, "items", None) and req_dict.pop("optional", False)
             for req in _convert_req(key, req_dict):
                 if optional:
-                    extra = next((k for k, v in extras.items() if key in v), None)
-                    if extra:
-                        self._data.setdefault("optional-dependencies", {}).setdefault(extra, []).append(req)
+                    for extra, members in extras.items():
+                        if key in members:
+                            self._data.setdefault("optional-dependencies", {}).setdefault(extra, []).append(req)
                 else:
                     rv.append(req)
         del source["dependencies"]

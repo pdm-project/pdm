@@ -172,6 +172,16 @@ def test_convert_poetry(project):
     assert build["excludes"] == ["my_package/excluded.py"]
 
 
+def test_convert_poetry_optional_dependency_in_multiple_extras(project):
+    golden_file = FIXTURES / "pyproject.toml"
+    with cd(FIXTURES):
+        result, _ = poetry.convert(project, golden_file, ns())
+
+    assert result["optional-dependencies"]["mysql"] == ["mysqlclient<2.0,>=1.3"]
+    assert result["optional-dependencies"]["pgsql"] == ["psycopg2<3.0,>=2.7"]
+    assert result["optional-dependencies"]["all"] == ["psycopg2<3.0,>=2.7", "mysqlclient<2.0,>=1.3"]
+
+
 def test_convert_poetry_12(project):
     golden_file = FIXTURES / "poetry-new.toml"
     with cd(FIXTURES):
