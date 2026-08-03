@@ -45,12 +45,10 @@ class Lockfile(TOMLFile, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def hash(self) -> tuple[str, str]:
         """The content hash algo and hash value of the pyproject.toml to generate this lockfile."""
-        pass
 
     @abc.abstractmethod
     def update_hash(self, hash_value: str, algo: str = "sha256") -> None:
         """Update the content hash of the lockfile."""
-        pass
 
     @property
     def lock_inputs(self) -> object | None:

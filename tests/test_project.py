@@ -442,9 +442,8 @@ def test_load_extra_sources(project):
 
 def test_no_index_raise_error(project):
     project.global_config["pypi.ignore_stored_index"] = True
-    with pytest.raises(PdmException, match="You must specify at least one index"):
-        with project.environment.get_finder():
-            pass
+    with pytest.raises(PdmException, match="You must specify at least one index"), project.environment.get_finder():
+        pass
 
 
 def test_access_index_with_auth(project, httpserver: HTTPServer):

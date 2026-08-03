@@ -56,7 +56,7 @@ class ProjectTemplate:
         self.prepare_template()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         shutil.rmtree(self._path, ignore_errors=True)
 
     def generate(self, target_path: Path, metadata: dict[str, Any], overwrite: bool = False) -> None:
@@ -93,10 +93,7 @@ class ProjectTemplate:
                         replace_all(os.path.join(root, f), import_name, new_import_name)
                         if f == import_name + ".py":
                             os.rename(os.path.join(root, f), os.path.join(root, new_import_name + ".py"))
-                    elif f.endswith((".md", ".rst")):
-                        replace_all(os.path.join(root, f), original_name, new_name)
-                        replace_all(os.path.join(root, f), import_name, new_import_name)
-                    elif Path(root) == self._path and f == "pyproject.toml":
+                    elif f.endswith((".md", ".rst")) or (Path(root) == self._path and f == "pyproject.toml"):
                         replace_all(os.path.join(root, f), original_name, new_name)
                         replace_all(os.path.join(root, f), import_name, new_import_name)
 

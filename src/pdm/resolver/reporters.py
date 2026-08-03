@@ -105,7 +105,7 @@ class RichLockReporter(LockReporter):
         self.start()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         self.stop()
 
     def starting_round(self, index: int) -> None:

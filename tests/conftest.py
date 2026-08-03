@@ -143,7 +143,6 @@ def fixture_project(project_no_init: Project, request: pytest.FixtureRequest, lo
 @pytest.fixture()
 def vcs(monkeypatch):
     monkeypatch.setattr(vcs_support, "_registry", {"git": MockGit})
-    return
 
 
 @pytest.fixture(params=[False, True])

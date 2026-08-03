@@ -107,5 +107,5 @@ class InstallationStatus:
         self.start()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         self.stop()
