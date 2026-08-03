@@ -18,13 +18,13 @@ import subprocess
 import sys
 import sysconfig
 import tempfile
-import urllib.parse as parse
 import warnings
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from os import name as os_name
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib import parse
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version

@@ -108,7 +108,7 @@ class Version:
     def __repr__(self) -> str:
         return f"<Version({self})>"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
         return self._version == other._version and self.pre == other.pre

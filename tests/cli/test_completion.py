@@ -48,15 +48,14 @@ def completion_values(*words):
         "_ARGCOMPLETE_IFS": "\n",
         "_ARGCOMPLETE_SHELL": "bash",
     }
-    with patch.dict(os.environ, environment):
-        with pytest.raises(CompletionFinished):
-            finder(
-                core.parser,
-                always_complete_options=False,
-                exit_method=exit_method,
-                output_stream=output,
-                default_completer=SuppressCompleter(),
-            )
+    with patch.dict(os.environ, environment), pytest.raises(CompletionFinished):
+        finder(
+            core.parser,
+            always_complete_options=False,
+            exit_method=exit_method,
+            output_stream=output,
+            default_completer=SuppressCompleter(),
+        )
     return {value.rstrip() for value in output.getvalue().splitlines()}
 
 

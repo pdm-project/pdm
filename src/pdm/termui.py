@@ -81,7 +81,7 @@ def confirm(*args: str, **kwargs: Any) -> bool:
     return Confirm.ask(*args, **kwargs)
 
 
-def ask(*args: str, prompt_type: type[str] | type[int] | None = None, **kwargs: Any) -> str:
+def ask(*args: str, prompt_type: type[str | int] | None = None, **kwargs: Any) -> str:
     """prompt user and return response
 
     :prompt_type: which rich prompt to use, defaults to str.
@@ -104,7 +104,7 @@ class Verbosity(enum.IntEnum):
 
 
 LOG_LEVELS = {
-    Verbosity.NORMAL: logging.WARN,
+    Verbosity.NORMAL: logging.WARNING,
     Verbosity.DETAIL: logging.INFO,
     Verbosity.DEBUG: logging.DEBUG,
 }
@@ -152,7 +152,7 @@ class DummySpinner:
         self._show()  # type: ignore[attr-defined]
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         pass
 
 

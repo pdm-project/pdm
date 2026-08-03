@@ -189,7 +189,7 @@ class Candidate:
     def prepared(self) -> PreparedCandidate | None:
         return self._prepared
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Candidate):
             return False
         if self.req.is_named:
@@ -470,21 +470,20 @@ class PreparedCandidate:
         if validate_hashes and self.candidate.hashes:
             hash_options = convert_hashes(self.candidate.hashes)
         assert self.link is not None
-        with self.environment.get_finder() as finder:
-            with TemporaryDirectory(prefix="pdm-download-") as tmpdir:
-                build_dir = self._get_build_dir()
-                if self.link.is_wheel:
-                    download_dir = build_dir
-                else:
-                    download_dir = tmpdir
-                result = finder.download_and_unpack(
-                    self.link,
-                    build_dir,
-                    download_dir,
-                    hash_options,
-                    download_reporter=self.reporter.report_download,
-                    unpack_reporter=self.reporter.report_unpack,
-                )
+        with self.environment.get_finder() as finder, TemporaryDirectory(prefix="pdm-download-") as tmpdir:
+            build_dir = self._get_build_dir()
+            if self.link.is_wheel:
+                download_dir = build_dir
+            else:
+                download_dir = tmpdir
+            result = finder.download_and_unpack(
+                self.link,
+                build_dir,
+                download_dir,
+                hash_options,
+                download_reporter=self.reporter.report_download,
+                unpack_reporter=self.reporter.report_unpack,
+            )
         if self.link.is_wheel:
             self._cached = result
         else:

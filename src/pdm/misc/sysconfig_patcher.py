@@ -199,20 +199,19 @@ def write_new_pkgconfig(fname: Path, real_prefix: Path, dest_path: Path):
 
     did_update = False
 
-    with open(fname) as fn:
-        with open(dest_path, "w") as outfile:
-            for line in fn:
-                new_line = re.sub(
-                    r"^(\w+=)(" + re.escape(OLD_PREFIX) + ")",
-                    replace_func,
-                    line,
-                    count=1,
-                )
-                if new_line != line:
-                    did_update = True
-                    _logger.debug("Updated\n  from %r\n  to %r", line.rstrip(), new_line.rstrip())
-                outfile.write(new_line)
-            sync_file(outfile)
+    with open(fname) as fn, open(dest_path, "w") as outfile:
+        for line in fn:
+            new_line = re.sub(
+                r"^(\w+=)(" + re.escape(OLD_PREFIX) + ")",
+                replace_func,
+                line,
+                count=1,
+            )
+            if new_line != line:
+                did_update = True
+                _logger.debug("Updated\n  from %r\n  to %r", line.rstrip(), new_line.rstrip())
+            outfile.write(new_line)
+        sync_file(outfile)
     return did_update
 
 

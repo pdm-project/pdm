@@ -1,8 +1,8 @@
 import pathlib
 import sys
-import unittest.mock as mock
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 import pytest
 import tomlkit
@@ -105,9 +105,8 @@ class TestGetUserEmailFromGit:
     )
     @mock.patch("pdm.utils.shutil.which", return_value="git")
     def test_no_git_username_and_email(self, git_patch, no_git_username_and_email_patch):
-        with git_patch:
-            with no_git_username_and_email_patch:
-                assert utils.get_user_email_from_git() == ("", "")
+        with git_patch, no_git_username_and_email_patch:
+            assert utils.get_user_email_from_git() == ("", "")
 
     @mock.patch(
         "pdm.utils.subprocess.check_output",
@@ -118,9 +117,8 @@ class TestGetUserEmailFromGit:
     )
     @mock.patch("pdm.utils.shutil.which", return_value="git")
     def test_no_git_email(self, git_patch, no_git_email_patch):
-        with git_patch:
-            with no_git_email_patch:
-                assert utils.get_user_email_from_git() == ("username", "")
+        with git_patch, no_git_email_patch:
+            assert utils.get_user_email_from_git() == ("username", "")
 
     @mock.patch(
         "pdm.utils.subprocess.check_output",
@@ -128,16 +126,14 @@ class TestGetUserEmailFromGit:
     )
     @mock.patch("pdm.utils.shutil.which", return_value="git")
     def test_no_git_username(self, git_patch, no_git_username_patch):
-        with git_patch:
-            with no_git_username_patch:
-                assert utils.get_user_email_from_git() == ("", "email")
+        with git_patch, no_git_username_patch:
+            assert utils.get_user_email_from_git() == ("", "email")
 
     @mock.patch("pdm.utils.subprocess.check_output", side_effect=["username", "email"])
     @mock.patch("pdm.utils.shutil.which", return_value="git")
     def test_git_username_and_email(self, git_patch, git_username_and_email_patch):
-        with git_patch:
-            with git_username_and_email_patch:
-                assert utils.get_user_email_from_git() == ("username", "email")
+        with git_patch, git_username_and_email_patch:
+            assert utils.get_user_email_from_git() == ("username", "email")
 
 
 @pytest.mark.parametrize(
@@ -592,9 +588,8 @@ def test_open_for_write_no_symlink_refuses_symlinked_target(tmp_path):
     except OSError as e:
         pytest.skip(f"symlink is not supported: {e}")
 
-    with pytest.raises(PdmUsageError, match="symlink"):
-        with utils.open_for_write_no_symlink(link):
-            pass
+    with pytest.raises(PdmUsageError, match="symlink"), utils.open_for_write_no_symlink(link):
+        pass
 
     # The symlink and its target are both left intact.
     assert link.is_symlink()

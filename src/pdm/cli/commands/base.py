@@ -5,6 +5,8 @@ from argparse import _SubParsersAction
 from collections.abc import Sequence
 from typing import Any, TypeVar
 
+from typing_extensions import Self
+
 from pdm.cli.options import Option, global_option, project_option, verbose_option
 from pdm.project import Project
 
@@ -23,7 +25,7 @@ class BaseCommand:
     arguments: Sequence[Option] = (verbose_option, global_option, project_option)
 
     @classmethod
-    def init_parser(cls: type[C], parser: argparse.ArgumentParser) -> C:
+    def init_parser(cls, parser: argparse.ArgumentParser) -> Self:
         cmd = cls()
         for arg in cmd.arguments:
             arg.add_to_parser(parser)
@@ -54,7 +56,6 @@ class BaseCommand:
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         """Manipulate the argument parser to add more arguments"""
-        pass
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         """The command handler function.

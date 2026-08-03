@@ -9,6 +9,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, NewType, TypeVar, cast
 
+from typing_extensions import Self
+
 from pdm import termui
 from pdm.exceptions import UninstallError
 from pdm.models.cached_package import CachedPackage
@@ -153,7 +155,7 @@ class BaseRemovePaths(abc.ABC):
         """Roll back the removal operations"""
 
     @classmethod
-    def from_dist(cls: type[_T], dist: Distribution, environment: BaseEnvironment) -> _T:
+    def from_dist(cls, dist: Distribution, environment: BaseEnvironment) -> Self:
         """Create an instance from the distribution"""
         scheme = environment.get_paths()
         instance = cls(dist, environment)

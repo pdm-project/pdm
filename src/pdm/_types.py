@@ -4,6 +4,8 @@ import dataclasses as dc
 import re
 from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar
 
+from typing_extensions import Self
+
 if TYPE_CHECKING:
     from typing import Protocol
 
@@ -113,9 +115,9 @@ if TYPE_CHECKING:
     class Spinner(Protocol):
         def update(self, text: str) -> None: ...
 
-        def __enter__(self: SpinnerT) -> SpinnerT: ...
+        def __enter__(self) -> Self: ...
 
-        def __exit__(self, *args: Any) -> None: ...
+        def __exit__(self, *args: object) -> None: ...
 
     class RichProtocol(Protocol):
         def __rich__(self) -> str: ...

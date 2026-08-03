@@ -99,7 +99,7 @@ class PySpecSet(SpecifierSet):
             return "<empty>"
         return super().__str__()
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, PySpecSet):
             return NotImplemented
         return self._logic == other._logic

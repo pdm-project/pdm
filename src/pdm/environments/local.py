@@ -58,7 +58,7 @@ def _replace_shebang(path: Path, new_executable: bytes) -> None:
         return
 
     if os.name == "nt":
-        new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, count=1, flags=re.M)
+        new_content, count = re.subn(_simple_shebang_re, rb"\1" + new_executable, contents, count=1, flags=re.MULTILINE)
         if count > 0:
             path.write_bytes(new_content)
         return
