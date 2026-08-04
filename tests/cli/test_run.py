@@ -351,6 +351,152 @@ def test_run_shell_script_with_pdm_placeholder(project, pdm):
     assert (project.root / "output.txt").read_text().strip().startswith("PDM, version")
 
 
+def test_run_shell_script_with_cwd_placeholder(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {
+            "shell": "echo {PDM_RUN_CWD} > output.txt",
+            "help": "test it won't fail",
+        }
+    }
+    project.pyproject.write()
+    with cd(project.root):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "output.txt").read_text().strip() == str(project.root)
+
+
+def test_run_cmd_script_with_cwd_placeholder(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "test_script": ["python", "-c", "import sys; print(sys.argv[1])", "{PDM_RUN_CWD}"],
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    with cd(project.root):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert out.strip() == str(project.root)
+
+
+def test_run_shell_script_with_cwd_placeholder_and_spaces_in_path(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {
+            "shell": "echo {PDM_RUN_CWD} > output.txt",
+            "help": "test cwd placeholder with spaces in path",
+        }
+    }
+    project.pyproject.write()
+    spaced_dir = project.root / "sub dir"
+    spaced_dir.mkdir()
+    with cd(spaced_dir):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    assert (project.root / "output.txt").read_text().strip() == str(spaced_dir)
+
+
+def test_run_cmd_script_with_cwd_placeholder_and_spaces_in_path(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "test_script": ["python", "-c", "import sys; print(sys.argv[1])", "{PDM_RUN_CWD}"],
+    }
+    project.pyproject.write()
+    spaced_dir = project.root / "sub dir"
+    spaced_dir.mkdir()
+    capfd.readouterr()
+    with cd(spaced_dir):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert out.strip() == str(spaced_dir)
+
+
+def test_run_composite_script_with_cwd_placeholder_and_spaces_in_path(project, pdm, capfd):
+    project.pyproject.settings["scripts"] = {
+        "test_script": {"composite": ["echo {PDM_RUN_CWD}"]},
+    }
+    project.pyproject.write()
+    spaced_dir = project.root / "sub dir"
+    spaced_dir.mkdir()
+    capfd.readouterr()
+    with cd(spaced_dir):
+        result = pdm(["run", "test_script"], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert out.strip() == str(spaced_dir)
+
+
+def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_path):
+    """Shell scripts are handed straight to cmd.exe on Windows, so a cwd must be
+    escaped the way cmd.exe's own command-line parser understands (caret-escaped
+    metacharacters) instead of with POSIX ``shlex.quote`` (single quotes), which
+    cmd.exe does not parse, or double quotes, which builtins like `echo` print
+    literally instead of stripping.
+    CI runs on Linux and cannot spawn a real cmd.exe, so assert on the
+    interpolated string directly."""
+    from pdm.cli.commands import run as run_module
+
+    spaced_dir = tmp_path / "Jane Doe" / "Project"
+    spaced_dir.mkdir(parents=True)
+    monkeypatch.chdir(spaced_dir)
+    monkeypatch.setattr(run_module.sys, "platform", "win32")
+
+    # for_shell=True targets cmd.exe -> spaces pass through unescaped since
+    # cmd.exe builtins like echo do not tokenize their argument on whitespace.
+    shell_result, interpolated = run_module.interpolate("echo {PDM_RUN_CWD}", [], for_shell=True)
+    assert interpolated
+    assert shell_result == f"echo {spaced_dir}"
+    assert "'" not in shell_result
+    assert '"' not in shell_result
+
+    # cmd/composite parts are re-parsed with shlex.split, so POSIX quoting stays
+    # correct even when simulating Windows.
+    cmd_result, _ = run_module.interpolate("echo {PDM_RUN_CWD}", [])
+    import shlex
+
+    assert cmd_result == f"echo {shlex.quote(str(spaced_dir))}"
+    assert shlex.split(cmd_result)[1] == str(spaced_dir)
+
+
+def test_interpolate_cwd_placeholder_escapes_cmd_exe_metacharacters_on_windows(monkeypatch):
+    """A cwd containing a cmd.exe metacharacter such as `&` must not be handed
+    to cmd.exe unescaped, even without any whitespace in the path: cmd.exe
+    parses `&` as a command separator regardless of quoting via
+    ``subprocess.list2cmdline`` (which only understands MSVCRT argv-quoting,
+    a different grammar from cmd.exe's own command-line parsing), so
+    `echo C:\\repo&ver` would run `echo C:\\repo` followed by a second
+    command `ver`. Caret-escaping is what cmd.exe itself defines for this."""
+    from pdm.cli.commands import run as run_module
+
+    monkeypatch.setattr(run_module.sys, "platform", "win32")
+    monkeypatch.setattr(run_module.Path, "cwd", staticmethod(lambda: run_module.Path(r"C:\repo&ver")))
+
+    result, interpolated = run_module.interpolate("echo {PDM_RUN_CWD}", [], for_shell=True)
+    assert interpolated
+    assert result == r"echo C:\repo^&ver"
+    # An unescaped & would be split into two cmd.exe commands.
+    assert "&" not in result.replace("^&", "")
+
+
+@pytest.mark.parametrize("metachar", ["&", "|", "<", ">", "^", "(", ")"])
+def test_interpolate_cwd_placeholder_escapes_all_cmd_exe_operators(monkeypatch, metachar):
+    from pdm.cli.commands import run as run_module
+
+    path = rf"C:\repo{metachar}ver"
+    monkeypatch.setattr(run_module.sys, "platform", "win32")
+    monkeypatch.setattr(run_module.Path, "cwd", staticmethod(lambda: run_module.Path(path)))
+
+    result, _ = run_module.interpolate("echo {PDM_RUN_CWD}", [], for_shell=True)
+    assert result == f"echo C:\\repo^{metachar}ver"
+
+
+def test_interpolate_cwd_with_backslash_u_in_path(monkeypatch):
+    from pdm.cli.commands.run import _interpolate_cwd
+
+    monkeypatch.setattr(Path, "cwd", staticmethod(lambda: Path(r"C:\Users\pdm")))
+    interpolated, replaced = _interpolate_cwd("echo {PDM_RUN_CWD}")
+    assert replaced
+    assert r"C:\Users\pdm" in interpolated
+
+
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
     (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
     project.pyproject.settings["scripts"] = {

@@ -58,6 +58,7 @@ def merge_options(*options: TaskOptions | None) -> TaskOptions:
 
 RE_ARGS_PLACEHOLDER = re.compile(r"\{args(?::(?P<default>[^}]*))?\}")
 RE_PDM_PLACEHOLDER = re.compile(r"\{pdm\}")
+RE_CWD_PLACEHOLDER = re.compile(r"\{PDM_RUN_CWD\}")
 
 
 def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
@@ -81,12 +82,54 @@ def _interpolate_pdm(script: str) -> str:
     return interpolated
 
 
-def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
-    """Interpolate the `{args:[defaults]} placeholder in a string"""
+#: Operators that cmd.exe's own command-line parser treats specially, e.g. `&`
+#: for command chaining or `|` for piping. `subprocess.list2cmdline` does not
+#: escape any of these: it only implements the MSVCRT argv-quoting convention
+#: (double quotes understood by a spawned program's argument parser), which is
+#: not the same grammar cmd.exe itself uses when it tokenizes the command line
+#: it was handed. `%` is left alone here since its escaping (doubling) is a
+#: batch-file convention that does not apply to a plain `cmd.exe /c` line.
+_CMD_EXE_METACHARS = re.compile(r"[\^&|<>()]")
+
+
+def _quote_cwd_for_cmd_exe(path: str) -> str:
+    """Escape cmd.exe metacharacters in ``path`` with carets.
+
+    The `^` itself is escaped first so a caret inserted while escaping a later
+    character is never re-escaped. Whitespace is left untouched: cmd.exe's
+    builtin `echo` does not tokenize its argument on spaces (it prints the
+    remainder of the line verbatim) and, unlike quoting, does not print the
+    escaping caret either, so this is safe for both spaced and unspaced paths.
+    """
+    return _CMD_EXE_METACHARS.sub(lambda m: "^" + m.group(), path)
+
+
+def _interpolate_cwd(script: str, for_shell: bool = False) -> tuple[str, bool]:
+    """Interpolate the `{PDM_RUN_CWD}` placeholder in a string.
+
+    When ``for_shell`` is true the result is handed directly to the OS shell, so
+    on Windows it must be escaped the way ``cmd.exe`` understands (caret-escaped
+    metacharacters) rather than with POSIX-only ``shlex.quote``. For the other
+    kinds the string is re-parsed with ``shlex.split`` before use, so POSIX
+    quoting is the correct format on every platform.
+    """
+    path = str(Path.cwd())
+    if for_shell and sys.platform == "win32":
+        cwd = _quote_cwd_for_cmd_exe(path)
+    else:
+        cwd = shlex.quote(path)
+
+    interpolated, count = RE_CWD_PLACEHOLDER.subn(lambda _: cwd, script)
+    return interpolated, count > 0
+
+
+def interpolate(script: str, args: Sequence[str], for_shell: bool = False) -> tuple[str, bool]:
+    """Interpolate the `{args:[defaults]}`, `{pdm}` and `{PDM_RUN_CWD}` placeholders in a string."""
 
     script, args_interpolated = _interpolate_args(script, args)
     script = _interpolate_pdm(script)
-    return script, args_interpolated
+    script, cwd_interpolated = _interpolate_cwd(script, for_shell=for_shell)
+    return script, args_interpolated or cwd_interpolated
 
 
 _METADATA_REGEX = r"(?m)^# /// (?P<type>[a-zA-Z0-9-]+)$\s(?P<content>(^#(| .*)$\s)+)^# ///$"
@@ -338,7 +381,7 @@ class TaskRunner:
             args = value if interpolated else [*value, *args]
         elif kind == "shell":
             assert isinstance(value, str)
-            script, interpolated = interpolate(value, args)
+            script, interpolated = interpolate(value, args, for_shell=True)
             args = script if interpolated else " ".join([script, *args])
             shell = True
         elif kind == "call":
@@ -359,6 +402,7 @@ class TaskRunner:
             args = list(args)
             should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
             should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
+            should_interpolate = should_interpolate or any(RE_CWD_PLACEHOLDER.search(script) for script in value)
             composite_code = 0
             keep_going = options.pop("keep_going", False) if options else False
             for script in value:
