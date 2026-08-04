@@ -425,9 +425,11 @@ def test_run_composite_script_with_cwd_placeholder_and_spaces_in_path(project, p
 
 
 def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_path):
-    """Shell scripts are handed straight to cmd.exe on Windows, so a cwd with
-    spaces must be quoted the way cmd.exe understands (double quotes) instead of
-    with POSIX ``shlex.quote`` (single quotes), which cmd.exe does not parse.
+    """Shell scripts are handed straight to cmd.exe on Windows, so a cwd must be
+    escaped the way cmd.exe's own command-line parser understands (caret-escaped
+    metacharacters) instead of with POSIX ``shlex.quote`` (single quotes), which
+    cmd.exe does not parse, or double quotes, which builtins like `echo` print
+    literally instead of stripping.
     CI runs on Linux and cannot spawn a real cmd.exe, so assert on the
     interpolated string directly."""
     from pdm.cli.commands import run as run_module
@@ -437,12 +439,13 @@ def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_p
     monkeypatch.chdir(spaced_dir)
     monkeypatch.setattr(run_module.sys, "platform", "win32")
 
-    # for_shell=True targets cmd.exe -> must use double-quote quoting.
+    # for_shell=True targets cmd.exe -> spaces pass through unescaped since
+    # cmd.exe builtins like echo do not tokenize their argument on whitespace.
     shell_result, interpolated = run_module.interpolate("echo {PDM_RUN_CWD}", [], for_shell=True)
     assert interpolated
-    assert shell_result == f"echo {subprocess.list2cmdline([str(spaced_dir)])}"
-    assert shell_result == f'echo "{spaced_dir}"'
+    assert shell_result == f"echo {spaced_dir}"
     assert "'" not in shell_result
+    assert '"' not in shell_result
 
     # cmd/composite parts are re-parsed with shlex.split, so POSIX quoting stays
     # correct even when simulating Windows.
@@ -451,6 +454,38 @@ def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_p
 
     assert cmd_result == f"echo {shlex.quote(str(spaced_dir))}"
     assert shlex.split(cmd_result)[1] == str(spaced_dir)
+
+
+def test_interpolate_cwd_placeholder_escapes_cmd_exe_metacharacters_on_windows(monkeypatch):
+    """A cwd containing a cmd.exe metacharacter such as `&` must not be handed
+    to cmd.exe unescaped, even without any whitespace in the path: cmd.exe
+    parses `&` as a command separator regardless of quoting via
+    ``subprocess.list2cmdline`` (which only understands MSVCRT argv-quoting,
+    a different grammar from cmd.exe's own command-line parsing), so
+    `echo C:\\repo&ver` would run `echo C:\\repo` followed by a second
+    command `ver`. Caret-escaping is what cmd.exe itself defines for this."""
+    from pdm.cli.commands import run as run_module
+
+    monkeypatch.setattr(run_module.sys, "platform", "win32")
+    monkeypatch.setattr(run_module.Path, "cwd", staticmethod(lambda: run_module.Path(r"C:\repo&ver")))
+
+    result, interpolated = run_module.interpolate("echo {PDM_RUN_CWD}", [], for_shell=True)
+    assert interpolated
+    assert result == r"echo C:\repo^&ver"
+    # An unescaped & would be split into two cmd.exe commands.
+    assert "&" not in result.replace("^&", "")
+
+
+@pytest.mark.parametrize("metachar", ["&", "|", "<", ">", "^", "(", ")"])
+def test_interpolate_cwd_placeholder_escapes_all_cmd_exe_operators(monkeypatch, metachar):
+    from pdm.cli.commands import run as run_module
+
+    path = rf"C:\repo{metachar}ver"
+    monkeypatch.setattr(run_module.sys, "platform", "win32")
+    monkeypatch.setattr(run_module.Path, "cwd", staticmethod(lambda: run_module.Path(path)))
+
+    result, _ = run_module.interpolate("echo {PDM_RUN_CWD}", [], for_shell=True)
+    assert result == f"echo C:\\repo^{metachar}ver"
 
 
 def test_interpolate_cwd_with_backslash_u_in_path(monkeypatch):
