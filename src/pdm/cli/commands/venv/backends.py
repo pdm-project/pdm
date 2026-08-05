@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pdm import termui
-from pdm.cli.commands.venv.utils import get_venv_prefix
+from pdm.cli.commands.venv.utils import get_venv_prefix, register_venv
 from pdm.exceptions import PdmUsageError, ProjectError
 
 if TYPE_CHECKING:
@@ -131,6 +131,7 @@ class Backend(abc.ABC):
             )
         self._ensure_clean(location, force)
         self.perform_create(location, args, prompt=prompt)
+        register_venv(self.project, location)
         return location
 
     @abc.abstractmethod

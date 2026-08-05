@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -9,6 +10,7 @@ from findpython import BaseProvider, PythonVersion
 
 from pdm.exceptions import PdmUsageError
 from pdm.models.venv import VirtualEnv
+from pdm.utils import open_for_write_no_symlink
 
 if TYPE_CHECKING:
     import sys
@@ -41,6 +43,57 @@ def get_venv_prefix(project: Project) -> str:
     path = project.root
     name_hash = hash_path(path.as_posix())
     return f"{path.name}-{name_hash}-"
+
+
+def _get_python_envs_path(project: Project) -> Path:
+    return project.root / ".python-envs"
+
+
+def _read_python_envs(project: Project) -> list[str]:
+    path = _get_python_envs_path(project)
+    if path.is_symlink():
+        raise PdmUsageError(f"Refusing to read from {path} because it is a symlink.")
+    try:
+        return path.read_text("utf-8").splitlines()
+    except FileNotFoundError:
+        return []
+
+
+def _write_python_envs(project: Project, entries: list[str]) -> None:
+    with open_for_write_no_symlink(_get_python_envs_path(project)) as fp:
+        if entries:
+            fp.write("\n".join(entries) + "\n")
+
+
+def _normalize_env_path(project: Project, path: str | Path) -> str:
+    path = Path(path)
+    if not path.is_absolute():
+        path = project.root / path
+    return os.path.normcase(os.path.abspath(path))
+
+
+def register_venv(project: Project, venv: Path) -> None:
+    """Register a virtualenv in the PEP 832 environment listing."""
+    if _normalize_env_path(project, venv) == _normalize_env_path(project, project.root / ".venv"):
+        return
+    entry = os.path.abspath(venv)
+    if "\n" in entry or "\r" in entry:
+        raise PdmUsageError(f"Virtualenv path {entry!r} cannot be represented in .python-envs.")
+    entries = _read_python_envs(project)
+    entries.append(entry)
+    _write_python_envs(project, entries)
+
+
+def unregister_venv(project: Project, venv: Path) -> None:
+    """Remove all references to a virtualenv from the PEP 832 listing."""
+    python_envs = _get_python_envs_path(project)
+    if not python_envs.exists():
+        return
+    target = _normalize_env_path(project, venv)
+    entries = _read_python_envs(project)
+    remaining = [entry for entry in entries if _normalize_env_path(project, entry) != target]
+    if remaining != entries:
+        _write_python_envs(project, remaining)
 
 
 def iter_venvs(project: Project) -> Iterable[tuple[str, VirtualEnv]]:
