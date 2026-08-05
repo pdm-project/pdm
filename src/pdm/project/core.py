@@ -41,7 +41,6 @@ from pdm.utils import (
     is_conda_base_python,
     is_path_relative_to,
     normalize_name,
-    open_for_write_no_symlink,
 )
 
 if TYPE_CHECKING:
@@ -281,12 +280,61 @@ class Project:
         self._python = value
         self._saved_python = value.path.as_posix()
 
+    def _get_env_path_for_python(self, value: str | Path) -> Path:
+        from pdm.models.venv import VirtualEnv
+
+        path = Path(value)
+        if venv := VirtualEnv.from_interpreter(path):
+            return venv.root
+        python = PythonInfo.from_path(path)
+        if python.valid:
+            interpreter = PythonInfo.from_path(python.executable)
+            return self.root / "__pypackages__" / interpreter.identifier
+        return self.root / "__pypackages__" / "unknown"
+
     @property
     def _saved_python(self) -> str | None:
         if os.getenv("PDM_PYTHON"):
             return os.getenv("PDM_PYTHON")
-        with contextlib.suppress(FileNotFoundError):
-            return self.root.joinpath(".pdm-python").read_text("utf-8").strip()
+        from pdm.cli.commands.venv.utils import get_default_env_path, set_default_env
+        from pdm.models.venv import VirtualEnv
+
+        legacy_file = self.root / ".pdm-python"
+        if legacy_file.is_symlink():
+            raise PdmUsageError(f"Refusing to read from {legacy_file} because it is a symlink.")
+        try:
+            legacy_python = legacy_file.read_text("utf-8").strip()
+        except FileNotFoundError:
+            pass
+        else:
+            if legacy_python:
+                set_default_env(self, self._get_env_path_for_python(legacy_python))
+            legacy_file.unlink()
+
+        env_path = get_default_env_path(self)
+        if env_path is not None:
+            pypackages = self.root / "__pypackages__"
+            if os.path.normcase(os.path.abspath(env_path.parent)) == os.path.normcase(os.path.abspath(pypackages)):
+                if (
+                    self._python is not None
+                    and self._python.get_venv() is None
+                    and self._python.identifier == env_path.name
+                ):
+                    return self._python.path.as_posix()
+                for python in self.find_interpreters(env_path.name, search_venv=False):
+                    if python.valid:
+                        return python.path.as_posix()
+                from pdm.cli.commands.venv.utils import pop_default_env
+
+                pop_default_env(self)
+                return None
+            if venv := VirtualEnv.get(env_path):
+                return venv.interpreter.as_posix()
+            if not env_path.exists():
+                from pdm.models.venv import get_venv_python
+
+                return get_venv_python(env_path).as_posix()
+            raise PdmUsageError(f"The default environment {env_path} in .python-envs is not supported by PDM.")
         with (
             contextlib.suppress(FileNotFoundError),
             self.root.joinpath(".pdm.toml").open("rb") as fp,
@@ -299,14 +347,18 @@ class Project:
 
     @_saved_python.setter
     def _saved_python(self, value: str | None) -> None:
+        from pdm.cli.commands.venv.utils import clear_envs, set_default_env
+
         self.root.mkdir(parents=True, exist_ok=True)
-        python_file = self.root.joinpath(".pdm-python")
+        legacy_file = self.root / ".pdm-python"
+        if legacy_file.is_symlink():
+            raise PdmUsageError(f"Refusing to replace {legacy_file} because it is a symlink.")
         if value is None:
-            with contextlib.suppress(FileNotFoundError):
-                python_file.unlink()
+            clear_envs(self)
+            legacy_file.unlink(missing_ok=True)
             return
-        with open_for_write_no_symlink(python_file) as fp:
-            fp.write(value)
+        set_default_env(self, self._get_env_path_for_python(value))
+        legacy_file.unlink(missing_ok=True)
 
     def resolve_interpreter(self) -> PythonInfo:
         """Get the Python interpreter path."""
@@ -326,8 +378,9 @@ class Project:
             return is_path_relative_to(python.executable, venv)
 
         config = self.config
-        saved_path = self._saved_python
-        if saved_path and not ensure_boolean(os.getenv("PDM_IGNORE_SAVED_PYTHON")):
+        ignore_saved_python = ensure_boolean(os.getenv("PDM_IGNORE_SAVED_PYTHON"))
+        saved_path = None if ignore_saved_python else self._saved_python
+        if saved_path:
             python = PythonInfo.from_path(saved_path)
             if match_version(python):
                 return python
@@ -337,7 +390,9 @@ class Project:
                 note(
                     "The saved Python interpreter doesn't match the project's requirement. Trying to find another one."
                 )
-            self._saved_python = None  # Clear the saved path if it doesn't match
+            from pdm.cli.commands.venv.utils import pop_default_env
+
+            pop_default_env(self)
 
         if config.get("python.use_venv") and not self.is_global:
             # Resolve virtual environments from env-vars

@@ -34,9 +34,9 @@ class RemoveCommand(BaseCommand):
         project.core.ui.echo("Virtualenvs created with this project:")
         venv = get_venv_with_name(project, options.env)
         if options.yes or termui.confirm(f"[warning]Will remove: [success]{venv.root}[/], continue?", default=True):
+            saved_python = project._saved_python
             shutil.rmtree(venv.root)
             unregister_venv(project, venv.root)
-            saved_python = project._saved_python
             if saved_python and Path(saved_python).parent.parent == venv.root:
-                project._saved_python = None
+                project._python = None
             project.core.ui.echo("Removed successfully!")

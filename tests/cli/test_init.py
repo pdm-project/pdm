@@ -289,7 +289,7 @@ def test_init_adds_project_to_parent_workspace(project_no_init, pdm, mocker):
     do_use.assert_not_called()
     project_no_init.pyproject.reload()
     assert project_no_init.pyproject.settings["workspace"]["members"] == ["packages/foo"]
-    assert not project_no_init.root.joinpath("packages/foo/.pdm-python").exists()
+    assert not project_no_init.root.joinpath("packages/foo/.python-envs").exists()
 
 
 def test_init_creates_parent_workspace_table(project_no_init, pdm, mocker):
@@ -306,7 +306,7 @@ def test_init_creates_parent_workspace_table(project_no_init, pdm, mocker):
     do_use.assert_not_called()
     project_no_init.pyproject.reload()
     assert project_no_init.pyproject.settings["workspace"]["members"] == ["packages/foo"]
-    assert not project_no_init.root.joinpath("packages/foo/.pdm-python").exists()
+    assert not project_no_init.root.joinpath("packages/foo/.python-envs").exists()
 
 
 def test_init_workspace_member_does_not_persist_uv_workspace(project_no_init, pdm, mocker):
@@ -380,7 +380,7 @@ def test_init_workspace_member_reuses_root_requires_python(project_no_init, pdm,
     with open(project_no_init.root.joinpath("packages/foo/pyproject.toml"), "rb") as fp:
         data = tomllib.load(fp)
     assert data["project"]["requires-python"] == ">=3.11"
-    assert not project_no_init.root.joinpath("packages/foo/.pdm-python").exists()
+    assert not project_no_init.root.joinpath("packages/foo/.python-envs").exists()
 
 
 def test_root_only_command_rejects_workspace_member(project_no_init, pdm):
@@ -526,7 +526,7 @@ def test_init_auto_create_venv(project_no_init, pdm, mocker):
     result = pdm(["init"], input="\ntest-project\n\ny\nTest Project\n1\n\n\n\n\n\n", obj=project_no_init)
     assert result.exit_code == 0
     assert project_no_init.python.executable.parent.parent == project_no_init.root / ".venv"
-    assert ".pdm-python" in (project_no_init.root / ".gitignore").read_text()
+    assert ".python-envs" in (project_no_init.root / ".gitignore").read_text()
 
 
 def test_init_auto_create_venv_specify_python(project_no_init, pdm, mocker):

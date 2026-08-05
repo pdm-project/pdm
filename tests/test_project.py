@@ -12,6 +12,7 @@ from pytest_httpserver import HTTPServer
 
 from pdm.environments import PythonEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
+from pdm.models.python import PythonInfo
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
@@ -290,6 +291,31 @@ def test_project_auto_detect_venv(project):
     project._saved_python = (project.root / "test_venv" / scripts / f"python{suffix}").as_posix()
 
     assert not project.environment.is_local
+
+
+def test_migrate_saved_python_to_python_envs(project):
+    project._saved_python = None
+    venv.create(project.root / "legacy-venv", symlinks=True)
+    interpreter = get_venv_python(project.root / "legacy-venv")
+    (project.root / ".python-envs").write_text("existing-venv\n", "utf-8")
+    (project.root / ".pdm-python").write_text(interpreter.as_posix(), "utf-8")
+
+    assert project._saved_python == interpreter.as_posix()
+    assert not (project.root / ".pdm-python").exists()
+    assert (project.root / ".python-envs").read_text("utf-8") == "existing-venv\nlegacy-venv\n"
+
+
+def test_save_pep582_environment_to_python_envs(project):
+    base_executable = Path(getattr(sys, "_base_executable", sys.executable))
+    python = PythonInfo.from_path(base_executable)
+    if python.get_venv() is not None:
+        pytest.skip("A base interpreter is required")
+
+    project._saved_python = base_executable.as_posix()
+
+    assert (project.root / ".python-envs").read_text("utf-8").splitlines()[-1] == (
+        f"__pypackages__/{python.identifier}"
+    )
 
 
 @pytest.mark.path
@@ -738,5 +764,22 @@ def test_saved_python_refuses_symlinked_pdm_python(project):
         project._saved_python = "/some/python"
 
     # The symlink target outside .pdm-python is left untouched.
+    assert real.read_text() == "untouched"
+    assert link.is_symlink()
+
+
+def test_saved_python_refuses_symlinked_python_envs(project):
+    real = project.root / "real-state.txt"
+    real.write_text("untouched")
+    link = project.root / ".python-envs"
+    link.unlink(missing_ok=True)
+    try:
+        link.symlink_to(real)
+    except OSError as e:
+        pytest.skip(f"symlink is not supported: {e}")
+
+    with pytest.raises(PdmUsageError, match="symlink"):
+        project._saved_python = None
+
     assert real.read_text() == "untouched"
     assert link.is_symlink()

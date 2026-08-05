@@ -41,7 +41,7 @@ pdm new packages/foo
 ```
 
 When a project is initialized as a workspace member, PDM reuses the root project's `requires-python` default,
-does not select a separate Python interpreter, does not write `.pdm-python`, and does not initialize a nested Git repository or `.gitignore`.
+does not select a separate Python environment, does not write `.python-envs`, and does not initialize a nested Git repository or `.gitignore`.
 
 ## Remove a member
 

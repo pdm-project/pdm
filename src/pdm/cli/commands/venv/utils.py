@@ -72,22 +72,70 @@ def _normalize_env_path(project: Project, path: str | Path) -> str:
     return os.path.normcase(os.path.abspath(path))
 
 
-def register_venv(project: Project, venv: Path) -> None:
-    """Register a virtualenv in the PEP 832 environment listing."""
-    if _normalize_env_path(project, venv) == _normalize_env_path(project, project.root / ".venv"):
-        return
-    entry = os.path.abspath(venv)
+def _format_env_path(project: Project, path: Path) -> str:
+    absolute_path = os.path.abspath(path)
+    try:
+        entry = os.path.relpath(absolute_path, project.root)
+    except ValueError:  # pragma: no cover - paths on different Windows drives
+        entry = absolute_path
     if "\n" in entry or "\r" in entry:
         raise PdmUsageError(f"Virtualenv path {entry!r} cannot be represented in .python-envs.")
+    return entry
+
+
+def get_default_env_path(project: Project) -> Path | None:
+    """Return the last environment listed in .python-envs."""
     entries = _read_python_envs(project)
-    entries.append(entry)
+    if not entries:
+        return None
+    path = Path(entries[-1])
+    return Path(os.path.abspath(path if path.is_absolute() else project.root / path))
+
+
+def set_default_env(project: Project, path: Path) -> None:
+    """Add an environment and make it the last, selected entry."""
+    target = _normalize_env_path(project, path)
+    entries = _read_python_envs(project)
+    entries = [entry for entry in entries if _normalize_env_path(project, entry) != target]
+    entries.append(_format_env_path(project, path))
+    _write_python_envs(project, entries)
+
+
+def pop_default_env(project: Project) -> None:
+    """Remove the last environment from .python-envs."""
+    python_envs = _get_python_envs_path(project)
+    if not python_envs.exists() and not python_envs.is_symlink():
+        return
+    entries = _read_python_envs(project)
+    if entries:
+        _write_python_envs(project, entries[:-1])
+
+
+def clear_envs(project: Project) -> None:
+    """Clear the PEP 832 environment listing."""
+    python_envs = _get_python_envs_path(project)
+    if python_envs.exists() or python_envs.is_symlink():
+        _read_python_envs(project)
+        _write_python_envs(project, [])
+
+
+def register_venv(project: Project, venv: Path) -> None:
+    """Register a virtualenv without changing the selected environment."""
+    target = _normalize_env_path(project, venv)
+    if target == _normalize_env_path(project, project.root / ".venv"):
+        return
+    entries = _read_python_envs(project)
+    if any(_normalize_env_path(project, entry) == target for entry in entries):
+        return
+    entry = _format_env_path(project, venv)
+    entries.insert(max(len(entries) - 1, 0), entry)
     _write_python_envs(project, entries)
 
 
 def unregister_venv(project: Project, venv: Path) -> None:
     """Remove all references to a virtualenv from the PEP 832 listing."""
     python_envs = _get_python_envs_path(project)
-    if not python_envs.exists():
+    if not python_envs.exists() and not python_envs.is_symlink():
         return
     target = _normalize_env_path(project, venv)
     entries = _read_python_envs(project)

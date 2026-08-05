@@ -8,15 +8,21 @@ import pytest
 from pdm.cli.commands.use import Command as UseCommand
 from pdm.exceptions import NoPythonVersion
 from pdm.models.caches import JSONFileCache
+from pdm.models.python import PythonInfo
 
 
 def test_use_command(project, pdm):
     python = "python" if os.name == "nt" else "python3"
     python_path = shutil.which(python)
+    assert python_path is not None
     result = pdm(["use", "-f", python], obj=project)
     assert result.exit_code == 0
-    config_content = project.root.joinpath(".pdm-python").read_text()
-    assert Path(python_path).as_posix() in config_content
+    default_env = (project.root / ".python-envs").read_text("utf-8").splitlines()[-1]
+    selected_python = PythonInfo.from_path(python_path)
+    if venv := selected_python.get_venv():
+        assert default_env == os.path.relpath(venv.root, project.root)
+    else:
+        assert default_env == f"__pypackages__/{selected_python.identifier}"
 
     result = pdm(["use", "-f", python_path], obj=project)
     assert result.exit_code == 0
@@ -79,8 +85,12 @@ def test_use_venv_python(project, pdm):
     do_use = UseCommand().do_use
     do_use(project, venv="in-project")
     assert project.python.executable.parent.parent == project.root.joinpath(".venv")
+    assert (project.root / ".python-envs").read_text("utf-8").splitlines()[-1] == ".venv"
     do_use(project, venv="test")
     assert project.python.executable.parent.parent.parent == Path(venv_location)
+    assert (project.root / ".python-envs").read_text("utf-8").splitlines()[-1] == os.path.relpath(
+        project.python.executable.parent.parent, project.root
+    )
     with pytest.raises(Exception, match="No virtualenv with key 'non-exists' is found"):
         do_use(project, venv="non-exists")
 

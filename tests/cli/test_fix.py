@@ -45,7 +45,8 @@ def test_fix_project_config(project, pdm):
     pdm(["fix"], obj=project, strict=True)
     assert not old_config.exists()
     assert project.root.joinpath("pdm.toml").read_text() == "[python]\nuse_pyenv = false\n"
-    assert project.root.joinpath(".pdm-python").read_text().strip() == Path(sys.executable).as_posix()
+    assert not project.root.joinpath(".pdm-python").exists()
+    assert project._saved_python == Path(sys.executable).as_posix()
 
 
 def test_fix_project_plugins(project, pdm):

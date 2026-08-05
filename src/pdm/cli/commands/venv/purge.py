@@ -61,8 +61,11 @@ class PurgeCommand(BaseCommand):
         elif selection != "none":
             for i, venv in enumerate(all_central_venvs):
                 if i == int(selection):
+                    saved_python = project._saved_python
                     shutil.rmtree(venv[1])
                     unregister_venv(project, venv[1])
+                    if saved_python and Path(saved_python).parent.parent == venv[1]:
+                        project._python = None
             project.core.ui.echo("Purged successfully!")
 
     def del_all_venvs(self, project: Project) -> None:
@@ -73,5 +76,5 @@ class PurgeCommand(BaseCommand):
             shutil.rmtree(venv)
             unregister_venv(project, venv)
             if saved_python and Path(saved_python).parent.parent == venv:
-                project._saved_python = None
+                project._python = None
         project.core.ui.echo("Purged successfully!")

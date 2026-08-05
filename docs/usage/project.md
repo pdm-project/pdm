@@ -20,10 +20,10 @@ pdm init
 
 ## Choose a Python interpreter
 
-At first, you need to choose a Python interpreter from a list of Python versions installed on your machine. The interpreter path
-will be stored in `.pdm-python` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#use).
+At first, you need to choose a Python interpreter from a list of Python versions installed on your machine. Its environment
+will be stored as the last entry in `.python-envs` and used by subsequent commands. You can also change it later with [`pdm use`](../reference/cli.md#use).
 
-Alternatively, you can specify the Python interpreter path via `PDM_PYTHON` environment variable. When it is set, the path saved in `.pdm-python` will be ignored.
+Alternatively, you can specify the Python interpreter path via the `PDM_PYTHON` environment variable. When it is set, the environment selected in `.python-envs` will be ignored.
 
 !!! tip
     Added in 2.23.0.
@@ -180,7 +180,7 @@ Also, when you are executing [`pdm init`](../reference/cli.md#init) or [`pdm ins
 
 ## Working with version control
 
-You **must** commit the `pyproject.toml` file. You **should** commit the `pdm.lock` and `pdm.toml` file. **Do not** commit the `.pdm-python` file.
+You **must** commit the `pyproject.toml` file. You **should** commit the `pdm.lock` and `pdm.toml` file. `.python-envs` should normally remain uncommitted when it contains personal environment locations, but may be committed when all listed paths are stable for the project.
 
 The `pyproject.toml` file must be committed as it contains the project's build metadata and dependencies needed for PDM.
 It is also commonly used by other python tools for configuration. Read more about the `pyproject.toml` file at
@@ -191,7 +191,7 @@ To learn how to update dependencies see [update existing dependencies](./depende
 
 `pdm.toml` contains some project-wide configuration and it may be useful to commit it for sharing.
 
-`.pdm-python` stores the **Python path** used by the **current** project and doesn't need to be shared.
+`.python-envs` lists the project's known environments. The last entry selects the current environment, and paths are relative to the project whenever possible.
 
 ## Show the current Python environment
 

@@ -43,7 +43,7 @@ class ProjectConfigFixer(BaseFixer):
 
     def get_message(self) -> str:
         return (
-            "[success]python.path[/] config needs to be moved to [info].pdm-python[/] and "
+            "[success]python.path[/] config needs to be moved to [info].python-envs[/] and "
             "[info].pdm.toml[/] needs to be renamed to [info]pdm.toml[/]"
         )
 
@@ -52,16 +52,17 @@ class ProjectConfigFixer(BaseFixer):
         if not gitignore.exists():
             return
         content = gitignore.read_text("utf8")
-        if ".pdm-python" not in content:
-            content = re.sub(r"^\.pdm\.toml$", ".pdm-python", content, flags=re.MULTILINE)
+        if ".python-envs" not in content:
+            content = re.sub(r"^\.pdm-python$", ".python-envs", content, flags=re.M)
+            content = re.sub(r"^\.pdm\.toml$", ".python-envs", content, flags=re.M)
             gitignore.write_text(content, "utf8")
 
     def fix(self) -> None:
         old_file = self.project.root.joinpath(".pdm.toml")
         config = Config(old_file).self_data
-        if not self.project.root.joinpath(".pdm-python").exists() and config.get("python.path"):
-            self.log("Creating .pdm-python...", verbosity=Verbosity.DETAIL)
-            self.project.root.joinpath(".pdm-python").write_text(config["python.path"])
+        if config.get("python.path"):
+            self.log("Updating .python-envs...", verbosity=Verbosity.DETAIL)
+            self.project._saved_python = config["python.path"]
         self.project.project_config  # access the project config to move the config items
         self.log("Moving .pdm.toml to pdm.toml...", verbosity=Verbosity.DETAIL)
         old_file.unlink()
