@@ -34,7 +34,7 @@ class PurgeCommand(BaseCommand):
         )
 
     def handle(self, project: Project, options: Namespace) -> None:
-        from pdm.cli.commands.venv.utils import iter_central_venvs
+        from pdm.cli.commands.venv.utils import iter_central_venvs, unregister_venv
 
         all_central_venvs = list(iter_central_venvs(project))
         if not all_central_venvs:
@@ -62,14 +62,16 @@ class PurgeCommand(BaseCommand):
             for i, venv in enumerate(all_central_venvs):
                 if i == int(selection):
                     shutil.rmtree(venv[1])
+                    unregister_venv(project, venv[1])
             project.core.ui.echo("Purged successfully!")
 
     def del_all_venvs(self, project: Project) -> None:
-        from pdm.cli.commands.venv.utils import iter_central_venvs
+        from pdm.cli.commands.venv.utils import iter_central_venvs, unregister_venv
 
         saved_python = project._saved_python
         for _, venv in iter_central_venvs(project):
             shutil.rmtree(venv)
+            unregister_venv(project, venv)
             if saved_python and Path(saved_python).parent.parent == venv:
                 project._saved_python = None
         project.core.ui.echo("Purged successfully!")

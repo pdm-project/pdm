@@ -42,6 +42,8 @@ pdm venv create --with venv 3.10
 ## The location of virtualenvs
 
 If no `--name` is given, PDM will create the venv in `<project_root>/.venv`. Otherwise, virtualenvs go to the location specified by the `venv.location` configuration.
+
+PDM supports the environment discovery convention defined by [PEP 832](https://peps.python.org/pep-0832/). An environment created outside of `<project_root>/.venv` is appended to the project's `.python-envs` file, making it discoverable by editors and other tools. PDM also removes the entry when the environment is removed or purged. The `.venv` environment is not written to this file because PEP 832 defines it as an implicit entry and the default environment.
 They are named as `<project_name>-<path_hash>-<name_or_python_version>` to avoid name collision.
 You can disable the in-project virtualenv creation by `pdm config venv.in_project false`. And all virtualenvs will be created under `venv.location`.
 
