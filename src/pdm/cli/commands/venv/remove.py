@@ -29,12 +29,13 @@ class RemoveCommand(BaseCommand):
         parser.add_argument("env", help="The key of the virtualenv")
 
     def handle(self, project: Project, options: Namespace) -> None:
-        from pdm.cli.commands.venv.utils import get_venv_with_name
+        from pdm.cli.commands.venv.utils import get_venv_with_name, unregister_venv
 
         project.core.ui.echo("Virtualenvs created with this project:")
         venv = get_venv_with_name(project, options.env)
         if options.yes or termui.confirm(f"[warning]Will remove: [success]{venv.root}[/], continue?", default=True):
             shutil.rmtree(venv.root)
+            unregister_venv(project, venv.root)
             saved_python = project._saved_python
             if saved_python and Path(saved_python).parent.parent == venv.root:
                 project._saved_python = None

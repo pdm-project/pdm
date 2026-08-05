@@ -11,7 +11,7 @@ import pytest
 import shellingham
 
 from pdm.cli.commands.venv import backends
-from pdm.cli.commands.venv.utils import get_venv_prefix
+from pdm.cli.commands.venv.utils import get_venv_prefix, register_venv, unregister_venv
 
 
 @pytest.fixture(params=[True, False])
@@ -89,6 +89,7 @@ def test_venv_create(pdm, project):
     venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
     assert os.path.exists(venv_path)
     assert not project._saved_python
+    assert (project.root / ".python-envs").read_text("utf-8") == f"{venv_path}\n"
 
 
 @pytest.mark.usefixtures("fake_create")
@@ -97,6 +98,7 @@ def test_venv_create_in_project(pdm, project):
     pdm(["venv", "create"], obj=project, strict=True)
     venv_path = project.root / ".venv"
     assert venv_path.exists()
+    assert not (project.root / ".python-envs").exists()
     result = pdm(["venv", "create"], obj=project)
     assert result.exit_code == 1
     assert "is not empty" in result.stderr
@@ -152,6 +154,25 @@ def test_venv_remove(pdm, project):
     assert result.exit_code == 0, result.stderr
 
     assert not os.path.exists(venv_path)
+    assert not (project.root / ".python-envs").read_text("utf-8")
+
+
+def test_register_and_unregister_venv(project):
+    python_envs = project.root / ".python-envs"
+    venv = project.root.parent / "venv"
+    python_envs.write_text(f"relative-venv\n{venv}\nrelative-venv\n", "utf-8")
+
+    register_venv(project, venv)
+
+    assert python_envs.read_text("utf-8") == f"relative-venv\n{venv}\nrelative-venv\n{venv}\n"
+
+    unregister_venv(project, project.root / "relative-venv")
+
+    assert python_envs.read_text("utf-8") == f"{venv}\n{venv}\n"
+
+    unregister_venv(project, venv)
+
+    assert not python_envs.read_text("utf-8")
 
 
 @pytest.mark.usefixtures("fake_create")
@@ -291,6 +312,7 @@ def test_venv_purge(pdm, project):
     result = pdm(["venv", "purge"], input="y", obj=project)
     assert result.exit_code == 0, result.stderr
     assert not os.path.exists(venv_path)
+    assert not (project.root / ".python-envs").read_text("utf-8")
 
 
 @pytest.mark.usefixtures("fake_create")
@@ -302,6 +324,7 @@ def test_venv_purge_force(pdm, project):
     result = pdm(["venv", "purge", "-f"], obj=project)
     assert result.exit_code == 0, result.stderr
     assert not os.path.exists(venv_path)
+    assert not (project.root / ".python-envs").read_text("utf-8")
 
 
 user_options = [("none", True), ("0", False), ("all", False)]
