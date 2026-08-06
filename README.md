@@ -29,7 +29,7 @@ A modern Python package and dependency manager supporting the latest PEP standar
 
 ## What is PDM?
 
-PDM is meant to be a next generation Python package management tool.
+PDM is meant to be a next-generation package manager.
 It was originally built for personal use. If you feel you are going well
 with `Pipenv` or `Poetry` and don't want to introduce another package manager,
 just stick to it. But if you are missing something that is not present in those tools,
@@ -43,7 +43,7 @@ you can probably find some goodness in `pdm`.
 - Flexible and powerful plug-in system.
 - Versatile user scripts.
 - Install Pythons using [astral-sh's python-build-standalone](https://github.com/astral-sh/python-build-standalone).
-- Opt-in centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
+- Opt-in, centralized installation cache like [pnpm](https://pnpm.io/motivation#saving-disk-space-and-boosting-installation-speed).
 
 [pep 517]: https://www.python.org/dev/peps/pep-0517
 [pep 621]: https://www.python.org/dev/peps/pep-0621
@@ -81,7 +81,7 @@ Unlike Poetry and Hatch, PDM is not limited to a specific build backend; users h
     <img src="https://repology.org/badge/vertical-allrepos/pdm.svg" alt="Packaging status" align="right">
 </a>
 
-PDM requires python version 3.10 or higher. Alternatively, you can download the standalone binary file from the [release assets](https://github.com/pdm-project/pdm/releases).
+PDM requires python version 3.10 or higher. Alternatively, you can download the standalone binary from the [release assets](https://github.com/pdm-project/pdm/releases).
 
 ### Install Binary via Script (recommended)
 
@@ -109,7 +109,7 @@ For alternative installation methods (Python script, package managers, etc.), se
 pdm new my-project
 ```
 
-Answer the questions following the guide, and a PDM project with a `pyproject.toml` file will be ready to use.
+Answer the prompts, and a PDM project with a `pyproject.toml` file will be ready to use., and a PDM project with a `pyproject.toml` file will be ready to use.
 
 **Install dependencies**
 
