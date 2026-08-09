@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import tomlkit
-from pbs_installer import PythonVersion
 
 from pdm._types import NotSet, NotSetType, RepositoryConfig
 from pdm.compat import CompatibleSequence, tomllib
@@ -47,6 +46,7 @@ from pdm.utils import (
 
 if TYPE_CHECKING:
     from findpython import Finder
+    from pbs_installer import PythonVersion
 
     from pdm.core import Core
     from pdm.environments import BaseEnvironment

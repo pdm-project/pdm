@@ -32,7 +32,7 @@ def fake_create(monkeypatch):
     monkeypatch.setattr(backends.CondaBackend, "perform_create", fake_create)
 
 
-def test_core_registration_does_not_import_venv_runtime_helpers():
+def test_core_registration_does_not_import_runtime_helpers():
     code = """
 import sys
 from pdm.core import Core
@@ -41,6 +41,7 @@ Core()
 lazy_modules = {
     "pdm.cli.commands.venv.backends",
     "pdm.cli.commands.venv.utils",
+    "pbs_installer",
     "shellingham",
 }
 loaded = sorted(lazy_modules.intersection(sys.modules))
