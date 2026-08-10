@@ -191,7 +191,7 @@ def parse_setup(path: str) -> dict[str, Any]:
 
         with tokenize.open(setup_path) as f:
             code = f.read()
-        exec(
+        exec(  # noqa: S102
             compile(code, __file__, "exec"),
             {"__name__": "__main__", "__file__": __file__, "setup_kwargs": setup_kwargs},
         )

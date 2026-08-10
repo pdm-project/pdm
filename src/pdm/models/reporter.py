@@ -11,8 +11,10 @@ from rich.progress import MofNCompleteColumn, Progress, SpinnerColumn, TaskProgr
 from pdm import termui
 
 if TYPE_CHECKING:
+    from typing import Self
+
     from rich.console import Console, ConsoleOptions, RenderResult
-    from rich.progress import Progress, TaskID
+    from rich.progress import TaskID
 
 
 class CandidateReporter:
@@ -103,9 +105,9 @@ class InstallationStatus:
         if not self.console.is_interactive:
             self.console.print()
 
-    def __enter__(self) -> InstallationStatus:
+    def __enter__(self) -> Self:
         self.start()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         self.stop()

@@ -205,8 +205,8 @@ class Metadata(dict):
     def get_all(self, name: str, fallback: list[str] | None = None) -> list[str] | None:
         return [self[name]] if name in self else fallback
 
-    def __getitem__(self, __key: str) -> str:
-        return cast(str, dict.get(self, __key))
+    def __getitem__(self, key: str, /) -> str:
+        return cast(str, dict.get(self, key))
 
 
 class Distribution:

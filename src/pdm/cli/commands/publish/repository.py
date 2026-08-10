@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse, urlunparse
 
@@ -35,7 +35,7 @@ class CallbackWrapperStream(httpx.SyncByteStream):
         self._callback = callback
         self.bytes_read = 0
 
-    def __iter__(self) -> Iterable[bytes]:
+    def __iter__(self) -> Iterator[bytes]:
         for chunk in self._stream:
             self.bytes_read += len(chunk)
             self._callback(self)

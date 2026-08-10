@@ -17,7 +17,7 @@ from pdm.utils import normalize_name
 if TYPE_CHECKING:
     from collections.abc import Callable
     from importlib.resources.abc import Traversable
-    from typing import TypeVar
+    from typing import Self, TypeVar
 
     ST = TypeVar("ST", Traversable, Path)
 
@@ -51,12 +51,12 @@ class ProjectTemplate:
     def __init__(self, path_or_url: str | None) -> None:
         self.template = path_or_url or "default"
 
-    def __enter__(self) -> ProjectTemplate:
+    def __enter__(self) -> Self:
         self._path = Path(tempfile.mkdtemp(suffix="-template", prefix="pdm-"))
         self.prepare_template()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         shutil.rmtree(self._path, ignore_errors=True)
 
     def generate(self, target_path: Path, metadata: dict[str, Any], overwrite: bool = False) -> None:
@@ -93,10 +93,7 @@ class ProjectTemplate:
                         replace_all(os.path.join(root, f), import_name, new_import_name)
                         if f == import_name + ".py":
                             os.rename(os.path.join(root, f), os.path.join(root, new_import_name + ".py"))
-                    elif f.endswith((".md", ".rst")):
-                        replace_all(os.path.join(root, f), original_name, new_name)
-                        replace_all(os.path.join(root, f), import_name, new_import_name)
-                    elif Path(root) == self._path and f == "pyproject.toml":
+                    elif f.endswith((".md", ".rst")) or (Path(root) == self._path and f == "pyproject.toml"):
                         replace_all(os.path.join(root, f), original_name, new_name)
                         replace_all(os.path.join(root, f), import_name, new_import_name)
 

@@ -191,7 +191,7 @@ def test_from_directory_precedence_and_falsy_update(tmp_path):
 
 def test_read_pyproject_toml_project_error_returns_empty(tmp_path, mocker):
     # Create a dummy PyProject that raises ProjectError on unwrap()
-    import pdm.project.project_file as project_file
+    from pdm.project import project_file
 
     mocker.patch.object(project_file.PyProject, "_convert_pyproject", side_effect=ProjectError("boom"))
 
@@ -209,7 +209,7 @@ def test_read_pyproject_toml_metaconverter_error_uses_partial_data_and_logs(tmp_
         "requires-python": ">=3.8",
     }
 
-    import pdm.project.project_file as project_file
+    from pdm.project import project_file
 
     mocker.patch.object(
         project_file.PyProject, "_convert_pyproject", side_effect=MetaConvertError(["e1"], data=partial, settings={})

@@ -62,7 +62,7 @@ class LoggerWrapper(threading.Thread):
 
     @staticmethod
     def remove_newline(msg: str) -> str:
-        return msg[:-1] if msg.endswith("\n") else msg
+        return msg.removesuffix("\n")
 
     def run(self) -> None:
         with os.fdopen(self.fd_read, encoding="utf-8", errors="replace") as reader:

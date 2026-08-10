@@ -287,12 +287,14 @@ class Project:
             return os.getenv("PDM_PYTHON")
         with contextlib.suppress(FileNotFoundError):
             return self.root.joinpath(".pdm-python").read_text("utf-8").strip()
-        with contextlib.suppress(FileNotFoundError):
+        with (
+            contextlib.suppress(FileNotFoundError),
+            self.root.joinpath(".pdm.toml").open("rb") as fp,
+        ):
             # TODO: remove this in the future
-            with self.root.joinpath(".pdm.toml").open("rb") as fp:
-                data = tomllib.load(fp)
-                if data.get("python", {}).get("path"):
-                    return data["python"]["path"]
+            data = tomllib.load(fp)
+            if data.get("python", {}).get("path"):
+                return data["python"]["path"]
         return None
 
     @_saved_python.setter

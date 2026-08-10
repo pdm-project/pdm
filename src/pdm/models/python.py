@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from packaging.version import InvalidVersion, Version
 
@@ -35,7 +35,7 @@ class PythonInfo:
     def __hash__(self) -> int:
         return hash(self._py_ver)
 
-    def __eq__(self, o: Any) -> bool:
+    def __eq__(self, o: object) -> bool:
         if not isinstance(o, PythonInfo):
             return False
         return self.path == o.path

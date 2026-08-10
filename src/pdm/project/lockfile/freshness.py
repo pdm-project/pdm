@@ -279,9 +279,7 @@ def _package_matches_requirement_context(
     if candidate.req.groups and group not in candidate.req.groups:
         return False
     extras, dependency_groups = project.split_extras_groups([group])
-    if not package.marker.evaluate({"extras": set(extras), "dependency_groups": set(dependency_groups)}):
-        return False
-    return True
+    return package.marker.evaluate({"extras": set(extras), "dependency_groups": set(dependency_groups)})
 
 
 def _context_packages(

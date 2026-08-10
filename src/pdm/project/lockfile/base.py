@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import abc
 import enum
-from collections.abc import Iterable, Mapping, Set
+from collections.abc import Iterable, Mapping
+from collections.abc import Set as AbstractSet
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
@@ -39,18 +40,16 @@ class LockInputsState(enum.Enum):
 
 
 class Lockfile(TOMLFile, metaclass=abc.ABCMeta):
-    SUPPORTED_FLAGS: Set[str]
+    SUPPORTED_FLAGS: AbstractSet[str]
 
     @property
     @abc.abstractmethod
     def hash(self) -> tuple[str, str]:
         """The content hash algo and hash value of the pyproject.toml to generate this lockfile."""
-        pass
 
     @abc.abstractmethod
     def update_hash(self, hash_value: str, algo: str = "sha256") -> None:
         """Update the content hash of the lockfile."""
-        pass
 
     @property
     def lock_inputs(self) -> object | None:

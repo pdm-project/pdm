@@ -34,8 +34,7 @@ if TYPE_CHECKING:
     from resolvelib.resolvers import RequirementInformation
 
     from pdm._types import Comparable
-    from pdm.models.repositories import BaseRepository, LockedRepository
-    from pdm.models.requirements import Requirement
+    from pdm.models.repositories import BaseRepository
     from pdm.models.working_set import WorkingSet
 
     ProviderT = TypeVar("ProviderT", bound="type[BaseProvider]")

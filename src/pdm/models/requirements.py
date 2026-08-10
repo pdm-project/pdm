@@ -18,6 +18,7 @@ from packaging.requirements import InvalidRequirement
 from packaging.requirements import Requirement as PackageRequirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
+from typing_extensions import Self
 
 from pdm.exceptions import RequirementError
 from pdm.models.backends import BuildBackend, get_relative_path
@@ -103,7 +104,7 @@ class Requirement:
         sp = next(iter(self.specifier))
         return sp.operator == "===" or (sp.operator == "==" and "*" not in sp.version)
 
-    def as_pinned_version(self: T, other_version: str | None) -> T:
+    def as_pinned_version(self, other_version: str | None) -> Self:
         """Return a new requirement with the given pinned version."""
         if self.is_pinned or not other_version:
             return self
@@ -136,7 +137,7 @@ class Requirement:
         return self.as_line()
 
     @classmethod
-    def create(cls: type[T], **kwargs: Any) -> T:
+    def create(cls, **kwargs: Any) -> Self:
         if "marker" in kwargs:
             kwargs["marker"] = get_marker(kwargs["marker"])
         if "extras" in kwargs and isinstance(kwargs["extras"], str):
@@ -262,8 +263,7 @@ class FileRequirement(Requirement):
         if self.is_vcs:
             if self.vcs == "git":  # type: ignore[attr-defined]
                 name = filename
-                if name.endswith(".git"):
-                    name = name[:-4]
+                name = name.removesuffix(".git")
                 return name
             elif self.vcs == "hg":  # type: ignore[attr-defined]
                 return filename
@@ -287,7 +287,7 @@ class FileRequirement(Requirement):
         return None
 
     @classmethod
-    def create(cls: type[T], **kwargs: Any) -> T:
+    def create(cls, **kwargs: Any) -> Self:
         if kwargs.get("path"):
             kwargs["path"] = Path(kwargs["path"])
         return super().create(**kwargs)

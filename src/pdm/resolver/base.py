@@ -61,7 +61,6 @@ class Resolver(abc.ABC):
     @abc.abstractmethod
     def resolve(self) -> Resolution:
         """Resolve the requirements."""
-        pass
 
     @property
     def project(self) -> Project:

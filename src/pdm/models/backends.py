@@ -75,8 +75,8 @@ class PathContext:
     def __init__(self, path: Path) -> None:
         self.__path = path
 
-    def __format__(self, __format_spec: str) -> str:
-        match __format_spec:
+    def __format__(self, format_spec: str, /) -> str:
+        match format_spec:
             case "":
                 return self.__path.as_posix()
             case "uri":
@@ -84,15 +84,15 @@ class PathContext:
             case "real":
                 return self.__path.resolve().as_posix()
             case _:
-                raise ValueError(f"Unknown format specifier: {__format_spec}")
+                raise ValueError(f"Unknown format specifier: {format_spec}")
 
 
 class EnvContext:
     def __init__(self, expand: bool = True) -> None:
         self.expand = expand
 
-    def __format__(self, __format_spec: str) -> str:
-        name, sep, default = __format_spec.partition(":")
+    def __format__(self, format_spec: str, /) -> str:
+        name, sep, default = format_spec.partition(":")
         if not self.expand:
             return f"${{{name}}}"
         if name in os.environ:

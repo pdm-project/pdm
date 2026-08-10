@@ -157,8 +157,8 @@ class Synchronizer(BaseSynchronizer):
         sequential_jobs = []
         parallel_jobs = []
 
-        for kind in to_do:
-            for key in to_do[kind]:
+        for kind, packages in to_do.items():
+            for key in packages:
                 if key in self.SEQUENTIAL_PACKAGES or not self.parallel:
                     sequential_jobs.append((kind, key))
                 elif key in self.candidates and self.candidates[key].req.editable:
@@ -178,8 +178,8 @@ class Synchronizer(BaseSynchronizer):
                 state.parallel_failed.append((kind, key))
                 state.errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
                 if self.fail_fast:
-                    for future in state.jobs:
-                        future.cancel()
+                    for job in state.jobs:
+                        job.cancel()
                     state.mark_failed = True
 
         # get rich progress and live handler to deal with multiple spinners

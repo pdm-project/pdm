@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Set
+from collections.abc import Iterable, Iterator
+from collections.abc import Set as AbstractSet
 from typing import TYPE_CHECKING, TypeVar, overload
 
 from pdm.models.markers import Marker, get_marker
@@ -14,10 +15,10 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class OrderedSet(Set[T]):
+class OrderedSet(AbstractSet[T]):
     """Set with deterministic ordering."""
 
-    __slots__ = "_data"
+    __slots__ = ("_data",)
 
     def __init__(self, iterable: Iterable[T] = ()) -> None:
         self._data = dict.fromkeys(iterable)
@@ -99,7 +100,7 @@ def merge_markers(result: Result[Requirement, Candidate, str]) -> dict[str, Mark
 
 
 def _build_marker(
-    crit: Criterion[Requirement, Candidate, str], resolved: dict[str, Marker], keep_unresolved: Set[str]
+    crit: Criterion[Requirement, Candidate, str], resolved: dict[str, Marker], keep_unresolved: AbstractSet[str]
 ) -> Marker:
     marker = None
 

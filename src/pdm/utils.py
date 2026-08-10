@@ -18,13 +18,13 @@ import subprocess
 import sys
 import sysconfig
 import tempfile
-import urllib.parse as parse
 import warnings
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from os import name as os_name
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib import parse
 
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version
@@ -155,7 +155,7 @@ def atomic_open_for_write(filename: str | Path, *, mode: str = "w", encoding: st
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     fd, name = tempfile.mkstemp(prefix="atomic-write-", dir=dirname)
-    fp = open(fd, mode, encoding=encoding if "b" not in mode else None)
+    fp = os.fdopen(fd, mode, encoding=encoding if "b" not in mode else None)
     try:
         yield fp
     except Exception:
@@ -194,7 +194,7 @@ def open_for_write_no_symlink(filename: str | Path, *, encoding: str = "utf-8") 
         if exc.errno in (errno.ELOOP, errno.EMLINK):
             raise PdmUsageError(f"Refusing to write to {path} because it is a symlink.") from exc
         raise
-    fp = open(fd, "w", encoding=encoding)
+    fp = os.fdopen(fd, "w", encoding=encoding)
     try:
         yield fp
     finally:
@@ -281,7 +281,7 @@ def expand_env_vars_in_auth(url: str) -> str:
     if "@" in netloc:
         auth, rest = netloc.split("@", 1)
         auth = expand_env_vars(auth, True)
-        netloc = "@".join([auth, rest])
+        netloc = f"{auth}@{rest}"
     return parse.urlunparse((scheme, netloc, path, params, query, fragment))
 
 
@@ -451,9 +451,8 @@ def deprecation_warning(message: str, stacklevel: int = 1, raise_since: str | No
     """
     from pdm.__version__ import __version__
 
-    if raise_since is not None:
-        if parse_version(__version__) >= parse_version(raise_since):
-            raise PDMDeprecationWarning(message)
+    if raise_since is not None and parse_version(__version__) >= parse_version(raise_since):
+        raise PDMDeprecationWarning(message)
     warnings.warn(message, PDMDeprecationWarning, stacklevel=stacklevel + 1)
 
 

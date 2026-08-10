@@ -596,17 +596,19 @@ def set_env_in_reg(env_name: str, value: str) -> None:
 
     value = os.path.normcase(value)
 
-    with winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root:
-        with winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key:
-            try:
-                old_value, type_ = winreg.QueryValueEx(env_key, env_name)
-                paths = [os.path.normcase(item) for item in old_value.split(os.pathsep)]
-                if value in paths:
-                    return
-            except FileNotFoundError:
-                paths, type_ = [], winreg.REG_EXPAND_SZ
-            new_value = os.pathsep.join([value, *paths])
-            winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
+    with (
+        winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER) as root,
+        winreg.OpenKey(root, "Environment", 0, winreg.KEY_ALL_ACCESS) as env_key,
+    ):
+        try:
+            old_value, type_ = winreg.QueryValueEx(env_key, env_name)
+            paths = [os.path.normcase(item) for item in old_value.split(os.pathsep)]
+            if value in paths:
+                return
+        except FileNotFoundError:
+            paths, type_ = [], winreg.REG_EXPAND_SZ
+        new_value = os.pathsep.join([value, *paths])
+        winreg.SetValueEx(env_key, env_name, 0, type_, new_value)
 
 
 def format_resolution_impossible(err: ResolutionImpossible) -> str:
@@ -625,9 +627,11 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
             if cause.parent is not None and not cause.requirement.specifier.is_superset(pyspec)
         ]
         result = [
-            "Unable to find a resolution because the following dependencies don't work "
-            "on all Python versions in the range of the project's `requires-python`: "
-            f"[success]{pyspec}[/]."
+            (
+                "Unable to find a resolution because the following dependencies don't work "
+                "on all Python versions in the range of the project's `requires-python`: "
+                f"[success]{pyspec}[/]."
+            )
         ]
         for req, parent in conflicting:
             pyspec &= req.specifier
@@ -650,9 +654,11 @@ def format_resolution_impossible(err: ResolutionImpossible) -> str:
         )
 
     result = [
-        "Unable to find a resolution for "
-        f"[success]{causes[0].requirement.identify()}[/]\n"
-        "because of the following conflicts:"
+        (
+            "Unable to find a resolution for "
+            f"[success]{causes[0].requirement.identify()}[/]\n"
+            "because of the following conflicts:"
+        )
     ]
     for req, parent in causes:
         info_lines.add(f"  {req.as_line()} (from {parent if parent else 'project'})")

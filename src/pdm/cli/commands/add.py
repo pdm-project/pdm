@@ -122,11 +122,11 @@ class Command(BaseCommand):
             if project.enable_write_lockfile:
                 project.core.ui.info(f"Adding group [success]{group}[/] to lockfile")
             lock_groups.append(group)
-        if group == "default" or (
-            not selection.dev and normalize_name(group) not in project.pyproject.dev_dependencies
-        ):
-            if editables:
-                raise PdmUsageError("Cannot add editables to the default or optional dependency group")
+        if (
+            group == "default"
+            or (not selection.dev and normalize_name(group) not in project.pyproject.dev_dependencies)
+        ) and editables:
+            raise PdmUsageError("Cannot add editables to the default or optional dependency group")
         for r in [parse_requirement(line, True) for line in editables] + [parse_requirement(line) for line in packages]:
             if project.is_distribution and normalize_name(name := project.name) == r.key and not r.extras:
                 project.core.ui.warn(f"Package [req]{name}[/] is the project itself.")

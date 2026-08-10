@@ -53,7 +53,7 @@ class ProjectConfigFixer(BaseFixer):
             return
         content = gitignore.read_text("utf8")
         if ".pdm-python" not in content:
-            content = re.sub(r"^\.pdm\.toml$", ".pdm-python", content, flags=re.M)
+            content = re.sub(r"^\.pdm\.toml$", ".pdm-python", content, flags=re.MULTILINE)
             gitignore.write_text(content, "utf8")
 
     def fix(self) -> None:

@@ -55,4 +55,3 @@ class Command(BaseCommand):
             "Since pypi.org no longer supports search API, this command is deprecated and will be removed in future versions. "
             "Please visit `https://pypi.org` in the browser to search for packages.",
         )
-        return
