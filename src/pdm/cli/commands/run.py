@@ -58,7 +58,7 @@ def merge_options(*options: TaskOptions | None) -> TaskOptions:
 
 RE_ARGS_PLACEHOLDER = re.compile(r"\{args(?::(?P<default>[^}]*))?\}")
 RE_PDM_PLACEHOLDER = re.compile(r"\{pdm\}")
-RE_CWD_PLACEHOLDER = re.compile(r"\{PDM_RUN_CWD\}")
+RE_CWD_PLACEHOLDER = re.compile(r"\{pdm_run_cwd\}")
 
 
 def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
@@ -105,7 +105,7 @@ def _quote_cwd_for_cmd_exe(path: str) -> str:
 
 
 def _interpolate_cwd(script: str, for_shell: bool = False) -> tuple[str, bool]:
-    """Interpolate the `{PDM_RUN_CWD}` placeholder in a string.
+    """Interpolate the `{pdm_run_cwd}` placeholder in a string.
 
     When ``for_shell`` is true the result is handed directly to the OS shell, so
     on Windows it must be escaped the way ``cmd.exe`` understands (caret-escaped
@@ -124,7 +124,7 @@ def _interpolate_cwd(script: str, for_shell: bool = False) -> tuple[str, bool]:
 
 
 def interpolate(script: str, args: Sequence[str], for_shell: bool = False) -> tuple[str, bool]:
-    """Interpolate the `{args:[defaults]}`, `{pdm}` and `{PDM_RUN_CWD}` placeholders in a string."""
+    """Interpolate the `{args:[defaults]}`, `{pdm}` and `{pdm_run_cwd}` placeholders in a string."""
 
     script, args_interpolated = _interpolate_args(script, args)
     script = _interpolate_pdm(script)

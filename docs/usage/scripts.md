@@ -402,15 +402,15 @@ PDM, version 2.8.0 was called as <snip>/venvs/pdm2-8/bin/python -m pdm -V
 !!! note
     While the above example uses PDM 2.8, this functionality was introduced in the 2.10 series and only backported for the showcase.
 
-### `{PDM_RUN_CWD}` placeholder
+### `{pdm_run_cwd}` placeholder
 
-To make scripts referencing the current working directory cross-platform, you can use the `{PDM_RUN_CWD}` placeholder.
+To make scripts referencing the current working directory cross-platform, you can use the `{pdm_run_cwd}` placeholder.
 It expands to the absolute path of the directory from which `pdm run` was invoked, the same value that is exposed
 via the `PDM_RUN_CWD` environment variable.
 
 ```toml
 [tool.pdm.scripts]
-create-symlinks = { shell = "python tools/create_symlinks.py {PDM_RUN_CWD}" }
+create-symlinks = { shell = "python tools/create_symlinks.py {pdm_run_cwd}" }
 ```
 
 ## Show the List of Scripts
