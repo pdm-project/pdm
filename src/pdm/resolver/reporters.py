@@ -13,6 +13,8 @@ from pdm.models.reporter import CandidateReporter, RichProgressReporter
 from pdm.termui import SPINNER, UI, Verbosity, logger
 
 if TYPE_CHECKING:
+    from typing import Self
+
     from resolvelib.resolvers import Criterion, RequirementInformation, State
     from rich.console import Console, ConsoleOptions, RenderResult
 
@@ -101,7 +103,7 @@ class RichLockReporter(LockReporter):
         if not self.console.is_interactive:  # pragma: no cover
             self.console.print()
 
-    def __enter__(self) -> RichLockReporter:
+    def __enter__(self) -> Self:
         self.start()
         return self
 

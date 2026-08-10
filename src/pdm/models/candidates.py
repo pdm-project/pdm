@@ -55,7 +55,7 @@ def _dist_info_files(whl_zip: ZipFile) -> list[str]:
             res.append(path)
     if res:
         return res
-    raise Exception("No .dist-info folder found in wheel")
+    raise BuildError("No .dist-info folder found in wheel")
 
 
 def _get_wheel_metadata_from_wheel(whl_file: Path, metadata_directory: str) -> str:

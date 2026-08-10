@@ -7,7 +7,7 @@ import shutil
 from collections.abc import Iterable
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, NewType, TypeVar, cast
+from typing import TYPE_CHECKING, NewType, cast
 
 from typing_extensions import Self
 
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
     from pdm.environments import BaseEnvironment
 
-_T = TypeVar("_T", bound="BaseRemovePaths")
 NormalizedPath = NewType("NormalizedPath", str)
 
 

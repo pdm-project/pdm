@@ -181,8 +181,7 @@ class RemoveCommand(BaseCommand):
                 package = PackageNode(key, "0.0.0", {})
                 if package not in graph:
                     continue
-                for dep in graph.iter_children(package):
-                    temp.append(dep)
+                temp.extend(graph.iter_children(package))
                 graph.remove(package)
 
             to_resolve.clear()

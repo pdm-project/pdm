@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import ANY
 
@@ -714,7 +714,7 @@ def test_lock_check_rejects_malformed_inputs(pdm, project, repository, lock_form
 
 
 @pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
-@pytest.mark.parametrize("malformed_inputs", [{}, "invalid", datetime(2026, 1, 1)])
+@pytest.mark.parametrize("malformed_inputs", [{}, "invalid", datetime(2026, 1, 1, tzinfo=timezone.utc)])
 def test_lock_check_does_not_fallback_for_invalid_lock_inputs(pdm, project, repository, lock_format, malformed_inputs):
     project.project_config["lock.format"] = lock_format
     project.add_dependencies(["requests"])
@@ -751,8 +751,10 @@ def test_lock_inputs_redact_credentials(project):
         }
     ]
     project.pyproject.metadata["dependencies"] = [
-        "demo @ https://dependency-user:dependency-password@example.org/dependency-path-secret/demo.whl"
-        "?token=dependency-query-secret"
+        (
+            "demo @ https://dependency-user:dependency-password@example.org/dependency-path-secret/demo.whl"
+            "?token=dependency-query-secret"
+        )
     ]
     project.pyproject.settings["resolution"] = {
         "overrides": {

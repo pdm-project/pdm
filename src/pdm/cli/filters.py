@@ -60,12 +60,11 @@ class GroupSelection:
 
     def all(self) -> list[str] | None:
         project_groups = list(self.project.iter_groups())
-        if self.is_unset:
-            if self.project.lockfile.exists():
-                groups = self.project.lockfile.groups
-                if groups:
-                    groups = [g for g in groups if g in project_groups]
-                return groups
+        if self.is_unset and self.project.lockfile.exists():
+            groups = self.project.lockfile.groups
+            if groups:
+                groups = [g for g in groups if g in project_groups]
+            return groups
         return list(self)
 
     @cached_property

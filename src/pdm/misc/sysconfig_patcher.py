@@ -103,7 +103,7 @@ def patch_sysconfig_ast(obj, real_prefix, variable_updates=None):
     dict_ast = assignment.value
 
     if not isinstance(dict_ast, ast.Dict):
-        raise ValueError(f"Expected Dict, got {dict_ast!r}")
+        raise ValueError(f"Expected Dict, got {dict_ast!r}")  # noqa: TRY004
 
     real_prefix_str = str(real_prefix)
     # type check
@@ -114,9 +114,9 @@ def patch_sysconfig_ast(obj, real_prefix, variable_updates=None):
     # index because we are modifying
     for key_ast, value_ast in zip(dict_ast.keys, dict_ast.values, strict=True):
         if not (isinstance(key_ast, ast.Constant) and isinstance(key_ast.value, str)):
-            raise ValueError("Expected all str keys dict")
+            raise ValueError("Expected all str keys dict")  # noqa: TRY004
         if not (isinstance(value_ast, ast.Constant) and isinstance(value_ast.value, (str, int))):
-            raise ValueError("Expected all str and int values dict")
+            raise ValueError("Expected all str and int values dict")  # noqa: TRY004
         key = key_ast.value
         value = value_ast.value
 

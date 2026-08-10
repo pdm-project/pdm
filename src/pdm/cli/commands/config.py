@@ -115,7 +115,7 @@ class Command(BaseCommand):
                 if canonical_key in supersedes:
                     superseded = True
                 deprecated = f"[error](deprecating: {key})[/]"
-            elif key not in Config._config_map and not (key.startswith("pypi.") or key.startswith(REPOSITORY)):
+            elif key not in Config._config_map and not (key.startswith(("pypi.", REPOSITORY))):
                 continue
             extra_style = "dim" if superseded else None
             if canonical_key not in Config._config_map:

@@ -239,7 +239,7 @@ class UI:
                 elif title[0] == ">":
                     title, justify = title[1:], "right"
                 else:
-                    title, justify = title, "left"
+                    justify = "left"
                 table.add_column(title, justify=justify)
         else:
             table = Table.grid(padding=(0, 1))
@@ -265,7 +265,7 @@ class UI:
             self._clean_logs()
             fp, log_file = tempfile.mkstemp(".log", f"pdm-{type_}-", self.log_dir)
             handler = logging.StreamHandler(
-                TruncatedIO(self.exit_stack.enter_context(open(fp, "a", encoding="utf-8")), self.MAX_LOG_SIZE)
+                TruncatedIO(self.exit_stack.enter_context(os.fdopen(fp, "a", encoding="utf-8")), self.MAX_LOG_SIZE)
             )
             handler.setLevel(logging.DEBUG)
 

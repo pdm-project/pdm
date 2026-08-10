@@ -108,7 +108,7 @@ if TYPE_CHECKING:
     from typing import Required, TypedDict
 
     class Comparable(Protocol):
-        def __lt__(self, __other: Any) -> bool: ...
+        def __lt__(self, other: Any, /) -> bool: ...
 
     SpinnerT = TypeVar("SpinnerT", bound="Spinner")
 

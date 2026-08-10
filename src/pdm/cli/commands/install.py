@@ -55,11 +55,13 @@ class Command(BaseCommand):
         environment = PythonEnvironment(
             project, python=sys.executable, prefix=str(plugin_root), extra_paths=extra_paths
         )
-        with project.core.ui.open_spinner("[success]Installing plugins...[/]"):
-            with project.core.ui.logging("install-plugins"):
-                install_requirements(
-                    plugins, environment, clean=True, use_install_cache=project.config["install.cache"], allow_uv=False
-                )
+        with (
+            project.core.ui.open_spinner("[success]Installing plugins...[/]"),
+            project.core.ui.logging("install-plugins"),
+        ):
+            install_requirements(
+                plugins, environment, clean=True, use_install_cache=project.config["install.cache"], allow_uv=False
+            )
         project.core.ui.echo(f"Plugins are installed successfully into [primary]{plugin_root}[/].")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

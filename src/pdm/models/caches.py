@@ -128,7 +128,7 @@ class HashCache:
         logger.debug("Downloading link %s for calculating hash", link.redacted)
         for chunk in self._read_from_link(link, session):
             h.update(chunk)
-        return ":".join([h.name, h.hexdigest()])
+        return f"{h.name}:{h.hexdigest()}"
 
     def _should_cache(self, link: Link) -> bool:
         # For now, we only disable caching for local files.

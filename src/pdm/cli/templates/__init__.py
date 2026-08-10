@@ -17,7 +17,7 @@ from pdm.utils import normalize_name
 if TYPE_CHECKING:
     from collections.abc import Callable
     from importlib.resources.abc import Traversable
-    from typing import TypeVar
+    from typing import Self, TypeVar
 
     ST = TypeVar("ST", Traversable, Path)
 
@@ -51,7 +51,7 @@ class ProjectTemplate:
     def __init__(self, path_or_url: str | None) -> None:
         self.template = path_or_url or "default"
 
-    def __enter__(self) -> ProjectTemplate:
+    def __enter__(self) -> Self:
         self._path = Path(tempfile.mkdtemp(suffix="-template", prefix="pdm-"))
         self.prepare_template()
         return self
