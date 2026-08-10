@@ -38,6 +38,7 @@ demo = { path = "./artifacts/demo-0.0.1-py2.py3-none-any.whl" }
 [tool.poetry.extras]
 mysql = ["mysqlclient"]
 pgsql = ["psycopg2"]
+all = ["mysqlclient", "psycopg2"]
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/python-poetry/poetry/issues"
