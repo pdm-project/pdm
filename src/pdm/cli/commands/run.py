@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import itertools
 import os
 import re
 import shlex
@@ -26,7 +25,6 @@ from pdm.signals import pdm_signals
 from pdm.utils import deprecation_warning, expand_env_vars, is_path_relative_to
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
     from types import FrameType
     from typing import Any, TypedDict
 
@@ -56,37 +54,60 @@ def merge_options(*options: TaskOptions | None) -> TaskOptions:
     )
 
 
-RE_ARGS_PLACEHOLDER = re.compile(r"\{args(?::(?P<default>[^}]*))?\}")
-RE_PDM_PLACEHOLDER = re.compile(r"\{pdm\}")
+RE_PLACEHOLDER = re.compile(r"\{(?P<name>[^}:]+)(?::(?P<default>[^}]*))?\}")
 
 
-def _interpolate_args(script: str, args: Sequence[str]) -> tuple[str, bool]:
-    """Interpolate the `{args:[defaults]} placeholder in a string"""
-    import shlex
-
-    def replace(m: re.Match[str]) -> str:
-        default = m.group("default") or ""
-        return shlex.join(args) if args else default
-
-    interpolated, count = RE_ARGS_PLACEHOLDER.subn(replace, script)
-    return interpolated, count > 0
+#: Operators that cmd.exe's own command-line parser treats specially, e.g. `&`
+#: for command chaining or `|` for piping. `subprocess.list2cmdline` does not
+#: escape any of these: it only implements the MSVCRT argv-quoting convention
+#: (double quotes understood by a spawned program's argument parser), which is
+#: not the same grammar cmd.exe itself uses when it tokenizes the command line
+#: it was handed. `%` is left alone here since its escaping (doubling) is a
+#: batch-file convention that does not apply to a plain `cmd.exe /c` line.
+_CMD_EXE_METACHARS = re.compile(r"[\^&|<>()]")
 
 
-def _interpolate_pdm(script: str) -> str:
-    """Interpolate the `{pdm} placeholder in a string"""
-    executable_path = Path(sys.executable)
-    pdm_executable = shlex.join([executable_path.as_posix(), "-m", "pdm"])
+def _quote_cwd_for_cmd_exe(path: str) -> str:
+    """Escape cmd.exe metacharacters in ``path`` with carets.
 
-    interpolated = RE_PDM_PLACEHOLDER.sub(pdm_executable, script)
-    return interpolated
+    The `^` itself is escaped first so a caret inserted while escaping a later
+    character is never re-escaped. Whitespace is left untouched: cmd.exe's
+    builtin `echo` does not tokenize its argument on spaces (it prints the
+    remainder of the line verbatim) and, unlike quoting, does not print the
+    escaping caret either, so this is safe for both spaced and unspaced paths.
+    """
+    return _CMD_EXE_METACHARS.sub(lambda m: "^" + m.group(), path)
 
 
-def interpolate(script: str, args: Sequence[str]) -> tuple[str, bool]:
-    """Interpolate the `{args:[defaults]} placeholder in a string"""
+def interpolate(script: str, args: Sequence[str], for_shell: bool = False) -> tuple[str, bool]:
+    """Interpolate placeholders in a script.
 
-    script, args_interpolated = _interpolate_args(script, args)
-    script = _interpolate_pdm(script)
-    return script, args_interpolated
+    ``run_cwd`` needs shell-specific quoting on Windows. Other script kinds
+    are re-parsed with ``shlex.split``, so POSIX quoting is used for them on all
+    platforms.
+    """
+    pdm = shlex.join([Path(sys.executable).as_posix(), "-m", "pdm"])
+    path = str(Path.cwd())
+    if for_shell and sys.platform == "win32":
+        cwd = _quote_cwd_for_cmd_exe(path)
+    else:
+        cwd = shlex.quote(path)
+    replacements = {
+        "args": shlex.join(args),
+        "pdm": pdm,
+        "run_cwd": cwd,
+    }
+    interpolated: set[str] = set()
+
+    def replace(match: re.Match[str]) -> str:
+        name = match.group("name")
+        if name not in replacements:
+            return match.group()
+        interpolated.add(name)
+        return replacements[name] or match.group("default") or ""
+
+    script = RE_PLACEHOLDER.sub(replace, script)
+    return script, "args" in interpolated
 
 
 _METADATA_REGEX = r"(?m)^# /// (?P<type>[a-zA-Z0-9-]+)$\s(?P<content>(^#(| .*)$\s)+)^# ///$"
@@ -324,22 +345,21 @@ class TaskRunner:
         shell = False
         if kind == "cmd":
             if isinstance(value, str):
-                cmd, interpolated = interpolate(value, args)
+                cmd, args_interpolated = interpolate(value, args)
                 value = shlex.split(cmd)
             else:
-                agg = [interpolate(part, args) for part in value]
-                interpolated = any(row[1] for row in agg)
-                # In case of multiple default, we need to split the resulting string.
-                parts: Iterator[list[str]] = (
-                    shlex.split(part) if interpolated else [part] for part, interpolated in agg
-                )
-                # We flatten the nested list to obtain a list of arguments
-                value = list(itertools.chain(*parts))
-            args = value if interpolated else [*value, *args]
+                expanded = []
+                args_interpolated = False
+                for part in value:
+                    result, part_args_interpolated = interpolate(part, args)
+                    args_interpolated = args_interpolated or part_args_interpolated
+                    expanded.extend(shlex.split(result) if result != part else [part])
+                value = expanded
+            args = value if args_interpolated else [*value, *args]
         elif kind == "shell":
             assert isinstance(value, str)
-            script, interpolated = interpolate(value, args)
-            args = script if interpolated else " ".join([script, *args])
+            script, args_interpolated = interpolate(value, args, for_shell=True)
+            args = script if args_interpolated or not args else f"{script} {shlex.join(args)}"
             shell = True
         elif kind == "call":
             assert isinstance(value, str)
@@ -357,16 +377,14 @@ class TaskRunner:
 
         if kind == "composite":
             args = list(args)
-            should_interpolate = any(RE_ARGS_PLACEHOLDER.search(script) for script in value)
-            should_interpolate = should_interpolate or any(RE_PDM_PLACEHOLDER.search(script) for script in value)
+            interpolated_scripts = [interpolate(script, args) for script in value]
+            args_interpolated = any(row[1] for row in interpolated_scripts)
             composite_code = 0
             keep_going = options.pop("keep_going", False) if options else False
-            for script in value:
-                if should_interpolate:
-                    script, _ = interpolate(script, args)
+            for script, _ in interpolated_scripts:
                 split = shlex.split(script)
                 cmd = split[0]
-                subargs = split[1:] + ([] if should_interpolate else args)
+                subargs = split[1:] + ([] if args_interpolated else args)
                 code = self.run(cmd, subargs, merge_options(options, opts), chdir=True, seen=seen)
                 if code != 0:
                     if not keep_going:
