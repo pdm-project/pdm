@@ -1,3 +1,25 @@
+## Release v2.28.1 (2026-08-11)
+
+### Features & Improvements
+
+- Defer command action and Python installer imports until their corresponding runtime paths execute. ([#3673](https://github.com/pdm-project/pdm/issues/3673))
+- Add `{run_cwd}` placeholder for scripts to reference the original working directory. ([#3734](https://github.com/pdm-project/pdm/issues/3734))
+- Add opt-in canonical lock input freshness via `tool.pdm.resolution.lock_inputs` while retaining sticky lockfile behavior and legacy hash fallback for existing lock files. ([#3821](https://github.com/pdm-project/pdm/issues/3821))
+- Integrate `argcomplete` for simplified command-line completion scripts. ([#3823](https://github.com/pdm-project/pdm/issues/3823))
+
+### Bug Fixes
+
+- Keep workspace members in their explicitly declared dependency groups instead of adding them to ``default`` in the lockfile. ([#3816](https://github.com/pdm-project/pdm/issues/3816))
+- Keep the cached parsed version intact when stripping the local segment in `comparable_version()`. ([#3817](https://github.com/pdm-project/pdm/issues/3817))
+- Make `use_uv` support adding local files. ([#3822](https://github.com/pdm-project/pdm/issues/3822))
+- Add a Poetry optional dependency to every extra that lists it when importing, instead of only the first one. ([#3831](https://github.com/pdm-project/pdm/issues/3831))
+- Do not write null values into the generated `pyproject.toml` when importing a flit project that omits `author-email`/`maintainer-email` or sets only one of `include` and `exclude` in `[tool.flit.sdist]`. ([#3832](https://github.com/pdm-project/pdm/issues/3832))
+
+### Miscellany
+
+- Add Python 3.15 preview version to the CI matrix. ([#3827](https://github.com/pdm-project/pdm/issues/3827))
+
+
 ## Release v2.28.0 (2026-06-23)
 
 ### Features & Improvements
