@@ -76,11 +76,11 @@ def _format_env_path(project: Project, path: Path) -> str:
     absolute_path = os.path.abspath(path)
     try:
         entry = os.path.relpath(absolute_path, project.root)
-    except ValueError:  # pragma: no cover - paths on different Windows drives
+    except ValueError:  # Paths on different Windows drives cannot be made relative.
         entry = absolute_path
     if "\n" in entry or "\r" in entry:
         raise PdmUsageError(f"Virtualenv path {entry!r} cannot be represented in .python-envs.")
-    return entry
+    return Path(entry).as_posix()
 
 
 def get_default_env_path(project: Project) -> Path | None:

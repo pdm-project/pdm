@@ -20,7 +20,7 @@ def test_use_command(project, pdm):
     default_env = (project.root / ".python-envs").read_text("utf-8").splitlines()[-1]
     selected_python = PythonInfo.from_path(python_path)
     if venv := selected_python.get_venv():
-        assert default_env == os.path.relpath(venv.root, project.root)
+        assert Path(project.root, default_env).resolve() == venv.root.resolve()
     else:
         assert default_env == f"__pypackages__/{selected_python.identifier}"
 
@@ -88,9 +88,8 @@ def test_use_venv_python(project, pdm):
     assert (project.root / ".python-envs").read_text("utf-8").splitlines()[-1] == ".venv"
     do_use(project, venv="test")
     assert project.python.executable.parent.parent.parent == Path(venv_location)
-    assert (project.root / ".python-envs").read_text("utf-8").splitlines()[-1] == os.path.relpath(
-        project.python.executable.parent.parent, project.root
-    )
+    default_env = (project.root / ".python-envs").read_text("utf-8").splitlines()[-1]
+    assert Path(project.root, default_env).resolve() == project.python.executable.parent.parent.resolve()
     with pytest.raises(Exception, match="No virtualenv with key 'non-exists' is found"):
         do_use(project, venv="non-exists")
 
