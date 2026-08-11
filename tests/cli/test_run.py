@@ -354,7 +354,7 @@ def test_run_shell_script_with_pdm_placeholder(project, pdm):
 def test_run_shell_script_with_cwd_placeholder(project, pdm):
     project.pyproject.settings["scripts"] = {
         "test_script": {
-            "shell": "echo {pdm_run_cwd} > output.txt",
+            "shell": "echo {run_cwd} > output.txt",
             "help": "test it won't fail",
         }
     }
@@ -367,7 +367,7 @@ def test_run_shell_script_with_cwd_placeholder(project, pdm):
 
 def test_run_cmd_script_with_cwd_placeholder(project, pdm, capfd):
     project.pyproject.settings["scripts"] = {
-        "test_script": ["python", "-c", "import sys; print(sys.argv[1])", "{pdm_run_cwd}"],
+        "test_script": ["python", "-c", "import sys; print(sys.argv[1])", "{run_cwd}"],
     }
     project.pyproject.write()
     capfd.readouterr()
@@ -381,7 +381,7 @@ def test_run_cmd_script_with_cwd_placeholder(project, pdm, capfd):
 def test_run_shell_script_with_cwd_placeholder_and_spaces_in_path(project, pdm):
     project.pyproject.settings["scripts"] = {
         "test_script": {
-            "shell": "echo {pdm_run_cwd} > output.txt",
+            "shell": "echo {run_cwd} > output.txt",
             "help": "test cwd placeholder with spaces in path",
         }
     }
@@ -389,39 +389,39 @@ def test_run_shell_script_with_cwd_placeholder_and_spaces_in_path(project, pdm):
     spaced_dir = project.root / "sub dir"
     spaced_dir.mkdir()
     with cd(spaced_dir):
-        result = pdm(["run", "test_script"], obj=project)
+        result = pdm(["run", "test_script", "extra arg"], obj=project)
     assert result.exit_code == 0
-    assert (project.root / "output.txt").read_text().strip() == str(spaced_dir)
+    assert (project.root / "output.txt").read_text().strip() == f"{spaced_dir} extra arg"
 
 
 def test_run_cmd_script_with_cwd_placeholder_and_spaces_in_path(project, pdm, capfd):
     project.pyproject.settings["scripts"] = {
-        "test_script": ["python", "-c", "import sys; print(sys.argv[1])", "{pdm_run_cwd}"],
+        "test_script": ["python", "-c", "import sys; print(*sys.argv[1:], sep='|')", "{run_cwd}"],
     }
     project.pyproject.write()
     spaced_dir = project.root / "sub dir"
     spaced_dir.mkdir()
     capfd.readouterr()
     with cd(spaced_dir):
-        result = pdm(["run", "test_script"], obj=project)
+        result = pdm(["run", "test_script", "extra arg"], obj=project)
     assert result.exit_code == 0
     out, _ = capfd.readouterr()
-    assert out.strip() == str(spaced_dir)
+    assert out.strip() == f"{spaced_dir}|extra arg"
 
 
 def test_run_composite_script_with_cwd_placeholder_and_spaces_in_path(project, pdm, capfd):
     project.pyproject.settings["scripts"] = {
-        "test_script": {"composite": ["echo {pdm_run_cwd}"]},
+        "test_script": {"composite": ["echo {run_cwd}"]},
     }
     project.pyproject.write()
     spaced_dir = project.root / "sub dir"
     spaced_dir.mkdir()
     capfd.readouterr()
     with cd(spaced_dir):
-        result = pdm(["run", "test_script"], obj=project)
+        result = pdm(["run", "test_script", "extra arg"], obj=project)
     assert result.exit_code == 0
     out, _ = capfd.readouterr()
-    assert out.strip() == str(spaced_dir)
+    assert out.strip() == f"{spaced_dir} extra arg"
 
 
 def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_path):
@@ -441,15 +441,15 @@ def test_interpolate_cwd_placeholder_shell_quoting_on_windows(monkeypatch, tmp_p
 
     # for_shell=True targets cmd.exe -> spaces pass through unescaped since
     # cmd.exe builtins like echo do not tokenize their argument on whitespace.
-    shell_result, interpolated = run_module.interpolate("echo {pdm_run_cwd}", [], for_shell=True)
-    assert interpolated
+    shell_result, args_interpolated = run_module.interpolate("echo {run_cwd}", [], for_shell=True)
+    assert not args_interpolated
     assert shell_result == f"echo {spaced_dir}"
     assert "'" not in shell_result
     assert '"' not in shell_result
 
     # cmd/composite parts are re-parsed with shlex.split, so POSIX quoting stays
     # correct even when simulating Windows.
-    cmd_result, _ = run_module.interpolate("echo {pdm_run_cwd}", [])
+    cmd_result, _ = run_module.interpolate("echo {run_cwd}", [])
     import shlex
 
     assert cmd_result == f"echo {shlex.quote(str(spaced_dir))}"
@@ -469,8 +469,8 @@ def test_interpolate_cwd_placeholder_escapes_cmd_exe_metacharacters_on_windows(m
     monkeypatch.setattr(run_module.sys, "platform", "win32")
     monkeypatch.setattr(run_module.Path, "cwd", staticmethod(lambda: run_module.Path(r"C:\repo&ver")))
 
-    result, interpolated = run_module.interpolate("echo {pdm_run_cwd}", [], for_shell=True)
-    assert interpolated
+    result, args_interpolated = run_module.interpolate("echo {run_cwd}", [], for_shell=True)
+    assert not args_interpolated
     assert result == r"echo C:\repo^&ver"
     # An unescaped & would be split into two cmd.exe commands.
     assert "&" not in result.replace("^&", "")
@@ -484,17 +484,24 @@ def test_interpolate_cwd_placeholder_escapes_all_cmd_exe_operators(monkeypatch, 
     monkeypatch.setattr(run_module.sys, "platform", "win32")
     monkeypatch.setattr(run_module.Path, "cwd", staticmethod(lambda: run_module.Path(path)))
 
-    result, _ = run_module.interpolate("echo {pdm_run_cwd}", [], for_shell=True)
+    result, _ = run_module.interpolate("echo {run_cwd}", [], for_shell=True)
     assert result == f"echo C:\\repo^{metachar}ver"
 
 
 def test_interpolate_cwd_with_backslash_u_in_path(monkeypatch):
-    from pdm.cli.commands.run import _interpolate_cwd
+    from pdm.cli.commands.run import interpolate
 
     monkeypatch.setattr(Path, "cwd", staticmethod(lambda: Path(r"C:\Users\pdm")))
-    interpolated, replaced = _interpolate_cwd("echo {pdm_run_cwd}")
-    assert replaced
+    interpolated, args_interpolated = interpolate("echo {run_cwd}", [])
+    assert not args_interpolated
     assert r"C:\Users\pdm" in interpolated
+
+
+def test_interpolate_unknown_placeholder():
+    from pdm.cli.commands.run import interpolate
+
+    script = "echo {unknown:default}"
+    assert interpolate(script, []) == (script, False)
 
 
 def test_run_expand_env_vars(project, pdm, capfd, monkeypatch):
@@ -937,6 +944,18 @@ def test_composite_can_pass_parameters(project, pdm, capfd, _args):
     assert "Second CALLED with param=second" in out
     assert "Post-Second CALLED" in out
     assert "Post-Test CALLED" in out
+
+
+def test_composite_preserves_unknown_placeholder(project, pdm, capfd, _args):
+    project.pyproject.settings["scripts"] = {
+        "test": {"composite": ["first {unknown:default}"]},
+        "first": "python args.py First",
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "test", "param=value"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "First CALLED with {unknown:default}, param=value" in out
 
 
 @pytest.mark.parametrize(
