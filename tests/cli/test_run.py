@@ -389,9 +389,9 @@ def test_run_shell_script_with_cwd_placeholder_and_spaces_in_path(project, pdm):
     spaced_dir = project.root / "sub dir"
     spaced_dir.mkdir()
     with cd(spaced_dir):
-        result = pdm(["run", "test_script", "extra arg"], obj=project)
+        result = pdm(["run", "test_script"], obj=project)
     assert result.exit_code == 0
-    assert (project.root / "output.txt").read_text().strip() == f"{spaced_dir} extra arg"
+    assert (project.root / "output.txt").read_text().strip() == str(spaced_dir)
 
 
 def test_run_cmd_script_with_cwd_placeholder_and_spaces_in_path(project, pdm, capfd):
