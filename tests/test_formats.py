@@ -225,6 +225,38 @@ def test_convert_flit(project):
     assert build["excludes"] == ["doc/*.html"]
 
 
+def test_convert_flit_author_and_maintainer_without_email(project, tmp_path):
+    pyproject_file = tmp_path / "pyproject.toml"
+    pyproject_file.write_text(
+        '[tool.flit.metadata]\nmodule = "flit"\nauthor = "Thomas Kluyver"\nmaintainer = "Frost Ming"\n',
+        encoding="utf-8",
+    )
+    result, _ = flit.convert(project, pyproject_file, None)
+
+    assert result["authors"] == [{"name": "Thomas Kluyver"}]
+    assert result["maintainers"] == [{"name": "Frost Ming"}]
+
+
+@pytest.mark.parametrize(
+    "sdist_table,expected_build",
+    [
+        ('include = ["doc/"]', {"includes": ["doc/"]}),
+        ('exclude = ["doc/*.html"]', {"excludes": ["doc/*.html"]}),
+    ],
+)
+def test_convert_flit_sdist_with_one_of_include_and_exclude(project, tmp_path, sdist_table, expected_build):
+    pyproject_file = tmp_path / "pyproject.toml"
+    pyproject_file.write_text(
+        '[tool.flit.metadata]\nmodule = "flit"\nauthor = "Thomas Kluyver"\n'
+        'author-email = "thomas@kluyver.me.uk"\n\n'
+        f"[tool.flit.sdist]\n{sdist_table}\n",
+        encoding="utf-8",
+    )
+    _, settings = flit.convert(project, pyproject_file, None)
+
+    assert settings["build"] == expected_build
+
+
 def test_convert_error_preserve_metadata(project):
     pyproject_file = FIXTURES / "poetry-error.toml"
     try:

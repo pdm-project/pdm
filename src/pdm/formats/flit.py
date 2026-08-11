@@ -35,9 +35,11 @@ def check_fingerprint(project: Project | None, filename: PathLike) -> bool:
 
 
 def _get_author(metadata: dict[str, Any], type_: str = "author") -> list[str]:
-    name = metadata.pop(type_)
+    author = {"name": metadata.pop(type_)}
     email = metadata.pop(f"{type_}-email", None)
-    return cast(list[str], array_of_inline_tables([{"name": name, "email": email}]))
+    if email is not None:
+        author["email"] = email
+    return cast(list[str], array_of_inline_tables([author]))
 
 
 def get_docstring_and_version_via_ast(
@@ -137,9 +139,11 @@ class FlitMetaConverter(MetaConverter):
 
     @convert_from("sdist")
     def includes(self, value: dict[str, list[str]]) -> None:
-        self.settings.setdefault("build", {}).update(
-            {"excludes": value.get("exclude"), "includes": value.get("include")}
-        )
+        build = self.settings.setdefault("build", {})
+        if "exclude" in value:
+            build["excludes"] = value["exclude"]
+        if "include" in value:
+            build["includes"] = value["include"]
         raise Unset()
 
 
