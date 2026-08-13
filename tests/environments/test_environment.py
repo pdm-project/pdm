@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import sysconfig
 from pathlib import Path
@@ -6,7 +7,9 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
+from pdm.environments.base import BareEnvironment
 from pdm.environments.local import PythonLocalEnvironment
+from pdm.environments.python import PythonEnvironment
 from pdm.utils import pdm_scheme
 
 
@@ -125,6 +128,55 @@ def test_script_kind_posix(local_env):
     # On non-Windows platforms, script_kind should be posix
     if os.name != "nt":
         assert local_env.script_kind == "posix"
+
+
+def test_old_python_installs_compatible_dep_logic(project, mocker):
+    compat_lib = project.cache_dir / ".compat_libs"
+    host_interpreter = project.python
+    interpreter = SimpleNamespace(
+        executable=Path("/python3.9"),
+        major=3,
+        minor=9,
+    )
+    mocker.patch(
+        "pdm.environments.base.PythonInfo.from_path",
+        side_effect=lambda path: interpreter if Path(path) == interpreter.executable else host_interpreter,
+    )
+    mocker.patch.object(BareEnvironment, "pip_command", ["host-python", "-m", "pip"])
+    working_set = mocker.patch("pdm.environments.base.WorkingSet")
+    working_set.return_value.__getitem__.side_effect = KeyError("dep-logic")
+    check_call = mocker.patch("pdm.environments.base.subprocess.check_call")
+    get_env_spec = mocker.patch("pdm.environments.base.get_env_spec", return_value=mocker.sentinel.spec)
+
+    environment = PythonEnvironment(project, python=str(interpreter.executable))
+
+    check_call.assert_not_called()
+    assert environment.spec is mocker.sentinel.spec
+    check_call.assert_called_once_with(
+        [
+            "host-python",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--target",
+            str(compat_lib),
+            "dep-logic<0.7",
+        ],
+        stdout=subprocess.DEVNULL,
+    )
+    get_env_spec.assert_called_once_with(interpreter.executable.as_posix(), str(compat_lib))
+
+
+def test_compatible_dep_logic_is_reused(project, mocker):
+    environment = PythonLocalEnvironment(project)
+    distribution = SimpleNamespace(version="0.6.0")
+    working_set = mocker.patch("pdm.environments.base.WorkingSet")
+    working_set.return_value.__getitem__.return_value = distribution
+    check_call = mocker.patch("pdm.environments.base.subprocess.check_call")
+
+    assert environment._ensure_compat_lib() == str(project.cache_dir / ".compat_libs")
+    check_call.assert_not_called()
 
 
 def test_which_python_variants(local_env):

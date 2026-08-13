@@ -14,6 +14,9 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from packaging.specifiers import SpecifierSet
+from packaging.version import InvalidVersion
+
 from pdm._types import NotSet, NotSetType
 from pdm.exceptions import BuildError, PdmUsageError
 from pdm.models.in_process import get_env_spec
@@ -52,6 +55,45 @@ class BaseEnvironment(abc.ABC):
             self._interpreter = project.python
         else:
             self._interpreter = PythonInfo.from_path(python)
+
+    @cached_property
+    def _env_spec_compat_lib(self) -> str | None:
+        if (self.interpreter.major, self.interpreter.minor) >= (3, 10):
+            return None
+        return self._ensure_compat_lib()
+
+    def _ensure_compat_lib(self) -> str:
+        import filelock
+
+        compat_versions = {"dep-logic": "<0.7"}
+        compat_lib = self.project.cache(".compat_libs")
+
+        def is_compatible(pkg: str, specifier: str) -> bool:
+            try:
+                version = WorkingSet([str(compat_lib)])[pkg].version
+                return version in SpecifierSet(specifier)
+            except (InvalidVersion, KeyError):
+                return False
+
+        with filelock.FileLock(compat_lib.with_name(f"{compat_lib.name}.lock"), is_singleton=True):
+            for pkg, specifier in compat_versions.items():
+                if not is_compatible(pkg, specifier):
+                    host_environment = BareEnvironment(self.project)
+                    requirement = f"{pkg}{specifier}"
+                    self.project.core.ui.info(f"Installing {requirement} for Python < 3.10 compatibility")
+                    subprocess.check_call(
+                        [
+                            *host_environment.pip_command,
+                            "install",
+                            "--upgrade",
+                            "--target",
+                            str(compat_lib),
+                            requirement,
+                        ],
+                        stdout=subprocess.DEVNULL,
+                    )
+
+        return str(compat_lib)
 
     @cached_property
     def auth(self) -> PdmBasicAuth:
@@ -189,7 +231,7 @@ class BaseEnvironment(abc.ABC):
 
     @cached_property
     def spec(self) -> EnvSpec:
-        return get_env_spec(self.interpreter.executable.as_posix())
+        return get_env_spec(self.interpreter.executable.as_posix(), self._env_spec_compat_lib)
 
     @property
     def allow_all_spec(self) -> EnvSpec:
