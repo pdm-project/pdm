@@ -55,9 +55,12 @@ class BaseEnvironment(abc.ABC):
             self._interpreter = project.python
         else:
             self._interpreter = PythonInfo.from_path(python)
-        self._env_spec_compat_lib = (
-            self._ensure_compat_lib() if (self.interpreter.major, self.interpreter.minor) < (3, 10) else None
-        )
+
+    @cached_property
+    def _env_spec_compat_lib(self) -> str | None:
+        if (self.interpreter.major, self.interpreter.minor) >= (3, 10):
+            return None
+        return self._ensure_compat_lib()
 
     def _ensure_compat_lib(self) -> str:
         import filelock

@@ -150,6 +150,8 @@ def test_old_python_installs_compatible_dep_logic(project, mocker):
 
     environment = PythonEnvironment(project, python=str(interpreter.executable))
 
+    check_call.assert_not_called()
+    assert environment.spec is mocker.sentinel.spec
     check_call.assert_called_once_with(
         [
             "host-python",
@@ -163,8 +165,7 @@ def test_old_python_installs_compatible_dep_logic(project, mocker):
         ],
         stdout=subprocess.DEVNULL,
     )
-    assert environment.spec is mocker.sentinel.spec
-    get_env_spec.assert_called_once_with(str(interpreter.executable), str(compat_lib))
+    get_env_spec.assert_called_once_with(interpreter.executable.as_posix(), str(compat_lib))
 
 
 def test_compatible_dep_logic_is_reused(project, mocker):
