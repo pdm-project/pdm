@@ -630,6 +630,18 @@ def test_run_show_list_of_scripts(project, pdm):
     assert result_lines[4][1:-1].strip() == "test_shell     │ shell     │ shell command"
 
 
+def test_run_show_list_of_scripts_with_blank_script(project, pdm):
+    project.pyproject.settings["scripts"] = {
+        "test_blank": "   ",
+        "test_cmd": "flask db upgrade",
+    }
+    project.pyproject.write()
+    result = pdm(["run", "--list"], obj=project)
+    result_lines = result.output.splitlines()[3:]
+    assert result_lines[0][1:-1].strip() == "test_blank │ cmd  │"
+    assert result_lines[1][1:-1].strip() == "test_cmd   │ cmd  │ flask db upgrade"
+
+
 def test_run_show_list_of_scripts_hide_internals(project, pdm):
     project.pyproject.settings["scripts"] = {
         "public": "true",

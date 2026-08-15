@@ -151,7 +151,9 @@ class Task(NamedTuple):
             fallback = f" {termui.Emoji.ARROW_SEPARATOR} ".join(self.args)
         else:
             lines = [line.strip() for line in str(self.args).splitlines() if line.strip()]
-            fallback = f"{lines[0]}{termui.Emoji.ELLIPSIS}" if len(lines) > 1 else lines[0]
+            # a blank script leaves no lines at all, and it still needs a row in the listing
+            first = lines[0] if lines else ""
+            fallback = f"{first}{termui.Emoji.ELLIPSIS}" if len(lines) > 1 else first
         return self.options.get("help", fallback)
 
 
