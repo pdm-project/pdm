@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pdm import termui
-from pdm.cli.commands.venv.utils import get_venv_prefix
+from pdm.cli.commands.venv.utils import get_venv_parent, get_venv_prefix
 from pdm.exceptions import PdmUsageError, ProjectError
 
 if TYPE_CHECKING:
@@ -105,7 +105,7 @@ class Backend(abc.ABC):
     def get_location(self, name: str | None = None, venv_name: str | None = None) -> Path:
         if name and venv_name:
             raise PdmUsageError("Cannot specify both name and venv_name")
-        venv_parent = Path(self.project.config["venv.location"]).expanduser()
+        venv_parent = get_venv_parent(self.project)
         if not venv_parent.is_dir():
             venv_parent.mkdir(exist_ok=True, parents=True)
         if not venv_name:

@@ -43,13 +43,23 @@ def get_venv_prefix(project: Project) -> str:
     return f"{path.name}-{name_hash}-"
 
 
+def get_venv_parent(project: Project) -> Path:
+    """Get the parent directory holding the centrally-created venvs.
+
+    ``venv.location`` may contain a `~` prefix, which must be expanded the same
+    way here as it is when the venv is created, otherwise the venvs are created
+    in one directory and looked up in another.
+    """
+    return Path(project.config["venv.location"]).expanduser()
+
+
 def iter_venvs(project: Project) -> Iterable[tuple[str, VirtualEnv]]:
     """Return an iterable of venv paths associated with the project"""
     in_project_venv = get_in_project_venv(project.root)
     if in_project_venv is not None:
         yield "in-project", in_project_venv
     venv_prefix = get_venv_prefix(project)
-    venv_parent = Path(project.config["venv.location"])
+    venv_parent = get_venv_parent(project)
     for path in venv_parent.glob(f"{venv_prefix}*"):
         ident = path.name[len(venv_prefix) :]
         venv = VirtualEnv.get(path)
@@ -59,7 +69,7 @@ def iter_venvs(project: Project) -> Iterable[tuple[str, VirtualEnv]]:
 
 def iter_central_venvs(project: Project) -> Iterable[tuple[str, Path]]:
     """Return an iterable of all managed venvs and their paths."""
-    venv_parent = Path(project.config["venv.location"])
+    venv_parent = get_venv_parent(project)
     for venv in venv_parent.glob("*"):
         ident = venv.name
         yield ident, venv
