@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import shlex
 import urllib.parse
 from collections.abc import Iterable, Mapping
@@ -20,6 +21,13 @@ if TYPE_CHECKING:
     from pdm.models.candidates import Candidate
     from pdm.models.session import PDMPyPIClient
     from pdm.project import Project
+
+
+#: A comment starts at a ``#`` that is either at the beginning of the line or
+#: preceded by whitespace, matching pip's own ``COMMENT_RE``. Note that any
+#: whitespace counts, not just a plain space: a tab before the ``#`` is common
+#: in hand-written requirements files.
+_COMMENT_RE = re.compile(r"(^|\s+)#.*$")
 
 
 class RequirementParser:
@@ -49,10 +57,7 @@ class RequirementParser:
 
     def _clean_line(self, line: str) -> str:
         """Strip the surrounding whitespaces and comment from the line"""
-        line = line.strip()
-        if line.startswith("#"):
-            return ""
-        return line.split(" #", 1)[0].strip()
+        return _COMMENT_RE.sub("", line.strip()).strip()
 
     def _parse_line(self, filename: str, line: str) -> None:
         if not line.startswith("-"):
