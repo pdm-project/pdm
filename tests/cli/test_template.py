@@ -6,6 +6,24 @@ from pdm.cli.templates import ProjectTemplate
 from pdm.exceptions import PdmException
 
 
+@pytest.mark.parametrize(
+    "url,expected",
+    [
+        # scp-like syntax, the userinfo must not be taken as a branch
+        ("git@github.com:owner/repo.git", ("git@github.com:owner/repo.git", None)),
+        ("git@github.com:owner/repo.git@dev", ("git@github.com:owner/repo.git", "dev")),
+        # ssh:// and credentialed https:// URLs contain a userinfo part too
+        ("ssh://git@github.com/owner/repo.git", ("ssh://git@github.com/owner/repo.git", None)),
+        ("ssh://git@github.com/owner/repo.git@dev", ("ssh://git@github.com/owner/repo.git", "dev")),
+        ("https://token@github.com/owner/repo.git", ("https://token@github.com/owner/repo.git", None)),
+        ("https://github.com/owner/repo", ("https://github.com/owner/repo", None)),
+        ("https://github.com/owner/repo@dev", ("https://github.com/owner/repo", "dev")),
+    ],
+)
+def test_split_git_branch(url, expected):
+    assert ProjectTemplate.split_git_branch(url) == expected
+
+
 def test_non_pyproject_template_disallowed(project_no_init):
     with (
         ProjectTemplate("tests/fixtures/projects/demo_extras") as template,

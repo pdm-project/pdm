@@ -176,13 +176,26 @@ class ProjectTemplate:
 
         self.mirror(files, self._path, skip=[files / "__init__.py"], copyfunc=self._copy_package_file)
 
+    @staticmethod
+    def split_git_branch(url: str) -> tuple[str, str | None]:
+        """Split the optional ``@branch`` suffix from a git URL.
+
+        Only the last path segment is searched, so that the userinfo part of a URL
+        such as ``ssh://git@host/path`` is not mistaken for a branch name.
+        """
+        head, sep, last_segment = url.rpartition("/")
+        if not sep:  # scp-like syntax without a path separator, e.g. git@host:repo.git
+            head, sep, last_segment = url.rpartition(":")
+        if not sep:
+            return url, None
+        name, amp, branch = last_segment.rpartition("@")
+        if not amp:
+            return url, None
+        return head + sep + name, branch
+
     def _prepare_git_template(self, url: str) -> None:
-        left, amp, right = url.rpartition("@")
-        if left != "git" and amp:
-            extra_args = [f"--branch={right}"]
-            url = left
-        else:
-            extra_args = []
+        url, branch = self.split_git_branch(url)
+        extra_args = [f"--branch={branch}"] if branch else []
         git_command = ["git", "clone", "--recursive", "--depth=1", *extra_args, url, self._path.as_posix()]
         result = subprocess.run(git_command, capture_output=True, text=True)
         if result.returncode != 0:
