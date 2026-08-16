@@ -125,12 +125,34 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
             return False
 
 
+def _split_host_port(netloc: str) -> tuple[str, int | None]:
+    """Split a ``host[:port]`` string into a lowercased host and an optional port.
+
+    ``urlsplit`` is used so that a bracketed IPv6 literal such as ``[::1]:8443``
+    is split on the right colon. An unparsable port is reported as absent rather
+    than raising, so a malformed value can never abort the import.
+    """
+    parsed = urllib.parse.urlsplit(f"//{netloc}")
+    try:
+        port = parsed.port
+    except ValueError:  # pragma: no cover - malformed port, e.g. `host:abc`
+        port = None
+    return (parsed.hostname or "").lower(), port
+
+
 def _is_url_trusted(url: str, trusted_hosts: list[str]) -> bool:
-    parsed = urllib.parse.urlparse(url)
-    netloc, host = parsed.netloc, parsed.hostname
+    """Check whether *url* is covered by one of pip's ``--trusted-host`` values.
+
+    Matching is done on host and port only. The userinfo part of the URL is not
+    compared, so credentials embedded in an index URL don't defeat the match, and
+    a trusted host given without a port matches the URL whatever its port is,
+    which is how pip treats it.
+    """
+    host, port = _split_host_port(urllib.parse.urlparse(url).netloc)
 
     for trusted in trusted_hosts:
-        if trusted in (host, netloc):
+        trusted_host, trusted_port = _split_host_port(trusted)
+        if trusted_host == host and trusted_port in (None, port):
             return True
     return False
 
@@ -244,6 +266,10 @@ def export(
                 raise ValueError(f"Unknown source type: {source_type}")
         lines.append(f"{prefix} {url}\n")
         if source.verify_ssl is False:
-            host = urllib.parse.urlparse(url).hostname
-            lines.append(f"--trusted-host {host}\n")
+            # Keep the port: `--trusted-host example.org` does not cover
+            # `https://example.org:8443/simple` for pip.
+            host, port = _split_host_port(urllib.parse.urlparse(url).netloc)
+            if ":" in host:  # an IPv6 literal has to stay bracketed
+                host = f"[{host}]"
+            lines.append(f"--trusted-host {host}{f':{port}' if port else ''}\n")
     return "".join(lines)
