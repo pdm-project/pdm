@@ -232,6 +232,15 @@ def test_show_update_hint(pdm, project, monkeypatch):
     assert "Run `pdm config check_update false` to disable the check." in r.stderr
 
 
+def test_update_check_caches_failure(project, mocker):
+    mocked = mocker.patch("pdm.cli.actions.get_latest_pdm_version_from_pypi", side_effect=Exception("network is down"))
+
+    assert actions.get_latest_version(project) is None
+    assert actions.get_latest_version(project) is None
+
+    assert mocked.call_count == 1
+
+
 @pytest.mark.usefixtures("repository")
 def test_export_with_platform_markers(pdm, project):
     pdm(
