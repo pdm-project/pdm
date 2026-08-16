@@ -65,6 +65,35 @@ def test_convert_requirements_file(project, is_dev):
     )
 
 
+@pytest.mark.parametrize(
+    "line, expected",
+    [
+        ("requests==2.31.0\t# tab before comment", "requests==2.31.0"),
+        ("requests==2.31.0 # space before comment", "requests==2.31.0"),
+        ("requests==2.31.0\x0c# formfeed before comment", "requests==2.31.0"),
+        ("requests==2.31.0   \t  # mixed whitespace", "requests==2.31.0"),
+        ("# a whole-line comment", ""),
+        ("   \t# an indented whole-line comment", ""),
+        # A `#` not preceded by whitespace is part of the requirement, e.g. a URL fragment
+        (
+            "git+https://github.com/test-root/demo.git#egg=demo",
+            "git+https://github.com/test-root/demo.git#egg=demo",
+        ),
+    ],
+)
+def test_requirements_clean_line_strips_comments(line, expected):
+    parser = requirements.RequirementParser(None)
+    assert parser._clean_line(line) == expected
+
+
+def test_convert_requirements_file_with_tab_before_comment(project):
+    req_file = project.root.joinpath("reqs.txt")
+    req_file.write_text("webassets==2.0\t# a tab-separated comment\n", encoding="utf-8")
+    result, _ = requirements.convert(project, str(req_file), ns())
+
+    assert result["dependencies"] == ["webassets==2.0"]
+
+
 def test_convert_requirements_file_without_name(project, vcs):
     req_file = project.root.joinpath("reqs.txt")
     project.root.joinpath("reqs.txt").write_text("git+https://github.com/test-root/demo.git\n")
