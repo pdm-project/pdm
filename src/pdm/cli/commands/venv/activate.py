@@ -30,7 +30,7 @@ class ActivateCommand(BaseCommand):
         if options.env:
             venv = get_venv_with_name(project, options.env)
         else:
-            # Use what is saved in .pdm-python
+            # Use the selected environment from .python-envs
             interpreter = project._saved_python
             if not interpreter:
                 project.core.ui.warn(

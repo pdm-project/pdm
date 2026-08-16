@@ -7,7 +7,7 @@ Compared to [PEP 582](https://www.python.org/dev/peps/pep-0582/), virtual enviro
 !!! note "Configure pdm to use virtual environment or PEP 582"
     By default pdm is configured to use virtual environment instead of PEP 582. But this behavior can be changed with `pdm config python.use_venv False` config variable.
 
-**Virtual environments will be used if the project interpreter (the interpreter stored in `.pdm-python`, which can be checked by `pdm info`) is from a virtualenv.**
+**Virtual environments will be used if the environment selected by the last line of `.python-envs` (which can be checked by `pdm info`) is a virtualenv.**
 
 ## Virtualenv auto-creation
 
@@ -42,6 +42,8 @@ pdm venv create --with venv 3.10
 ## The location of virtualenvs
 
 If no `--name` is given, PDM will create the venv in `<project_root>/.venv`. Otherwise, virtualenvs go to the location specified by the `venv.location` configuration.
+
+PDM supports the environment discovery convention defined by [PEP 832](https://peps.python.org/pep-0832/). Environments are recorded in the project's `.python-envs` file, using paths relative to the project whenever possible. The last line is the environment selected by `pdm use`. In PEP 582 mode it points to `__pypackages__/<python_identifier>`; otherwise it points to the virtualenv root. PDM removes entries when their environments are removed or purged. A `.pdm-python` file created by an older PDM version is migrated automatically.
 They are named as `<project_name>-<path_hash>-<name_or_python_version>` to avoid name collision.
 You can disable the in-project virtualenv creation by `pdm config venv.in_project false`. And all virtualenvs will be created under `venv.location`.
 

@@ -177,7 +177,7 @@ def atomic_open_for_write(filename: str | Path, *, mode: str = "w", encoding: st
 def open_for_write_no_symlink(filename: str | Path, *, encoding: str = "utf-8") -> Iterator[IO[str]]:
     """Open *filename* for writing text, refusing to follow a symlink.
 
-    Project-local state and config files (``pdm.toml``, ``.pdm-python``,
+    Project-local state and config files (``pdm.toml``, ``.python-envs``,
     ``.python-version``) may be planted as symlinks by an untrusted repository to
     redirect the write onto a file outside the project root. This helper rejects
     such writes: on POSIX it passes ``O_NOFOLLOW`` so the kernel rejects the open

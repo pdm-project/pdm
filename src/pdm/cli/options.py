@@ -424,7 +424,7 @@ packages_group.add_argument("packages", nargs="*", help="Specify packages")
     "-I",
     "--ignore-python",
     nargs=0,
-    help="Ignore the Python path saved in .pdm-python. [env var: PDM_IGNORE_SAVED_PYTHON]",
+    help="Ignore the environment selected in .python-envs. [env var: PDM_IGNORE_SAVED_PYTHON]",
 )
 def ignore_python_option(
     project: Project,
