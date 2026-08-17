@@ -138,6 +138,30 @@ def test_venv_list(pdm, project):
 
 
 @pytest.mark.usefixtures("fake_create")
+def test_venv_list_with_tilde_location(pdm, project, monkeypatch, tmp_path):
+    home = tmp_path / "fake-home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.setenv("USERPROFILE", str(home))
+    project.global_config["venv.location"] = "~/my-venvs"
+    project.project_config["venv.in_project"] = False
+
+    result = pdm(["venv", "create"], obj=project)
+    assert result.exit_code == 0, result.stderr
+    venv_path = re.match(r"Virtualenv (.+) is created successfully", result.output).group(1)
+    assert Path(venv_path).is_relative_to(home / "my-venvs")
+
+    result = pdm(["venv", "list"], obj=project)
+    assert result.exit_code == 0, result.stderr
+    assert venv_path in result.output
+
+    key = os.path.basename(venv_path)[len(get_venv_prefix(project)) :]
+    result = pdm(["venv", "--path", key], obj=project)
+    assert result.exit_code == 0, result.stderr
+    assert result.output.strip() == venv_path
+
+
+@pytest.mark.usefixtures("fake_create")
 def test_venv_remove(pdm, project):
     project.project_config["venv.in_project"] = False
     result = pdm(["venv", "create"], obj=project)
