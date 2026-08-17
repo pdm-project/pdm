@@ -158,6 +158,42 @@ def test_build_uv_files_without_project_name_and_version(project):
     assert roots[0]["source"] == {"virtual": "."}
 
 
+def test_build_uv_lock_root_entry_groups_dependencies(project):
+    """The root entry carries the requirements, split between `dependencies` and
+    `optional-dependencies` by group. Covers the loop the placeholder fix de-indented."""
+    from pdm.formats.uv import PLACEHOLDER_NAME
+    from pdm.models.candidates import Candidate
+    from pdm.models.repositories import Package
+
+    del project.pyproject.metadata["name"]
+    project.pyproject.write()
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    reqs = []
+    for name, groups in [("first", ["default"]), ("second", ["tui"]), ("third", [])]:
+        req = parse_requirement(name)
+        req.groups = groups
+        reqs.append(req)
+        locked_repo.add_package(Package(Candidate(req, name=name, version="1.0"), [], ""))
+
+    # not in the locked repository, so _make_dependency returns None and it is skipped
+    unlocked = parse_requirement("nowhere")
+    unlocked.groups = ["default"]
+    reqs.append(unlocked)
+
+    with uv_file_builder(project, ">=3.10", reqs, locked_repo) as builder:
+        lock_path = builder.build_uv_lock()
+        with lock_path.open("rb") as fp:
+            lock_data = tomllib.load(fp)
+
+    root = next(p for p in lock_data["package"] if p["name"] == PLACEHOLDER_NAME)
+    assert [d["name"] for d in root["dependencies"]] == ["first"]
+    assert [d["name"] for d in root["optional-dependencies"]["tui"]] == ["second"]
+    # `third` belongs to no group and `nowhere` is not locked, so neither is listed
+    listed = {d["name"] for d in root["dependencies"]}
+    assert "third" not in listed and "nowhere" not in listed
+
+
 def test_build_uv_pyproject_toml_keeps_dynamic_version(project):
     project.pyproject.metadata["dynamic"] = ["version"]
     del project.pyproject.metadata["version"]
