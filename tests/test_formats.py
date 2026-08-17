@@ -94,6 +94,31 @@ def test_convert_requirements_file_with_tab_before_comment(project):
     assert result["dependencies"] == ["webassets==2.0"]
 
 
+@pytest.mark.parametrize(
+    "reference,expected_url",
+    [
+        ("child.txt", "https://example.com/base/child.txt"),
+        ("../child.txt", "https://example.com/child.txt"),
+        ("https://other.example/child.txt", "https://other.example/child.txt"),
+    ],
+)
+def test_remote_requirements_resolve_nested_reference(mocker, reference, expected_url):
+    session = mocker.Mock()
+    session.get.side_effect = [
+        mocker.Mock(is_error=False, text=f"-r {reference}"),
+        mocker.Mock(is_error=False, text="webassets==2.0"),
+    ]
+    parser = requirements.RequirementParser(session)
+
+    parser.parse_file("https://example.com/base/requirements.txt")
+
+    assert [call.args[0] for call in session.get.call_args_list] == [
+        "https://example.com/base/requirements.txt",
+        expected_url,
+    ]
+    assert [req.as_line() for req in parser.requirements] == ["webassets==2.0"]
+
+
 def test_convert_requirements_file_without_name(project, vcs):
     req_file = project.root.joinpath("reqs.txt")
     project.root.joinpath("reqs.txt").write_text("git+https://github.com/test-root/demo.git\n")

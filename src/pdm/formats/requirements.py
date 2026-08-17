@@ -83,7 +83,14 @@ class RequirementParser:
         if args.editable:
             self.requirements.append(parse_requirement(" ".join(args.editable), True))
         if args.requirement:
-            referenced_requirements = Path(filename).parent.joinpath(args.requirement).as_posix()
+            reference = urllib.parse.urlparse(args.requirement)
+            source = urllib.parse.urlparse(filename)
+            if reference.scheme in ("http", "https", "file"):
+                referenced_requirements = args.requirement
+            elif source.scheme in ("http", "https", "file"):
+                referenced_requirements = urllib.parse.urljoin(filename, args.requirement)
+            else:
+                referenced_requirements = Path(filename).parent.joinpath(args.requirement).as_posix()
             self.parse_file(referenced_requirements)
 
     def parse_lines(self, lines: Iterable[str], filename: str = "<temp file>") -> None:
