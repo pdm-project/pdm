@@ -164,3 +164,45 @@ def test_parse_uv_lock_with_local_path_wheel(project):
         "file": "my_local_pkg-0.1.0-py3-none-any.whl",
         "hash": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
     }
+
+
+def test_parse_uv_lock_drops_the_placeholder_root(project):
+    """A project with no name gets a placeholder in the generated pyproject.toml,
+    so uv writes the root entry under that name. It must not become a dependency."""
+    from pdm.formats.uv import PLACEHOLDER_NAME
+    from pdm.resolver.uv import UvResolver
+
+    project.pyproject._data.get("project", {}).pop("name", None)
+    lock_path = project.root / "uv.lock"
+    lock_path.write_text(
+        dedent(
+            f"""
+            version = 1
+            requires-python = ">=3.8"
+
+            [[package]]
+            name = "{PLACEHOLDER_NAME}"
+            version = "0.0.0"
+            source = {{ virtual = "." }}
+
+            [[package]]
+            name = "packaging"
+            version = "24.0"
+            source = {{ registry = "https://pypi.org/simple" }}
+            sdist = {{ url = "https://example.invalid/packaging-24.0.tar.gz", hash = "sha256:abc" }}
+            """
+        ).strip(),
+        encoding="utf-8",
+    )
+
+    resolver = UvResolver(
+        project.environment,
+        requirements=[],
+        target=project.environment.spec,
+        update_strategy="all",
+        strategies=set(),
+    )
+    resolution = resolver._parse_uv_lock(lock_path)
+
+    names = {p.candidate.name for p in resolution.packages}
+    assert names == {"packaging"}, f"the placeholder root leaked into the resolution: {names}"
