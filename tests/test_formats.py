@@ -187,8 +187,8 @@ def test_convert_poetry(project):
     assert result["license"] == {"text": "MIT"}
     assert "repository" in result["urls"]
     assert result["requires-python"] == "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,<4.0,>=2.7"
-    assert 'cleo<1.0.0,>=0.7.6; python_version ~= "2.7"' in result["dependencies"]
-    assert 'cachecontrol[filecache]<1.0.0,>=0.12.4; python_version ~= "3.4"' in result["dependencies"]
+    assert 'cleo<0.8.0,>=0.7.6; python_version ~= "2.7"' in result["dependencies"]
+    assert 'cachecontrol[filecache]<0.13.0,>=0.12.4; python_version ~= "3.4"' in result["dependencies"]
     assert "babel==2.9.0" in result["dependencies"]
     assert "mysql" in result["optional-dependencies"]
     assert "psycopg2<3.0,>=2.7" in result["optional-dependencies"]["pgsql"]
@@ -209,6 +209,30 @@ def test_convert_poetry_optional_dependency_in_multiple_extras(project):
     assert result["optional-dependencies"]["mysql"] == ["mysqlclient<2.0,>=1.3"]
     assert result["optional-dependencies"]["pgsql"] == ["psycopg2<3.0,>=2.7"]
     assert result["optional-dependencies"]["all"] == ["psycopg2<3.0,>=2.7", "mysqlclient<2.0,>=1.3"]
+
+
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        # Poetry's caret keeps the leftmost non-zero component unchanged.
+        ("^1.2.3", "<2.0.0,>=1.2.3"),
+        ("^1.2", "<2.0,>=1.2"),
+        ("^1", "<2,>=1"),
+        ("^0.2.3", "<0.3.0,>=0.2.3"),
+        ("^0.0.3", "<0.0.4,>=0.0.3"),
+        ("^0.0", "<0.1,>=0.0"),
+        ("^0", "<1,>=0"),
+    ],
+)
+def test_convert_poetry_caret_constraint(project, constraint, expected):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        f'[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\nfoo = "{constraint}"\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["dependencies"] == [f"foo{expected}"]
 
 
 def test_convert_poetry_12(project):
