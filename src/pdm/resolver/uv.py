@@ -114,6 +114,7 @@ class UvResolver(Resolver):
         from unearth import Link
 
         from pdm.compat import tomllib
+        from pdm.formats.uv import PLACEHOLDER_NAME
 
         with path.open("rb") as f:
             data = tomllib.load(f)
@@ -142,12 +143,11 @@ class UvResolver(Resolver):
                 hash_value = hash_cache.get_hash(link, session)
             return {"url": url, "file": link.filename, "hash": hash_value}
 
+        # When the project has no `name`, a placeholder is written to the generated
+        # pyproject.toml, so the root entry comes back under that name.
+        self_name = normalize_name(self.project.name) if self.project.name else PLACEHOLDER_NAME
         for package in data["package"]:
-            if (
-                self.project.name
-                and package["name"] == normalize_name(self.project.name)
-                and (not self.keep_self or package["source"].get("virtual"))
-            ):
+            if package["name"] == self_name and (not self.keep_self or package["source"].get("virtual")):
                 continue
             req: Requirement
             if url := package["source"].get("url"):

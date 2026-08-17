@@ -129,6 +129,49 @@ def test_build_uv_pyproject_toml_with_workspace(project):
     assert data["tool"]["uv"]["sources"]["bar"] == {"workspace": True}
 
 
+def test_build_uv_files_without_project_name_and_version(project):
+    """uv requires project.name/version, so a placeholder is filled in for applications
+    that declare neither. See issue #3421.
+    """
+    from pdm.formats.uv import PLACEHOLDER_NAME, PLACEHOLDER_VERSION
+
+    del project.pyproject.metadata["name"]
+    del project.pyproject.metadata["version"]
+    project.pyproject.write()
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    with uv_file_builder(project, ">=3.10", [], locked_repo) as builder:
+        pyproject_path = builder.build_pyproject_toml()
+        with pyproject_path.open("rb") as fp:
+            pyproject_data = tomllib.load(fp)
+        lock_path = builder.build_uv_lock()
+        with lock_path.open("rb") as fp:
+            lock_data = tomllib.load(fp)
+
+    # uv refuses to parse a pyproject.toml whose [project] table lacks either key
+    assert pyproject_data["project"].get("name") == PLACEHOLDER_NAME
+    assert pyproject_data["project"].get("version") == PLACEHOLDER_VERSION
+    roots = [p for p in lock_data["package"] if p["name"] == PLACEHOLDER_NAME]
+    assert len(roots) == 1
+    assert roots[0]["version"] == PLACEHOLDER_VERSION
+    assert roots[0]["source"] == {"virtual": "."}
+
+
+def test_build_uv_pyproject_toml_keeps_dynamic_version(project):
+    project.pyproject.metadata["dynamic"] = ["version"]
+    del project.pyproject.metadata["version"]
+    project.pyproject.write()
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    with uv_file_builder(project, ">=3.10", [], locked_repo) as builder:
+        path = builder.build_pyproject_toml()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+
+    assert "version" not in data["project"]
+    assert data["project"]["dynamic"] == ["version"]
+
+
 def test_build_uv_lock_with_local_path_wheel(project):
     from pdm.models.candidates import Candidate
     from pdm.models.repositories import Package

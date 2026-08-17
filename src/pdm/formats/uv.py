@@ -17,6 +17,13 @@ from pdm.models.requirements import FileRequirement, Requirement, VcsRequirement
 from pdm.project.core import Project
 from pdm.utils import get_requirement_from_override, normalize_name
 
+#: uv requires ``project.name`` and ``project.version`` to be present, while PDM allows a
+#: project without them (an "application"). In that case a placeholder is written to the
+#: generated ``pyproject.toml`` and the resulting root entry is filtered out again when the
+#: uv lockfile is read back.
+PLACEHOLDER_NAME = "pdm-placeholder-project"
+PLACEHOLDER_VERSION = "0.0.0"
+
 
 @dataclass
 class _UvFileBuilder:
@@ -57,6 +64,10 @@ class _UvFileBuilder:
             )
 
         data.setdefault("project", {})["requires-python"] = self.requires_python
+        if not data["project"].get("name"):
+            data["project"]["name"] = PLACEHOLDER_NAME
+        if not data["project"].get("version") and "version" not in data["project"].get("dynamic", []):
+            data["project"]["version"] = PLACEHOLDER_VERSION
         data.pop("dependency-groups", None)
         data.setdefault("project", {}).pop("optional-dependencies", None)
         if self.workspace_members:
@@ -116,30 +127,30 @@ class _UvFileBuilder:
                 p for k, p in locked_repo.packages.items() if strip_extras(k[0])[0] == key[0] and k[1:] == key[1:]
             ]
             packages.append(self._build_lock_entry(related_packages))
-        if name := self.project.name:
-            version = self.project.pyproject.metadata.get("version", "0.0.0")
-            this_package = {
-                "name": normalize_name(name),
-                "version": version,
-                "source": {"editable" if include_self else "virtual": "."},
-            }
-            dependencies: list[dict[str, Any]] = []
-            optional_dependencies: dict[str, list[dict[str, Any]]] = {}
-            for req in self.requirements:
-                if (dep := self._make_dependency(None, req)) is None:
-                    continue
-                for group in req.groups:
-                    if group == "default":
-                        target_group = dependencies
-                    else:
-                        target_group = optional_dependencies.setdefault(group, [])
-                    if dep not in target_group:
-                        target_group.append(dep)
-            if dependencies:
-                this_package["dependencies"] = dependencies  # type: ignore[assignment]
-            if optional_dependencies:
-                this_package["optional-dependencies"] = optional_dependencies
-            packages.append(this_package)
+        name = self.project.name or PLACEHOLDER_NAME
+        version = self.project.pyproject.metadata.get("version") or PLACEHOLDER_VERSION
+        this_package = {
+            "name": normalize_name(name),
+            "version": version,
+            "source": {"editable" if include_self else "virtual": "."},
+        }
+        dependencies: list[dict[str, Any]] = []
+        optional_dependencies: dict[str, list[dict[str, Any]]] = {}
+        for req in self.requirements:
+            if (dep := self._make_dependency(None, req)) is None:
+                continue
+            for group in req.groups:
+                if group == "default":
+                    target_group = dependencies
+                else:
+                    target_group = optional_dependencies.setdefault(group, [])
+                if dep not in target_group:
+                    target_group.append(dep)
+        if dependencies:
+            this_package["dependencies"] = dependencies  # type: ignore[assignment]
+        if optional_dependencies:
+            this_package["optional-dependencies"] = optional_dependencies
+        packages.append(this_package)
 
         data = {"version": 1, "requires-python": self.requires_python}
         if packages:
