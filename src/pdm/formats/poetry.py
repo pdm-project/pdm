@@ -44,15 +44,27 @@ def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
 VERSION_RE = re.compile(r"([^\d\s]*)\s*(\d.*?)\s*(?=,|$)")
 
 
+def _caret_upper_bound(version: str) -> str:
+    """Return the exclusive upper bound of a Poetry caret requirement.
+
+    A caret requirement allows changes that do not modify the leftmost non-zero
+    component, so ``^0.2.3`` means ``<0.3.0`` and ``^0.0.3`` means ``<0.0.4``.
+    If every component is zero, the last one is bumped, matching ``^0.0`` -> ``<0.1``.
+    """
+    numbers = [int(match.group()) if (match := re.match(r"\d+", part)) else 0 for part in version.split(".")]
+    index = next((i for i, number in enumerate(numbers) if number), len(numbers) - 1)
+    bumped = numbers[: index + 1]
+    bumped[-1] += 1
+    return ".".join(str(number) for number in bumped + [0] * (len(numbers) - index - 1))
+
+
 def _convert_specifier(version: str) -> str:
     parts = []
     for op, ver in VERSION_RE.findall(str(version)):
         if op == "~":
             op += "="
         elif op == "^":
-            major, *vparts = ver.split(".")
-            next_major = ".".join([str(int(major) + 1)] + ["0"] * len(vparts))
-            parts.append(f">={ver},<{next_major}")
+            parts.append(f">={ver},<{_caret_upper_bound(ver)}")
             continue
         elif not op:
             op = "=="
