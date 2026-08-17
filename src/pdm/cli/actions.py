@@ -409,15 +409,17 @@ def get_latest_version(project: Project, expire_after: int = 7 * 24 * 3600) -> s
         state = json.loads(cache_file.read_text())
     current_time = datetime.datetime.now(datetime.timezone.utc).timestamp()
     if (last_check := state.get("last-check")) and current_time - last_check < expire_after:
-        return cast(str, state["latest-version"])
+        return cast("str | None", state.get("latest-version"))
     try:
         latest_version = get_latest_pdm_version_from_pypi(project)
     except Exception as e:
         project.core.ui.warn(f"Failed to get latest version: {e}", verbosity=termui.Verbosity.NORMAL)
         latest_version = None
-    if latest_version is None:
-        return None
-    state.update({"latest-version": latest_version, "last-check": current_time})
+    # Record the check time even on failure, so that an unreachable index doesn't make
+    # every subsequent command wait for the request to time out again.
+    if latest_version is not None:
+        state["latest-version"] = latest_version
+    state["last-check"] = current_time
     with contextlib.suppress(OSError):
         cache_file.write_text(json.dumps(state))
     return latest_version
