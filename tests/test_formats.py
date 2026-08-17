@@ -1,5 +1,6 @@
 import shutil
 from argparse import Namespace
+from textwrap import dedent
 
 import pytest
 
@@ -152,6 +153,85 @@ def test_build_uv_pyproject_toml_with_workspace(project):
     assert data["tool"]["uv"]["workspace"]["members"] == ["packages/*"]
     assert data["tool"]["uv"]["sources"]["foo"] == {"workspace": True}
     assert data["tool"]["uv"]["sources"]["bar"] == {"workspace": True}
+
+
+def test_build_uv_files_without_project_name_and_version(project):
+    """uv requires project.name/version, so a placeholder is filled in for applications
+    that declare neither. See issue #3421.
+    """
+    from pdm.formats.uv import PLACEHOLDER_NAME, PLACEHOLDER_VERSION
+
+    del project.pyproject.metadata["name"]
+    del project.pyproject.metadata["version"]
+    project.pyproject.write()
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    with uv_file_builder(project, ">=3.10", [], locked_repo) as builder:
+        pyproject_path = builder.build_pyproject_toml()
+        with pyproject_path.open("rb") as fp:
+            pyproject_data = tomllib.load(fp)
+        lock_path = builder.build_uv_lock()
+        with lock_path.open("rb") as fp:
+            lock_data = tomllib.load(fp)
+
+    # uv refuses to parse a pyproject.toml whose [project] table lacks either key
+    assert pyproject_data["project"].get("name") == PLACEHOLDER_NAME
+    assert pyproject_data["project"].get("version") == PLACEHOLDER_VERSION
+    roots = [p for p in lock_data["package"] if p["name"] == PLACEHOLDER_NAME]
+    assert len(roots) == 1
+    assert roots[0]["version"] == PLACEHOLDER_VERSION
+    assert roots[0]["source"] == {"virtual": "."}
+
+
+def test_build_uv_lock_root_entry_groups_dependencies(project):
+    """The root entry carries the requirements, split between `dependencies` and
+    `optional-dependencies` by group. Covers the loop the placeholder fix de-indented."""
+    from pdm.formats.uv import PLACEHOLDER_NAME
+    from pdm.models.candidates import Candidate
+    from pdm.models.repositories import Package
+
+    del project.pyproject.metadata["name"]
+    project.pyproject.write()
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    reqs = []
+    for name, groups in [("first", ["default"]), ("second", ["tui"]), ("third", [])]:
+        req = parse_requirement(name)
+        req.groups = groups
+        reqs.append(req)
+        locked_repo.add_package(Package(Candidate(req, name=name, version="1.0"), [], ""))
+
+    # not in the locked repository, so _make_dependency returns None and it is skipped
+    unlocked = parse_requirement("nowhere")
+    unlocked.groups = ["default"]
+    reqs.append(unlocked)
+
+    with uv_file_builder(project, ">=3.10", reqs, locked_repo) as builder:
+        lock_path = builder.build_uv_lock()
+        with lock_path.open("rb") as fp:
+            lock_data = tomllib.load(fp)
+
+    root = next(p for p in lock_data["package"] if p["name"] == PLACEHOLDER_NAME)
+    assert [d["name"] for d in root["dependencies"]] == ["first"]
+    assert [d["name"] for d in root["optional-dependencies"]["tui"]] == ["second"]
+    # `third` belongs to no group and `nowhere` is not locked, so neither is listed
+    listed = {d["name"] for d in root["dependencies"]}
+    assert "third" not in listed and "nowhere" not in listed
+
+
+def test_build_uv_pyproject_toml_keeps_dynamic_version(project):
+    project.pyproject.metadata["dynamic"] = ["version"]
+    del project.pyproject.metadata["version"]
+    project.pyproject.write()
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    with uv_file_builder(project, ">=3.10", [], locked_repo) as builder:
+        path = builder.build_pyproject_toml()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+
+    assert "version" not in data["project"]
+    assert data["project"]["dynamic"] == ["version"]
 
 
 def test_build_uv_lock_with_local_path_wheel(project):
@@ -520,3 +600,45 @@ def test_export_from_pylock_not_empty(core, pdm):
     # Should contain expected packages
     output = result.stdout
     assert any(pkg in output for pkg in ["chardet", "idna"]), "Expected at least some packages in output"
+
+
+def test_parse_uv_lock_drops_the_placeholder_root(project):
+    """A project with no name gets a placeholder in the generated pyproject.toml,
+    so uv writes the root entry under that name. It must not become a dependency."""
+    from pdm.formats.uv import PLACEHOLDER_NAME
+    from pdm.resolver.uv import UvResolver
+
+    project.pyproject._data.get("project", {}).pop("name", None)
+    lock_path = project.root / "uv.lock"
+    lock_path.write_text(
+        dedent(
+            f"""
+            version = 1
+            requires-python = ">=3.8"
+
+            [[package]]
+            name = "{PLACEHOLDER_NAME}"
+            version = "0.0.0"
+            source = {{ virtual = "." }}
+
+            [[package]]
+            name = "packaging"
+            version = "24.0"
+            source = {{ registry = "https://pypi.org/simple" }}
+            sdist = {{ url = "https://example.invalid/packaging-24.0.tar.gz", hash = "sha256:abc" }}
+            """
+        ).strip(),
+        encoding="utf-8",
+    )
+
+    resolver = UvResolver(
+        project.environment,
+        requirements=[],
+        target=project.environment.spec,
+        update_strategy="all",
+        strategies=set(),
+    )
+    resolution = resolver._parse_uv_lock(lock_path)
+
+    names = {p.candidate.name for p in resolution.packages}
+    assert names == {"packaging"}, f"the placeholder root leaked into the resolution: {names}"
