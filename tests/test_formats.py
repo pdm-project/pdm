@@ -344,6 +344,60 @@ def test_export_find_links(project, monkeypatch):
     assert result.strip().splitlines()[-1] == f"--find-links {url}"
 
 
+@pytest.mark.parametrize(
+    "url,trusted_host",
+    [
+        # A port in the trusted host must not be lost when matching.
+        ("https://mirror.example.org:8443/simple", "mirror.example.org:8443"),
+        # Credentials in the index URL are not part of the host.
+        ("https://user:pw@mirror.example.org:8443/simple", "mirror.example.org:8443"),
+        ("https://user@mirror.example.org/simple", "mirror.example.org"),
+        # A trusted host without a port matches whatever port the URL uses.
+        ("https://mirror.example.org:8443/simple", "mirror.example.org"),
+        # Host comparison is case-insensitive.
+        ("https://Mirror.Example.ORG/simple", "mirror.example.org"),
+        # IPv6 literals stay bracketed.
+        ("https://[::1]:8443/simple", "[::1]:8443"),
+    ],
+)
+def test_import_requirements_trusted_host(project, tmp_path, url, trusted_host):
+    req_file = tmp_path / "requirements.txt"
+    req_file.write_text(f"--index-url {url}\n--trusted-host {trusted_host}\n", encoding="utf-8")
+    _, settings = requirements.convert(project, req_file, ns())
+    assert settings["source"] == [{"name": "pypi", "url": url, "verify_ssl": False}]
+
+
+@pytest.mark.parametrize(
+    "url,trusted_host",
+    [
+        ("https://mirror.example.org:8443/simple", "mirror.example.org:8443"),
+        ("https://user:pw@mirror.example.org:8443/simple", "mirror.example.org:8443"),
+        ("https://mirror.example.org/simple", "mirror.example.org"),
+        ("https://[::1]:8443/simple", "[::1]:8443"),
+    ],
+)
+def test_export_trusted_host_keeps_port(project, url, trusted_host):
+    project.pyproject.settings["source"] = [{"url": url, "name": "pypi", "verify_ssl": False}]
+    result = requirements.export(project, [], ns())
+    assert result.strip().splitlines()[-1] == f"--trusted-host {trusted_host}"
+
+
+@pytest.mark.parametrize(
+    "url,trusted_host",
+    [
+        # A different port is not covered by the trusted host.
+        ("https://mirror.example.org:8443/simple", "mirror.example.org:9999"),
+        ("https://mirror.example.org/simple", "mirror.example.org:8443"),
+        ("https://other.example.org:8443/simple", "mirror.example.org:8443"),
+    ],
+)
+def test_import_requirements_untrusted_host(project, tmp_path, url, trusted_host):
+    req_file = tmp_path / "requirements.txt"
+    req_file.write_text(f"--index-url {url}\n--trusted-host {trusted_host}\n", encoding="utf-8")
+    _, settings = requirements.convert(project, req_file, ns())
+    assert settings["source"] == [{"name": "pypi", "url": url, "verify_ssl": True}]
+
+
 def test_export_replace_project_root(project):
     artifact = FIXTURES / "artifacts/first-2.0.2-py2.py3-none-any.whl"
     shutil.copy2(artifact, project.root)
