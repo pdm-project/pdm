@@ -225,6 +225,8 @@ class PoetryMetaConverter(MetaConverter):
                 dest.append(item["path"])
         if includes:
             self.settings.setdefault("build", {})["includes"] = includes
+        if source_includes:
+            self.settings.setdefault("build", {})["source-includes"] = source_includes
         raise Unset()
 
     @convert_from("exclude")
