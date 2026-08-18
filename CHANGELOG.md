@@ -1,3 +1,19 @@
+## Release v2.28.2 (2026-08-18)
+
+### Bug Fixes
+
+- Keep environment inspection working for Python 3.9 targets when PDM uses dep-logic 0.7 or newer. ([#3838](https://github.com/pdm-project/pdm/issues/3838))
+- Cache the update check timestamp even when the version lookup fails, so that pdm no longer appears to hang on every command when PyPI is unreachable. ([#3840](https://github.com/pdm-project/pdm/issues/3840))
+- Don't crash with an `IndexError` when listing scripts and one of them is blank. A blank script is now listed as `<BLANK_SCRIPT>`. ([#3842](https://github.com/pdm-project/pdm/issues/3842))
+- Keep the whole template URL when `pdm new` is given an `ssh://` or credentialed Git URL, instead of truncating it at the userinfo `@`. ([#3843](https://github.com/pdm-project/pdm/issues/3843))
+- Strip comments preceded by any whitespace, not only a plain space, when importing a `requirements.txt` file. ([#3844](https://github.com/pdm-project/pdm/issues/3844))
+- Match `--trusted-host` on host and port when importing a `requirements.txt` file, and keep the port when exporting one. ([#3845](https://github.com/pdm-project/pdm/issues/3845))
+- Expand a `~` prefix in the `venv.location` config so `pdm venv list/remove/activate/purge` find virtualenvs created under it. ([#3847](https://github.com/pdm-project/pdm/issues/3847))
+- Convert a Poetry caret constraint on a `0.x` version to the upper bound Poetry documents, so `^0.2.3` becomes `<0.3.0` and `^0.0.3` becomes `<0.0.4` instead of `<1.0.0`. ([#3848](https://github.com/pdm-project/pdm/issues/3848))
+- Fill in a placeholder `project.name` and `project.version` for the `pyproject.toml` generated for `uv`, so `pdm lock`/`pdm install` work with `use_uv` on a project that declares neither. ([#3849](https://github.com/pdm-project/pdm/issues/3849))
+- Resolve nested requirement paths relative to remote requirements file URLs. ([#3850](https://github.com/pdm-project/pdm/issues/3850))
+
+
 ## Release v2.28.1 (2026-08-11)
 
 ### Features & Improvements
