@@ -243,10 +243,13 @@ def export(
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
-        line = project.backend.expand_line(req.as_line(), options.expandvars)
+        line = req.as_line()
+        if isinstance(req, FileRequirement) and req.editable and req.str_path:
+            line = line.replace(req.get_full_url(), req.str_path, 1)
+        line = project.backend.expand_line(line, options.expandvars)
         if line in collected_req:
             continue
-        lines.append(project.backend.expand_line(req.as_line(), options.expandvars))
+        lines.append(line)
         collected_req.add(line)
         if options.hashes and getattr(candidate, "hashes", None):
             for item in sorted({row["hash"] for row in candidate.hashes}):  # type: ignore[union-attr]
