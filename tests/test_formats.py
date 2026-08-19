@@ -306,6 +306,25 @@ def test_convert_poetry(project):
     assert build["excludes"] == ["my_package/excluded.py"]
 
 
+def test_convert_poetry_sdist_only_include(project):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        "include = [\n"
+        '    "demo/data.json",\n'
+        '    {path = "tests", format = "sdist"},\n'
+        '    {path = "docs", format = ["sdist"]},\n'
+        "]\n"
+        "[tool.poetry.dependencies]\n",
+        encoding="utf-8",
+    )
+    _, settings = poetry.convert(project, pyproject, ns())
+
+    # Entries restricted to the sdist format belong to `source-includes`, not `includes`.
+    assert settings["build"]["includes"] == ["demo/data.json"]
+    assert settings["build"]["source-includes"] == ["tests", "docs"]
+
+
 def test_convert_poetry_optional_dependency_in_multiple_extras(project):
     golden_file = FIXTURES / "pyproject.toml"
     with cd(FIXTURES):
