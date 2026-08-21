@@ -15,9 +15,10 @@ def test_export_editable_local_path_as_relative(project):
 
     with cd(project.root):
         req = parse_requirement("./packages/pkg-core", True)
-    req.relocate(project.backend)
+        req.relocate(project.backend)
 
-    options = Namespace(expandvars=False, hashes=False, self=False, editable_self=False)
+    options = Namespace(expandvars=False, hashes=False, editable_self=False)
+    options.self = False
     result = requirements.export(project, [req], options)
 
     assert "-e ./packages/pkg-core#egg=pkg-core" in result.splitlines()
