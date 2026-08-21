@@ -180,6 +180,35 @@ def test_merge_result_adds_and_merges_packages(mocker):
     assert "all_candidates" not in repository.__dict__
 
 
+def test_merge_result_keeps_packages_out_of_foreign_targets(mocker):
+    repository = make_repository(mocker)
+    windows = EnvSpec.from_spec(requires_python=">=3.9", platform="windows")
+    linux = EnvSpec.from_spec(requires_python=">=3.9", platform="linux")
+
+    def candidate(name):
+        return Candidate(parse_requirement(name), name=name, version="1.0")
+
+    shared, windows_only = candidate("shared"), candidate("windows-only")
+    marked = candidate("marked")
+    marked.req = parse_requirement("marked; sys_platform == 'win32'")
+    repository.merge_result(windows, [Package(shared), Package(windows_only), Package(marked)])
+
+    # The first target doesn't restrict anything, there is nothing to be excluded from yet.
+    assert all(can.req.marker is None for can in (shared, windows_only))
+
+    linux_only = candidate("linux-only")
+    repository.merge_result(linux, [Package(candidate("shared")), Package(linux_only)])
+
+    # A package resolved for the new target only, without a marker excluding the old ones.
+    assert str(linux_only.req.marker) == 'sys_platform == "linux"'
+    # A package missing from the new target's resolution.
+    assert str(windows_only.req.marker) == 'sys_platform != "linux"'
+    # Markers that already exclude the other target are left alone.
+    assert str(marked.req.marker) == 'sys_platform == "win32"'
+    # Packages resolved for both targets stay unrestricted.
+    assert repository.packages[repository._identify_candidate(shared)].candidate.req.marker is None
+
+
 def test_get_hashes_returns_candidate_hashes(mocker):
     repository = make_repository(mocker)
     candidate = make_candidate()
