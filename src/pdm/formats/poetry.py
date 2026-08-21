@@ -62,6 +62,11 @@ def _convert_specifier(version: str) -> str:
     parts = []
     for op, ver in VERSION_RE.findall(str(version)):
         if op == "~":
+            if "." not in ver:
+                # ``~=1`` is not a valid PEP 440 specifier, and Poetry's ``~1``
+                # allows the minor version to change, so it means ``>=1,<2``.
+                parts.append(f">={ver},<{_caret_upper_bound(ver)}")
+                continue
             op += "="
         elif op == "^":
             parts.append(f">={ver},<{_caret_upper_bound(ver)}")

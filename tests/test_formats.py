@@ -359,6 +359,27 @@ def test_convert_poetry_caret_constraint(project, constraint, expected):
     assert result["dependencies"] == [f"foo{expected}"]
 
 
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        # ``~=1`` is not a valid PEP 440 specifier, Poetry's ``~1`` means ``>=1,<2``.
+        ("~1", "<2,>=1"),
+        ("~0", "<1,>=0"),
+        ("~1.2", "~=1.2"),
+        ("~1.2.3", "~=1.2.3"),
+    ],
+)
+def test_convert_poetry_tilde_constraint(project, constraint, expected):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        f'[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\nfoo = "{constraint}"\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["dependencies"] == [f"foo{expected}"]
+
+
 def test_convert_poetry_12(project):
     golden_file = FIXTURES / "poetry-new.toml"
     with cd(FIXTURES):
