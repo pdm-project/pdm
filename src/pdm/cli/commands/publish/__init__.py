@@ -75,7 +75,12 @@ class Command(BaseCommand):
         )
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
-            "--no-very-ssl", action="store_false", dest="verify_ssl", help="Disable SSL verification", default=None
+            "--no-verify-ssl",
+            "--no-very-ssl",
+            action="store_false",
+            dest="verify_ssl",
+            help="Disable SSL verification",
+            default=None,
         )
         group.add_argument(
             "--ca-certs",
