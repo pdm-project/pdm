@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from pdm._types import SearchResult
 from pdm.exceptions import CandidateInfoNotFound, CandidateNotFound
 from pdm.models.candidates import Candidate
 from pdm.models.repositories.base import BaseRepository, CandidateMetadata, cache_result
 from pdm.models.requirements import Requirement, filter_requirements_with_extras
-from pdm.models.search import SearchResultParser
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class PyPIRepository(BaseRepository):
     """Get package and metadata from PyPI source."""
 
-    DEFAULT_INDEX_URL = "https://pypi.org"
+    SEARCH_API_URL = "https://pyoven.org/api/search"
 
     @cache_result
     def _get_dependencies_from_json(self, candidate: Candidate) -> CandidateMetadata:  # pragma: no cover
@@ -72,24 +72,9 @@ class PyPIRepository(BaseRepository):
             )
         return cans
 
-    def search(self, query: str) -> SearchResults:  # pragma: no cover
-        pypi_simple = self.sources[0].url.rstrip("/")  # type: ignore[union-attr]
-
-        if pypi_simple.endswith("/simple"):
-            search_url = pypi_simple[:-6] + "search"
-        else:
-            search_url = pypi_simple + "/search"
-
-        session = self.environment.session
-        resp = session.get(search_url, params={"q": query})
-        if resp.status_code == 404:
-            self.environment.project.core.ui.warn(
-                f"{pypi_simple!r} doesn't support '/search' endpoint, fallback "
-                f"to {self.DEFAULT_INDEX_URL!r} now.\n"
-                "This may take longer depending on your network condition.",
-            )
-            resp = session.get(f"{self.DEFAULT_INDEX_URL}/search/", params={"q": query}, follow_redirects=True)
-        parser = SearchResultParser()
+    def search(self, query: str) -> SearchResults:
+        resp = self.environment.session.get(self.SEARCH_API_URL, params={"q": query})
         resp.raise_for_status()
-        parser.feed(resp.text)
-        return parser.results
+        return [
+            SearchResult(item["name"], item["latest_version"], item["description"]) for item in resp.json()["results"]
+        ]
