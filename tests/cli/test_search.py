@@ -1,6 +1,9 @@
 """Tests for the search command utilities"""
 
+from pdm._types import SearchResult
 from pdm.cli.commands.search import print_results
+from pdm.environments import BareEnvironment
+from pdm.models.repositories.pypi import PyPIRepository
 
 
 def test_print_results_empty_hits(mocker):
@@ -95,9 +98,68 @@ def test_print_results_unicode_error(mocker):
     print_results(ui, [hit], working_set)
 
 
-def test_search_command_deprecation_warning(pdm):
-    """Test that search command shows deprecation warning"""
-    result = pdm(["search", "test"])
-    # Command should succeed but show warning
+def test_pypi_repository_search(project, mocker):
+    environment = BareEnvironment(project)
+    session = mocker.Mock()
+    environment.__dict__["session"] = session
+    response = session.get.return_value
+    response.json.return_value = {
+        "results": [
+            {
+                "name": "test-package",
+                "latest_version": "1.2.3",
+                "description": "A test package",
+            }
+        ]
+    }
+    repository = PyPIRepository(project.sources, environment)
+
+    result = repository.search("test query")
+
+    session.get.assert_called_once_with("https://pyoven.org/api/search", params={"q": "test query"})
+    response.raise_for_status.assert_called_once_with()
+    assert result == [SearchResult("test-package", "1.2.3", "A test package")]
+
+
+def test_search_command_without_saved_python(project, pdm, mocker):
+    search = mocker.patch.object(
+        PyPIRepository,
+        "search",
+        return_value=[SearchResult("test-package", "1.2.3", "A test package")],
+    )
+    project.root.joinpath(".pdm-python").unlink()
+    get_environment = mocker.patch.object(
+        project,
+        "get_environment",
+        side_effect=AssertionError("The project environment should not be created"),
+    )
+
+    result = pdm(["search", "test"], obj=project)
+
     assert result.exit_code == 0
-    assert "deprecated" in result.stderr.lower() or "deprecated" in result.output.lower()
+    assert "test-package" in result.stdout
+    assert "A test package" in result.stdout
+    assert "INSTALLED" not in result.stdout
+    assert "deprecated" not in result.outputs.lower()
+    search.assert_called_once_with("test")
+    get_environment.assert_not_called()
+
+
+def test_search_command_with_saved_python(project_no_init, pdm, mocker):
+    search = mocker.patch.object(
+        PyPIRepository,
+        "search",
+        return_value=[SearchResult("test-package", "1.2.3", "A test package")],
+    )
+    environment = mocker.Mock()
+    distribution = mocker.Mock(version="1.0.0")
+    environment.get_working_set.return_value = {"test-package": distribution}
+    get_environment = mocker.patch.object(project_no_init, "get_environment", return_value=environment)
+
+    result = pdm(["search", "test"], obj=project_no_init)
+
+    assert result.exit_code == 0
+    assert "INSTALLED: 1.0.0" in result.stdout
+    get_environment.assert_called_once_with()
+    environment.get_working_set.assert_called_once_with()
+    search.assert_called_once_with("test")

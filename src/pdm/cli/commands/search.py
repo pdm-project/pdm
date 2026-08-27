@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import sys
 import textwrap
+from shutil import get_terminal_size
 
 from pdm import termui
 from pdm._types import SearchResults
 from pdm.cli.commands.base import BaseCommand
 from pdm.cli.options import verbose_option
+from pdm.environments import BareEnvironment
 from pdm.models.working_set import WorkingSet
 from pdm.project import Project
 from pdm.utils import normalize_name
@@ -43,7 +46,7 @@ def print_results(
 
 
 class Command(BaseCommand):
-    """[DEPRECATED] Search for PyPI packages"""
+    """Search for PyPI packages"""
 
     arguments = (verbose_option,)
 
@@ -51,7 +54,9 @@ class Command(BaseCommand):
         parser.add_argument("query", help="Query string to search")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        project.core.ui.warn(
-            "Since pypi.org no longer supports search API, this command is deprecated and will be removed in future versions. "
-            "Please visit `https://pypi.org` in the browser to search for packages.",
-        )
+        has_project_environment = project._saved_python is not None
+        working_set = project.environment.get_working_set() if has_project_environment else WorkingSet()
+        project.environment = BareEnvironment(project)
+        result = project.get_repository().search(options.query)
+        terminal_width = get_terminal_size()[0] if sys.stdout.isatty() else None
+        print_results(project.core.ui, result, working_set, terminal_width)
