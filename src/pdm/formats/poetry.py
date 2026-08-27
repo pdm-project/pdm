@@ -58,11 +58,28 @@ def _caret_upper_bound(version: str) -> str:
     return ".".join(str(number) for number in bumped + [0] * (len(numbers) - index - 1))
 
 
+def _tilde_upper_bound(version: str) -> str:
+    """Return the exclusive upper bound of a Poetry tilde requirement.
+
+    A tilde requirement allows patch-level changes when a minor version is given and
+    minor-level changes otherwise, so ``~1.2.3`` and ``~1.2`` both mean ``<1.3.0``
+    while ``~1`` means ``<2.0.0``. PEP 440's ``~=`` only agrees with that when all
+    three components are present: ``~=1.2`` means ``<2.0``, and ``~=1`` is not even a
+    valid specifier.
+    """
+    numbers = [int(match.group()) if (match := re.match(r"\d+", part)) else 0 for part in version.split(".")]
+    index = min(1, len(numbers) - 1)
+    bumped = numbers[: index + 1]
+    bumped[-1] += 1
+    return ".".join(str(number) for number in bumped + [0] * (len(numbers) - index - 1))
+
+
 def _convert_specifier(version: str) -> str:
     parts = []
     for op, ver in VERSION_RE.findall(str(version)):
         if op == "~":
-            op += "="
+            parts.append(f">={ver},<{_tilde_upper_bound(ver)}")
+            continue
         elif op == "^":
             parts.append(f">={ver},<{_caret_upper_bound(ver)}")
             continue
