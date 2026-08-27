@@ -209,6 +209,16 @@ def test_publish_cli_args_and_env_var_precedence(project, monkeypatch, mocker):
         )
 
 
+def test_publish_parse_no_verify_ssl_option(core):
+    core.init_parser()
+    parser = core.parser
+
+    assert parser.parse_args(["publish", "--no-verify-ssl"]).verify_ssl is False
+    # Kept as an alias for backward compatibility.
+    assert parser.parse_args(["publish", "--no-very-ssl"]).verify_ssl is False
+    assert parser.parse_args(["publish"]).verify_ssl is None
+
+
 def test_repository_get_credentials_from_keyring(project, keyring, mocker):
     keyring.save_auth_info("https://test.org/upload", "foo", "barbaz")
     config = RepositoryConfig(config_prefix="repository", name="test", url="https://test.org/upload")
