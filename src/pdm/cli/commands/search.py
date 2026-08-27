@@ -54,7 +54,8 @@ class Command(BaseCommand):
         parser.add_argument("query", help="Query string to search")
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:
-        working_set = project._environment.get_working_set() if project._environment is not None else WorkingSet()
+        has_project_environment = project._saved_python is not None
+        working_set = project.environment.get_working_set() if has_project_environment else WorkingSet()
         project.environment = BareEnvironment(project)
         result = project.get_repository().search(options.query)
         terminal_width = get_terminal_size()[0] if sys.stdout.isatty() else None

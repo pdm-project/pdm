@@ -121,12 +121,13 @@ def test_pypi_repository_search(project, mocker):
     assert result == [SearchResult("test-package", "1.2.3", "A test package")]
 
 
-def test_search_command(project, pdm, mocker):
+def test_search_command_without_saved_python(project, pdm, mocker):
     search = mocker.patch.object(
         PyPIRepository,
         "search",
         return_value=[SearchResult("test-package", "1.2.3", "A test package")],
     )
+    project.root.joinpath(".pdm-python").unlink()
     get_environment = mocker.patch.object(
         project,
         "get_environment",
@@ -138,12 +139,13 @@ def test_search_command(project, pdm, mocker):
     assert result.exit_code == 0
     assert "test-package" in result.stdout
     assert "A test package" in result.stdout
+    assert "INSTALLED" not in result.stdout
     assert "deprecated" not in result.outputs.lower()
     search.assert_called_once_with("test")
     get_environment.assert_not_called()
 
 
-def test_search_command_with_existing_environment(project, pdm, mocker):
+def test_search_command_with_saved_python(project_no_init, pdm, mocker):
     search = mocker.patch.object(
         PyPIRepository,
         "search",
@@ -152,11 +154,12 @@ def test_search_command_with_existing_environment(project, pdm, mocker):
     environment = mocker.Mock()
     distribution = mocker.Mock(version="1.0.0")
     environment.get_working_set.return_value = {"test-package": distribution}
-    project.environment = environment
+    get_environment = mocker.patch.object(project_no_init, "get_environment", return_value=environment)
 
-    result = pdm(["search", "test"], obj=project)
+    result = pdm(["search", "test"], obj=project_no_init)
 
     assert result.exit_code == 0
     assert "INSTALLED: 1.0.0" in result.stdout
+    get_environment.assert_called_once_with()
     environment.get_working_set.assert_called_once_with()
     search.assert_called_once_with("test")
