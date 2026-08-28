@@ -174,6 +174,7 @@ class TaskRunner:
         self.global_options = global_options.copy()
         self.recreate_env = False
         self.hooks = hooks
+        self.run_options: TaskOptions = {}
 
     def _get_script_env(self, script_file: str) -> BaseEnvironment:
         import hashlib
@@ -423,6 +424,7 @@ class TaskRunner:
             return 0
         if seen is None:
             seen = set()
+        opts = merge_options(opts, self.run_options)
         task = self.get_task(command)
         if task is not None:
             if task.kind == "composite":
@@ -523,6 +525,25 @@ class Command(BaseCommand):
         exec.add_argument(
             "--recreate", action="store_true", help="Recreate the script environment for self-contained scripts"
         )
+        exec.add_argument(
+            "--env",
+            dest="env",
+            action="append",
+            metavar="KEY=VALUE",
+            help="Set environment variables for the script. Can be supplied multiple times",
+        )
+        exec.add_argument(
+            "--env-file",
+            dest="env_file",
+            metavar="FILE",
+            help="Read environment variables from the given dotenv file",
+        )
+        exec.add_argument(
+            "--working-dir",
+            dest="working_dir",
+            metavar="DIR",
+            help="Set the working directory for the script",
+        )
         exec.add_argument("script", nargs="?", help="The command to run")
         exec.add_argument(
             "args",
@@ -539,6 +560,20 @@ class Command(BaseCommand):
         runner.recreate_env = options.recreate
         if options.site_packages:
             runner.global_options["site_packages"] = True
+        run_options: TaskOptions = {}
+        if options.env:
+            env: dict[str, str] = {}
+            for item in options.env:
+                key, sep, value = item.partition("=")
+                if not sep:
+                    raise PdmUsageError(f"Invalid environment variable: [success]{item}[/], expected KEY=VALUE")
+                env[key] = value
+            run_options["env"] = env
+        if options.env_file:
+            run_options["env_file"] = options.env_file
+        if options.working_dir:
+            run_options["working_dir"] = options.working_dir
+        runner.run_options = run_options
         return runner
 
     def handle(self, project: Project, options: argparse.Namespace) -> None:

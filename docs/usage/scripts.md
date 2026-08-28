@@ -317,6 +317,35 @@ migrate_db = "flask db upgrade"
 
 Besides, inside the tasks, `PDM_PROJECT_ROOT` environment variable will be set to the project root.
 
+### Overriding Options from the Command Line
+
+!!! tip
+    Added in 2.29.0.
+
+Some script options can also be set or overridden dynamically when invoking `pdm run`,
+which is useful for running the same script against different environments or for
+running a single command of a composite script without changing `pyproject.toml`:
+
+```bash
+pdm run --env FOO=bar --env-file .env.staging --working-dir subdir start
+```
+
+- `--env KEY=VALUE` sets an environment variable for the script. It can be supplied
+  multiple times and overrides the `env` mapping defined in the script.
+- `--env-file FILE` sets the dotenv file to load, overriding the `env_file` option
+  defined in the script.
+- `--working-dir DIR` sets the working directory, overriding the `working_dir` option
+  defined in the script.
+
+These options take precedence over the values defined in `pyproject.toml`, and they
+are also applied to all tasks invoked by a composite script.
+
+!!! note
+    As with other `pdm run` flags (e.g. `-s/--site-packages`), these options must be
+    placed before the script name. Everything following the script name is forwarded
+    to the script as-is, so `pdm run start --env-file .env.staging` would pass
+    `--env-file .env.staging` to the `start` command instead of PDM.
+
 ### Arguments placeholder
 
 By default, all user provided extra arguments are simply appended to the command (or to all the commands for `composite` tasks).
