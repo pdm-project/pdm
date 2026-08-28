@@ -416,6 +416,31 @@ def test_convert_poetry_tilde_python_constraint(project):
     assert result["requires-python"] == "<4,>=3"
 
 
+@pytest.mark.parametrize(
+    "author,expected",
+    [
+        ("Jane Doe <jane@example.com>", {"name": "Jane Doe", "email": "jane@example.com"}),
+        ("Acme, Inc. (Support) <s@acme.io>", {"name": "Acme, Inc. (Support)", "email": "s@acme.io"}),
+        ("Jane Doe", {"name": "Jane Doe"}),
+        # Characters outside the strict pattern used to abort the whole import.
+        ("Foo [Bar] <a@b.com>", {"name": "Foo [Bar]", "email": "a@b.com"}),
+        ("Team A/B <a@b.com>", {"name": "Team A/B", "email": "a@b.com"}),
+        # A bare address is an address, not a name.
+        ("jane@example.com", {"email": "jane@example.com"}),
+        ("<only@example.com>", {"email": "only@example.com"}),
+    ],
+)
+def test_convert_poetry_unusual_author(project, author, expected):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        f'[tool.poetry]\nname = "demo"\nversion = "0.1.0"\nauthors = ["{author}"]\n[tool.poetry.dependencies]\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["authors"] == [expected]
+
+
 def test_convert_poetry_12(project):
     golden_file = FIXTURES / "poetry-new.toml"
     with cd(FIXTURES):
