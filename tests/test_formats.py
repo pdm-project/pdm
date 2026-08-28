@@ -472,6 +472,29 @@ def test_convert_flit_author_and_maintainer_without_email(project, tmp_path):
 
 
 @pytest.mark.parametrize(
+    "source",
+    [
+        "__version__ = '1.0'\nprint 'not python 3'\n",  # invalid syntax
+        "__version__ = '1.0'\x00\n",  # a null byte
+    ],
+)
+def test_convert_flit_unparseable_module(project, tmp_path, source):
+    """An unreadable module leaves version/description empty instead of aborting."""
+    pyproject_file = tmp_path / "pyproject.toml"
+    pyproject_file.write_text(
+        '[tool.flit.metadata]\nmodule = "demo"\nauthor = "Thomas Kluyver"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "demo.py").write_text(source, encoding="utf-8", newline="")
+
+    result, _ = flit.convert(project, pyproject_file, None)
+
+    assert result["name"] == "demo"
+    assert result["version"] == ""
+    assert result["description"] == ""
+
+
+@pytest.mark.parametrize(
     "sdist_table,expected_build",
     [
         ('include = ["doc/"]', {"includes": ["doc/"]}),

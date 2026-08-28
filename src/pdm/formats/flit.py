@@ -53,7 +53,13 @@ def get_docstring_and_version_via_ast(
     # read as bytes to enable custom encodings
     if not target.exists():
         return None, None
-    node = ast.parse(target.read_bytes())
+    try:
+        node = ast.parse(target.read_bytes())
+    except (SyntaxError, ValueError):
+        # The module isn't parseable by the running interpreter, so there is
+        # nothing to read out of it. The caller already warns about the fields
+        # that stayed empty, which beats aborting the whole import.
+        return None, None
     for child in node.body:
         # Only use the version from the given module if it's a simple
         # string assignment to __version__
