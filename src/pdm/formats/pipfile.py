@@ -56,8 +56,12 @@ def convert(project: Project, filename: PathLike, options: Namespace | None) -> 
     if "pipenv" in data and "allow_prereleases" in data["pipenv"]:
         settings.setdefault("resolution", {})["allow-prereleases"] = data["pipenv"]["allow_prereleases"]
     if "requires" in data:
+        # `[requires]` may carry only other markers, e.g. `platform_system`. Writing
+        # the missing version out anyway produced `requires-python = ">=None"`, which
+        # is not a valid specifier and breaks the generated pyproject.toml.
         python_version = data["requires"].get("python_full_version") or data["requires"].get("python_version")
-        result["requires-python"] = f">={python_version}"
+        if python_version:
+            result["requires-python"] = f">={python_version}"
     if "source" in data:
         settings["source"] = data["source"]
     result["dependencies"] = make_array(  # type: ignore[assignment]
