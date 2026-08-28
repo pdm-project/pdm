@@ -1340,3 +1340,94 @@ def test_run_composite_script_verbose(project, pdm):
     assert "['python', '-V']" in result.stderr
     assert "python -V" not in result.stderr
     assert "help" not in result.stderr
+
+
+def test_run_env_option(project, pdm, capfd):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'), os.getenv('BAR'))")
+    project.pyproject.settings["scripts"] = {
+        "test": {"cmd": "python test_script.py", "env": {"FOO": "default", "BAR": "default"}},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "--env", "FOO=cli", "test"], strict=True, obj=project)
+    assert capfd.readouterr()[0].strip() == "cli default"
+
+
+def test_run_env_option_without_task(project, pdm, capfd):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
+    project.pyproject.write()
+    capfd.readouterr()
+    with cd(project.root):
+        pdm(["run", "--env", "FOO=cli", "python", "test_script.py"], strict=True, obj=project)
+        assert capfd.readouterr()[0].strip() == "cli"
+
+
+def test_run_env_file_option(project, pdm, capfd):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
+    project.pyproject.settings["scripts"] = {
+        "test": {"cmd": "python test_script.py", "env_file": ".env"},
+    }
+    project.pyproject.write()
+    (project.root / ".env").write_text("FOO=from-env\n")
+    (project.root / ".env.staging").write_text("FOO=from-staging\n")
+    capfd.readouterr()
+    pdm(["run", "--env-file", ".env.staging", "test"], strict=True, obj=project)
+    assert capfd.readouterr()[0].strip() == "from-staging"
+
+
+def test_run_working_dir_option(project, pdm, capfd):
+    project.root.joinpath("subdir").mkdir()
+    project.root.joinpath("subdir", "file.text").write_text("Hello world\n")
+    project.pyproject.settings["scripts"] = {
+        "test": {"cmd": "cat file.text"},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "--working-dir", "subdir", "test"], strict=True, obj=project)
+    assert capfd.readouterr()[0].strip() == "Hello world"
+
+
+def test_run_options_override_composite(project, pdm, capfd):
+    (project.root / "test_script.py").write_text("import os; print(os.getenv('FOO'))")
+    project.pyproject.settings["scripts"] = {
+        "test": {"cmd": "python test_script.py", "env": {"FOO": "default"}},
+        "composite": {"composite": ["test"]},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "--env", "FOO=cli", "composite"], strict=True, obj=project)
+    assert capfd.readouterr()[0].strip() == "cli"
+
+
+def test_run_env_option_invalid(project, pdm):
+    project.pyproject.settings["scripts"] = {"test": "true"}
+    project.pyproject.write()
+    result = pdm(["run", "--env", "NOEQUALSIGN", "test"], obj=project)
+    assert result.exit_code == 1
+    assert "Invalid environment variable" in result.stderr
+
+
+def test_run_env_option_empty_key(project, pdm):
+    project.pyproject.settings["scripts"] = {"test": "true"}
+    project.pyproject.write()
+    result = pdm(["run", "--env", "=value", "test"], obj=project)
+    assert result.exit_code == 1
+    assert "Invalid environment variable" in result.stderr
+
+
+def test_run_script_in_working_dir_with_inline_metadata(project, pdm, capfd):
+    project.root.joinpath("subdir").mkdir()
+    (project.root / "subdir" / "script.py").write_text(
+        textwrap.dedent(
+            """\
+            # /// script
+            # requires-python = ">=3.9"
+            # ///
+            print("from subdir")
+            """
+        )
+    )
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "--working-dir", "subdir", "script.py"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == "from subdir"
