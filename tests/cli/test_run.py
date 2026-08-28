@@ -1405,3 +1405,29 @@ def test_run_env_option_invalid(project, pdm):
     result = pdm(["run", "--env", "NOEQUALSIGN", "test"], obj=project)
     assert result.exit_code == 1
     assert "Invalid environment variable" in result.stderr
+
+
+def test_run_env_option_empty_key(project, pdm):
+    project.pyproject.settings["scripts"] = {"test": "true"}
+    project.pyproject.write()
+    result = pdm(["run", "--env", "=value", "test"], obj=project)
+    assert result.exit_code == 1
+    assert "Invalid environment variable" in result.stderr
+
+
+def test_run_script_in_working_dir_with_inline_metadata(project, pdm, capfd):
+    project.root.joinpath("subdir").mkdir()
+    (project.root / "subdir" / "script.py").write_text(
+        textwrap.dedent(
+            """\
+            # /// script
+            # requires-python = ">=3.9"
+            # ///
+            print("from subdir")
+            """
+        )
+    )
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "--working-dir", "subdir", "script.py"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == "from subdir"

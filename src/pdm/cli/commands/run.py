@@ -263,7 +263,10 @@ class TaskRunner:
 
         project = self.project
         if not shell and args[0].endswith(".py"):
-            project_env = self._get_script_env(os.path.expanduser(args[0]))
+            script_file = os.path.expanduser(args[0])
+            if working_dir and not os.path.isabs(script_file):
+                script_file = os.path.join(project.root, working_dir, script_file)
+            project_env = self._get_script_env(script_file)
         else:
             check_project_file(project)
             project_env = project.environment
@@ -565,7 +568,7 @@ class Command(BaseCommand):
             env: dict[str, str] = {}
             for item in options.env:
                 key, sep, value = item.partition("=")
-                if not sep:
+                if not sep or not key:
                     raise PdmUsageError(f"Invalid environment variable: [success]{item}[/], expected KEY=VALUE")
                 env[key] = value
             run_options["env"] = env
