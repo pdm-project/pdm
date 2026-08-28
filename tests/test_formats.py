@@ -87,6 +87,24 @@ def test_requirements_clean_line_strips_comments(line, expected):
     assert parser._clean_line(line) == expected
 
 
+@pytest.mark.parametrize(
+    "line,expected",
+    [
+        # POSIX-mode shlex treats a backslash as an escape, which used to eat the
+        # separators of a native Windows path.
+        (r"-e C:\src\pkg", ["-e", r"C:\src\pkg"]),
+        (r"-r C:\src\reqs.txt", ["-r", r"C:\src\reqs.txt"]),
+        (r'-e "C:\src\my pkg"', ["-e", r"C:\src\my pkg"]),
+        # Anything without a backslash is unaffected.
+        ("-e ./libs/foo", ["-e", "./libs/foo"]),
+        ("--index-url https://example.org/simple", ["--index-url", "https://example.org/simple"]),
+    ],
+)
+def test_requirements_split_args_keeps_windows_paths(monkeypatch, line, expected):
+    monkeypatch.setattr(requirements.os, "name", "nt")
+    assert requirements.RequirementParser._split_args(line) == expected
+
+
 def test_convert_requirements_file_with_tab_before_comment(project):
     req_file = project.root.joinpath("reqs.txt")
     req_file.write_text("webassets==2.0\t# a tab-separated comment\n", encoding="utf-8")

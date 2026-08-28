@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import re
 import shlex
 import urllib.parse
@@ -59,6 +60,20 @@ class RequirementParser:
         """Strip the surrounding whitespaces and comment from the line"""
         return _COMMENT_RE.sub("", line.strip()).strip()
 
+    @staticmethod
+    def _split_args(line: str) -> list[str]:
+        """Split an option line into argv-style tokens.
+
+        ``shlex.split`` runs in POSIX mode, where a backslash is an escape
+        character. On Windows that silently eats the separators of a native
+        path, so ``-e C:\\src\\pkg`` arrived as ``C:srcpkg``. Escape the
+        backslashes there first, leaving quoting to behave as it does
+        everywhere else.
+        """
+        if os.name == "nt":
+            line = line.replace("\\", "\\\\")
+        return shlex.split(line)
+
     def _parse_line(self, filename: str, line: str) -> None:
         if not line.startswith("-"):
             # Starts with a requirement, just ignore all per-requirement options
@@ -69,7 +84,7 @@ class RequirementParser:
                 req.name = req.guess_name()
             self.requirements.append(req)
             return
-        args, _ = self._parser.parse_known_args(shlex.split(line))
+        args, _ = self._parser.parse_known_args(self._split_args(line))
         if args.index_url:
             self.index_url = args.index_url
         if args.no_index:
