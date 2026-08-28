@@ -142,17 +142,31 @@ NAME_EMAIL_RE = re.compile(
 )
 
 
+#: A permissive fallback for entries ``NAME_EMAIL_RE`` rejects, such as a name
+#: containing a character outside its set. It always matches, so the address is
+#: still split off instead of being buried in the name.
+NAME_EMAIL_FALLBACK_RE = re.compile(r"^\s*(?P<name>.*?)\s*(?:<(?P<email>[^<>]*)>)?\s*$", re.UNICODE)
+
+
+def _parse_one_name_email(item: str) -> dict[str, str]:
+    """Split a single Poetry author/maintainer entry into ``name`` and ``email``.
+
+    Poetry only documents the ``Name <email>`` form, but a project can carry
+    anything in there. An entry that doesn't fit used to abort the whole import
+    with ``AttributeError: 'NoneType' object has no attribute 'groupdict'``,
+    because the strict pattern's ``None`` result was indexed directly.
+    """
+    match = NAME_EMAIL_RE.match(item) or NAME_EMAIL_FALLBACK_RE.match(item)
+    assert match is not None  # the fallback pattern matches any string
+    parsed = {k: v for k, v in match.groupdict().items() if v}
+    # A bare address carries no name, so report it as the email it is.
+    if set(parsed) == {"name"} and "@" in parsed["name"] and " " not in parsed["name"]:
+        return {"email": parsed["name"]}
+    return parsed
+
+
 def parse_name_email(name_email: list[str]) -> list[dict]:
-    return array_of_inline_tables(
-        [
-            {
-                k: v
-                for k, v in NAME_EMAIL_RE.match(item).groupdict().items()  # type: ignore[union-attr]
-                if v is not None
-            }
-            for item in name_email
-        ]
-    )
+    return array_of_inline_tables([_parse_one_name_email(item) for item in name_email])
 
 
 class PoetryMetaConverter(MetaConverter):
