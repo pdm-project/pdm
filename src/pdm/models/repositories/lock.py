@@ -13,7 +13,7 @@ from dep_logic.markers import AnyMarker, BaseMarker
 from pdm.cli.utils import normalize_name
 from pdm.exceptions import CandidateNotFound, PdmException
 from pdm.models.candidates import Candidate
-from pdm.models.markers import EnvSpec, exclude_multi, get_marker
+from pdm.models.markers import EnvSpec, Marker, exclude_multi, get_marker
 from pdm.models.repositories.base import BaseRepository, CandidateMetadata
 from pdm.models.requirements import FileRequirement, Requirement, parse_line
 from pdm.utils import cd, url_to_path, url_without_fragments
@@ -34,6 +34,34 @@ class Package:
     dependencies: list[str] | None = None
     summary: str = ""
     marker: BaseMarker = dataclasses.field(default_factory=AnyMarker)
+
+
+def _platform_markers(env_spec: EnvSpec, others: list[EnvSpec]) -> tuple[Marker, Marker] | None:
+    """Build a ``(only, without)`` marker pair for the platform of ``env_spec``.
+
+    ``only`` matches that platform alone while ``without`` matches all the others.
+    ``platform_machine`` is added only when another target shares the same
+    ``sys_platform``, to keep the markers short. Return ``None`` for a target that
+    isn't restricted to a platform.
+    """
+    platform = env_spec.platform
+    if platform is None:
+        return None
+    pairs = [("sys_platform", platform.sys_platform)]
+    if any(other.platform is not None and other.platform.sys_platform == platform.sys_platform for other in others):
+        pairs.append(("platform_machine", platform.platform_machine))
+    only = get_marker(" and ".join(f'{name} == "{value}"' for name, value in pairs))
+    without = get_marker(" or ".join(f'{name} != "{value}"' for name, value in pairs))
+    return only, without
+
+
+def _restrict_marker(entry: Package, marker: Marker, excluded: list[EnvSpec]) -> None:
+    """Narrow the marker of ``entry`` with ``marker``, unless it already excludes ``excluded``."""
+    old_marker = entry.candidate.req.marker
+    if old_marker is not None and not any(old_marker.matches(target) for target in excluded):
+        return
+    new_marker = marker if old_marker is None else old_marker & marker
+    entry.candidate.req = dataclasses.replace(entry.candidate.req, marker=new_marker)
 
 
 class LockedRepository(BaseRepository):
@@ -271,12 +299,23 @@ class LockedRepository(BaseRepository):
             yield package
 
     def merge_result(self, env_spec: EnvSpec, result: Iterable[Package]) -> None:
-        if env_spec not in self.targets:
+        is_new_target = env_spec not in self.targets
+        previous_targets = list(self.targets)
+        if is_new_target:
             self.targets.append(env_spec)
+        # Markers are inherited from the requirements only, so a package exclusive to one
+        # target can still carry a marker matching the others, e.g. when a platform-specific
+        # wheel declares its dependencies unconditionally. Keep such packages out of the
+        # targets they were not resolved for.
+        markers = _platform_markers(env_spec, previous_targets) if is_new_target and previous_targets else None
+        resolved: set[CandidateKey] = set()
         for entry in result:
             key = self._identify_candidate(entry.candidate)
+            resolved.add(key)
             existing = self.packages.get(key)
             if existing is None:
+                if markers is not None:
+                    _restrict_marker(entry, markers[0], previous_targets)
                 self.packages[key] = entry
             else:
                 # merge markers
@@ -299,6 +338,10 @@ class LockedRepository(BaseRepository):
                 for file in entry.candidate.hashes:
                     if file not in existing.candidate.hashes:
                         existing.candidate.hashes.append(file)
+        if markers is not None:
+            for key, package in self.packages.items():
+                if key not in resolved:
+                    _restrict_marker(package, markers[1], [env_spec])
         # clear caches
         if "all_candidates" in self.__dict__:
             del self.__dict__["all_candidates"]
