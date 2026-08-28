@@ -45,6 +45,22 @@ def test_convert_pipfile(project):
     assert settings["source"][0]["url"] == "https://pypi.python.org/simple"
 
 
+@pytest.mark.parametrize(
+    "requires",
+    [
+        "",  # an empty [requires] table
+        'platform_system = "Linux"\n',  # only non-python markers
+    ],
+)
+def test_convert_pipfile_requires_without_python(project, requires):
+    """`[requires]` without a python key used to emit `requires-python = ">=None"`."""
+    pipfile_path = project.root / "Pipfile"
+    pipfile_path.write_text(f"[requires]\n{requires}", encoding="utf-8")
+    result, _ = pipfile.convert(project, pipfile_path, None)
+
+    assert "requires-python" not in result
+
+
 @pytest.mark.parametrize("is_dev", [True, False])
 def test_convert_requirements_file(project, is_dev):
     golden_file = FIXTURES / "requirements.txt"
