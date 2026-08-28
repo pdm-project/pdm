@@ -558,9 +558,9 @@ class Command(BaseCommand):
         else:
             runner = TaskRunner(project, hooks)
         runner.recreate_env = options.recreate
-        if options.site_packages:
-            runner.global_options["site_packages"] = True
         run_options: TaskOptions = {}
+        if options.site_packages:
+            run_options["site_packages"] = True
         if options.env:
             env: dict[str, str] = {}
             for item in options.env:
