@@ -70,12 +70,19 @@ class Command(BaseCommand):
         from pdm.models.repositories.lock import Package
 
         if options.format == "pylock":
+            selected_groups = list(GroupSelection.from_options(project, options))
             locked_repository = project.get_locked_repository()
+            # Keep only the packages required by the selected groups, the whole lock file
+            # would otherwise be exported no matter which groups were asked for.
+            selected = list(locked_repository.evaluate_candidates(selected_groups, evaluate_markers=False))
+            locked_repository.packages.clear()
+            for package in selected:
+                locked_repository.add_package(package)
             if options.self or options.editable_self:
                 locked_repository.add_package(
                     Package(project.make_self_candidate(editable=options.editable_self), [], "")
                 )
-            doc = tomlkit.dumps(PyLockConverter(project, locked_repository).convert())
+            doc = tomlkit.dumps(PyLockConverter(project, locked_repository).convert(selected_groups))
             if options.output:
                 Path(options.output).write_text(doc, encoding="utf-8")
             else:
