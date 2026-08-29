@@ -441,6 +441,31 @@ def test_convert_poetry_unusual_author(project, author, expected):
     assert result["authors"] == [expected]
 
 
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        # A multi-constraint string used to keep the separating comma as part of
+        # the next operator, emitting `>=1.0,,<2.0`.
+        (">=1.0,<2.0", "<2.0,>=1.0"),
+        (">=1.2,!=1.5,<2.0", "!=1.5,<2.0,>=1.2"),
+        (">= 1.0, < 2.0", "<2.0,>=1.0"),
+        # Poetry accepts a `v` prefix on the version.
+        ("^v1.2.3", "<2.0.0,>=1.2.3"),
+        ("~v1.2", "<1.3,>=1.2"),
+        ("v1.2.3", "==1.2.3"),
+    ],
+)
+def test_convert_poetry_multi_and_v_prefixed_constraint(project, constraint, expected):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        f'[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\nfoo = "{constraint}"\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["dependencies"] == [f"foo{expected}"]
+
+
 def test_convert_poetry_12(project):
     golden_file = FIXTURES / "poetry-new.toml"
     with cd(FIXTURES):

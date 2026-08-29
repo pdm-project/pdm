@@ -41,7 +41,11 @@ def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
     return "tool" in data and "poetry" in data["tool"]
 
 
-VERSION_RE = re.compile(r"([^\d\s]*)\s*(\d.*?)\s*(?=,|$)")
+#: A single Poetry version constraint: an optional operator, an optional ``v``
+#: prefix, then the version itself. The operator is restricted to the characters
+#: Poetry actually uses -- matching any non-digit instead swallowed the separating
+#: comma of a multi-constraint string, so ``>=1.0,<2.0`` produced ``>=1.0,,<2.0``.
+VERSION_RE = re.compile(r"([<>=!~^]*)\s*v?\s*(\d.*?)\s*(?=,|$)")
 
 
 def _caret_upper_bound(version: str) -> str:
