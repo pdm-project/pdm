@@ -1,3 +1,23 @@
+## Release v2.29.0 (2026-08-29)
+
+### Features & Improvements
+
+- Export editable local dependencies with relative paths in requirements files. ([#3294](https://github.com/pdm-project/pdm/issues/3294))
+- Extend `pdm run` with `--env`, `--env-file` and `--working-dir` options to set or override the corresponding script options dynamically. ([#3829](https://github.com/pdm-project/pdm/issues/3829))
+
+### Bug Fixes
+
+- Restrict a locked package to the platform it was resolved for when it doesn't belong to every lock target, so `pdm lock --platform ... --append` no longer adds entries that get installed on the other targets. ([#3261](https://github.com/pdm-project/pdm/issues/3261))
+- Keep Poetry `include` entries restricted to the sdist format when importing, writing them to `tool.pdm.build.source-includes` instead of dropping them. ([#3854](https://github.com/pdm-project/pdm/issues/3854))
+- Accept `--no-verify-ssl` on `pdm publish`, which was misspelled as `--no-very-ssl`. The old spelling keeps working as an alias. ([#3857](https://github.com/pdm-project/pdm/issues/3857))
+- Convert Poetry tilde constraints with fewer than three components to the bounds Poetry means: `~1.2` becomes `<1.3` rather than `<2.0`, and `~1` no longer produces an invalid `~=1` specifier that aborts the import. ([#3858](https://github.com/pdm-project/pdm/issues/3858))
+- Keep the separating comma out of the operator and accept a `v` prefix when converting Poetry version constraints. ([#3860](https://github.com/pdm-project/pdm/issues/3860))
+- Keep importing a Poetry project when an author or maintainer entry does not fit the `Name <email>` pattern. ([#3861](https://github.com/pdm-project/pdm/issues/3861))
+- Skip `requires-python` when a Pipfile `[requires]` table has no python version, instead of writing `>=None`. ([#3862](https://github.com/pdm-project/pdm/issues/3862))
+- Leave the version and description empty instead of aborting when a flit module cannot be parsed. ([#3864](https://github.com/pdm-project/pdm/issues/3864))
+- Respect dependency group selection options when exporting to `pylock.toml`, producing a single-use lock file that contains only the selected packages. ([#3866](https://github.com/pdm-project/pdm/issues/3866))
+
+
 ## Release v2.28.2 (2026-08-18)
 
 ### Bug Fixes
