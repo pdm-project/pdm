@@ -69,13 +69,15 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         from pdm.models.repositories.lock import Package
 
+        selection = GroupSelection.from_options(project, options)
         if options.format == "pylock":
             locked_repository = project.get_locked_repository()
             if options.self or options.editable_self:
                 locked_repository.add_package(
                     Package(project.make_self_candidate(editable=options.editable_self), [], "")
                 )
-            doc = tomlkit.dumps(PyLockConverter(project, locked_repository).convert())
+            selected_groups = None if selection.is_unset else list(selection)
+            doc = tomlkit.dumps(PyLockConverter(project, locked_repository).convert(selected_groups=selected_groups))
             if options.output:
                 Path(options.output).write_text(doc, encoding="utf-8")
             else:
@@ -83,7 +85,6 @@ class Command(BaseCommand):
             return
         if options.pyproject:
             options.hashes = False
-        selection = GroupSelection.from_options(project, options)
         if options.markers is False:
             project.core.ui.warn(
                 "The --no-markers option is on, the exported requirements can only work on the current platform"

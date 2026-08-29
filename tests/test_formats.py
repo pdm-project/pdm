@@ -706,6 +706,35 @@ def test_export_pylock_toml(core, pdm):
     assert "inherit_metadata strategy is required for pylock format" in result.stderr
 
 
+@pytest.mark.parametrize(
+    ("group_options", "expected_packages"),
+    [
+        (["--prod"], {"chardet", "idna"}),
+        (["--no-default", "-G", "tests"], {"colorama", "py", "pytest", "setuptools"}),
+    ],
+)
+@pytest.mark.parametrize("source_lockfile", ["pdm.lock", "pylock.toml"])
+def test_export_pylock_toml_respects_group_selection(core, pdm, group_options, expected_packages, source_lockfile):
+    project = core.create_project(FIXTURES / "projects/demo")
+
+    result = pdm(
+        ["export", "-f", "pylock", "-L", str(project.root / source_lockfile), *group_options],
+        obj=project,
+        strict=True,
+    )
+    exported = tomllib.loads(result.stdout)
+    package_names = {package["name"] for package in exported["packages"]}
+
+    assert package_names == expected_packages
+    assert "extras" not in exported
+    assert "dependency-groups" not in exported
+    assert "default-groups" not in exported
+    assert all(
+        "extras" not in package.get("marker", "") and "dependency_groups" not in package.get("marker", "")
+        for package in exported["packages"]
+    )
+
+
 def test_export_from_pylock_not_empty(core, pdm):
     """Test that exporting from pylock.toml produces non-empty output (fixes issue #3573)."""
     project = core.create_project(FIXTURES / "projects/demo")
