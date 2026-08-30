@@ -141,6 +141,29 @@ def test_venv_list_with_tilde_location(pdm, project, monkeypatch, tmp_path):
     assert result.output.strip() == venv_path
 
 
+@pytest.mark.parametrize("dirname", ["my[project]", "downloads[1]"])
+def test_iter_venvs_with_glob_chars_in_project_path(project, tmp_path, dirname):
+    """A project directory name may legally contain glob metacharacters.
+
+    ``venv create`` names the venv with the literal directory name, so the
+    lookup must match that same literal name rather than treating it as a
+    pattern.
+    """
+    from pdm.cli.commands.venv.utils import get_venv_parent, iter_venvs
+
+    project.root = tmp_path / dirname
+    project.root.mkdir()
+
+    venv_parent = get_venv_parent(project)
+    venv_parent.mkdir(parents=True, exist_ok=True)
+    venv_dir = venv_parent / f"{get_venv_prefix(project)}3.13"
+    bin_dir = venv_dir / ("Scripts" if sys.platform == "win32" else "bin")
+    bin_dir.mkdir(parents=True)
+    bin_dir.joinpath("python.exe" if sys.platform == "win32" else "python").touch()
+
+    assert {ident: venv.root for ident, venv in iter_venvs(project)} == {"3.13": venv_dir}
+
+
 @pytest.mark.usefixtures("fake_create")
 def test_venv_remove(pdm, project):
     project.project_config["venv.in_project"] = False

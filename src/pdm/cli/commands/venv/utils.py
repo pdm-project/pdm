@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import glob
 import hashlib
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -60,7 +61,10 @@ def iter_venvs(project: Project) -> Iterable[tuple[str, VirtualEnv]]:
         yield "in-project", in_project_venv
     venv_prefix = get_venv_prefix(project)
     venv_parent = get_venv_parent(project)
-    for path in venv_parent.glob(f"{venv_prefix}*"):
+    # The project directory name is part of the prefix and may legally contain
+    # glob metacharacters (e.g. `my[project]`), which would otherwise be treated
+    # as a pattern and fail to match the venv that `venv create` wrote to disk.
+    for path in venv_parent.glob(f"{glob.escape(venv_prefix)}*"):
         ident = path.name[len(venv_prefix) :]
         venv = VirtualEnv.get(path)
         if venv is not None:
