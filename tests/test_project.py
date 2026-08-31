@@ -10,18 +10,58 @@ import pytest
 from pbs_installer import PythonVersion
 from pytest_httpserver import HTTPServer
 
+from pdm.compat import tomllib
 from pdm.environments import PythonEnvironment
 from pdm.exceptions import PdmException, PdmUsageError, ProjectError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
-from pdm.utils import cd, is_path_relative_to, parse_version
+from pdm.project.lockfile import PDMLock, PyLock
+from pdm.project.project_file import PyProject
+from pdm.utils import atomic_open_for_write, cd, is_path_relative_to, parse_version
 
 if TYPE_CHECKING:
     from pdm.project.core import Project
     from pdm.pytest import PDMCallable
 
 PYTHON_VERSIONS = ["3.9.7", "3.10.12", "3.10.11", "3.9.0", "3.10.13", "3.9.12"]
+
+
+@pytest.mark.parametrize(
+    ("file_class", "filename"),
+    [
+        (PyProject, "pyproject.toml"),
+        (PDMLock, "pdm.lock"),
+        (PyLock, "pylock.toml"),
+    ],
+)
+def test_project_toml_files_are_written_atomically(tmp_path, core, mocker, file_class, filename):
+    target = tmp_path / filename
+    toml_file = file_class(target, ui=core.ui)
+    toml_file.set_data({"test": {"value": "data"}})
+    atomic_write = mocker.patch(
+        "pdm.project.toml_file.atomic_open_for_write",
+        wraps=atomic_open_for_write,
+    )
+
+    toml_file.write(show_message=False)
+
+    atomic_write.assert_called_once_with(target, encoding="utf-8", newline="")
+    with target.open("rb") as fp:
+        assert tomllib.load(fp) == {"test": {"value": "data"}}
+
+
+def test_atomic_toml_write_preserves_line_endings(tmp_path, core):
+    target = tmp_path / "pyproject.toml"
+    target.write_bytes(b'[project]\r\nname = "demo"\r\nversion = "0.1.0"\r\n')
+    pyproject = PyProject(target, ui=core.ui)
+    pyproject.open_for_write()["project"]["description"] = "Demo project"
+
+    pyproject.write(show_message=False)
+
+    content = target.read_bytes()
+    assert b"\r\n" in content
+    assert b"\n" not in content.replace(b"\r\n", b"")
 
 
 def get_python_versions() -> list[PythonVersion]:

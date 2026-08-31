@@ -150,12 +150,19 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
 
 
 @contextlib.contextmanager
-def atomic_open_for_write(filename: str | Path, *, mode: str = "w", encoding: str = "utf-8") -> Iterator[IO]:
+def atomic_open_for_write(
+    filename: str | Path, *, mode: str = "w", encoding: str = "utf-8", newline: str | None = None
+) -> Iterator[IO]:
     dirname = os.path.dirname(filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     fd, name = tempfile.mkstemp(prefix="atomic-write-", dir=dirname)
-    fp = os.fdopen(fd, mode, encoding=encoding if "b" not in mode else None)
+    fp = os.fdopen(
+        fd,
+        mode,
+        encoding=encoding if "b" not in mode else None,
+        newline=newline if "b" not in mode else None,
+    )
     try:
         yield fp
     except Exception:
