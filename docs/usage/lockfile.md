@@ -229,10 +229,33 @@ pdm config strategy.exclude-newer 7d
 exclude-newer = "7d"
 ```
 
+Package-specific values can override the global cutoff:
+
+```toml
+[tool.pdm.resolution]
+exclude-newer = "7d"
+
+[tool.pdm.resolution.exclude-newer-override]
+mypackage = false
+anotherpackage = "3d"
+```
+
+An override accepts the same date, timestamp, and duration formats as `exclude-newer`. Set it to `false` to disable the
+cutoff for that package. Package names are normalized before matching, and package-specific values take precedence
+over the global cutoff. Overrides may also be supplied on the command line:
+
+```bash
+pdm lock --exclude-newer 7d --exclude-newer-override mypackage=false anotherpackage=3d
+```
+
+Command-line overrides take precedence over entries for the same package in `exclude-newer-override`.
+
 The precedence is: the `--exclude-newer` command line option, then `[tool.pdm.resolution]` in `pyproject.toml`, then `strategy.exclude-newer` in PDM config.
 
 !!! note
-    The package index must support the `upload-time` field as specified in [PEP 700]. If the field is not present for a given distribution, the distribution will be treated as unavailable.
+    The package index must support the `upload-time` field as specified in [PEP 700]. If the field is not present for
+    a given distribution, the distribution will be treated as unavailable unless its cutoff is disabled with an
+    `exclude-newer-override` value of `false`.
 
 [PEP 700]: https://peps.python.org/pep-0700/
 

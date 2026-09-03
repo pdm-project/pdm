@@ -34,7 +34,7 @@ from pdm.installers import InstallManager
 from pdm.models.repositories import BaseRepository, PyPIRepository
 from pdm.project import Project
 from pdm.project.config import Config
-from pdm.utils import convert_to_datetime, is_in_zipapp
+from pdm.utils import convert_to_datetime, is_in_zipapp, normalize_name
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -55,6 +55,8 @@ class State:
     """The config settings map shared by all packages"""
     exclude_newer: datetime | None = None
     """The exclude newer than datetime for the lockfile"""
+    exclude_newer_overrides: dict[str, datetime | None] = dc.field(default_factory=dict)
+    """Package-specific overrides for the exclude-newer cutoff"""
     build_isolation: bool = True
     """Whether to make an isolated environment and install requirements for build"""
     enable_cache: bool = True
@@ -188,6 +190,14 @@ class Core:
             self.state.exclude_newer = exclude_newer
         if exclude_newer := project.pyproject.resolution.get("exclude-newer"):
             self.state.exclude_newer = convert_to_datetime(exclude_newer)
+        overrides = project.pyproject.resolution.get("exclude-newer-override", {})
+        try:
+            self.state.exclude_newer_overrides = {
+                normalize_name(package): None if value is False else convert_to_datetime(value)
+                for package, value in overrides.items()
+            }
+        except (AttributeError, TypeError, ValueError) as e:
+            raise PdmUsageError("Invalid `resolution.exclude-newer-override` configuration") from e
 
         for callback in getattr(options, "callbacks", []):
             callback(project, options)
