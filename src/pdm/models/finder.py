@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import unearth
@@ -10,7 +11,7 @@ from packaging.version import Version
 from unearth.evaluator import Evaluator, FormatControl, LinkMismatchError, Package
 
 from pdm.models.markers import EnvSpec
-from pdm.utils import parse_version
+from pdm.utils import normalize_name, parse_version
 
 logger = logging.getLogger("unearth")
 
@@ -67,20 +68,23 @@ class PDMPackageFinder(unearth.PackageFinder):
         *,
         env_spec: EnvSpec,
         minimal_version: bool = False,
+        exclude_newer_overrides: dict[str, datetime | None] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(session, **kwargs)
         self.minimal_version = minimal_version
         self.env_spec = env_spec
+        self.exclude_newer_overrides = exclude_newer_overrides or {}
 
     def build_evaluator(self, package_name: str, allow_yanked: bool = False) -> Evaluator:
         format_control = FormatControl(no_binary=self.no_binary, only_binary=self.only_binary)
+        exclude_newer_than = self.exclude_newer_overrides.get(normalize_name(package_name), self.exclude_newer_than)
         return PDMEvaluator(
             package_name=package_name,
             target_python=self.target_python,
             allow_yanked=allow_yanked,
             format_control=format_control,
-            exclude_newer_than=self.exclude_newer_than,
+            exclude_newer_than=exclude_newer_than,
             env_spec=self.env_spec,
         )
 

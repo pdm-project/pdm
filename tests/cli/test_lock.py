@@ -1077,6 +1077,67 @@ def test_pyproject_exclude_newer_overrides_config(project, pdm):
     assert project.get_locked_repository().candidates["zipp"].version == "3.7.0"
 
 
+@pytest.mark.parametrize(
+    ("resolution", "expected_version"),
+    [
+        ({"exclude-newer": "2024-01-01", "exclude-newer-override": {"zipp": False}}, "3.7.0"),
+        ({"exclude-newer": "2024-01-01", "exclude-newer-override": {"other-package": False}}, "3.6.0"),
+        ({"exclude-newer": "2025-01-01", "exclude-newer-override": {"zipp": "2024-01-01"}}, "3.6.0"),
+        ({"exclude-newer-override": {"Zipp": "2024-01-01"}}, "3.6.0"),
+    ],
+)
+def test_lock_exclude_newer_overrides(project, pdm, resolution, expected_version):
+    project.pyproject.metadata["requires-python"] = ">=3.9"
+    project.project_config["pypi.url"] = "https://my.pypi.org/json"
+    project.pyproject.settings["resolution"] = resolution
+    project.add_dependencies(["zipp"])
+
+    pdm(["lock"], obj=project, strict=True, cleanup=False)
+
+    assert project.get_locked_repository().candidates["zipp"].version == expected_version
+
+
+def test_cli_exclude_newer_overrides(project, pdm):
+    project.pyproject.metadata["requires-python"] = ">=3.9"
+    project.project_config["pypi.url"] = "https://my.pypi.org/json"
+    project.pyproject.settings["resolution"] = {"exclude-newer-override": {"zipp": "2024-01-01"}}
+    project.add_dependencies(["zipp"])
+
+    pdm(
+        [
+            "lock",
+            "--exclude-newer",
+            "2024-01-01",
+            "--exclude-newer-override",
+            "zipp=false",
+            "other-package=3d",
+        ],
+        obj=project,
+        strict=True,
+        cleanup=False,
+    )
+
+    assert project.get_locked_repository().candidates["zipp"].version == "3.7.0"
+
+
+@pytest.mark.parametrize("overrides", [[], {"foo": 0}, {"foo": 1}, {"foo": True}, {"foo": "invalid"}])
+def test_invalid_exclude_newer_overrides(project, pdm, overrides):
+    project.pyproject.settings["resolution"] = {"exclude-newer-override": overrides}
+
+    result = pdm(["lock"], obj=project)
+
+    assert result.exit_code != 0
+    assert "Invalid `resolution.exclude-newer-override` configuration" in result.stderr
+
+
+@pytest.mark.parametrize("override", ["foo=0", "foo=invalid"])
+def test_invalid_cli_exclude_newer_override(project, pdm, override):
+    result = pdm(["lock", "--exclude-newer-override", override], obj=project)
+
+    assert result.exit_code != 0
+    assert "Invalid exclude-newer override" in result.stderr
+
+
 exclusion_cases = [
     pytest.param(("-G", ":all", "--without", "tz,ssl"), id="-G :all --without tz,ssl"),
     pytest.param(("-G", ":all", "--without", "tz", "--without", "ssl"), id="-G :all --without tz --without ssl"),
