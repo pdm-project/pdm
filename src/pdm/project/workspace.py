@@ -76,12 +76,16 @@ class WorkspaceManager:
         workspace_project = self.project or self.owner
         if not workspace_project.workspace.is_root:
             return
+        # ``iter_members()`` yields resolved paths, so the root has to be resolved too:
+        # ``Project.root`` is only made absolute, and a root given as ``pdm -p ../workspace``
+        # or reached through a symlink keeps a form ``relative_to()`` cannot match.
+        root = workspace_project.root.resolve()
         for member in workspace_project.workspace.iter_members():
             member_project = workspace_project.core.create_project(member)
             if not member_project.name or not member_project.is_distribution:
                 continue
             with cd(workspace_project.root):
-                req = parse_requirement("./" + member.relative_to(workspace_project.root).as_posix(), True)
+                req = parse_requirement("./" + member.relative_to(root).as_posix(), True)
                 req.relocate(workspace_project.backend)  # type: ignore[attr-defined]
             req.name = member_project.name
             req.groups = ["default"]
