@@ -25,6 +25,7 @@ The PDM's CLI module is designed in a way that user can easily "inherit and modi
 ```python
 from pdm.cli.commands.base import BaseCommand
 
+
 class HelloCommand(BaseCommand):
     """Say hello to the specified person.
     If none is given, will read from "hello.name" config.
@@ -54,7 +55,6 @@ or assign it to an empty list to have no default options:
 
 ```python hl_lines="3"
 class HelloCommand(BaseCommand):
-
     arguments = []
 ```
 
@@ -100,6 +100,7 @@ You need to register the config item, too:
 
 ```python hl_lines="5"
 from pdm.project.config import ConfigItem
+
 
 def hello_plugin(core):
     core.register_command(HelloCommand, "hello")
