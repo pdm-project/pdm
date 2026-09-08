@@ -6,6 +6,7 @@ import itertools
 import operator
 import os
 import shutil
+import subprocess
 import sys
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from copy import deepcopy
@@ -245,6 +246,13 @@ class Project:
         return collections.ChainMap(self.project_config, self.global_config)
 
     @property
+    def use_managed_python(self) -> bool:
+        """Whether PDM may select or install a Python interpreter it manages."""
+        if ensure_boolean(os.getenv("PDM_NO_MANAGED_PYTHON")):
+            return False
+        return self.config["python.use_managed"]
+
+    @property
     def scripts(self) -> dict[str, str | dict[str, str]]:
         return self.pyproject.settings.get("scripts", {})
 
@@ -329,15 +337,20 @@ class Project:
         saved_path = self._saved_python
         if saved_path and not ensure_boolean(os.getenv("PDM_IGNORE_SAVED_PYTHON")):
             python = PythonInfo.from_path(saved_path)
-            if match_version(python):
+            policy_rejected = False
+            if match_version(python) and (self.use_managed_python or not self._is_managed_python(python)):
                 return python
             elif not python.valid:
                 note("The saved Python interpreter does not exist or broken. Trying to find another one.")
+            elif match_version(python) and not self.use_managed_python and self._is_managed_python(python):
+                note("The saved Python interpreter is managed by PDM. Trying to find another one.")
+                policy_rejected = True
             else:
                 note(
                     "The saved Python interpreter doesn't match the project's requirement. Trying to find another one."
                 )
-            self._saved_python = None  # Clear the saved path if it doesn't match
+            if not policy_rejected:
+                self._saved_python = None  # Clear the saved path if it doesn't match
 
         if config.get("python.use_venv") and not self.is_global:
             # Resolve virtual environments from env-vars
@@ -975,7 +988,7 @@ class Project:
             if filter_func is None or filter_func(interpreter):
                 found = True
                 yield interpreter
-        if found or self.is_global:
+        if found or self.is_global or not self.use_managed_python:
             return
 
         if not python_spec:  # handle both empty string and None
@@ -1020,52 +1033,76 @@ class Project:
                 if os.name == "nt":
                     pyenv_shim += ".bat"
                 if os.path.exists(pyenv_shim):
-                    yield PythonInfo.from_path(pyenv_shim)
+                    python_info = PythonInfo.from_path(pyenv_shim)
+                    if self.use_managed_python or not self._is_managed_python(python_info):
+                        yield python_info
                 elif os.path.exists(pyenv_shim.replace("python3", "python")):
-                    yield PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
+                    python_info = PythonInfo.from_path(pyenv_shim.replace("python3", "python"))
+                    if self.use_managed_python or not self._is_managed_python(python_info):
+                        yield python_info
             python = shutil.which("python") or shutil.which("python3")
             if python:
-                yield PythonInfo.from_path(python)
+                python_info = PythonInfo.from_path(python)
+                if self.use_managed_python or not self._is_managed_python(python_info):
+                    yield python_info
         else:
             if not all(c.isdigit() for c in python_spec.split(".")):
                 path = Path(python_spec)
                 if path.exists():
                     python = find_python_in_path(python_spec)
                     if python:
-                        yield PythonInfo.from_path(python)
-                        return
+                        python_info = PythonInfo.from_path(python)
+                        if self.use_managed_python or not self._is_managed_python(python_info):
+                            yield python_info
+                            return
                 if len(path.parts) == 1:  # only check for spec with only one part
                     python = shutil.which(python_spec)
                     if python:
-                        yield PythonInfo.from_path(python)
-                        return
+                        python_info = PythonInfo.from_path(python)
+                        if self.use_managed_python or not self._is_managed_python(python_info):
+                            yield python_info
+                            return
             finder_arg = python_spec
         if search_venv is None:
             search_venv = cast(bool, config["python.use_venv"])
         finder = self._get_python_finder(search_venv)
         for entry in finder.find_all(finder_arg, allow_prereleases=True):
-            yield PythonInfo(entry)
+            python_info = PythonInfo(entry)
+            if self.use_managed_python or not self._is_managed_python(python_info):
+                yield python_info
         if not python_spec:
             # Lastly, return the host Python as well
             this_python = getattr(sys, "_base_executable", sys.executable)
-            yield PythonInfo.from_path(this_python)
+            python_info = PythonInfo.from_path(this_python)
+            if self.use_managed_python or not self._is_managed_python(python_info):
+                yield python_info
+
+    def _is_managed_python(self, python: PythonInfo) -> bool:
+        install_root = Path(self.config["python.install_root"]).expanduser().resolve()
+        try:
+            target = python.executable
+        except (OSError, subprocess.SubprocessError):
+            return True
+        return is_path_relative_to(target.resolve(), install_root)
 
     def _get_python_finder(self, search_venv: bool = True) -> Finder:
         from findpython import Finder
 
         from pdm.cli.commands.venv.utils import VenvProvider
 
-        providers: list[str] = self.config["python.providers"]
+        configured_providers = list(self.config["python.providers"])
+        providers = configured_providers.copy()
         venv_pos = -1
         if not providers:
             venv_pos = 0
         elif "venv" in providers:
             venv_pos = providers.index("venv")
             providers.remove("venv")
+        selected_providers: list[str] | None = providers if configured_providers else None
         old_rye_root = os.getenv("RYE_PY_ROOT")
         os.environ["RYE_PY_ROOT"] = os.path.expanduser(self.config["python.install_root"])
         try:
-            finder = Finder(resolve_symlinks=True, selected_providers=providers or None)
+            finder = Finder(resolve_symlinks=True, selected_providers=selected_providers)
         finally:
             if old_rye_root:  # pragma: no cover
                 os.environ["RYE_PY_ROOT"] = old_rye_root
