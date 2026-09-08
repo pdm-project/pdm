@@ -198,8 +198,10 @@ def test_no_managed_python_preserves_saved_selection(project, mocker, monkeypatc
 
 def test_no_managed_python_finds_linked_python_by_version(project, mocker):
     project.global_config["python.use_managed"] = False
-    linked_path = Path(project.config["python.install_root"]) / "cpython@3.14.0" / (
-        "python.exe" if sys.platform == "win32" else "bin/python3"
+    linked_path = (
+        Path(project.config["python.install_root"])
+        / "cpython@3.14.0"
+        / ("python.exe" if sys.platform == "win32" else "bin/python3")
     )
     linked = FindPythonVersion(
         linked_path,
@@ -221,8 +223,10 @@ def test_no_managed_python_skips_managed_path_lookup(project, mocker):
     project.global_config["python.use_managed"] = False
     wrapper = project.root.parent / "python-wrapper"
     wrapper.touch()
-    managed_python = Path(project.config["python.install_root"]) / "cpython@3.14.0" / (
-        "python.exe" if sys.platform == "win32" else "bin/python3"
+    managed_python = (
+        Path(project.config["python.install_root"])
+        / "cpython@3.14.0"
+        / ("python.exe" if sys.platform == "win32" else "bin/python3")
     )
     mocker.patch("pdm.project.core.shutil.which", return_value=str(wrapper))
     mocker.patch("findpython.python.PythonVersion._get_interpreter", return_value=str(managed_python))
@@ -242,8 +246,10 @@ def test_no_managed_python_skips_managed_pyenv_shim(project, mocker, shim_name):
     pyenv_shim = pyenv_root / "shims" / (shim_name + ".bat" if sys.platform == "win32" else shim_name)
     pyenv_shim.parent.mkdir(parents=True, exist_ok=True)
     pyenv_shim.touch()
-    managed_python = Path(project.config["python.install_root"]) / "cpython@3.14.0" / (
-        "python.exe" if sys.platform == "win32" else "bin/python3"
+    managed_python = (
+        Path(project.config["python.install_root"])
+        / "cpython@3.14.0"
+        / ("python.exe" if sys.platform == "win32" else "bin/python3")
     )
     mocker.patch("pdm.project.core.PYENV_ROOT", str(pyenv_root))
     mocker.patch("pdm.project.core.shutil.which", return_value=None)
