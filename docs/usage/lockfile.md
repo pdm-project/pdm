@@ -1,6 +1,6 @@
 # Lock file
 
-PDM installs packages exclusively from the existing lock file named `pdm.lock`. This file serves as the sole source of truth for installing dependencies. The lock file contains essential information such as:
+PDM synchronizes dependencies using a locked resolution, normally stored in `pdm.lock`. Depending on the command, PDM can reuse that resolution or create a new one before installing packages. The lock file contains essential information such as:
 
 - All packages and their versions
 - The file names and hashes of the packages
@@ -13,19 +13,69 @@ To create or overwrite the lock file, run [`pdm lock`](../reference/cli.md#lock)
 
     It depends. If your goal is to make CI use the same dependency versions as local development and avoid unexpected failures, you should add the `pdm.lock` file to version control. Otherwise, if your project is a library and you want CI to mimic the installation on user site to ensure that the current version on PyPI doesn't break anything, then do not submit the `pdm.lock` file.
 
-## Install the packages pinned in lock file
+## Command effects
 
-There are a few similar commands to do this job with slight differences:
+There are three separate pieces of project state:
 
-- [`pdm sync`](../reference/cli.md#sync) installs packages from the lock file.
-- [`pdm update`](../reference/cli.md#update) will update the lock file, then `pdm sync`.
-- [`pdm install`](../reference/cli.md#install) will check the project file for changes, update the lock file if needed, then `pdm sync`.
+1. **`pyproject.toml` declares requirements.** It records the packages you request, acceptable version ranges, dependency groups, and other resolution inputs. It is not a list of the exact versions currently installed.
+2. **The lock file records a resolution.** It pins versions and artifacts for the groups included when locking. It can contain packages for several Python versions or platforms, not all of which will be installed in the current environment.
+3. **The environment contains installed packages.** It can lag behind the lock file or contain packages that are not in it. Installing a selected set of dependencies does not, by default, remove everything else.
 
-`pdm sync` also has a few options to manage installed packages:
+The following table describes normal successful invocations, without flags such as `--dry-run` or `--frozen-lockfile`. Commands operate in stages: an installation error can occur after the lock file has already been updated.
 
-- `--clean`: will remove packages no longer in the lockfile
-- `--clean-unselected` (or `--only-keep`): more thorough version of `--clean` that will also remove packages not in the groups specified by the `-G`, `-d`, and `--prod` options.
-  Note: by default, `pdm sync` selects all groups from the lockfile, so `--clean-unselected` is identical to `--clean` unless `-G`, `-d`, and `--prod` are used.
+| Command | Requirements and group arguments | `pyproject.toml` | Lock file | Installed packages |
+| --- | --- | --- | --- | --- |
+| [`pdm add`](../reference/cli.md#add) | Add or change the requested requirements in one target group (`default` unless selected otherwise). | Writes the target group's declarations. | Resolves the previously locked groups plus the target group. A new lock includes `default` and the target group. | Installs the target group's dependencies; keeps unrelated packages. |
+| [`pdm lock`](../reference/cli.md#lock) | Resolve the selected groups, or reuse the recorded group selection when none is specified. | Reads, but does not change, declarations. | Creates or updates the resolution; may select new versions according to the update strategy. | Does not install or remove packages. |
+| [`pdm install`](../reference/cli.md#install) | Install selected groups. A new lock uses the requested groups; refreshing an existing lock preserves its group selection. | Reads, but does not change, declarations. | Creates a missing lock or updates an outdated one, reusing compatible pins where possible. A fresh lock is reused. | Installs selected dependencies; keeps unrelated packages. |
+| [`pdm sync`](../reference/cli.md#sync) | Select groups already included in an existing lock. | Reads group selections without changing declarations. | Reads the locked resolution without creating or updating it. | Installs selected pinned versions; keeps unrelated packages unless a cleanup option is used. |
+| [`pdm update`](../reference/cli.md#update) | Update named packages or the selected groups, using the existing constraints and update strategy. | Keeps declarations unless `--unconstrained` is used. | Updates the resolution while preserving the locked groups. | Installs the selected dependencies; keeps unrelated packages. |
+
+`pdm update` does not add new dependencies: use `pdm add` for that. Named update targets can be declared requirements or transitive packages already in the lock. For a requirement declared outside the default group, specify its group with `-G`. Without package names, the selected groups determine the update targets.
+
+When the project is a distributable package and the `default` group is selected, synchronization also installs the project itself unless `--no-self` is given. A project configured with `distribution = false` is not installed itself.
+
+### Select groups for locking and installation
+
+Groups declared in `pyproject.toml`, groups included in the lock file, and groups selected for installation are distinct sets. The native `pdm.lock` format records the locked set in `metadata.groups`.
+
+- For `lock`, `install`, `sync`, and `update`, omitting group-selection options reuses the recorded groups that still exist in the project. Running plain `pdm lock` does not automatically add every newly declared group.
+- Without a recorded selection, the default selection includes `default` and development groups, but not optional groups. `pdm add` instead starts a new lock with `default` and its target group.
+- `-G:all` explicitly selects all declared groups. `--prod` excludes development groups. See [dependency group selection](./dependency.md#select-a-subset-of-dependency-groups-to-install) for combinations with `-G`, `--without`, and `--no-default`.
+- Selecting a group for installation does not by itself add that group to an existing lock file. `install`, `sync`, or `update` can report `Requested groups not in lockfile` even when the group is declared in `pyproject.toml`.
+
+For example, if a lock was created with `pdm lock --prod`, and you later want to install a declared `docs` group, first include the desired groups in the lock:
+
+```bash
+# Resolve all declared groups, including docs and development groups.
+pdm lock -G:all
+# Install the requested group selection from that lock.
+pdm install -G docs
+```
+
+If you intentionally maintain a smaller lock, use explicit group-selection options instead of `-G:all`. A stale-lock refresh by `pdm install` preserves the previously locked groups; it is not a replacement for selecting new groups with `pdm lock`.
+
+Lock strategy flags, such as `static_urls`, are also persisted in `metadata.strategy` and reused by later locking operations. This is separate from the [update strategy](./dependency.md#about-update-strategy), which controls which existing versions the resolver tries to reuse. See [lock strategies](#lock-strategies) for changing the stored flags. These metadata field names describe the native `pdm` format; see [lock file formats](#change-lock-file-format) for the alternative `pylock` format.
+
+### Keep or clean installed packages
+
+Ordinary `install`, `sync`, `add`, and `update` invocations do not remove unrelated installed packages. For example, removing a requirement from `pyproject.toml` and running `pdm install` can update the lock without uninstalling that now-unneeded package.
+
+Use `pdm sync` when you want cleanup:
+
+- `--clean` removes eligible installed packages absent from the **entire lock file**. Packages locked in an unselected group are kept.
+- `--clean-unselected` (also spelled `--only-keep`) additionally removes eligible packages outside the **selected groups**.
+
+By default, `sync` selects the recorded locked groups, so the two cleanup modes differ when you select a subset, such as `pdm sync --prod --clean-unselected`. Installer-managed packages are protected from removal.
+
+### Control resolution, writes, and installation separately
+
+- `pdm add --no-sync` and `pdm update --no-sync` leave installed packages unchanged while updating the project/lock state described above.
+- `pdm lock --check` checks freshness and exits without installing packages. `pdm install --check` refuses a missing or outdated lock, but **still installs** the selected dependencies when the lock is fresh.
+- `pdm lock --refresh` refreshes lock input metadata and artifact hashes without changing the pinned versions. It does not resolve a new set of dependency versions.
+- `--frozen-lockfile` prevents **writing** the lock file; it does not prohibit resolution. For example, `pdm install --frozen-lockfile` can resolve and install dependencies without creating a lock file. `pdm add --frozen-lockfile --no-sync` can change declarations without resolving or installing them.
+
+Use `install --check`, not `--frozen-lockfile` alone, when installation must fail if the committed lock is missing or outdated. See [freshness checks](#lock-file-freshness) below for what makes a lock outdated.
 
 ## Lock file freshness
 
