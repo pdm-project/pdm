@@ -14,6 +14,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import sysconfig
@@ -149,6 +150,16 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
     return uri
 
 
+def _published_file_mode(filename: str | Path) -> int:
+    """Return the permission bits a file written by ``atomic_open_for_write`` should carry."""
+    try:
+        return stat.S_IMODE(os.stat(filename).st_mode)
+    except OSError:
+        umask = os.umask(0o022)
+        os.umask(umask)
+        return 0o666 & ~umask
+
+
 @contextlib.contextmanager
 def atomic_open_for_write(
     filename: str | Path, *, mode: str = "w", encoding: str = "utf-8", newline: str | None = None
@@ -170,14 +181,15 @@ def atomic_open_for_write(
         raise
     else:
         fp.close()
-        with contextlib.suppress(OSError):
-            os.unlink(filename)
-        # The tempfile is created with mode 600, we need to restore the default mode
-        # with copyfile() instead of move().
+        # The tempfile is created with mode 600, restore the mode the destination
+        # should carry before publishing it.
         # See: https://github.com/pdm-project/pdm/issues/542
-        shutil.copyfile(name, str(filename))
+        with contextlib.suppress(OSError):
+            os.chmod(name, _published_file_mode(filename))
+        os.replace(name, filename)
     finally:
-        os.unlink(name)
+        with contextlib.suppress(OSError):
+            os.unlink(name)
 
 
 @contextlib.contextmanager

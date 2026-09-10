@@ -1,4 +1,6 @@
+import os
 import pathlib
+import stat
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -594,3 +596,30 @@ def test_open_for_write_no_symlink_refuses_symlinked_target(tmp_path):
     # The symlink and its target are both left intact.
     assert link.is_symlink()
     assert real.read_text() == "untouched"
+
+
+def test_atomic_open_for_write_keeps_the_original_when_the_write_fails(tmp_path, mocker):
+    target = tmp_path / "pyproject.toml"
+    target.write_text("original content", encoding="utf-8")
+    # Fail at whichever call publishes the new content over the destination.
+    mocker.patch("pdm.utils.shutil.copyfile", side_effect=OSError("No space left on device"))
+    mocker.patch("pdm.utils.os.replace", side_effect=OSError("No space left on device"))
+
+    with pytest.raises(OSError), utils.atomic_open_for_write(target) as fp:
+        fp.write("new content")
+
+    assert target.exists(), "the destination was destroyed by a failed write"
+    assert target.read_text(encoding="utf-8") == "original content"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file modes")
+def test_atomic_open_for_write_keeps_the_destination_mode(tmp_path):
+    target = tmp_path / "pdm.lock"
+    target.write_text("original content", encoding="utf-8")
+    target.chmod(0o640)
+
+    with utils.atomic_open_for_write(target) as fp:
+        fp.write("new content")
+
+    assert stat.S_IMODE(target.stat().st_mode) == 0o640
+    assert target.read_text(encoding="utf-8") == "new content"
