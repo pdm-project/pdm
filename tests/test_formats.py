@@ -112,6 +112,22 @@ def test_convert_requirements_file_with_tab_before_comment(project):
 
 
 @pytest.mark.parametrize(
+    "line",
+    ['"./foo - bar"', "'./foo - bar'", '"./foo - bar" --hash=sha256:abc'],
+)
+def test_requirements_quoted_path_with_space_dash_is_kept(line):
+    parser = requirements.RequirementParser(None)
+    parser._parse_line("reqs.txt", line)
+    assert parser.requirements[0].str_path == "./foo - bar"
+
+
+def test_requirements_env_marker_quotes_are_kept():
+    parser = requirements.RequirementParser(None)
+    parser._parse_line("reqs.txt", 'whoosh==2.7.4; sys_platform == "win32"')
+    assert parser.requirements[0].as_line() == 'whoosh==2.7.4; sys_platform == "win32"'
+
+
+@pytest.mark.parametrize(
     "reference,expected_url",
     [
         ("child.txt", "https://example.com/base/child.txt"),

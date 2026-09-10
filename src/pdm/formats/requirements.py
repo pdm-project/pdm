@@ -30,6 +30,19 @@ if TYPE_CHECKING:
 _COMMENT_RE = re.compile(r"(^|\s+)#.*$")
 
 
+def _requirement_before_options(line: str) -> str:
+    """Drop unquoted `` -`` options; keep quoted paths that contain `` - ``."""
+    in_single = in_double = False
+    for i, ch in enumerate(line):
+        if ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == '"' and not in_single:
+            in_double = not in_double
+        elif not in_single and not in_double and line.startswith(" -", i):
+            return line[:i].strip()
+    return line.strip()
+
+
 class RequirementParser:
     """Reference:
     https://pip.pypa.io/en/stable/reference/requirements-file-format/
@@ -62,8 +75,13 @@ class RequirementParser:
     def _parse_line(self, filename: str, line: str) -> None:
         if not line.startswith("-"):
             # Starts with a requirement, just ignore all per-requirement options
-            req_string = line.split(" -", 1)[0].strip()
-            req = parse_requirement(req_string)
+            req_string = _requirement_before_options(line)
+            quote = req_string[:1]
+            req: Requirement
+            if quote in {'"', "'"} and req_string.endswith(quote) and len(req_string) > 1:
+                req = FileRequirement.create(path=req_string[1:-1])
+            else:
+                req = parse_requirement(req_string)
             if not req.name:
                 assert isinstance(req, FileRequirement)
                 req.name = req.guess_name()
