@@ -112,7 +112,13 @@ class GroupSelection:
     def validate(self) -> None:
         extra_groups = self.project.lockfile.compare_groups(self._translated_groups)
         if extra_groups:
-            raise PdmUsageError(f"Requested groups not in lockfile: {','.join(extra_groups)}")
+            raise PdmUsageError(
+                f"Requested groups not in lockfile: {','.join(extra_groups)}\n"
+                "These groups are declared in pyproject.toml but are not included in this lockfile.\n"
+                "Run `pdm lock` with the desired group-selection options to include them, then retry.\n"
+                "If using `-L/--lockfile`, pass it to `pdm lock` as well.\n"
+                "See https://pdm-project.org/latest/usage/lockfile/#select-groups-for-locking-and-installation"
+            )
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._translated_groups)
