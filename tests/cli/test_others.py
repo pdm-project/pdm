@@ -32,6 +32,22 @@ def test_help_option(pdm):
     assert "usage: pdm [-h]" in result.output.lower()
 
 
+@pytest.mark.parametrize(
+    "command, detail",
+    [
+        ("add", "Use --no-sync to leave the environment unchanged."),
+        ("lock", "Does not install or remove packages."),
+        ("install", "Creates a missing lockfile"),
+        ("sync", "Does not resolve new versions or update the lockfile."),
+        ("update", "Version constraints in pyproject.toml are kept unless --unconstrained is given."),
+    ],
+)
+def test_command_help_explains_state_effects(pdm, command, detail):
+    result = pdm([command, "--help"], strict=True)
+    assert detail in " ".join(result.output.split())
+    assert detail not in pdm(["--help"], strict=True).output
+
+
 def test_pep582_option(pdm):
     result = pdm(["--pep582", "bash"])
     assert result.exit_code == 0

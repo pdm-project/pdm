@@ -2,4 +2,6 @@
 
 # CLI Reference
 
+For how dependency commands affect `pyproject.toml`, the lock file, and installed packages, see [Command effects](../usage/lockfile.md#command-effects).
+
 {{ cli_reference }}
