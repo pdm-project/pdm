@@ -277,17 +277,44 @@ def test_install_fail_fast(project, pdm, mocker):
     assert handler.call_count == 1
 
 
-@pytest.mark.usefixtures("working_set")
-def test_install_groups_not_in_lockfile(project, pdm):
-    project.add_dependencies(["pytz"], to_group="tz")
-    project.add_dependencies(["urllib3"], to_group="web")
-    pdm(["install", "-vv"], obj=project, strict=True)
+@pytest.mark.parametrize("command", ["install", "sync", "update"])
+@pytest.mark.parametrize("dev", [False, True])
+@pytest.mark.parametrize(
+    "lock_format,lockfile",
+    [("pdm", None), ("pdm", "locks/group subset.lock"), ("pylock", "locks/pylock.groups.toml")],
+)
+def test_requested_groups_not_in_lockfile(project, pdm, working_set, command, dev, lock_format, lockfile):
+    project.project_config["lock.format"] = lock_format
+    project.add_dependencies(["urllib3"])
+    project.add_dependencies(["pytz"], to_group="tz", dev=dev)
+    project.add_dependencies(["requests"], to_group="web")
+    lock_options = ["-L", str(project.root / lockfile)] if lockfile else []
+    pdm(["lock", "--prod", *lock_options], obj=project, strict=True)
+    assert project.lockfile._path == project.root / (lockfile or "pdm.lock")
     assert project.lockfile.groups == ["default"]
-    all_locked_packages = project.get_locked_repository().candidates
-    for package in ["pytz", "urllib3"]:
-        assert package not in all_locked_packages
-    with pytest.raises(RuntimeError, match="Requested groups not in lockfile"):
-        pdm(["install", "-Gtz"], obj=project, strict=True)
+    pyproject_before = project.pyproject._path.read_bytes()
+    lockfile_before = project.lockfile._path.read_bytes()
+
+    result = pdm([command, "-Gtz", *lock_options], obj=project)
+    assert result.exit_code == 1
+    assert "[PdmUsageError]: Requested groups not in lockfile: tz" in result.stderr
+    assert "declared in pyproject.toml but are not included in this lockfile" in result.stderr
+    assert "Run `pdm lock` with the desired group-selection options" in result.stderr
+    assert "If using `-L/--lockfile`, pass it to `pdm lock` as well" in result.stderr
+    assert "https://pdm-project.org/latest/usage/lockfile/#select-groups-for-locking-and-installation" in result.stderr
+    assert project.lockfile._path.read_bytes() == lockfile_before
+    assert "pytz" not in working_set
+
+    pdm(["lock", "-Gtz", *lock_options], obj=project, strict=True)
+    pdm([command, "-Gtz", *lock_options], obj=project, strict=True)
+    assert sorted(project.lockfile.groups) == ["default", "tz"]
+    assert "urllib3" in working_set
+    assert "pytz" in working_set
+    assert "requests" not in working_set
+    assert project.pyproject._path.read_bytes() == pyproject_before
+    if lockfile:
+        assert not (project.root / "pdm.lock").exists()
+        assert not (project.root / "pylock.toml").exists()
 
 
 def test_install_locked_groups(project, pdm, working_set):
