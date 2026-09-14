@@ -121,6 +121,35 @@ def test_requirements_quoted_path_with_space_dash_is_kept(line):
     assert parser.requirements[0].str_path == "./foo - bar"
 
 
+@pytest.mark.parametrize(
+    "line,expected_marker",
+    [
+        ('"./foo - bar" ; python_version < "3.9"', 'python_version < "3.9"'),
+        ("'./foo - bar' ; sys_platform == 'linux'", 'sys_platform == "linux"'),
+        ('"./foo - bar"; python_version < "3.9"', 'python_version < "3.9"'),
+    ],
+)
+def test_requirements_quoted_path_with_marker_keeps_both(line, expected_marker):
+    parser = requirements.RequirementParser(None)
+    parser._parse_line("reqs.txt", line)
+    req = parser.requirements[0]
+    assert req.str_path == "./foo - bar"
+    assert str(req.marker) == expected_marker
+
+
+def test_convert_requirements_quoted_path_with_marker(project):
+    local = project.root.joinpath("local pkg")
+    local.mkdir()
+    local.joinpath("pyproject.toml").write_text('[project]\nname = "mylocal"\nversion = "0.1.0"\n', encoding="utf-8")
+    req_file = project.root.joinpath("reqs.txt")
+    req_file.write_text('"./local pkg" ; python_version < "3.9"\n', encoding="utf-8")
+
+    with cd(project.root):
+        result, _ = requirements.convert(project, str(req_file), ns())
+
+    assert result["dependencies"] == ['mylocal @ file:///${PROJECT_ROOT}/local%20pkg ; python_version < "3.9"']
+
+
 def test_requirements_env_marker_quotes_are_kept():
     parser = requirements.RequirementParser(None)
     parser._parse_line("reqs.txt", 'whoosh==2.7.4; sys_platform == "win32"')

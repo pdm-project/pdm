@@ -43,6 +43,26 @@ def _requirement_before_options(line: str) -> str:
     return line.strip()
 
 
+def _split_quoted_local_path(value: str) -> tuple[str, str] | None:
+    """Split a quoted local path from a trailing environment marker.
+
+    ``"./my pkg" ; python_version < "3.9"`` is a quoted local path with a
+    marker, so the closing quote of the path is not the last quote of the
+    string. Returns ``None`` when ``value`` is not a closed quoted section, or
+    when what follows it is neither empty nor a ``; marker`` clause.
+    """
+    quote = value[:1]
+    if quote not in {'"', "'"} or len(value) < 2:
+        return None
+    end = value.find(quote, 1)
+    if end == -1:
+        return None
+    remainder = value[end + 1 :].strip()
+    if remainder and not remainder.startswith(";"):
+        return None
+    return value[1:end], remainder[1:].strip()
+
+
 class RequirementParser:
     """Reference:
     https://pip.pypa.io/en/stable/reference/requirements-file-format/
@@ -76,10 +96,11 @@ class RequirementParser:
         if not line.startswith("-"):
             # Starts with a requirement, just ignore all per-requirement options
             req_string = _requirement_before_options(line)
-            quote = req_string[:1]
             req: Requirement
-            if quote in {'"', "'"} and req_string.endswith(quote) and len(req_string) > 1:
-                req = FileRequirement.create(path=req_string[1:-1])
+            quoted = _split_quoted_local_path(req_string)
+            if quoted is not None:
+                path, marker = quoted
+                req = FileRequirement.create(path=path, marker=marker or None)
             else:
                 req = parse_requirement(req_string)
             if not req.name:
