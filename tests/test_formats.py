@@ -5,6 +5,7 @@ from textwrap import dedent
 import pytest
 
 from pdm.compat import tomllib
+from pdm.exceptions import RequirementError
 from pdm.formats import MetaConvertError, flit, pipfile, poetry, requirements, setup_py
 from pdm.formats.uv import uv_file_builder
 from pdm.models.repositories import LockedRepository
@@ -135,6 +136,20 @@ def test_requirements_quoted_path_with_marker_keeps_both(line, expected_marker):
     req = parser.requirements[0]
     assert req.str_path == "./foo - bar"
     assert str(req.marker) == expected_marker
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        '"./foo - bar',  # unterminated quote
+        '"./foo - bar" trailing',  # something other than a marker after the path
+        "'./foo - bar' trailing",
+    ],
+)
+def test_requirements_unclosed_or_trailing_quoted_path_is_not_a_path(line):
+    parser = requirements.RequirementParser(None)
+    with pytest.raises(RequirementError):
+        parser._parse_line("reqs.txt", line)
 
 
 def test_convert_requirements_quoted_path_with_marker(project):
