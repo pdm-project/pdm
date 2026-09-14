@@ -1,3 +1,25 @@
+## Release v2.29.1 (2026-09-14)
+
+### Features & Improvements
+
+- Explain missing lockfile groups and provide group-selection recovery guidance when installing, syncing, or updating groups. ([#2682](https://github.com/pdm-project/pdm/issues/2682))
+- Allow package-specific overrides for `exclude-newer` resolution limits. ([#3809](https://github.com/pdm-project/pdm/issues/3809))
+
+### Bug Fixes
+
+- Keep the separating comma out of the operator and accept a `v` prefix when converting Poetry version constraints. ([#3860](https://github.com/pdm-project/pdm/issues/3860))
+- Escape glob characters in the virtualenv lookup prefix, so a project whose directory name contains `[` or `]` can find its own virtualenv. ([#3869](https://github.com/pdm-project/pdm/issues/3869))
+- Write `pyproject.toml` and lockfiles atomically to prevent interrupted writes from truncating them. ([#3870](https://github.com/pdm-project/pdm/issues/3870))
+- Resolve the workspace root before making member paths relative, so a root given as a relative path or reached through a symlink no longer raises `ValueError`. ([#3874](https://github.com/pdm-project/pdm/issues/3874))
+- Replace the destination of an atomic write instead of unlinking it first, so an interrupted write can no longer destroy `pyproject.toml` or the lockfile. ([#3878](https://github.com/pdm-project/pdm/issues/3878))
+- Report the version part that could not be read, instead of blaming a postrelease for every parse failure. ([#3880](https://github.com/pdm-project/pdm/issues/3880))
+- Keep quoted local paths that contain `` - `` when parsing requirements files. ([#3885](https://github.com/pdm-project/pdm/issues/3885))
+
+### Documentation
+
+- Clarify dependency command effects on project declarations, lock metadata, and installed packages in the guide and CLI help. ([#2681](https://github.com/pdm-project/pdm/issues/2681))
+
+
 ## Release v2.29.0 (2026-08-29)
 
 ### Features & Improvements
