@@ -598,6 +598,18 @@ def test_open_for_write_no_symlink_refuses_symlinked_target(tmp_path):
     assert real.read_text() == "untouched"
 
 
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_atomic_open_for_write_with_bare_filename(tmp_path, monkeypatch, path_type):
+    monkeypatch.chdir(tmp_path)
+    target = path_type("target.lock")
+
+    with utils.atomic_open_for_write(target) as fp:
+        fp.write("new content")
+
+    assert Path(target).read_text(encoding="utf-8") == "new content"
+    assert list(tmp_path.iterdir()) == [tmp_path / "target.lock"]
+
+
 def test_atomic_open_for_write_keeps_the_original_when_the_write_fails(tmp_path, mocker):
     target = tmp_path / "pyproject.toml"
     target.write_text("original content", encoding="utf-8")

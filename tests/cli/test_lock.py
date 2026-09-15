@@ -801,11 +801,13 @@ def test_lock_check_change_fails(pdm, project, repository):
 
 
 @pytest.mark.usefixtures("repository")
-def test_innovations_with_specified_lockfile(pdm, project, working_set):
+@pytest.mark.parametrize("relative", [False, True])
+def test_innovations_with_specified_lockfile(pdm, project, working_set, monkeypatch, relative):
     project.add_dependencies(["requests"])
-    lockfile = str(project.root / "mylock.lock")
+    monkeypatch.chdir(project.root)
+    lockfile = "mylock.lock" if relative else str(project.root / "mylock.lock")
     pdm(["lock", "--lockfile", lockfile], strict=True, obj=project)
-    assert project.lockfile._path == project.root / "mylock.lock"
+    assert project.lockfile._path.absolute() == project.root / "mylock.lock"
     assert project.is_lockfile_hash_match()
     locked = project.get_locked_repository().candidates
     assert "requests" in locked
