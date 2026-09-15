@@ -164,7 +164,7 @@ def _published_file_mode(filename: str | Path) -> int:
 def atomic_open_for_write(
     filename: str | Path, *, mode: str = "w", encoding: str = "utf-8", newline: str | None = None
 ) -> Iterator[IO]:
-    dirname = os.path.dirname(filename)
+    dirname = os.path.dirname(filename) or "."
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     fd, name = tempfile.mkstemp(prefix="atomic-write-", dir=dirname)
