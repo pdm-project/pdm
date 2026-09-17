@@ -1,3 +1,15 @@
+## Release v2.29.2 (2026-09-17)
+
+### Bug Fixes
+
+- Fix writing lock files specified as bare relative filenames with `pdm lock --lockfile`. ([#3891](https://github.com/pdm-project/pdm/issues/3891))
+- Preserve local paths containing spaces and their extras and environment markers when importing requirements files. ([#3894](https://github.com/pdm-project/pdm/issues/3894))
+
+### Documentation
+
+- List the install-pdm.py options the script actually accepts. ([#3889](https://github.com/pdm-project/pdm/issues/3889))
+
+
 ## Release v2.29.1 (2026-09-14)
 
 ### Features & Improvements
