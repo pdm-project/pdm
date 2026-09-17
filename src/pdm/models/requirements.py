@@ -47,10 +47,10 @@ _vcs_req_re = re.compile(
 )
 _file_req_re = re.compile(
     r"(?:(?P<url>\S+://[^\s\[\];]+)|"
-    r"(?P<path>(?:[^\s;\[\]]|\\ )*"
+    r"(?P<path>(?:[^\s;\[\]]|\\ |[\t ])*"
     r"|'(?:[^']|\\')*'"
     r"|\"(?:[^\"]|\\\")*\"))"
-    r"(?P<extras>\[[^\[\]]+\])?(?P<marker>[\t ]*;[^\n]+)?"
+    r"(?P<extras>\[[^\[\]]+\])?(?:[\t ]*;[\t ]*(?P<marker>[^\n]+))?"
 )
 _egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
 T = TypeVar("T", bound="Requirement")
@@ -517,10 +517,12 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         try:
             pkg_req = parse_as_pkg_requirement(line)
         except InvalidRequirement as e:
-            m = _file_req_re.match(line)
+            m = _file_req_re.fullmatch(line)
             if m is None:
                 raise RequirementError(f"{line}: {e}") from None
             args = m.groupdict()
+            if args["path"]:
+                args["path"] = args["path"].rstrip()
             if not line.startswith(".") and not args["url"] and args["path"] and not os.path.exists(args["path"]):
                 raise RequirementError(f"{line}: {e}") from None
             r = FileRequirement.create(**args)

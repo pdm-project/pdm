@@ -121,6 +121,25 @@ def test_requirements_quoted_path_with_space_dash_is_kept(line):
     assert parser.requirements[0].str_path == "./foo - bar"
 
 
+@pytest.mark.parametrize("path_kind", ["relative", "absolute"])
+@pytest.mark.parametrize("suffix", ["", ' ; python_version < "3.9"', '[test]; python_version < "3.9"'])
+def test_import_requirements_local_path_with_spaces(project, pdm, monkeypatch, path_kind, suffix):
+    monkeypatch.chdir(project.root)
+    package = project.root / "local pkg"
+    package.mkdir()
+    package.joinpath("pyproject.toml").write_text('[project]\nname = "local-pkg"\nversion = "1.0"\n')
+    path = "./local pkg" if path_kind == "relative" else package.as_posix()
+    req_file = project.root / "requirements.txt"
+    req_file.write_text(f"{path}{suffix} --hash=sha256:abc\n", encoding="utf-8")
+
+    pdm(["import", "-f", "requirements", str(req_file)], obj=project, strict=True)
+
+    extras = "[test]" if suffix.startswith("[") else ""
+    url = project.backend.relative_path_to_url("local pkg") if path_kind == "relative" else package.as_uri()
+    marker = ' ; python_version < "3.9"' if suffix else ""
+    assert project.pyproject.metadata["dependencies"] == [f"local-pkg{extras} @ {url}{marker}"]
+
+
 def test_requirements_env_marker_quotes_are_kept():
     parser = requirements.RequirementParser(None)
     parser._parse_line("reqs.txt", 'whoosh==2.7.4; sys_platform == "win32"')

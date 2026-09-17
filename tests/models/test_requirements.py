@@ -95,6 +95,21 @@ def test_illegal_requirement_line(line, expected):
         parse_requirement(line)
 
 
+@pytest.mark.parametrize("editable", [False, True])
+def test_local_path_with_spaces_and_marker(editable):
+    req = parse_requirement('./local pkg[test] ; python_version < "3.9"', editable)
+
+    assert req.str_path == "./local pkg"
+    assert req.extras == ("test",)
+    assert str(req.marker) == 'python_version < "3.9"'
+    assert req.editable is editable
+
+
+def test_local_path_does_not_ignore_trailing_text():
+    with pytest.raises(RequirementError):
+        parse_requirement("./local[test] trailing text")
+
+
 @pytest.mark.parametrize("line", ["requests >= 2.19.0", "https://github.com/pypa/pip/archive/1.3.1.zip"])
 def test_not_supported_editable_requirement(line):
     with pytest.raises(RequirementError, match="Editable requirement is only supported"):
