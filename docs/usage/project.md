@@ -97,6 +97,15 @@ pdm python install --min
 The same principles apply to [`pdm use`](../reference/cli.md#use) (incl. an automatic installation feature)
 which make it a good unattended set up command for CI/CD or 'fresh start with existing pyproject.toml' use-cases.
 
+To use only Python interpreters installed outside PDM, disable managed Python:
+
+```bash
+pdm config python.use_managed false
+```
+
+You can also set `PDM_NO_MANAGED_PYTHON=true` for a command or environment. PDM will not select or install
+an interpreter from its managed Python directory, but explicit external interpreter paths remain available.
+
 ### Virtualenv or not
 
 After you select the Python interpreter, PDM will ask you whether you want to create a virtual environment for the project.

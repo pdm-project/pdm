@@ -3,8 +3,10 @@ import sys
 from pathlib import Path
 
 import pytest
+from findpython import PythonVersion as FindPythonVersion
 from pbs_installer import PythonVersion
 
+from pdm.exceptions import NoPythonVersion
 from pdm.models.python import PythonInfo
 from pdm.utils import parse_version
 
@@ -137,6 +139,128 @@ def test_use_no_auto_install(project, pdm, mocker):
     pdm(["use", "-f"], obj=project, strict=True)
     installer.assert_not_called()
     mock_best_match.assert_not_called()
+
+
+def test_use_no_managed_python(project, pdm, mocker, monkeypatch):
+    monkeypatch.setenv("PDM_NO_MANAGED_PYTHON", "true")
+    mock_find_interpreters = mocker.patch("pdm.project.Project.find_interpreters", return_value=[])
+    mock_install = mocker.patch(
+        "pdm.cli.commands.python.InstallCommand.install_python", return_value=PythonInfo.from_path(sys.executable)
+    )
+
+    result = pdm(["use", "3.10.8"], obj=project)
+
+    assert result.exit_code != 0
+    mock_find_interpreters.assert_called_once()
+    mock_install.assert_not_called()
+
+
+def test_use_auto_install_strategy_respects_no_managed_python(project, pdm, mocker, monkeypatch):
+    monkeypatch.setenv("PDM_NO_MANAGED_PYTHON", "true")
+    mock_find_interpreters = mocker.patch("pdm.project.Project.find_interpreters", return_value=[])
+    mock_best_match = mocker.patch(
+        "pdm.project.core.Project.get_best_matching_cpython_version", return_value=PythonVersion("cpython", 3, 10, 8)
+    )
+    mock_install = mocker.patch(
+        "pdm.cli.commands.python.InstallCommand.install_python", return_value=PythonInfo.from_path(sys.executable)
+    )
+
+    result = pdm(["use", "--auto-install-min"], obj=project)
+
+    assert result.exit_code != 0
+    mock_find_interpreters.assert_called_once()
+    mock_best_match.assert_not_called()
+    mock_install.assert_not_called()
+
+
+def test_no_managed_python_keeps_managed_provider_for_links(project, mocker):
+    project.global_config["python.use_managed"] = False
+    finder = mocker.patch("findpython.Finder")
+
+    project._get_python_finder(search_venv=False)
+
+    providers = finder.call_args.kwargs["selected_providers"]
+    assert providers is None or "rye" in providers
+
+
+def test_no_managed_python_preserves_saved_selection(project, mocker, monkeypatch):
+    monkeypatch.setenv("PDM_NO_MANAGED_PYTHON", "true")
+    saved_python = Path(sys.executable)
+    project.global_config["python.install_root"] = str(saved_python.parent)
+    project._saved_python = saved_python.as_posix()
+    mocker.patch.object(project, "iter_interpreters", return_value=iter(()))
+
+    with pytest.raises(NoPythonVersion):
+        project.resolve_interpreter()
+
+    assert project._saved_python == saved_python.as_posix()
+
+
+def test_no_managed_python_finds_linked_python_by_version(project, mocker):
+    project.global_config["python.use_managed"] = False
+    linked_path = (
+        Path(project.config["python.install_root"])
+        / "cpython@3.14.0"
+        / ("python.exe" if sys.platform == "win32" else "bin/python3")
+    )
+    linked = FindPythonVersion(
+        linked_path,
+        _interpreter=Path(sys.executable),
+        _version=parse_version(platform.python_version()),
+    )
+    finder = mocker.Mock()
+    finder.find_all.return_value = [linked]
+    mocker.patch.object(project, "_get_python_finder", return_value=finder)
+
+    interpreters = list(project.find_interpreters("3.14", search_venv=False))
+
+    assert len(interpreters) == 1
+    assert interpreters[0].path == linked_path
+    assert interpreters[0].executable == Path(sys.executable)
+
+
+def test_no_managed_python_skips_managed_path_lookup(project, mocker):
+    project.global_config["python.use_managed"] = False
+    wrapper = project.root.parent / "python-wrapper"
+    wrapper.touch()
+    managed_python = (
+        Path(project.config["python.install_root"])
+        / "cpython@3.14.0"
+        / ("python.exe" if sys.platform == "win32" else "bin/python3")
+    )
+    mocker.patch("pdm.project.core.shutil.which", return_value=str(wrapper))
+    mocker.patch("findpython.python.PythonVersion._get_interpreter", return_value=str(managed_python))
+    finder = mocker.Mock()
+    finder.find_all.return_value = []
+    mocker.patch.object(project, "_get_python_finder", return_value=finder)
+
+    interpreters = list(project.find_interpreters("python", search_venv=False))
+
+    assert not interpreters
+
+
+@pytest.mark.parametrize("shim_name", ["python3", "python"])
+def test_no_managed_python_skips_managed_pyenv_shim(project, mocker, shim_name):
+    project.global_config["python.use_managed"] = False
+    pyenv_root = project.root.parent / "pyenv"
+    pyenv_shim = pyenv_root / "shims" / (shim_name + ".bat" if sys.platform == "win32" else shim_name)
+    pyenv_shim.parent.mkdir(parents=True, exist_ok=True)
+    pyenv_shim.touch()
+    managed_python = (
+        Path(project.config["python.install_root"])
+        / "cpython@3.14.0"
+        / ("python.exe" if sys.platform == "win32" else "bin/python3")
+    )
+    mocker.patch("pdm.project.core.PYENV_ROOT", str(pyenv_root))
+    mocker.patch("pdm.project.core.shutil.which", return_value=None)
+    mocker.patch("findpython.python.PythonVersion._get_interpreter", return_value=str(managed_python))
+    finder = mocker.Mock()
+    finder.find_all.return_value = []
+    mocker.patch.object(project, "_get_python_finder", return_value=finder)
+
+    interpreters = list(project.find_interpreters(search_venv=False))
+
+    assert all(interpreter.path != pyenv_shim for interpreter in interpreters)
 
 
 def test_use_auto_install_strategy_max(project, pdm, mock_install, mocker):
