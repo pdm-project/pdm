@@ -203,7 +203,7 @@ def test_prefixed_env_ignores_host_system_site_packages(project, monkeypatch, tm
     fake_venv = SimpleNamespace(
         include_system_site_packages=True,
         base_paths=["/should/not/be/shared"],
-        env_vars=lambda: {},
+        env_vars=dict,
     )
 
     created: dict[str, list[str]] = {}
