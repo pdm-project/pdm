@@ -284,6 +284,9 @@ class Core:
 
         try:
             self.handle(project, options)
+        except KeyboardInterrupt:
+            self.ui.echo("[error]Interrupted[/]", err=True)
+            sys.exit(130)
         except Exception:
             etype, err, traceback = sys.exc_info()
             should_show_tb = not isinstance(err, PdmUsageError) or self.ui.verbosity > termui.Verbosity.DETAIL
