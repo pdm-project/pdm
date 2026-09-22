@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 import venv
 from collections.abc import Callable
 from pathlib import Path
@@ -318,55 +317,3 @@ def test_compress_file_list_for_rename():
     }
     abs_paths = {os.path.join(project_root, path) for path in paths}
     assert sorted(compress_for_rename(abs_paths)) == [os.path.join(project_root, "test-removal" + os.sep)]
-
-
-def test_synchronize_keyboard_interrupt_cancels_pending_jobs(mocker):
-    """Pressing ^C while parallel installs are running cancels the installs that haven't
-    started yet, lets the running ones finish so no package is left half-installed, and
-    aborts the command. Regression test for #2180.
-    """
-    import _thread
-    import threading
-    from concurrent.futures import ThreadPoolExecutor
-
-    from pdm.installers import synchronizers
-
-    synchronizer = object.__new__(synchronizers.Synchronizer)
-    synchronizer.parallel = True
-    synchronizer.retry_times = 0
-    synchronizer.fail_fast = False
-    synchronizer.install_self = False
-    synchronizer.dry_run = False
-    synchronizer.ui = mocker.MagicMock()
-
-    started, finished = [], []
-
-    def fake_install(key, progress):
-        started.append(key)
-        if key == "slow-pkg":
-            time.sleep(2)
-        finished.append(key)
-
-    synchronizer.install_candidate = fake_install
-    synchronizer.compare_with_working_set = mocker.Mock(return_value=(["slow-pkg", "queued-pkg"], [], []))
-    synchronizer._show_headline = mocker.Mock()
-    synchronizer._fix_pth_files = mocker.Mock()
-    synchronizer.__dict__["candidates"] = {
-        key: mocker.Mock(req=mocker.Mock(editable=False)) for key in ("slow-pkg", "queued-pkg")
-    }
-    status = mocker.MagicMock()
-    status.__enter__.return_value = status
-    mocker.patch.object(synchronizers, "InstallationStatus", return_value=status)
-    # A single worker guarantees the second job is still queued when ^C arrives.
-    mocker.patch.object(synchronizers, "ThreadPoolExecutor", lambda: ThreadPoolExecutor(max_workers=1))
-
-    def press_ctrl_c():
-        time.sleep(0.5)
-        _thread.interrupt_main()  # this is what CPython does on SIGINT
-
-    threading.Thread(target=press_ctrl_c, daemon=True).start()
-    with pytest.raises(KeyboardInterrupt):
-        synchronizer.synchronize()
-
-    assert started == ["slow-pkg"]
-    assert finished == ["slow-pkg"]

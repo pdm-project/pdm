@@ -19,6 +19,16 @@ if TYPE_CHECKING:
     from rich.progress import Progress
 
 
+def _wait_for_jobs(jobs: list[Future]) -> None:
+    """Wait for the futures in short slices instead of one blocking wait, so that
+    ^C is acted on promptly even on Python versions where a blocking thread
+    join doesn't react to signals."""
+    while True:
+        _, pending = wait(jobs, timeout=0.2, return_when=ALL_COMPLETED)
+        if not pending:
+            break
+
+
 class Synchronizer(BaseSynchronizer):
     def install_candidate(self, key: str, progress: Progress) -> Candidate:
         """Install candidate"""
@@ -213,13 +223,7 @@ class Synchronizer(BaseSynchronizer):
                             future = executor.submit(handlers[kind], key, status.progress)
                             future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
                             state.jobs.append(future)
-                        # Wait in short slices instead of one blocking shutdown, so that
-                        # ^C is acted on promptly even on Python versions where a blocking
-                        # thread join doesn't react to signals.
-                        while True:
-                            _, pending = wait(state.jobs, timeout=0.2, return_when=ALL_COMPLETED)
-                            if not pending:
-                                break
+                        _wait_for_jobs(state.jobs)
                         executor.shutdown(wait=True)
                     except KeyboardInterrupt:
                         # The user pressed ^C: cancel the installs that haven't started,
@@ -228,10 +232,7 @@ class Synchronizer(BaseSynchronizer):
                         for job in state.jobs:
                             job.cancel()
                         try:
-                            while True:
-                                _, pending = wait(state.jobs, timeout=0.2, return_when=ALL_COMPLETED)
-                                if not pending:
-                                    break
+                            _wait_for_jobs(state.jobs)
                         except KeyboardInterrupt:
                             # A second ^C: stop waiting and abort immediately.
                             pass
