@@ -853,6 +853,21 @@ def test_composite_inherit_env(project, pdm, capfd, _echo):
     assert "Third CALLED with VAR=overridden" in out
 
 
+def test_composite_does_not_leak_env_between_tasks(project, pdm, capfd, _echo):
+    (project.root / ".env").write_text("FILE_VAR=42")
+    project.pyproject.settings["scripts"] = {
+        "first": {"cmd": "python echo.py First VAR FILE_VAR", "env": {"VAR": "42"}, "env_file": ".env"},
+        "second": "python echo.py Second VAR FILE_VAR",
+        "test": {"composite": ["first", "second"]},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "First CALLED with VAR=42 FILE_VAR=42" in out
+    assert "Second CALLED with VAR=None FILE_VAR=None" in out
+
+
 def test_composite_fail_on_first_missing_task(project, pdm, capfd, _echo):
     project.pyproject.settings["scripts"] = {
         "first": "python echo.py First",
