@@ -9,6 +9,7 @@ from pdm.models.specifiers import PySpecSet
     [
         ("python_version > '3'", "", ">=3.1"),
         ("python_version > '3.8'", "", ">=3.9"),
+        ("python_version <= '3.8'", "", "<3.9"),
         ("python_version != '3.8'", "", "!=3.8.*"),
         ("python_version == '3.7'", "", "==3.7.*"),
         ("python_version in '3.6 3.7'", "", ">=3.6.0,<3.8.0"),
@@ -38,6 +39,7 @@ def test_split_pyspec(original, marker, py_spec):
         ("os_name != 'nt'", EnvSpec.from_spec(">=3.10", "windows"), False),
         ("python_version >= '3.7' and os_name == 'nt'", EnvSpec.from_spec(">=3.10"), True),
         ("python_version < '3.7' and os_name == 'nt'", EnvSpec.from_spec(">=3.10"), False),
+        ("python_version <= '3.10'", EnvSpec.from_spec("==3.10.4"), True),
         ("python_version < '3.7' or os_name == 'nt'", EnvSpec.from_spec(">=3.10"), False),
         ("python_version >= '3.7' and os_name == 'nt'", EnvSpec.from_spec(">=3.10", "linux"), False),
         ("python_version >= '3.7' or os_name == 'nt'", EnvSpec.from_spec(">=3.10", "linux"), True),
