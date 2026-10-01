@@ -228,6 +228,25 @@ def test_export_doesnt_include_dep_with_extras(pdm, fixture_project, extra_opt):
         assert "requests[security]==2.26.0" in result.output.splitlines()
 
 
+@pytest.mark.usefixtures("repository")
+def test_export_keeps_dep_when_extras_have_narrower_marker(pdm, project):
+    pdm(
+        ["add", "--no-sync", "requests", 'requests[security]; sys_platform == "win32"'],
+        obj=project,
+        strict=True,
+    )
+    result = pdm(["export", "--no-hashes"], obj=project, strict=True)
+    result_lines = result.output.splitlines()
+    assert 'requests[security]==2.19.1; sys_platform == "win32"' in result_lines
+    # requests is needed on every platform, not only where the extra applies
+    assert "requests==2.19.1" in result_lines
+
+    result = pdm(["export", "--no-hashes", "--no-extras"], obj=project, strict=True)
+    result_lines = result.output.splitlines()
+    assert "requests==2.19.1" in result_lines
+    assert not any(line.startswith("requests[") for line in result_lines)
+
+
 def test_completion_command(pdm):
     result = pdm(["completion", "bash"])
     assert result.exit_code == 0
