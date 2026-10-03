@@ -1431,3 +1431,30 @@ def test_run_script_in_working_dir_with_inline_metadata(project, pdm, capfd):
     capfd.readouterr()
     pdm(["run", "--working-dir", "subdir", "script.py"], obj=project, strict=True)
     assert capfd.readouterr()[0].strip() == "from subdir"
+
+
+def test_run_strips_host_pythonpath_in_venv(project, pdm, capfd, monkeypatch):
+    from pdm.environments import PythonEnvironment
+
+    project.environment = PythonEnvironment(project)
+    monkeypatch.setenv("PYTHONPATH", "/path/from/host")
+    capfd.readouterr()
+    with cd(project.root):
+        pdm(["run", sys.executable, "-c", "import os; print('PYTHONPATH:', os.getenv('PYTHONPATH'))"], obj=project)
+        assert capfd.readouterr()[0].strip() == "PYTHONPATH: None"
+
+
+def test_run_script_env_pythonpath_still_applies(project, pdm, capfd, monkeypatch):
+    from pdm.environments import PythonEnvironment
+
+    project.environment = PythonEnvironment(project)
+    (project.root / "test_script.py").write_text("import os; print('PYTHONPATH:', os.getenv('PYTHONPATH'))")
+    project.pyproject.settings["scripts"] = {
+        "test_script": {"cmd": [sys.executable, "test_script.py"], "env": {"PYTHONPATH": "/declared/in/script"}}
+    }
+    project.pyproject.write()
+    monkeypatch.setenv("PYTHONPATH", "/path/from/host")
+    capfd.readouterr()
+    with cd(project.root):
+        pdm(["run", "test_script"], obj=project)
+        assert capfd.readouterr()[0].strip() == "PYTHONPATH: /declared/in/script"

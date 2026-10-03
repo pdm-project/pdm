@@ -272,6 +272,11 @@ class TaskRunner:
             project_env = project.environment
         this_path = project_env.get_paths()["scripts"]
         os.environ.update(project_env.process_env)
+        # A virtualenv is self-contained; a PYTHONPATH set outside the project
+        # must not leak into the child process (gh-3742). PEP 582 environments
+        # already merge the host value in their own process_env.
+        if not project_env.is_local:
+            os.environ.pop("PYTHONPATH", None)
         if env_file is not None:
             if isinstance(env_file, str):
                 path = env_file
