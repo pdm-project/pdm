@@ -85,10 +85,10 @@ class PythonLocalEnvironment(BaseEnvironment):
         from pdm.cli.utils import get_pep582_path
 
         env = super().process_env
-        pythonpath = os.getenv("PYTHONPATH", "").split(os.pathsep)
-        pythonpath = [get_pep582_path(self.project)] + [p for p in pythonpath if "/pep582" not in p.replace("\\", "/")]
-        env["PYTHONPATH"] = os.pathsep.join(pythonpath)
-        env["PEP582_PACKAGES"] = str(self.packages_path)
+        env.update(
+            PYTHONPATH=get_pep582_path(self.project),
+            PEP582_PACKAGES=str(self.packages_path),
+        )
         return env
 
     @cached_property
