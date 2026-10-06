@@ -106,8 +106,8 @@ For `tox`, `PYTHONPATH` will not be passed to the test sessions so this isn't go
 
 ## Use PDM in Continuous Integration
 
-Only one thing to keep in mind -- PDM can't be installed on Python < 3.7, so if your project is to be tested on those Python versions,
-you have to make sure PDM is installed on the correct Python version, which can be different from the target Python version the particular job/task is run on.
+Only one thing to keep in mind -- PDM itself requires Python 3.10 or newer, so if your project is to be tested on older Python versions,
+you have to make sure PDM is installed on a supported Python version, which can be different from the target Python version the particular job/task is run on.
 
 Fortunately, if you are using GitHub Action, there is [pdm-project/setup-pdm](https://github.com/marketplace/actions/setup-pdm) to make this process easier.
 Here is an example workflow of GitHub Actions, while you can adapt it for other CI platforms.
@@ -137,7 +137,7 @@ Testing:
 
 !!! important "TIPS"
     For GitHub Action users, there is a [known compatibility issue](https://github.com/actions/virtual-environments/issues/2803) on Ubuntu virtual environment.
-    If PDM parallel install is failed on that machine you should either set `parallel_install` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
+    If PDM parallel install is failed on that machine you should either set `install.parallel` to `false` or set env `LD_PRELOAD=/lib/x86_64-linux-gnu/libgcc_s.so.1`.
     It is already handled by the `pdm-project/setup-pdm` action.
 
 !!! note
@@ -147,6 +147,42 @@ Testing:
     ```bash
     export HOME=/tmp/home
     ```
+
+### Caching in CI
+
+PDM doesn't run `pip` under the hood, so caching pip's cache directory has no effect. To speed up installs on other CI platforms,
+cache these instead:
+
+- The PDM cache directory, shown by `pdm config cache_dir`. It holds the HTTP cache, package metadata, the wheels built from source distributions
+  and the package hashes, which saves downloading and building them again in later jobs. Its location can be changed with the
+  `PDM_CACHE_DIR` environment variable, which is useful when the CI platform only caches paths inside the project directory.
+- Optionally, the project's virtualenv (`.venv` by default). It must be keyed on the operating system, the architecture, the Python
+  version and the content of `pdm.lock`, otherwise a stale environment may be restored.
+
+To install from the committed lock file in CI, use `pdm install --check`, which fails if `pdm.lock` is missing or outdated, or
+`pdm sync`, which installs the locked packages without resolving or updating the lock file. Setting `PDM_CHECK_UPDATE=false`
+also skips PDM's own update check.
+
+Here is an example for GitLab CI:
+
+```yaml
+test:
+  image: python:3.12
+  variables:
+    PDM_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pdm"
+    PDM_CHECK_UPDATE: "false"
+  cache:
+    key:
+      files:
+        - pdm.lock
+    paths:
+      - .cache/pdm
+  before_script:
+    - pip install pdm
+  script:
+    - pdm install --check -G testing
+    - pdm run pytest tests
+```
 
 ## Use PDM in a multi-stage Dockerfile
 
