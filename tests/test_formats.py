@@ -392,6 +392,25 @@ def test_convert_poetry_sdist_only_include(project):
     assert settings["build"]["source-includes"] == ["tests", "docs"]
 
 
+def test_convert_poetry_develop_dependency(project):
+    (project.root / "libs/core").mkdir(parents=True)
+    (project.root / "libs/devtools").mkdir(parents=True)
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.poetry.dependencies]\n"
+        'core = {path = "libs/core", develop = true}\n'
+        "[tool.poetry.group.dev.dependencies]\n"
+        'devtools = {path = "libs/devtools", develop = true}\n',
+        encoding="utf-8",
+    )
+    result, settings = poetry.convert(project, pyproject, ns())
+
+    # Editable requirements are only allowed in dependency groups.
+    assert result["dependencies"] == ["core @ file:///${PROJECT_ROOT}/libs/core"]
+    assert settings["dev-dependencies"]["dev"] == ["-e file:///${PROJECT_ROOT}/libs/devtools#egg=devtools"]
+
+
 def test_convert_poetry_optional_dependency_in_multiple_extras(project):
     golden_file = FIXTURES / "pyproject.toml"
     with cd(FIXTURES):
@@ -818,10 +837,10 @@ def test_convert_poetry_project_with_circular_dependency(project):
     child_file = FIXTURES / "projects/poetry-with-circular-dep/packages/child/pyproject.toml"
 
     _, settings = poetry.convert(project, parent_file, ns())
-    assert settings["dev-dependencies"]["dev"] == ["child @ file:///${PROJECT_ROOT}/packages/child"]
+    assert settings["dev-dependencies"]["dev"] == ["-e file:///${PROJECT_ROOT}/packages/child#egg=child"]
 
     _, settings = poetry.convert(project, child_file, ns())
-    assert settings["dev-dependencies"]["dev"] == ["parent @ file:///${PROJECT_ROOT}/../.."]
+    assert settings["dev-dependencies"]["dev"] == ["-e file:///${PROJECT_ROOT}/../..#egg=parent"]
 
 
 def test_export_pylock_toml(core, pdm):

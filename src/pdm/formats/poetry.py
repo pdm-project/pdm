@@ -100,7 +100,14 @@ def _convert_python(python: str) -> PySpecSet:
     return functools.reduce(operator.or_, parts)
 
 
-def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -> Iterable[str]:
+def _convert_req(
+    name: str, req_dict: RequirementDict | list[RequirementDict], allow_editable: bool = False
+) -> Iterable[str]:
+    """Convert a Poetry dependency to requirement lines.
+
+    ``develop = true`` is turned into an editable requirement only when ``allow_editable``
+    is set, because editable requirements are only allowed in dependency groups.
+    """
     from pdm.models.backends import DEFAULT_BACKEND
 
     backend = DEFAULT_BACKEND(Path.cwd())
@@ -112,7 +119,7 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
 
     if isinstance(req_dict, list):
         for req in req_dict:
-            yield from _convert_req(name, req)
+            yield from _convert_req(name, req, allow_editable)
     elif isinstance(req_dict, str):
         pdm_req = fix_req_path(Requirement.from_req_dict(name, _convert_specifier(req_dict)))
         yield pdm_req.as_line()
@@ -120,6 +127,8 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
         assert isinstance(req_dict, dict)
         req_dict = dict(req_dict)
         req_dict.pop("optional", None)  # Ignore the 'optional' key
+        if req_dict.pop("develop", False) and allow_editable:
+            req_dict["editable"] = True
         if "version" in req_dict:
             req_dict["version"] = _convert_specifier(str(req_dict["version"]))
         markers: list[Marker] = []
@@ -228,7 +237,7 @@ class PoetryMetaConverter(MetaConverter):
     @convert_from("dev-dependencies")
     def dev_dependencies(self, value: dict) -> None:
         self.settings.setdefault("dev-dependencies", {})["dev"] = make_array(
-            [r for key, req in value.items() for r in _convert_req(key, req)], True
+            [r for key, req in value.items() for r in _convert_req(key, req, allow_editable=True)], True
         )
         raise Unset()
 
@@ -236,7 +245,12 @@ class PoetryMetaConverter(MetaConverter):
     def group_dependencies(self, value: dict[str, dict[str, Any]]) -> None:
         for name, group in value.items():
             self.settings.setdefault("dev-dependencies", {})[name] = make_array(
-                [r for key, req in group.get("dependencies", {}).items() for r in _convert_req(key, req)], True
+                [
+                    r
+                    for key, req in group.get("dependencies", {}).items()
+                    for r in _convert_req(key, req, allow_editable=True)
+                ],
+                True,
             )
         raise Unset()
 
