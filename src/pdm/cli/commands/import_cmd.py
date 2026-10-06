@@ -53,6 +53,7 @@ class Command(BaseCommand):
 
         from pdm.cli.utils import merge_dictionary
         from pdm.formats import FORMATS
+        from pdm.formats.base import make_array
         from pdm.models.backends import DEFAULT_BACKEND
 
         if not format:
@@ -68,7 +69,18 @@ class Command(BaseCommand):
         if options is None:
             options = argparse.Namespace(dev=False, group=None)
         project_data, settings = FORMATS[key].convert(project, filename, options)
-        dependency_groups = settings.pop("dev-dependencies", {})  # type: ignore[attr-defined]
+        dependency_groups: dict[str, list] = {}
+        editable_groups: dict[str, list] = {}
+        for group, deps in settings.pop("dev-dependencies", {}).items():  # type: ignore[attr-defined]
+            # Editable requirements are not valid in [dependency-groups] (PEP 735),
+            # keep them in [tool.pdm.dev-dependencies] like `pdm add -e` does.
+            editables = [dep for dep in deps if isinstance(dep, str) and dep.startswith("-e")]
+            if editables:
+                editable_groups[group] = make_array(editables, True)
+                deps = make_array([dep for dep in deps if dep not in editables], True)
+                if not deps:
+                    continue
+            dependency_groups[group] = deps
         pyproject = project.pyproject.open_for_write()
 
         if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
@@ -92,6 +104,8 @@ class Command(BaseCommand):
         merge_dictionary(pyproject["tool"]["pdm"], settings)
         if dependency_groups:
             merge_dictionary(pyproject.setdefault("dependency-groups", {}), dependency_groups)
+        if editable_groups:
+            merge_dictionary(pyproject["tool"]["pdm"].setdefault("dev-dependencies", {}), editable_groups)
         if reset_backend:
             pyproject["build-system"] = DEFAULT_BACKEND.build_system()
 
