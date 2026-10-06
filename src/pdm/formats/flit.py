@@ -132,9 +132,19 @@ class FlitMetaConverter(MetaConverter):
         if "requires-python" in metadata:
             self._data["requires-python"] = metadata.pop("requires-python")
             self._data["dynamic"] = ["classifiers"]
+        if "keywords" in metadata:
+            # Flit takes a comma-separated string, PEP 621 expects an array.
+            keywords = metadata.pop("keywords")
+            if isinstance(keywords, str):
+                keywords = [word.strip() for word in keywords.split(",") if word.strip()]
+            self._data["keywords"] = make_array(keywords)
         # requirements
         self._data["dependencies"] = make_array(metadata.pop("requires", []), True)
         self._data["optional-dependencies"] = metadata.pop("requires-extra", {})
+        if "dev-requires" in metadata:
+            # Flit turns the obsolete dev-requires into the "dev" extra.
+            dev_requires = metadata.pop("dev-requires")
+            self._data["optional-dependencies"].setdefault("dev", dev_requires)
         # Add remaining metadata as the same key
         self._data.update(metadata)
         return self._data["name"]

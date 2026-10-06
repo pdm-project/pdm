@@ -599,6 +599,35 @@ def test_convert_flit_sdist_with_one_of_include_and_exclude(project, tmp_path, s
     assert settings["build"] == expected_build
 
 
+def test_convert_flit_keywords_and_dev_requires(project, tmp_path):
+    pyproject_file = tmp_path / "pyproject.toml"
+    pyproject_file.write_text(
+        '[tool.flit.metadata]\nmodule = "flit"\nauthor = "Thomas Kluyver"\n'
+        'keywords = "packaging, flit,,wheel "\n'
+        'dev-requires = ["pytest"]\n',
+        encoding="utf-8",
+    )
+    result, _ = flit.convert(project, pyproject_file, None)
+
+    assert result["keywords"] == ["packaging", "flit", "wheel"]
+    assert result["optional-dependencies"] == {"dev": ["pytest"]}
+    assert "dev-requires" not in result
+
+
+def test_convert_flit_dev_requires_does_not_override_dev_extra(project, tmp_path):
+    pyproject_file = tmp_path / "pyproject.toml"
+    pyproject_file.write_text(
+        '[tool.flit.metadata]\nmodule = "flit"\nauthor = "Thomas Kluyver"\n'
+        'dev-requires = ["pytest"]\n\n'
+        '[tool.flit.metadata.requires-extra]\ndev = ["tox"]\n',
+        encoding="utf-8",
+    )
+    result, _ = flit.convert(project, pyproject_file, None)
+
+    assert result["optional-dependencies"] == {"dev": ["tox"]}
+    assert "dev-requires" not in result
+
+
 def test_convert_error_preserve_metadata(project):
     pyproject_file = FIXTURES / "poetry-error.toml"
     try:
