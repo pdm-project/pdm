@@ -9,6 +9,7 @@ from itertools import zip_longest
 from typing import TYPE_CHECKING, cast
 
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.options import venv_option
 from pdm.cli.utils import normalize_pattern
 from pdm.models.requirements import strip_extras
 from pdm.utils import normalize_name
@@ -44,6 +45,7 @@ class Command(BaseCommand):
     """Check for outdated packages and list the latest versions on indexes."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
+        venv_option.add_to_parser(parser)
         parser.add_argument(
             "--json", action="store_const", const="json", dest="format", default="table", help="Output in JSON format"
         )
