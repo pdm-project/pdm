@@ -20,7 +20,7 @@ from pdm.formats.base import (
 from pdm.models.markers import Marker, get_marker
 from pdm.models.requirements import FileRequirement, Requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import cd
+from pdm.utils import cd, normalize_name
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -210,15 +210,18 @@ class PoetryMetaConverter(MetaConverter):
     def dependencies(self, source: dict[str, Any]) -> list[str]:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
+        # Poetry matches extras members to dependencies by normalized name
+        extra_members = {extra: {normalize_name(m) for m in members} for extra, members in extras.items()}
         for key, req_dict in value.items():
-            optional = getattr(req_dict, "items", None) and req_dict.pop("optional", False)
-            for req in _convert_req(key, req_dict):
-                if optional:
-                    for extra, members in extras.items():
-                        if key in members:
-                            self._data.setdefault("optional-dependencies", {}).setdefault(extra, []).append(req)
-                else:
-                    rv.append(req)
+            for constraint in req_dict if isinstance(req_dict, list) else [req_dict]:
+                optional = isinstance(constraint, dict) and constraint.get("optional", False)
+                for req in _convert_req(key, constraint):
+                    if optional:
+                        for extra, members in extra_members.items():
+                            if normalize_name(key) in members:
+                                self._data.setdefault("optional-dependencies", {}).setdefault(extra, []).append(req)
+                    else:
+                        rv.append(req)
         del source["dependencies"]
         return make_array(rv, True)
 

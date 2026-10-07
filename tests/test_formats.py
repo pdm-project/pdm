@@ -387,6 +387,31 @@ def test_convert_poetry_optional_dependency_in_multiple_extras(project):
     assert result["optional-dependencies"]["all"] == ["psycopg2<3.0,>=2.7", "mysqlclient<2.0,>=1.3"]
 
 
+def test_convert_poetry_optional_dependency_extras_matching(project):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.poetry.dependencies]\n"
+        'PyYAML = {version = "^6.0", optional = true}\n'
+        "tomli = [\n"
+        '    {version = "^1.0", python = "<3.8", optional = true},\n'
+        '    {version = "^2.0", python = ">=3.8", optional = true},\n'
+        "]\n"
+        "[tool.poetry.extras]\n"
+        'yaml = ["pyyaml"]\n'
+        'toml = ["tomli"]\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["dependencies"] == []
+    assert result["optional-dependencies"]["yaml"] == ["PyYAML<7.0,>=6.0"]
+    assert result["optional-dependencies"]["toml"] == [
+        'tomli<2.0,>=1.0; python_version < "3.8"',
+        'tomli<3.0,>=2.0; python_version >= "3.8"',
+    ]
+
+
 @pytest.mark.parametrize(
     "constraint,expected",
     [
