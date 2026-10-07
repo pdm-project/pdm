@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import functools
 import traceback
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ALL_COMPLETED, Future, ThreadPoolExecutor, wait
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
@@ -17,6 +17,16 @@ if TYPE_CHECKING:
     from importlib.metadata import Distribution
 
     from rich.progress import Progress
+
+
+def _wait_for_jobs(jobs: list[Future]) -> None:
+    """Wait for the futures in short slices instead of one blocking wait, so that
+    ^C is acted on promptly even on Python versions where a blocking thread
+    join doesn't react to signals."""
+    while True:
+        _, pending = wait(jobs, timeout=0.2, return_when=ALL_COMPLETED)
+        if not pending:
+            break
 
 
 class Synchronizer(BaseSynchronizer):
@@ -170,6 +180,11 @@ class Synchronizer(BaseSynchronizer):
         state = SimpleNamespace(errors=[], parallel_failed=[], sequential_failed=[], jobs=[], mark_failed=False)
 
         def update_progress(future: Future, kind: str, key: str) -> None:
+            if future.cancelled():
+                # The job was cancelled, e.g. after a KeyboardInterrupt,
+                # there is nothing to report for it.
+                status.update_spinner(advance=1)  # type: ignore[has-type]
+                return
             error = future.exception()
             status.update_spinner(advance=1)  # type: ignore[has-type]
             if error:
@@ -202,11 +217,27 @@ class Synchronizer(BaseSynchronizer):
                     break
                 state.jobs.clear()
                 if parallel_jobs:
-                    with ThreadPoolExecutor() as executor:
+                    executor = ThreadPoolExecutor()
+                    try:
                         for kind, key in parallel_jobs:
                             future = executor.submit(handlers[kind], key, status.progress)
                             future.add_done_callback(functools.partial(update_progress, kind=kind, key=key))
                             state.jobs.append(future)
+                        _wait_for_jobs(state.jobs)
+                        executor.shutdown(wait=True)
+                    except KeyboardInterrupt:
+                        # The user pressed ^C: cancel the installs that haven't started,
+                        # let the ones already running finish so no package is left
+                        # half-installed, then abort the command.
+                        for job in state.jobs:
+                            job.cancel()
+                        try:
+                            _wait_for_jobs(state.jobs)
+                        except KeyboardInterrupt:
+                            # A second ^C: stop waiting and abort immediately.
+                            pass
+                        executor.shutdown(wait=False)
+                        raise
                 if (
                     state.mark_failed
                     or i == self.retry_times
