@@ -142,6 +142,19 @@ def test_import_requirement_no_overwrite(project, pdm, tmp_path):
     assert [r.key for r in project.get_dependencies("web")] == ["flask", "flask-login"]
 
 
+def test_import_editable_requirement_into_pdm_dev_dependencies(project, pdm, tmp_path):
+    tmp_path.joinpath("reqs.txt").write_text("flask\n-e git+https://github.com/pypa/pip.git@main#egg=pip\n")
+    result = pdm(["import", "-d", str(tmp_path.joinpath("reqs.txt"))], obj=project)
+    assert result.exit_code == 0, result.stderr
+
+    # Editable requirements are not valid PEP 508 strings, so they don't belong to [dependency-groups].
+    assert project.pyproject.dependency_groups["dev"] == ["flask"]
+    assert project.pyproject.settings["dev-dependencies"]["dev"] == [
+        "-e git+https://github.com/pypa/pip.git@main#egg=pip"
+    ]
+    assert sorted(r.key for r in project.get_dependencies("dev")) == ["flask", "pip"]
+
+
 @pytest.mark.network
 def test_search_package(pdm, tmp_path):
     with cd(tmp_path):
