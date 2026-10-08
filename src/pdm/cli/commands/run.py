@@ -275,7 +275,7 @@ class TaskRunner:
         # A virtualenv is self-contained; a PYTHONPATH set outside the project
         # must not leak into the child process (gh-3742). PEP 582 environments
         # already merge the host value in their own process_env.
-        if not project_env.is_local:
+        if not project_env.is_local and project_env.interpreter.get_venv() is not None:
             os.environ.pop("PYTHONPATH", None)
         if env_file is not None:
             if isinstance(env_file, str):
