@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     from pdm.project import Project
 
 MARKER_KEYS = list(default_environment().keys())
+#: Top-level Pipfile tables that are not package categories, as defined by pipenv.
+NON_CATEGORY_SECTIONS = {"build-system", "pipenv", "requires", "scripts", "source", "packages", "dev-packages"}
 
 
 def convert_pipfile_requirement(name: str, req: RequirementDict, backend: BuildBackend) -> str:
@@ -74,6 +76,13 @@ def convert(project: Project, filename: PathLike, options: Namespace | None) -> 
             True,
         )
     }
+    # Any other table is a custom package category, which maps to a dependency group.
+    for category, packages in data.items():
+        if category in NON_CATEGORY_SECTIONS or not isinstance(packages, dict):
+            continue
+        settings["dev-dependencies"][category] = make_array(
+            [convert_pipfile_requirement(k, req, backend) for k, req in packages.items()], True
+        )
     return result, settings
 
 

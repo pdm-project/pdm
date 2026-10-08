@@ -45,6 +45,21 @@ def test_convert_pipfile(project):
     assert settings["source"][0]["url"] == "https://pypi.python.org/simple"
 
 
+def test_convert_pipfile_custom_categories(project):
+    pipfile_path = project.root / "Pipfile"
+    pipfile_path.write_text(
+        '[packages]\nrequests = "*"\n\n'
+        '[dev-packages]\npytest = "*"\n\n'
+        '[docs]\nsphinx = ">=7"\n\n'
+        '[scripts]\nserve = "python -m http.server"\n',
+        encoding="utf-8",
+    )
+    result, settings = pipfile.convert(project, pipfile_path, None)
+
+    assert result["dependencies"] == ["requests"]
+    assert settings["dev-dependencies"] == {"dev": ["pytest"], "docs": ["sphinx>=7"]}
+
+
 @pytest.mark.parametrize(
     "requires",
     [
