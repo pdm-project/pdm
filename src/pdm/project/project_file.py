@@ -28,11 +28,12 @@ class PyProject(TOMLFile):
         self._convert_pyproject(data)
         return data
 
-    def open_for_write(self) -> tomlkit.TOMLDocument:
+    def open_for_write(self, convert: bool = True) -> tomlkit.TOMLDocument:
         if self._for_write:
             return cast(tomlkit.TOMLDocument, self._data)
         doc = super().open_for_write()
-        self._convert_pyproject(doc)
+        if convert:
+            self._convert_pyproject(doc)
         return doc
 
     def _convert_pyproject(self, data: dict[str, Any]) -> None:
