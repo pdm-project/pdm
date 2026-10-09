@@ -27,6 +27,9 @@ NON_CATEGORY_SECTIONS = {"build-system", "pipenv", "requires", "scripts", "sourc
 
 def convert_pipfile_requirement(name: str, req: RequirementDict, backend: BuildBackend) -> str:
     if isinstance(req, dict):
+        if "file" in req:
+            # Pipenv stores remote archives as `{file = "<url>"}`.
+            req["url"] = req.pop("file")
         markers: list[Marker] = []
         if "markers" in req:
             markers.append(get_marker(req["markers"]))  # type: ignore[arg-type]
