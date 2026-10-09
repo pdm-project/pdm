@@ -155,6 +155,23 @@ def test_import_editable_requirement_into_pdm_dev_dependencies(project, pdm, tmp
     assert sorted(r.key for r in project.get_dependencies("dev")) == ["flask", "pip"]
 
 
+def test_import_project_poetry_file_does_not_duplicate_groups(project, pdm):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.poetry.dependencies]\npython = "^3.9"\nrequests = "^2.31"\n'
+        '[tool.poetry.group.dev.dependencies]\npytest = "^8.0"\n',
+        encoding="utf-8",
+    )
+    project.pyproject.reload()
+    pdm(["import", "-f", "poetry", str(pyproject)], obj=project, strict=True)
+
+    project.pyproject.reload()
+    assert "dev-dependencies" not in project.pyproject.settings
+    assert project.pyproject.dependency_groups["dev"] == ["pytest<9.0,>=8.0"]
+    assert project.pyproject.dev_dependencies["dev"] == ["pytest<9.0,>=8.0"]
+
+
 @pytest.mark.network
 def test_search_package(pdm, tmp_path):
     with cd(tmp_path):

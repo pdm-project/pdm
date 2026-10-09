@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 from pdm.cli.commands.base import BaseCommand
 from pdm.exceptions import PdmUsageError
@@ -81,7 +82,10 @@ class Command(BaseCommand):
                 if not deps:
                     continue
             dependency_groups[group] = deps
-        pyproject = project.pyproject.open_for_write()
+        # The project file is converted above when importing it, converting it again
+        # on open would also leave its groups in [tool.pdm.dev-dependencies].
+        same_file = Path(filename).resolve() == project.root.joinpath(project.PYPROJECT_FILENAME).resolve()
+        pyproject = project.pyproject.open_for_write(convert=not same_file)
 
         if "tool" not in pyproject or "pdm" not in pyproject["tool"]:
             pyproject.setdefault("tool", {})["pdm"] = tomlkit.table()
