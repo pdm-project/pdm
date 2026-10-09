@@ -395,20 +395,27 @@ def test_convert_poetry_sdist_only_include(project):
 def test_convert_poetry_develop_dependency(project):
     (project.root / "libs/core").mkdir(parents=True)
     (project.root / "libs/devtools").mkdir(parents=True)
+    (project.root / "dist").mkdir()
+    (project.root / "dist/wheeltool-1.0-py3-none-any.whl").touch()
     pyproject = project.root / "pyproject.toml"
     pyproject.write_text(
         '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
         "[tool.poetry.dependencies]\n"
         'core = {path = "libs/core", develop = true}\n'
         "[tool.poetry.group.dev.dependencies]\n"
-        'devtools = {path = "libs/devtools", develop = true}\n',
+        'devtools = {path = "libs/devtools", develop = true}\n'
+        'wheeltool = {path = "dist/wheeltool-1.0-py3-none-any.whl", develop = true}\n',
         encoding="utf-8",
     )
     result, settings = poetry.convert(project, pyproject, ns())
 
     # Editable requirements are only allowed in dependency groups.
     assert result["dependencies"] == ["core @ file:///${PROJECT_ROOT}/libs/core"]
-    assert settings["dev-dependencies"]["dev"] == ["-e file:///${PROJECT_ROOT}/libs/devtools#egg=devtools"]
+    # A local archive can't be editable, Poetry ignores ``develop`` for it.
+    assert settings["dev-dependencies"]["dev"] == [
+        "-e file:///${PROJECT_ROOT}/libs/devtools#egg=devtools",
+        "wheeltool @ file:///${PROJECT_ROOT}/dist/wheeltool-1.0-py3-none-any.whl",
+    ]
 
 
 def test_convert_poetry_legacy_dev_dependencies_develop(project):

@@ -8,6 +8,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+from unearth.utils import ARCHIVE_EXTENSIONS
+
 from pdm.compat import tomllib
 from pdm.formats.base import (
     MetaConverter,
@@ -127,7 +129,10 @@ def _convert_req(
         assert isinstance(req_dict, dict)
         req_dict = dict(req_dict)
         req_dict.pop("optional", None)  # Ignore the 'optional' key
-        if req_dict.pop("develop", False) and allow_editable:
+        # Poetry only applies ``develop`` to directories and VCS checkouts, a local
+        # archive stays a plain file requirement.
+        is_archive = str(req_dict.get("path", "")).endswith(ARCHIVE_EXTENSIONS)
+        if req_dict.pop("develop", False) and allow_editable and not is_archive:
             req_dict["editable"] = True
         if "version" in req_dict:
             req_dict["version"] = _convert_specifier(str(req_dict["version"]))
