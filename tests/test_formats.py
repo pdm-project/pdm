@@ -392,6 +392,55 @@ def test_convert_poetry_sdist_only_include(project):
     assert settings["build"]["source-includes"] == ["tests", "docs"]
 
 
+def test_convert_poetry_develop_dependency(project):
+    (project.root / "libs/core").mkdir(parents=True)
+    (project.root / "libs/devtools").mkdir(parents=True)
+    (project.root / "dist").mkdir()
+    (project.root / "dist/wheeltool-1.0-py3-none-any.whl").touch()
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.poetry.dependencies]\n"
+        'core = {path = "libs/core", develop = true}\n'
+        "[tool.poetry.group.dev.dependencies]\n"
+        'devtools = {path = "libs/devtools", develop = true}\n'
+        'wheeltool = {path = "dist/wheeltool-1.0-py3-none-any.whl", develop = true}\n',
+        encoding="utf-8",
+    )
+    result, settings = poetry.convert(project, pyproject, ns())
+
+    # Editable requirements are only allowed in dependency groups.
+    assert result["dependencies"] == ["core @ file:///${PROJECT_ROOT}/libs/core"]
+    # A local archive can't be editable, Poetry ignores ``develop`` for it.
+    assert settings["dev-dependencies"]["dev"] == [
+        "-e file:///${PROJECT_ROOT}/libs/devtools#egg=devtools",
+        "wheeltool @ file:///${PROJECT_ROOT}/dist/wheeltool-1.0-py3-none-any.whl",
+    ]
+
+
+def test_convert_poetry_legacy_dev_dependencies_develop(project):
+    (project.root / "libs/old").mkdir(parents=True)
+    (project.root / "libs/new").mkdir(parents=True)
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.poetry.dependencies]\n"
+        'python = ">=3.9"\n'
+        "[tool.poetry.dev-dependencies]\n"
+        "devtools = [\n"
+        '    {path = "libs/old", develop = true, python = "<3.11"},\n'
+        '    {path = "libs/new", develop = true, python = ">=3.11"},\n'
+        "]\n",
+        encoding="utf-8",
+    )
+    _, settings = poetry.convert(project, pyproject, ns())
+
+    assert settings["dev-dependencies"]["dev"] == [
+        '-e file:///${PROJECT_ROOT}/libs/old#egg=devtools ; python_version < "3.11"',
+        '-e file:///${PROJECT_ROOT}/libs/new#egg=devtools ; python_version >= "3.11"',
+    ]
+
+
 def test_convert_poetry_optional_dependency_in_multiple_extras(project):
     golden_file = FIXTURES / "pyproject.toml"
     with cd(FIXTURES):
@@ -818,10 +867,10 @@ def test_convert_poetry_project_with_circular_dependency(project):
     child_file = FIXTURES / "projects/poetry-with-circular-dep/packages/child/pyproject.toml"
 
     _, settings = poetry.convert(project, parent_file, ns())
-    assert settings["dev-dependencies"]["dev"] == ["child @ file:///${PROJECT_ROOT}/packages/child"]
+    assert settings["dev-dependencies"]["dev"] == ["-e file:///${PROJECT_ROOT}/packages/child#egg=child"]
 
     _, settings = poetry.convert(project, child_file, ns())
-    assert settings["dev-dependencies"]["dev"] == ["parent @ file:///${PROJECT_ROOT}/../.."]
+    assert settings["dev-dependencies"]["dev"] == ["-e file:///${PROJECT_ROOT}/../..#egg=parent"]
 
 
 def test_export_pylock_toml(core, pdm):
