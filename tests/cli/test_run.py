@@ -1446,3 +1446,85 @@ def test_run_script_in_working_dir_with_inline_metadata(project, pdm, capfd):
     capfd.readouterr()
     pdm(["run", "--working-dir", "subdir", "script.py"], obj=project, strict=True)
     assert capfd.readouterr()[0].strip() == "from subdir"
+
+
+@pytest.fixture
+def run_system_python():
+    from pdm.models.python import PythonInfo
+    from pdm.utils import find_python_in_path
+
+    # On Python 3.10 and PyPy, _base_executable can still point into virtualenv.
+    python = find_python_in_path(sys.base_prefix)
+    assert python is not None
+    interpreter = PythonInfo.from_path(python)
+    assert interpreter.get_venv() is None
+    return interpreter
+
+
+@pytest.fixture
+def run_venv_python(tmp_path, run_system_python):
+    from pdm.models.python import PythonInfo
+
+    path = tmp_path / "run-venv"
+    subprocess.run([str(run_system_python.executable), "-m", "venv", "--without-pip", str(path)], check=True)
+    python = path / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    interpreter = PythonInfo.from_path(python)
+    assert interpreter.get_venv() is not None
+    return interpreter
+
+
+@pytest.mark.parametrize("is_global", [False, True])
+def test_run_strips_host_pythonpath_in_venv(project, pdm, capfd, monkeypatch, run_venv_python, is_global):
+    project.python = run_venv_python
+    project.is_global = is_global
+    project.project_config["python.use_venv"] = True
+    monkeypatch.setenv("PYTHONPATH", "/path/from/host")
+    capfd.readouterr()
+    with cd(project.root):
+        pdm(["run", "python", "-c", "import os; print(os.getenv('PYTHONPATH'))"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == "None"
+
+
+def test_run_preserves_host_pythonpath_in_global_system_python(project, pdm, capfd, monkeypatch, run_system_python):
+    project.python = run_system_python
+    project.is_global = True
+    assert project.python.get_venv() is None
+    assert not project.environment.is_local
+    monkeypatch.setenv("PYTHONPATH", "/path/from/host")
+    capfd.readouterr()
+    with cd(project.root):
+        pdm(["run", "python", "-c", "import os; print(os.getenv('PYTHONPATH'))"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == "/path/from/host"
+
+
+@pytest.mark.parametrize("use_venv_python", [False, True])
+def test_run_preserves_host_pythonpath_in_pep582(
+    project, pdm, capfd, monkeypatch, run_venv_python, run_system_python, use_venv_python
+):
+    project.python = run_venv_python if use_venv_python else run_system_python
+    assert project.environment.is_local
+    monkeypatch.setenv("PYTHONPATH", "/path/from/host")
+    expected = os.pathsep.join([get_pep582_path(project), "/path/from/host"])
+    capfd.readouterr()
+    with cd(project.root):
+        pdm(["run", "python", "-c", "import os; print(os.getenv('PYTHONPATH'))"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == expected
+
+
+@pytest.mark.parametrize("source", ["env", "env_file", "env_file_override"])
+def test_run_script_env_pythonpath_still_applies(project, pdm, capfd, monkeypatch, run_venv_python, source):
+    project.python = run_venv_python
+    project.project_config["python.use_venv"] = True
+    script = {"cmd": ["python", "-c", "import os; print(os.getenv('PYTHONPATH'))"]}
+    if source == "env":
+        script["env"] = {"PYTHONPATH": "/declared/in/script"}
+    else:
+        (project.root / ".env").write_text("PYTHONPATH=/declared/in/script\n")
+        script["env_file"] = {"override": ".env"} if source == "env_file_override" else ".env"
+    project.pyproject.settings["scripts"] = {"test_script": script}
+    project.pyproject.write()
+    monkeypatch.setenv("PYTHONPATH", "/path/from/host")
+    capfd.readouterr()
+    with cd(project.root):
+        pdm(["run", "test_script"], obj=project, strict=True)
+    assert capfd.readouterr()[0].strip() == "/declared/in/script"
