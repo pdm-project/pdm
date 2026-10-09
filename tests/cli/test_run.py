@@ -1434,13 +1434,24 @@ def test_run_script_in_working_dir_with_inline_metadata(project, pdm, capfd):
 
 
 @pytest.fixture
-def run_venv_python(tmp_path):
-    import venv
+def run_system_python():
+    from pdm.models.python import PythonInfo
+    from pdm.utils import find_python_in_path
 
+    # On Python 3.10 and PyPy, _base_executable can still point into virtualenv.
+    python = find_python_in_path(sys.base_prefix)
+    assert python is not None
+    interpreter = PythonInfo.from_path(python)
+    assert interpreter.get_venv() is None
+    return interpreter
+
+
+@pytest.fixture
+def run_venv_python(tmp_path, run_system_python):
     from pdm.models.python import PythonInfo
 
     path = tmp_path / "run-venv"
-    venv.create(path, with_pip=False)
+    subprocess.run([str(run_system_python.executable), "-m", "venv", "--without-pip", str(path)], check=True)
     python = path / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     interpreter = PythonInfo.from_path(python)
     assert interpreter.get_venv() is not None
@@ -1459,10 +1470,8 @@ def test_run_strips_host_pythonpath_in_venv(project, pdm, capfd, monkeypatch, ru
     assert capfd.readouterr()[0].strip() == "None"
 
 
-def test_run_preserves_host_pythonpath_in_global_system_python(project, pdm, capfd, monkeypatch):
-    from pdm.models.python import PythonInfo
-
-    project.python = PythonInfo.from_path(sys._base_executable)
+def test_run_preserves_host_pythonpath_in_global_system_python(project, pdm, capfd, monkeypatch, run_system_python):
+    project.python = run_system_python
     project.is_global = True
     assert project.python.get_venv() is None
     assert not project.environment.is_local
@@ -1474,10 +1483,10 @@ def test_run_preserves_host_pythonpath_in_global_system_python(project, pdm, cap
 
 
 @pytest.mark.parametrize("use_venv_python", [False, True])
-def test_run_preserves_host_pythonpath_in_pep582(project, pdm, capfd, monkeypatch, run_venv_python, use_venv_python):
-    from pdm.models.python import PythonInfo
-
-    project.python = run_venv_python if use_venv_python else PythonInfo.from_path(sys._base_executable)
+def test_run_preserves_host_pythonpath_in_pep582(
+    project, pdm, capfd, monkeypatch, run_venv_python, run_system_python, use_venv_python
+):
+    project.python = run_venv_python if use_venv_python else run_system_python
     assert project.environment.is_local
     monkeypatch.setenv("PYTHONPATH", "/path/from/host")
     expected = os.pathsep.join([get_pep582_path(project), "/path/from/host"])
