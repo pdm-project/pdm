@@ -89,11 +89,13 @@ class Command(BaseCommand):
                 project.core.ui.error(
                     f"The last selection is corrupted. {path!r}",
                 )
-            elif version_matcher(cached_python):
+            elif version_matcher(cached_python) and (
+                project.use_managed_python or not project._is_managed_python(cached_python)
+            ):
                 project.core.ui.info("Using the last selection, add '-i' to ignore it.")
                 return cached_python
 
-        if not python and not first and (auto_install_min or auto_install_max):
+        if not python and not first and (auto_install_min or auto_install_max) and project.use_managed_python:
             match = project.get_best_matching_cpython_version(auto_install_min)
             if match is None:
                 req = f'requires-python="{project.python_requires}"'
