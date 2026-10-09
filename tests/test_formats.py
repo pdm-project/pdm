@@ -60,6 +60,17 @@ def test_convert_pipfile_custom_categories(project):
     assert settings["dev-dependencies"] == {"dev": ["pytest"], "docs": ["sphinx>=7"]}
 
 
+def test_convert_pipfile_file_url(project):
+    pipfile_path = project.root / "Pipfile"
+    pipfile_path.write_text(
+        '[packages]\nmy-package = {file = "https://example.com/packages/my-package-1.0.tar.gz"}\n',
+        encoding="utf-8",
+    )
+    result, _ = pipfile.convert(project, pipfile_path, None)
+
+    assert result["dependencies"] == ["my-package @ https://example.com/packages/my-package-1.0.tar.gz"]
+
+
 @pytest.mark.parametrize(
     "requires",
     [
