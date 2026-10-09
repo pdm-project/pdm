@@ -411,6 +411,29 @@ def test_convert_poetry_develop_dependency(project):
     assert settings["dev-dependencies"]["dev"] == ["-e file:///${PROJECT_ROOT}/libs/devtools#egg=devtools"]
 
 
+def test_convert_poetry_legacy_dev_dependencies_develop(project):
+    (project.root / "libs/old").mkdir(parents=True)
+    (project.root / "libs/new").mkdir(parents=True)
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        "[tool.poetry.dependencies]\n"
+        'python = ">=3.9"\n'
+        "[tool.poetry.dev-dependencies]\n"
+        "devtools = [\n"
+        '    {path = "libs/old", develop = true, python = "<3.11"},\n'
+        '    {path = "libs/new", develop = true, python = ">=3.11"},\n'
+        "]\n",
+        encoding="utf-8",
+    )
+    _, settings = poetry.convert(project, pyproject, ns())
+
+    assert settings["dev-dependencies"]["dev"] == [
+        '-e file:///${PROJECT_ROOT}/libs/old#egg=devtools ; python_version < "3.11"',
+        '-e file:///${PROJECT_ROOT}/libs/new#egg=devtools ; python_version >= "3.11"',
+    ]
+
+
 def test_convert_poetry_optional_dependency_in_multiple_extras(project):
     golden_file = FIXTURES / "pyproject.toml"
     with cd(FIXTURES):
