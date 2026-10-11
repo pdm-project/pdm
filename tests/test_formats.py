@@ -402,6 +402,58 @@ def test_convert_poetry_optional_dependency_in_multiple_extras(project):
     assert result["optional-dependencies"]["all"] == ["psycopg2<3.0,>=2.7", "mysqlclient<2.0,>=1.3"]
 
 
+@pytest.mark.parametrize(
+    "platform, matches",
+    [
+        ("win32", {"win32"}),
+        ("=linux", {"linux"}),
+        ("==linux", {"linux"}),
+        ("===linux", {"linux"}),
+        ("!=win32", {"linux", "darwin"}),
+        ("linux || darwin", {"linux", "darwin"}),
+        ("linux | darwin", {"linux", "darwin"}),
+        ("!=linux, !=darwin", {"win32"}),
+        ("'linux darwin' in", {"linux", "darwin"}),
+        ("'linux darwin' not in", {"win32"}),
+        ("'linux darwin'in", {"linux", "darwin"}),
+        ("' linux darwin ' in", {"linux", "darwin"}),
+        ("*", {"win32", "linux", "darwin"}),
+        ("", {"win32", "linux", "darwin"}),
+    ],
+)
+def test_convert_poetry_platform_constraint(project, platform, matches):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\n'
+        f'foo = {{version = "^1.0", platform = "{platform}"}}\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+    req = parse_requirement(result["dependencies"][0])
+
+    assert str(req.specifier) == "<2.0,>=1.0"
+    for sys_platform in ("win32", "linux", "darwin"):
+        assert (req.marker is None or req.marker.evaluate({"sys_platform": sys_platform})) == (sys_platform in matches)
+
+
+def test_convert_poetry_platform_combines_with_other_markers(project):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\n'
+        'foo = {version = "^1.0", platform = "win32", python = ">=3.11", '
+        "markers = \"platform_machine == 'AMD64' or platform_machine == 'x86_64'\"}\n",
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+    marker = parse_requirement(result["dependencies"][0]).marker
+    assert marker is not None
+    environment = {"sys_platform": "win32", "python_version": "3.11", "platform_machine": "AMD64"}
+    assert marker.evaluate(environment)
+    assert marker.evaluate({**environment, "platform_machine": "x86_64"})
+    for key, value in (("sys_platform", "linux"), ("python_version", "3.10"), ("platform_machine", "arm64")):
+        assert not marker.evaluate({**environment, key: value})
+
+
 def test_convert_poetry_optional_dependency_extras_matching(project):
     pyproject = project.root / "pyproject.toml"
     pyproject.write_text(
