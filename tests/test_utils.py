@@ -536,6 +536,16 @@ def test_convert_to_datetime_when_uppercase_t_is_present():
     assert utils.convert_to_datetime(original_datetime) == expected_datetime
 
 
+@pytest.mark.parametrize(
+    "value",
+    ["2025-10-30T10:26:29", "2025-10-30t10:26:29z", "2025-10-30T10:26:29.000+00:00"],
+)
+def test_convert_to_datetime_is_always_timezone_aware(value):
+    expected_datetime = datetime(2025, 10, 30, 10, 26, 29, tzinfo=timezone.utc)
+
+    assert utils.convert_to_datetime(value) == expected_datetime
+
+
 def test_convert_to_datetime_when_uppercase_t_is_absent():
     original_datetime = "2025-10-30"
     expected_datetime = datetime(2025, 10, 30, tzinfo=timezone.utc)
