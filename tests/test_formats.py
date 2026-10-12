@@ -436,6 +436,19 @@ def test_convert_poetry_platform_constraint(project, platform, matches):
         assert (req.marker is None or req.marker.evaluate({"sys_platform": sys_platform})) == (sys_platform in matches)
 
 
+@pytest.mark.parametrize("platform", ["linux ||", "|| linux", "linux,", "linux,,darwin"])
+def test_convert_poetry_platform_rejects_empty_groups(project, platform):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\n'
+        f'foo = {{version = "^1.0", platform = "{platform}"}}\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(MetaConvertError, match="Invalid platform constraint"):
+        poetry.convert(project, pyproject, ns())
+
+
 def test_convert_poetry_platform_combines_with_other_markers(project):
     pyproject = project.root / "pyproject.toml"
     pyproject.write_text(
