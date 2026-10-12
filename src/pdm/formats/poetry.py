@@ -110,7 +110,14 @@ def _convert_platform(platform: str) -> Marker:
         for constraint in re.split(r"\s*,\s*", group):
             if match := re.fullmatch(r"(['\"])(.*?)\1\s*(in|not in)", constraint):
                 value, op = match.group(2, 3)
-                value = value.strip()
+                # Poetry treats membership as a list of exact platform names.
+                values = [item for item in re.split(r"[ ,|]+", value.strip()) if item]
+                if not values:
+                    raise ValueError(f"Invalid platform constraint: {constraint}")
+                comparison, combine = ("!=", operator.and_) if op == "not in" else ("==", operator.or_)
+                members = [get_marker(f"sys_platform {comparison} {item!r}") for item in values]
+                constraints.append(functools.reduce(combine, members))
+                continue
             else:
                 match = re.fullmatch(r"(!=|===|==|=)?\s*(.+?)\s*", constraint)
                 if match is None:
