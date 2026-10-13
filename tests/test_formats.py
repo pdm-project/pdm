@@ -411,6 +411,7 @@ def test_convert_poetry_optional_dependency_in_multiple_extras(project):
         ("===linux", {"linux"}),
         ("!=win32", {"linux", "darwin"}),
         ("linux || darwin", {"linux", "darwin"}),
+        ("win32 || darwin,linux", {"win32"}),
         ("linux | darwin", {"linux", "darwin"}),
         ("!=linux, !=darwin", {"win32"}),
         ("'linux darwin' in", {"linux", "darwin"}),
@@ -442,8 +443,11 @@ def test_convert_poetry_platform_constraint(project, platform, matches):
         assert (req.marker is None or req.marker.evaluate({"sys_platform": sys_platform})) == (sys_platform in matches)
 
 
-@pytest.mark.parametrize("platform", ["linux ||", "|| linux", "linux,", "linux,,darwin", "' ' in", "' ' not in"])
-def test_convert_poetry_platform_rejects_empty_parts(project, platform):
+@pytest.mark.parametrize(
+    "platform",
+    ["linux ||", "|| linux", "linux,", "linux,,darwin", "' ' in", "' ' not in", "win32,darwin", "linux,!=linux"],
+)
+def test_convert_poetry_platform_rejects_invalid_constraints(project, platform):
     pyproject = project.root / "pyproject.toml"
     pyproject.write_text(
         '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\n'

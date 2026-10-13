@@ -126,7 +126,10 @@ def _convert_platform(platform: str) -> Marker:
                 op = "!=" if op == "!=" else "=="
             constraints.append(get_marker(f"sys_platform {op} {value!r}"))
         alternatives.append(functools.reduce(operator.and_, constraints))
-    return functools.reduce(operator.or_, alternatives)
+    marker = functools.reduce(operator.or_, alternatives)
+    if marker.is_empty():
+        raise ValueError(f"Invalid platform constraint: {platform}")
+    return marker
 
 
 def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -> Iterable[str]:
