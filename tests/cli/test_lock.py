@@ -1037,6 +1037,15 @@ def test_lock_exclude_newer(project, pdm, source):
     assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
 
 
+def test_lock_exclude_newer_timestamp_without_offset(project, pdm):
+    project.pyproject.metadata["requires-python"] = ">=3.9"
+    project.project_config["pypi.url"] = "https://my.pypi.org/json"
+    project.add_dependencies(["zipp"])
+
+    pdm(["lock", "--exclude-newer", "2024-01-01T00:00:00"], obj=project, strict=True, cleanup=False)
+    assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
+
+
 @pytest.mark.parametrize("source", ["cli", "pyproject", "config"])
 def test_lock_exclude_newer_accepts_relative_duration(project, pdm, monkeypatch, source):
     from datetime import datetime, timezone
