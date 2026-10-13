@@ -574,8 +574,10 @@ def convert_to_datetime(value: str) -> datetime:
             "w": timedelta(weeks=amount),
         }[unit]
         return datetime.now(timezone.utc) - delta
-    if "T" in value:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if "T" in value.upper():
+        dt = datetime.fromisoformat(value.upper().replace("Z", "+00:00"))
+        # A timestamp without an offset is read as UTC, like a bare date
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
     return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
 
