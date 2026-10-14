@@ -79,9 +79,9 @@ class Command(BaseCommand):
             if editables:
                 editable_groups[group] = make_array(editables, True)
                 deps = make_array([dep for dep in deps if dep not in editables], True)
-                if not deps:
-                    continue
-            dependency_groups[group] = deps
+            # Skip empty groups, e.g. the empty `[dev-packages]` table pipenv creates.
+            if deps:
+                dependency_groups[group] = deps
         # The project file is converted above when importing it, converting it again
         # on open would also leave its groups in [tool.pdm.dev-dependencies].
         same_file = Path(filename).resolve() == project.root.joinpath(project.PYPROJECT_FILENAME).resolve()

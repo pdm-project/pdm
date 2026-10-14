@@ -155,6 +155,16 @@ def test_import_editable_requirement_into_pdm_dev_dependencies(project, pdm, tmp
     assert sorted(r.key for r in project.get_dependencies("dev")) == ["flask", "pip"]
 
 
+def test_import_pipfile_without_dev_packages_skips_empty_group(project, pdm):
+    pipfile = project.root / "Pipfile"
+    pipfile.write_text('[packages]\nrequests = "*"\n\n[dev-packages]\n', encoding="utf-8")
+    pdm(["import", str(pipfile)], obj=project, strict=True)
+
+    project.pyproject.reload()
+    assert "dependency-groups" not in project.pyproject._data
+    assert [r.key for r in project.get_dependencies()] == ["requests"]
+
+
 def test_import_project_poetry_file_does_not_duplicate_groups(project, pdm):
     pyproject = project.root / "pyproject.toml"
     pyproject.write_text(
