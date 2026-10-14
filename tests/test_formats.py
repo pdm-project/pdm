@@ -71,6 +71,24 @@ def test_convert_pipfile_file_url(project):
     assert result["dependencies"] == ["my-package @ https://example.com/packages/my-package-1.0.tar.gz"]
 
 
+def test_convert_pipfile_relative_path(project):
+    pipfile_dir = project.root / "legacy"
+    package = pipfile_dir / "my-lib"
+    package.mkdir(parents=True)
+    package.joinpath("pyproject.toml").write_text('[project]\nname = "my-lib"\nversion = "1.0"\n')
+    pipfile_path = pipfile_dir / "Pipfile"
+    pipfile_path.write_text(
+        '[packages]\nmy-lib = {path = "./my-lib"}\n\n[dev-packages]\nmy-lib = {path = "./my-lib", editable = true}\n',
+        encoding="utf-8",
+    )
+    with cd(project.root):
+        result, settings = pipfile.convert(project, pipfile_path, None)
+
+    url = project.backend.relative_path_to_url("legacy/my-lib")
+    assert result["dependencies"] == [f"my-lib @ {url}"]
+    assert settings["dev-dependencies"]["dev"] == [f"-e {url}#egg=my-lib"]
+
+
 @pytest.mark.parametrize(
     "requires",
     [

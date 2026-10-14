@@ -11,6 +11,7 @@ from pdm.compat import tomllib
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker, get_marker
 from pdm.models.requirements import FileRequirement, Requirement
+from pdm.utils import cd
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -53,40 +54,41 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
 
 
 def convert(project: Project, filename: PathLike, options: Namespace | None) -> tuple[dict[str, Any], dict[str, Any]]:
-    with open(filename, "rb") as fp:
+    # Relative paths in a Pipfile are relative to the Pipfile itself, not the current directory.
+    with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         data = tomllib.load(fp)
-    result = {}
-    settings: dict[str, Any] = {}
-    backend = project.backend
-    if "pipenv" in data and "allow_prereleases" in data["pipenv"]:
-        settings.setdefault("resolution", {})["allow-prereleases"] = data["pipenv"]["allow_prereleases"]
-    if "requires" in data:
-        # `[requires]` may carry only other markers, e.g. `platform_system`. Writing
-        # the missing version out anyway produced `requires-python = ">=None"`, which
-        # is not a valid specifier and breaks the generated pyproject.toml.
-        python_version = data["requires"].get("python_full_version") or data["requires"].get("python_version")
-        if python_version:
-            result["requires-python"] = f">={python_version}"
-    if "source" in data:
-        settings["source"] = data["source"]
-    result["dependencies"] = make_array(  # type: ignore[assignment]
-        [convert_pipfile_requirement(k, req, backend) for k, req in data.get("packages", {}).items()],
-        True,
-    )
-    settings["dev-dependencies"] = {
-        "dev": make_array(
-            [convert_pipfile_requirement(k, req, backend) for k, req in data.get("dev-packages", {}).items()],
+        result = {}
+        settings: dict[str, Any] = {}
+        backend = project.backend
+        if "pipenv" in data and "allow_prereleases" in data["pipenv"]:
+            settings.setdefault("resolution", {})["allow-prereleases"] = data["pipenv"]["allow_prereleases"]
+        if "requires" in data:
+            # `[requires]` may carry only other markers, e.g. `platform_system`. Writing
+            # the missing version out anyway produced `requires-python = ">=None"`, which
+            # is not a valid specifier and breaks the generated pyproject.toml.
+            python_version = data["requires"].get("python_full_version") or data["requires"].get("python_version")
+            if python_version:
+                result["requires-python"] = f">={python_version}"
+        if "source" in data:
+            settings["source"] = data["source"]
+        result["dependencies"] = make_array(  # type: ignore[assignment]
+            [convert_pipfile_requirement(k, req, backend) for k, req in data.get("packages", {}).items()],
             True,
         )
-    }
-    # Any other table is a custom package category, which maps to a dependency group.
-    for category, packages in data.items():
-        if category in NON_CATEGORY_SECTIONS or not isinstance(packages, dict):
-            continue
-        settings["dev-dependencies"][category] = make_array(
-            [convert_pipfile_requirement(k, req, backend) for k, req in packages.items()], True
-        )
-    return result, settings
+        settings["dev-dependencies"] = {
+            "dev": make_array(
+                [convert_pipfile_requirement(k, req, backend) for k, req in data.get("dev-packages", {}).items()],
+                True,
+            )
+        }
+        # Any other table is a custom package category, which maps to a dependency group.
+        for category, packages in data.items():
+            if category in NON_CATEGORY_SECTIONS or not isinstance(packages, dict):
+                continue
+            settings["dev-dependencies"][category] = make_array(
+                [convert_pipfile_requirement(k, req, backend) for k, req in packages.items()], True
+            )
+        return result, settings
 
 
 def export(project: Project, candidates: list, options: Any) -> None:
