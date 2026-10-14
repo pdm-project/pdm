@@ -102,6 +102,38 @@ def _convert_python(python: str) -> PySpecSet:
     return functools.reduce(operator.or_, parts)
 
 
+def _convert_platform(platform: str) -> Marker:
+    """Translate Poetry's generic platform constraints into environment markers."""
+    if not platform or platform.strip() == "*":
+        return get_marker("")
+    alternatives = []
+    for group in re.split(r"\s*\|\|?\s*", platform.strip()):
+        constraints = []
+        for constraint in re.split(r"\s*,\s*", group):
+            if match := re.fullmatch(r"(['\"])(.*?)\1\s*(in|not in)", constraint):
+                value, op = match.group(2, 3)
+                # Poetry treats membership as a list of exact platform names.
+                values = [item for item in re.split(r"[ ,|]+", value.strip()) if item]
+                if not values:
+                    raise ValueError(f"Invalid platform constraint: {constraint}")
+                comparison, combine = ("!=", operator.and_) if op == "not in" else ("==", operator.or_)
+                members = [get_marker(f"sys_platform {comparison} {item!r}") for item in values]
+                constraints.append(functools.reduce(combine, members))
+                continue
+            else:
+                match = re.fullmatch(r"(!=|===|==|=)?\s*(.+?)\s*", constraint)
+                if match is None:
+                    raise ValueError(f"Invalid platform constraint: {constraint}")
+                op, value = match.groups()
+                op = "!=" if op == "!=" else "=="
+            constraints.append(get_marker(f"sys_platform {op} {value!r}"))
+        alternatives.append(functools.reduce(operator.and_, constraints))
+    marker = functools.reduce(operator.or_, alternatives)
+    if marker.is_empty():
+        raise ValueError(f"Invalid platform constraint: {platform}")
+    return marker
+
+
 def _convert_req(
     name: str, req_dict: RequirementDict | list[RequirementDict], allow_editable: bool = False
 ) -> Iterable[str]:
@@ -141,6 +173,10 @@ def _convert_req(
             markers.append(get_marker(req_dict.pop("markers")))  # type: ignore[arg-type]
         if "python" in req_dict:
             markers.append(get_marker(_convert_python(str(req_dict.pop("python"))).as_marker_string()))
+        if "platform" in req_dict:
+            platform_marker = _convert_platform(str(req_dict.pop("platform")))
+            if not platform_marker.is_any():
+                markers.append(platform_marker)
         if markers:
             req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace('"', "'")
         if "rev" in req_dict or "branch" in req_dict or "tag" in req_dict:
