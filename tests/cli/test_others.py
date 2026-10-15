@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import httpx
 import pytest
 
 from pdm.cli import actions
@@ -172,11 +173,40 @@ def test_import_project_poetry_file_does_not_duplicate_groups(project, pdm):
     assert project.pyproject.dev_dependencies["dev"] == ["pytest<9.0,>=8.0"]
 
 
-@pytest.mark.network
-def test_search_package(pdm, tmp_path):
+def test_search_package(pdm, tmp_path, mocker):
+    from pdm.environments.base import BaseEnvironment
+    from pdm.models.repositories.pypi import PyPIRepository
+
+    search_url = httpx.URL(PyPIRepository.SEARCH_API_URL)
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"name": "requests", "latest_version": "2.32.3", "description": "Python HTTP for Humans."},
+                    {"name": "requests-mock", "latest_version": "1.12.1", "description": "Mock out responses."},
+                ]
+            },
+        )
+
+    build_session = BaseEnvironment._build_session
+
+    def build_mocked_session(self, *args, **kwargs):
+        kwargs["mounts"] = {f"{search_url.scheme}://{search_url.host}": httpx.MockTransport(handler)}
+        return build_session(self, *args, **kwargs)
+
+    mocker.patch.object(BaseEnvironment, "_build_session", build_mocked_session)
     with cd(tmp_path):
         result = pdm(["search", "requests"], strict=True)
-    assert len(result.output.splitlines()) > 0
+    assert len(requests) == 1
+    assert requests[0].url.path == search_url.path
+    assert requests[0].url.params["q"] == "requests"
+    lines = [line for line in result.output.splitlines() if not line.strip().startswith("INSTALLED:")]
+    assert lines[0].startswith("requests ") and "Python HTTP for Humans." in lines[0]
+    assert lines[1].startswith("requests-mock ") and "Mock out responses." in lines[1]
     assert not tmp_path.joinpath("__pypackages__").exists()
     assert not tmp_path.joinpath(".pdm-python").exists()
 
