@@ -217,6 +217,14 @@ class Command(BaseCommand):
         else:
             default_license = existing_license or "MIT"
         license = self.ask("License(SPDX name)", options.license or default_license)
+        license_value: Any
+        if isinstance(existing_license, str):
+            # A PEP 639 expression stays a string, a table is refused next to license-files
+            license_value = license
+        elif license == existing_license.get("file"):
+            license_value = make_inline_table({"file": license})
+        else:
+            license_value = make_inline_table({"text": license})
 
         git_user, git_email = get_user_email_from_git()
         existing_authors = existing_project.get("authors", [])
@@ -232,7 +240,7 @@ class Command(BaseCommand):
                 "name": name,
                 "version": version,
                 "authors": array_of_inline_tables([{"name": author, "email": email}]),
-                "license": make_inline_table({"text": license}),
+                "license": license_value,
                 "dependencies": make_array([], True),
             },
             "tool": {"pdm": {"distribution": is_dist}},
