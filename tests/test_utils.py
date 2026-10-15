@@ -502,7 +502,16 @@ def test_invalidate_project_name(name):
 
 @pytest.mark.parametrize(
     "given,sanitized",
-    [("foo", "foo"), ("Foo.Bar", "Foo.Bar"), ("-foo", "foo"), ("Foo%$Bar", "Foo-Bar"), ("Foo$", "Foo")],
+    [
+        ("foo", "foo"),
+        ("Foo.Bar", "Foo.Bar"),
+        ("-foo", "foo"),
+        ("Foo%$Bar", "Foo-Bar"),
+        ("Foo$", "Foo"),
+        ("__demo__", "demo"),
+        ("--foo..", "foo"),
+        ("my project!_", "my-project"),
+    ],
 )
 def test_sanitize_project_name(given, sanitized):
     assert utils.sanitize_project_name(given) == sanitized

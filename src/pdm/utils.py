@@ -510,7 +510,7 @@ def sanitize_project_name(name: str) -> str:
     """Sanitize the project name and remove all illegal characters"""
     pattern = r"[^a-zA-Z0-9\-_\.]+"
     result = re.sub(pattern, "-", name)
-    result = re.sub(r"^[\._-]|[\._-]$", "", result)
+    result = re.sub(r"^[\._-]+|[\._-]+$", "", result)
     if not result:
         raise PdmException(f"Invalid project name: {name}")
     return result
