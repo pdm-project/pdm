@@ -120,6 +120,8 @@ def read_script_metadata(script: str, section: str) -> dict[str, Any] | None:
     else:
         import tomli as tomllib
 
+    # Python runs a script that starts with a UTF-8 BOM, so look for a block on its first line too.
+    script = script.removeprefix("\ufeff")
     matches = [m for m in re.finditer(_METADATA_REGEX, script) if m.group("type") == section]
     if len(matches) > 1:
         raise ValueError(f"Multiple {section} blocks found")

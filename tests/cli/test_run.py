@@ -1218,6 +1218,37 @@ def test_run_script_with_inline_metadata(project, pdm, local_finder, local_finde
         assert result.exit_code == 0
 
 
+def test_run_script_with_inline_metadata_after_bom(project, pdm, local_finder_artifacts):
+    local_artifacts_url = local_finder_artifacts.as_uri()
+    project.root.joinpath("test_script.py").write_text(
+        textwrap.dedent(f"""\
+        # /// script
+        # dependencies = ["first"]
+        #
+        # [[tool.pdm.source]]
+        # name = "pypi"
+        # url = "{local_artifacts_url}"
+        # type = "find_links"
+        # ///
+        from first import first
+
+        assert first([0, False, 1, 2]) == 1
+        """),
+        encoding="utf-8-sig",
+    )
+    with cd(project.root):
+        result = pdm(["run", "test_script.py"], obj=project)
+        assert result.exit_code == 0
+
+
+def test_read_script_metadata_ignores_leading_bom():
+    from pdm.cli.commands.run import read_script_metadata
+
+    script = '# /// script\n# dependencies = ["first"]\n# ///\nimport first\n'
+
+    assert read_script_metadata("\ufeff" + script, "script") == {"dependencies": ["first"]}
+
+
 def test_run_script_pass_run_cwd(project, pdm, capfd):
     project.pyproject.settings["scripts"] = {
         "test_script": [
