@@ -676,6 +676,60 @@ def test_convert_poetry_multi_and_v_prefixed_constraint(project, constraint, exp
     assert result["dependencies"] == [f"foo{expected}"]
 
 
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        # Poetry writes a multi-constraint with spaces instead of a comma too;
+        # only the comma form was split, so `>=2.0 <3.0` reached the requirement
+        # parser as a single version and aborted the import.
+        (">=2.0 <3.0", "<3.0,>=2.0"),
+        (">=2.0  <3.0", "<3.0,>=2.0"),
+        (">=1.0 <2.0,!=1.5", "!=1.5,<2.0,>=1.0"),
+        ("^1.2.3 <2.0", "<2.0,>=1.2.3"),
+    ],
+)
+def test_convert_poetry_space_separated_constraint(project, constraint, expected):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        f'[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\nfoo = "{constraint}"\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["dependencies"] == [f"foo{expected}"]
+
+
+def test_convert_poetry_space_separated_python_constraint(project):
+    """A space-separated `python` constraint used to abort the whole import.
+
+    `>=3.8 <4.0` was read as a single version, which is not a valid specifier.
+    """
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\npython = ">=3.8 <4.0"\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["requires-python"] == "<4.0,>=3.8"
+
+
+def test_convert_poetry_constraint_without_a_separator_is_rejected(project):
+    """A constraint with no separator must not be read as a space-separated one.
+
+    Poetry rejects ``>=1.0<2.0`` (poetry-core raises ``ParseConstraintError``), and
+    the space form this converter accepts needs at least one space before the next
+    operator, so the lookahead cannot be relaxed into an optional separator again.
+    """
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\nfoo = ">=1.0<2.0"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(MetaConvertError, match="Invalid specifier for foo"):
+        poetry.convert(project, pyproject, ns())
+
+
 def test_convert_poetry_12(project):
     golden_file = FIXTURES / "poetry-new.toml"
     with cd(FIXTURES):

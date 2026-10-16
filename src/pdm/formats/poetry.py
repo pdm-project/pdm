@@ -47,7 +47,12 @@ def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
 #: prefix, then the version itself. The operator is restricted to the characters
 #: Poetry actually uses -- matching any non-digit instead swallowed the separating
 #: comma of a multi-constraint string, so ``>=1.0,<2.0`` produced ``>=1.0,,<2.0``.
-VERSION_RE = re.compile(r"([<>=!~^]*)\s*v?\s*(\d.*?)\s*(?=,|$)")
+#: Poetry also accepts a space where that comma is, as in ``>=1.0 <2.0``; the
+#: lookahead requires at least one space there, and only accepts it in front of
+#: another operator. A constraint with no separator at all (``>=1.0<2.0``) and an
+#: unsupported ``||`` disjunction therefore keep failing loudly instead of being
+#: split into a set of constraints that all have to hold.
+VERSION_RE = re.compile(r"([<>=!~^]*)\s*v?\s*(\d.*?)\s*(?=\s+[<>=!~^]|,|$)")
 
 
 def _caret_upper_bound(version: str) -> str:
