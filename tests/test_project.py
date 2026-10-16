@@ -803,3 +803,25 @@ def test_saved_python_refuses_symlinked_pdm_python(project):
     # The symlink target outside .pdm-python is left untouched.
     assert real.read_text() == "untouched"
     assert link.is_symlink()
+
+
+@pytest.mark.parametrize(
+    "lock_version, expected",
+    [
+        ("1.0", "SAME"),
+        ("1.1", "FORWARD"),
+        ("2.0", "NONE"),
+        ("0.9", "NONE"),
+        ("not-a-version", "NONE"),
+        (None, "NONE"),
+    ],
+)
+def test_pylock_compatibility_follows_lock_version(project, lock_version, expected):
+    from pdm.project.lockfile.base import Compatibility
+
+    project.project_config["lock.format"] = "pylock"
+    header = f'lock-version = "{lock_version}"\n' if lock_version else ""
+    project.root.joinpath("pylock.toml").write_text(header + 'created-by = "pdm"\n')
+    project._lockfile = None
+
+    assert project.lockfile.compatibility() == Compatibility[expected]

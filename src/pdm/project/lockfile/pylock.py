@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from functools import cached_property
 
+from packaging.version import InvalidVersion
+
 from pdm.exceptions import PdmUsageError
 from pdm.models.repositories.lock import LockedRepository
 from pdm.project.lockfile.base import (
@@ -13,6 +15,7 @@ from pdm.project.lockfile.base import (
     Lockfile,
     LockInputsState,
 )
+from pdm.utils import parse_version
 
 
 class PyLock(Lockfile):
@@ -66,5 +69,21 @@ class PyLock(Lockfile):
             data["tool"]["pdm"]["lock_inputs"] = repository.environment.project.lock_inputs()
         self.set_data(data)
 
-    def compatibility(self) -> Compatibility:  # pragma: no cover
+    def compatibility(self) -> Compatibility:
+        """PEP 751: a tool must error on a lock-version whose major version it doesn't
+        support, and may read a newer minor version of a supported major version.
+        """
+        if not self.exists():
+            return Compatibility.SAME
+        from pdm.formats.pylock import PyLockConverter
+
+        supported = parse_version(PyLockConverter.lock_version)
+        try:
+            lock_version = parse_version(str(self._data["lock-version"]))
+        except (KeyError, InvalidVersion):
+            return Compatibility.NONE
+        if lock_version.major != supported.major:
+            return Compatibility.NONE
+        if lock_version.minor > supported.minor:
+            return Compatibility.FORWARD
         return Compatibility.SAME
