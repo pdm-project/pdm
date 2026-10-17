@@ -160,6 +160,39 @@ def test_init_preserves_existing_pyproject_values(project_no_init, pdm, mocker):
     assert data["tool"]["pdm"]["distribution"] is False
 
 
+@pytest.mark.parametrize(
+    "license_lines,args,expected",
+    [
+        ('license = {file = "LICENSE"}', [], {"file": "LICENSE"}),
+        ('license = "MIT"\nlicense-files = ["LICENSE"]', [], "MIT"),
+        ('license = "MIT"\nlicense-files = ["LICENSE"]', ["--license", "Apache-2.0"], "Apache-2.0"),
+        ('license = {file = "LICENSE"}', ["--license", "MIT"], {"text": "MIT"}),
+    ],
+    ids=["file", "expression", "new-expression", "file-to-text"],
+)
+def test_init_keeps_existing_license_shape(project_no_init, pdm, mocker, license_lines, args, expected):
+    project_no_init.pyproject._path.write_text(
+        "[project]\n"
+        'name = "existing-project"\n'
+        'version = "2.1.0"\n'
+        f"{license_lines}\n"
+        'requires-python = ">=3.10"\n'
+        "dependencies = []\n"
+    )
+    project_no_init.pyproject.reload()
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+
+    result = pdm(["init", "-n", *args], obj=project_no_init)
+
+    assert result.exit_code == 0
+    with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        data = tomllib.load(fp)
+    assert data["project"]["license"] == expected
+
+
 def test_init_updates_existing_pyproject_with_explicit_values(project_no_init, pdm, mocker):
     project_no_init.pyproject._path.write_text(
         dedent(
