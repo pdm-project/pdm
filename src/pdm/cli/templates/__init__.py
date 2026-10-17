@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fnmatch
 import importlib.resources
 import os
 import re
@@ -23,6 +24,36 @@ if TYPE_CHECKING:
 
 TEMPLATE_PACKAGE = "pdm.cli.templates"
 BUILTIN_TEMPLATES = ["default", "minimal"]
+TEMPLATE_IGNORE_FILE = ".pdm-template-ignore"
+
+
+def _read_ignore_patterns(template_path: Path) -> list[str]:
+    """Read ignore globs from the template's ignore file, if present."""
+    try:
+        content = (template_path / TEMPLATE_IGNORE_FILE).read_text(encoding="utf-8")
+    except OSError:
+        return []
+    return [line for line in (l.strip() for l in content.splitlines()) if line and not line.startswith("#")]
+
+
+def _ignored_template_paths(template_path: Path, patterns: list[str]) -> list[Path]:
+    """Expand ignore globs to concrete paths under the template root.
+
+    Patterns use fnmatch syntax against `/`-separated paths relative to the
+    template root (`*` spans directories). A pattern naming a directory
+    excludes its whole subtree. The ignore file itself is always excluded.
+    """
+    ignored = [template_path / TEMPLATE_IGNORE_FILE]
+    for root, dirs, files in os.walk(template_path):
+        for name in dirs:
+            rel = (Path(root) / name).relative_to(template_path).as_posix()
+            if any(fnmatch.fnmatch(rel, pattern.rstrip("/")) for pattern in patterns):
+                ignored.append(Path(root) / name)
+        for name in files:
+            rel = (Path(root) / name).relative_to(template_path).as_posix()
+            if any(fnmatch.fnmatch(rel, pattern) for pattern in patterns):
+                ignored.append(Path(root) / name)
+    return ignored
 
 
 def merge_dictionary_defaults(target: MutableMapping[Any, Any], input: Mapping[Any, Any]) -> None:
@@ -98,7 +129,9 @@ class ProjectTemplate:
                         replace_all(os.path.join(root, f), import_name, new_import_name)
 
         target_path.mkdir(exist_ok=True, parents=True)
-        self.mirror(self._path, target_path, [self._path / "pyproject.toml"], overwrite=overwrite)
+        ignore_patterns = _read_ignore_patterns(self._path)
+        skip = [self._path / "pyproject.toml", *_ignored_template_paths(self._path, ignore_patterns)]
+        self.mirror(self._path, target_path, skip, overwrite=overwrite)
         self._generate_pyproject(target_path / "pyproject.toml", metadata)
 
     def prepare_template(self) -> None:
