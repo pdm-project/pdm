@@ -63,6 +63,22 @@ class Command(BaseCommand):
             package.latest_version = best.version or ""
 
     @staticmethod
+    def _is_outdated(package: ListPackage) -> bool:
+        from packaging.version import InvalidVersion
+
+        from pdm.utils import parse_version
+
+        if not package.latest_version:
+            return False
+        if not package.installed_version:
+            return True
+        try:
+            # An installed pre-release or local build can be newer than the best match on the index
+            return parse_version(package.latest_version) > parse_version(package.installed_version)
+        except InvalidVersion:
+            return package.latest_version != package.installed_version
+
+    @staticmethod
     def _format_json(packages: list[ListPackage]) -> str:
         return json.dumps([asdict(package) for package in packages], indent=2)
 
@@ -127,7 +143,7 @@ class Command(BaseCommand):
                 executor.submit(self._populate_latest_version, finder, package)
 
         collected = sorted(
-            [p for p in collected if p.latest_version and p.latest_version != p.installed_version],
+            [p for p in collected if self._is_outdated(p)],
             key=lambda p: p.package,
         )
         if options.format == "json":

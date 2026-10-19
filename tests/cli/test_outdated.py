@@ -71,3 +71,26 @@ def test_outdated_in_given_venv(project, pdm):
     assert outdated_in_default.get("zipp", {}).get("installed_version", "") == "", result1.stdout
     assert outdated_in_second["zipp"]["installed_version"] == "3.6.0", result2.stdout
     assert outdated_in_second["zipp"]["latest_version"] == "3.7.0", result2.stdout
+
+
+@mock.patch("pdm.termui.ROUNDED", ASCII)
+@pytest.mark.usefixtures("working_set")
+def test_outdated_skips_package_newer_than_index(project, pdm, index):
+    pdm(["add", "requests"], obj=project, strict=True, cleanup=False)
+    project.project_config["pypi.url"] = "https://my.pypi.org/simple"
+    del project.pyproject.settings["source"]
+    project.pyproject.write()
+    index["/simple/requests/"] = b"""\
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>requests</h1>
+    <a href="http://fixtures.test/artifacts/requests-2.19.0-py3-none-any.whl">
+      requests-2.19.0-py3-none-any.whl
+    </a>
+  </body>
+</html>
+"""
+
+    result = pdm(["outdated", "--json"], obj=project, strict=True, cleanup=False)
+    assert json.loads(result.stdout) == []
