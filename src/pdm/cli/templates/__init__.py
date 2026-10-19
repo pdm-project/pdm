@@ -37,7 +37,8 @@ def merge_dictionary_defaults(target: MutableMapping[Any, Any], input: Mapping[A
 def merge_project_metadata(target: MutableMapping[Any, Any], input: Mapping[Any, Any]) -> None:
     """Merge init metadata while preserving existing dependency lists."""
     for key, value in input.items():
-        if isinstance(target.get(key), MutableMapping) and isinstance(value, Mapping):
+        # license is replaced whole: merging {text} into {file} leaves both keys
+        if key != "license" and isinstance(target.get(key), MutableMapping) and isinstance(value, Mapping):
             merge_project_metadata(target[key], value)
         elif key == "dependencies" and not value and key in target:
             continue

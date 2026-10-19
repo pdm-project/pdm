@@ -153,7 +153,7 @@ class Command(BaseCommand):
         return self.ask_project(project, default)
 
     def get_metadata_from_input(self, project: Project, options: argparse.Namespace) -> dict[str, Any]:
-        from pdm.formats.base import array_of_inline_tables, make_array, make_inline_table
+        from pdm.formats.base import array_of_inline_tables, make_array
 
         existing_data = project.pyproject.open_for_read()
         existing_project = existing_data.get("project", {})
@@ -217,6 +217,9 @@ class Command(BaseCommand):
         else:
             default_license = existing_license or "MIT"
         license = self.ask("License(SPDX name)", options.license or default_license)
+        # An existing {file = ...} table has no expression to offer, so it is left
+        # alone unless a new license is given
+        keep_license_file = isinstance(existing_license, dict) and license == existing_license.get("file")
 
         git_user, git_email = get_user_email_from_git()
         existing_authors = existing_project.get("authors", [])
@@ -232,12 +235,14 @@ class Command(BaseCommand):
                 "name": name,
                 "version": version,
                 "authors": array_of_inline_tables([{"name": author, "email": email}]),
-                "license": make_inline_table({"text": license}),
+                "license": license,
                 "dependencies": make_array([], True),
             },
             "tool": {"pdm": {"distribution": is_dist}},
         }
 
+        if keep_license_file:
+            del data["project"]["license"]  # type: ignore[attr-defined]
         if python_requires and python_requires != "*":
             get_specifier(python_requires)
             data["project"]["requires-python"] = python_requires  # type: ignore[index]
