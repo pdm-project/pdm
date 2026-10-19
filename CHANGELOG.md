@@ -1,3 +1,36 @@
+## Release v2.29.3 (2026-10-19)
+
+### Features & Improvements
+
+- Add the `--venv` option to `pdm outdated`, like the other commands that read the installed packages. ([#3904](https://github.com/pdm-project/pdm/issues/3904))
+
+### Bug Fixes
+
+- Fix isolated PEP 517 builds skipping packages that are only visible via the host venv's `--system-site-packages`. ([#3895](https://github.com/pdm-project/pdm/issues/3895))
+- Fix `pdm import` of Poetry projects dropping optional dependencies whose extras entry is spelled differently, and importing optional dependencies with multiple constraints as required ones. ([#3899](https://github.com/pdm-project/pdm/issues/3899))
+- Keep the plain requirement in `pdm export` when the same package is also locked with extras under a narrower marker, so it is no longer missing from `requirements.txt` on the other platforms. ([#3900](https://github.com/pdm-project/pdm/issues/3900))
+- Fix `python_version <= "X.Y"` markers excluding the patch releases of `X.Y`, so `pdm install` skipped such dependencies. ([#3902](https://github.com/pdm-project/pdm/issues/3902))
+- Fix environment variables set by one task of a composite script, via `env` or `env_file`, leaking into the tasks that run after it. ([#3903](https://github.com/pdm-project/pdm/issues/3903))
+- Convert flit's comma-separated `keywords` and obsolete `dev-requires` into valid PEP 621 fields when importing a flit project. ([#3907](https://github.com/pdm-project/pdm/issues/3907))
+- Import custom Pipfile package categories, such as `[docs]`, as dependency groups instead of dropping them. ([#3909](https://github.com/pdm-project/pdm/issues/3909))
+- Keep editable requirements in `[tool.pdm.dev-dependencies]` on `pdm import`, so the written `[dependency-groups]` table stays valid per PEP 735. ([#3910](https://github.com/pdm-project/pdm/issues/3910))
+- Keep Poetry's `develop = true` as an editable requirement when importing dependency groups. ([#3913](https://github.com/pdm-project/pdm/issues/3913))
+- Fix `pdm import` of the project's own Poetry `pyproject.toml` writing each dependency group to both `[tool.pdm.dev-dependencies]` and `[dependency-groups]`. ([#3915](https://github.com/pdm-project/pdm/issues/3915))
+- Import Pipfile packages declared with a `file` URL, such as `{file = "https://..."}`, as URL requirements instead of dropping the URL. ([#3918](https://github.com/pdm-project/pdm/issues/3918))
+- Preserve Poetry platform restrictions as environment markers when importing dependencies. ([#3920](https://github.com/pdm-project/pdm/issues/3920))
+- Read an `exclude-newer` timestamp without a UTC offset as UTC, so `pdm lock` no longer fails with a `TypeError` comparing naive and aware datetimes. ([#3922](https://github.com/pdm-project/pdm/issues/3922))
+- Do not write empty dependency groups, such as `dev = []` from an empty `[dev-packages]` table, when importing from another format. ([#3925](https://github.com/pdm-project/pdm/issues/3925))
+- Strip every leading and trailing `.`, `_` and `-` when `pdm init` derives the project name from the directory, so a folder like `__demo__` no longer produces the invalid name `_demo_`. ([#3927](https://github.com/pdm-project/pdm/issues/3927))
+- `pdm init` now writes `project.license` as a license expression string instead of a `{text = ...}` table, and no longer rewrites an existing `{file = ...}` table or license expression into a value the build backend rejects. ([#3929](https://github.com/pdm-project/pdm/issues/3929))
+- Read the inline metadata of a script that starts with a UTF-8 BOM, which `pdm run` ignored. ([#3931](https://github.com/pdm-project/pdm/issues/3931))
+- Convert a space-separated Poetry version constraint such as `>=1.0 <2.0` like the comma-separated form instead of aborting the import. ([#3934](https://github.com/pdm-project/pdm/issues/3934))
+- Resolve relative `path` entries in a `Pipfile` against the directory of the `Pipfile` when importing, instead of the current working directory. ([#3935](https://github.com/pdm-project/pdm/issues/3935))
+
+### Documentation
+
+- Document what to cache and which install command to use when running PDM on CI platforms other than GitHub Actions. ([#2472](https://github.com/pdm-project/pdm/issues/2472))
+
+
 ## Release v2.29.2 (2026-09-17)
 
 ### Bug Fixes
