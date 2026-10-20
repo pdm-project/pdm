@@ -61,18 +61,19 @@ def get_docstring_and_version_via_ast(
         # that stayed empty, which beats aborting the whole import.
         return None, None
     for child in node.body:
+        if not isinstance(child, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = child.targets if isinstance(child, ast.Assign) else [child.target]
         # Only use the version from the given module if it's a simple
         # string assignment to __version__
-        is_version_str = (
-            isinstance(child, ast.Assign)
-            and len(child.targets) == 1
-            and isinstance(child.targets[0], ast.Name)
-            and child.targets[0].id == "__version__"
+        if (
+            len(targets) == 1
+            and isinstance(targets[0], ast.Name)
+            and targets[0].id == "__version__"
             and isinstance(child.value, ast.Constant)
             and isinstance(child.value.value, str)
-        )
-        if is_version_str:
-            version: str | None = child.value.value  # type: ignore[assignment, attr-defined]
+        ):
+            version: str | None = child.value.value
             break
     else:
         version = None
@@ -104,10 +105,13 @@ class FlitMetaConverter(MetaConverter):
         module = metadata.pop("module")
         self._data["name"] = metadata.pop("dist-name", module)
         # version and description
-        if (Path(module) / "__init__.py").exists():
-            source = Path(module) / "__init__.py"
-        else:
-            source = Path(f"{module}.py")
+        for prefix in (Path(), Path("src")):
+            source = prefix / module / "__init__.py"
+            if source.exists():
+                break
+            source = prefix / f"{module}.py"
+            if source.exists():
+                break
 
         version = self._data.get("version")
         description = self._data.get("description")

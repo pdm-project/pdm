@@ -830,6 +830,26 @@ def test_convert_flit(project):
     assert build["excludes"] == ["doc/*.html"]
 
 
+@pytest.mark.parametrize("source_dir", ["", "src"])
+@pytest.mark.parametrize("module_path", ["demo.py", "demo/__init__.py"])
+@pytest.mark.parametrize("version_assignment", ['__version__ = "1.2.3"', '__version__: str = "1.2.3"'])
+def test_import_flit_module_metadata(project, pdm, tmp_path, source_dir, module_path, version_assignment):
+    pyproject_file = tmp_path / "legacy" / "pyproject.toml"
+    pyproject_file.parent.mkdir()
+    pyproject_file.write_text(
+        '[tool.flit.metadata]\nmodule = "demo"\nauthor = "Example"\nauthor-email = "example@example.com"\n',
+        encoding="utf-8",
+    )
+    source = pyproject_file.parent / source_dir / module_path
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(f'"""A demo package."""\n{version_assignment}\n', encoding="utf-8")
+
+    pdm(["import", "-f", "flit", str(pyproject_file)], obj=project, strict=True)
+
+    assert project.pyproject.metadata["version"] == "1.2.3"
+    assert project.pyproject.metadata["description"] == "A demo package."
+
+
 def test_convert_flit_author_and_maintainer_without_email(project, tmp_path):
     pyproject_file = tmp_path / "pyproject.toml"
     pyproject_file.write_text(
