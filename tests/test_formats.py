@@ -460,6 +460,24 @@ def test_convert_poetry_sdist_only_include(project):
     assert settings["build"]["source-includes"] == ["tests", "docs"]
 
 
+@pytest.mark.parametrize("formats", ['["sdist", "wheel"]', '["wheel", "sdist"]', '["wheel"]'])
+def test_convert_poetry_include_for_wheel(project, formats):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        "include = [\n"
+        f'    {{path = "data/schema.json", format = {formats}}},\n'
+        '    {path = "docs", format = ["sdist"]},\n'
+        "]\n"
+        "[tool.poetry.dependencies]\n",
+        encoding="utf-8",
+    )
+    _, settings = poetry.convert(project, pyproject, ns())
+
+    assert settings["build"]["includes"] == ["data/schema.json"]
+    assert settings["build"]["source-includes"] == ["docs"]
+
+
 def test_convert_poetry_develop_dependency(project):
     (project.root / "libs/core").mkdir(parents=True)
     (project.root / "libs/devtools").mkdir(parents=True)
