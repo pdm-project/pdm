@@ -94,3 +94,22 @@ def test_outdated_skips_package_newer_than_index(project, pdm, index):
 
     result = pdm(["outdated", "--json"], obj=project, strict=True, cleanup=False)
     assert json.loads(result.stdout) == []
+
+
+@pytest.mark.parametrize(
+    "installed, latest, expected",
+    [
+        ("2.19.1", "2.20.0", True),
+        ("2.19.1", "2.19.0", False),
+        ("2.19.1", "2.19.1", False),
+        ("", "2.20.0", True),
+        ("2.19.1", "", False),
+        ("not-a-version", "2.20.0", True),
+        ("not-a-version", "not-a-version", False),
+    ],
+)
+def test_outdated_compares_versions(installed, latest, expected):
+    from pdm.cli.commands.outdated import Command, ListPackage
+
+    package = ListPackage("requests", ["default"], installed, installed, latest)
+    assert Command._is_outdated(package) is expected
