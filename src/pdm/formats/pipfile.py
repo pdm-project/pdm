@@ -26,8 +26,19 @@ MARKER_KEYS = list(default_environment().keys())
 NON_CATEGORY_SECTIONS = {"build-system", "pipenv", "requires", "scripts", "source", "packages", "dev-packages"}
 
 
+def _convert_specifier(version: str) -> str:
+    """Pipenv reads a version without an operator, like ``"2.31.0"``, as an exact pin."""
+    if version.strip() in ("", "*") or version.lstrip().startswith(("<", ">", "=", "!", "~")):
+        return version
+    return f"=={version}"
+
+
 def convert_pipfile_requirement(name: str, req: RequirementDict, backend: BuildBackend) -> str:
-    if isinstance(req, dict):
+    if isinstance(req, str):
+        req = _convert_specifier(req)
+    elif isinstance(req, dict):
+        if "version" in req:
+            req["version"] = _convert_specifier(str(req["version"]))
         if "file" in req:
             # Pipenv stores remote archives as `{file = "<url>"}`.
             req["url"] = req.pop("file")

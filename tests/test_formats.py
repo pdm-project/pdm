@@ -90,6 +90,29 @@ def test_convert_pipfile_relative_path(project):
 
 
 @pytest.mark.parametrize(
+    "entry,expected",
+    [
+        ('"2.31.0"', "requests==2.31.0"),
+        ('{version = "2.31.0"}', "requests==2.31.0"),
+        ('{version = "2.31.0", extras = ["socks"]}', "requests[socks]==2.31.0"),
+        ('"2.*"', "requests==2.*"),
+        ('"*"', "requests"),
+        ('{version = "*"}', "requests"),
+        ('"==2.31.0"', "requests==2.31.0"),
+        ('">=2.31"', "requests>=2.31"),
+        ('"~=2.31"', "requests~=2.31"),
+    ],
+)
+def test_convert_pipfile_version_without_operator(project, entry, expected):
+    """Pipenv treats a version without an operator as an exact pin."""
+    pipfile_path = project.root / "Pipfile"
+    pipfile_path.write_text(f"[packages]\nrequests = {entry}\n", encoding="utf-8")
+    result, _ = pipfile.convert(project, pipfile_path, None)
+
+    assert result["dependencies"] == [expected]
+
+
+@pytest.mark.parametrize(
     "requires",
     [
         "",  # an empty [requires] table
