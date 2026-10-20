@@ -319,7 +319,8 @@ class PoetryMetaConverter(MetaConverter):
             if not isinstance(item, dict):
                 includes.append(item)
             else:
-                dest = source_includes if "sdist" in item.get("format", "") else includes
+                formats = item.get("format", [])
+                dest = source_includes if "sdist" in formats and "wheel" not in formats else includes
                 dest.append(item["path"])
         if includes:
             self.settings.setdefault("build", {})["includes"] = includes
