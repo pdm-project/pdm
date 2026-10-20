@@ -132,7 +132,8 @@ class RequirementParser:
                     f"Failed to fetch {filename_or_url}: ({resp.status_code} - {resp.reason_phrase}) {resp.text}"
                 )
             return self.parse_lines(resp.text.splitlines(), filename_or_url)
-        with open(filename_or_url, encoding="utf-8") as f:
+        # pip accepts a requirements file that starts with a UTF-8 BOM, e.g. one saved by Notepad.
+        with open(filename_or_url, encoding="utf-8-sig") as f:
             self.parse_lines(f, filename_or_url)
 
 
