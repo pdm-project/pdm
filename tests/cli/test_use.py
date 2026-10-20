@@ -103,3 +103,16 @@ def test_use_auto_install_and_no_auto_install_are_mutual_exclusive(project, pdm)
         result = pdm(command, obj=project, strict=True)
         assert str(error.value).startswith(f"Call command {command} failed")
         assert result.exit_code != 0
+
+
+@pytest.mark.parametrize("bom", [b"", b"\xef\xbb\xbf"])
+def test_version_file_is_read_after_a_utf8_bom(project, mocker, bom):
+    # PowerShell 5.1 and some Windows editors write a UTF-8 BOM at the start of .python-version.
+    version = ".".join(map(str, sys.version_info[:2]))
+    project.root.joinpath(".python-version").write_bytes(bom + f"{version}\n".encode())
+    project.pyproject.metadata["requires-python"] = ">=3.6"
+    find_interpreters = mocker.patch.object(project, "find_interpreters", return_value=[mocker.Mock()])
+
+    list(project.iter_interpreters())
+
+    assert find_interpreters.call_args.args[0] == version

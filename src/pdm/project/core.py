@@ -958,7 +958,7 @@ class Project:
         from pdm.cli.commands.python import InstallCommand
 
         def read_version_from_version_file(python_version_file: Path) -> str | None:
-            content = python_version_file.read_text().strip()
+            content = python_version_file.read_text(encoding="utf-8-sig").strip()
             content_lines = [cl for cl in content.splitlines() if not cl.lstrip().startswith("#")]
 
             return content_lines[0] if len(content_lines) == 1 else None
