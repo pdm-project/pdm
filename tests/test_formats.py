@@ -156,6 +156,22 @@ def test_convert_requirements_file_with_tab_before_comment(project):
 
 
 @pytest.mark.parametrize(
+    "content,expected",
+    [
+        ("webassets==2.0\nsix\n", ["webassets==2.0", "six"]),
+        ("# pinned versions\nsix\n", ["six"]),
+    ],
+)
+def test_convert_requirements_file_with_utf8_bom(project, content, expected):
+    req_file = project.root.joinpath("reqs.txt")
+    req_file.write_text(content, encoding="utf-8-sig")
+    assert requirements.check_fingerprint(project, str(req_file))
+    result, _ = requirements.convert(project, str(req_file), ns())
+
+    assert result["dependencies"] == expected
+
+
+@pytest.mark.parametrize(
     "line",
     ['"./foo - bar"', "'./foo - bar'", '"./foo - bar" --hash=sha256:abc'],
 )
