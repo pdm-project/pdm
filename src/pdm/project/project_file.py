@@ -85,7 +85,7 @@ class PyProject(TOMLFile):
             group = normalize_name(group)
             if group in groups:
                 raise ProjectError(f"The group {group} is duplicated in dependency-groups")
-            groups[group] = deps.unwrap() if hasattr(deps, "unwrap") else deps
+            groups[group] = list(deps.unwrap() if hasattr(deps, "unwrap") else deps)
         for group, deps in self.settings.get("dev-dependencies", {}).items():
             group = normalize_name(group)
             groups.setdefault(group, []).extend(deps.unwrap() if hasattr(deps, "unwrap") else deps)
