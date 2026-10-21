@@ -412,6 +412,22 @@ def test_invalid_dependency_group(project):
         project.get_dependencies("missing")
 
 
+def test_dev_dependencies_merge_does_not_modify_dependency_groups(tmp_path, core):
+    pyproject_file = tmp_path / "pyproject.toml"
+    pyproject_file.write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n'
+        '[dependency-groups]\ntest = ["pytest"]\n\n'
+        '[tool.pdm.dev-dependencies]\ntest = ["coverage"]\n'
+    )
+    pyproject = PyProject(pyproject_file, ui=core.ui)
+    content_hash = pyproject.content_hash()
+
+    assert pyproject.dev_dependencies == {"test": ["pytest", "coverage"]}
+    assert pyproject.dev_dependencies == {"test": ["pytest", "coverage"]}
+    assert pyproject.dependency_groups == {"test": ["pytest"]}
+    assert pyproject.content_hash() == content_hash
+
+
 @pytest.mark.path
 def test_set_non_exist_python_path(project_no_init):
     project_no_init._saved_python = "non-exist-python"
