@@ -71,3 +71,45 @@ def test_outdated_in_given_venv(project, pdm):
     assert outdated_in_default.get("zipp", {}).get("installed_version", "") == "", result1.stdout
     assert outdated_in_second["zipp"]["installed_version"] == "3.6.0", result2.stdout
     assert outdated_in_second["zipp"]["latest_version"] == "3.7.0", result2.stdout
+
+
+@mock.patch("pdm.termui.ROUNDED", ASCII)
+@pytest.mark.usefixtures("working_set")
+def test_outdated_skips_package_newer_than_index(project, pdm, index):
+    pdm(["add", "requests"], obj=project, strict=True, cleanup=False)
+    project.project_config["pypi.url"] = "https://my.pypi.org/simple"
+    del project.pyproject.settings["source"]
+    project.pyproject.write()
+    index["/simple/requests/"] = b"""\
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>requests</h1>
+    <a href="http://fixtures.test/artifacts/requests-2.19.0-py3-none-any.whl">
+      requests-2.19.0-py3-none-any.whl
+    </a>
+  </body>
+</html>
+"""
+
+    result = pdm(["outdated", "--json"], obj=project, strict=True, cleanup=False)
+    assert json.loads(result.stdout) == []
+
+
+@pytest.mark.parametrize(
+    "installed, latest, expected",
+    [
+        ("2.19.1", "2.20.0", True),
+        ("2.19.1", "2.19.0", False),
+        ("2.19.1", "2.19.1", False),
+        ("", "2.20.0", True),
+        ("2.19.1", "", False),
+        ("not-a-version", "2.20.0", True),
+        ("not-a-version", "not-a-version", False),
+    ],
+)
+def test_outdated_compares_versions(installed, latest, expected):
+    from pdm.cli.commands.outdated import Command, ListPackage
+
+    package = ListPackage("requests", ["default"], installed, installed, latest)
+    assert Command._is_outdated(package) is expected
