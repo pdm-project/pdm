@@ -37,7 +37,7 @@ dependencies = [
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
     "httpcore>=1.0.6",
-    "certifi>=2024.8.30",
+    "certifi>=2026.10.19",
     "id>=1.5.0"
 ]
 readme = "README.md"
