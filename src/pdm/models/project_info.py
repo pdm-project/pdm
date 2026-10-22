@@ -46,7 +46,7 @@ class ProjectInfo:
             author=metadata.get("Author", ""),
             email=metadata.get("Author-email", ""),
             # Core metadata 2.4 (PEP 639) puts an SPDX expression in License-Expression
-            license=metadata.get("License-Expression") or metadata.get("License", ""),
+            license=metadata.get("License-Expression") or metadata.get("License") or "",
             requires_python=metadata.get("Requires-Python", ""),
             platform=platform,
             keywords=keywords,
