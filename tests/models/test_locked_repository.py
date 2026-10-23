@@ -209,6 +209,25 @@ def test_merge_result_keeps_packages_out_of_foreign_targets(mocker):
     assert repository.packages[repository._identify_candidate(shared)].candidate.req.marker is None
 
 
+def test_merge_result_keeps_packages_in_targets_sharing_the_platform(mocker):
+    repository = make_repository(mocker)
+    manylinux = EnvSpec.from_spec(requires_python=">=3.9", platform="linux")
+    musllinux = EnvSpec.from_spec(requires_python=">=3.9", platform="alpine")
+
+    def candidate(name, version="1.0"):
+        return Candidate(parse_requirement(name), name=name, version=version)
+
+    manylinux_only = candidate("forked", "2.0")
+    repository.merge_result(manylinux, [Package(candidate("shared")), Package(manylinux_only)])
+    musllinux_only = candidate("forked", "1.0")
+    repository.merge_result(musllinux, [Package(candidate("shared")), Package(musllinux_only)])
+
+    # Both targets are x86_64 Linux, a platform marker excluding the new target
+    # would also exclude the one the package was resolved for.
+    assert manylinux_only.req.marker is None or manylinux_only.req.marker.matches(manylinux)
+    assert musllinux_only.req.marker.matches(musllinux)
+
+
 def test_get_hashes_returns_candidate_hashes(mocker):
     repository = make_repository(mocker)
     candidate = make_candidate()
