@@ -106,7 +106,7 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
     identifier = "package-type"
 
     def get_message(self) -> str:
-        package_type = self.project.pyproject.settings["package-type"]
+        package_type = self.project.pyproject.settings["package-type"]  # type: ignore[typeddict-item]
         dist = str(package_type == "library").lower()
         return (
             rf'[success]package-type = "{package_type}"[/] has been renamed to '
@@ -122,7 +122,7 @@ class PackageTypeFixer(BaseFixer):  # pragma: no cover
         settings = self.project.pyproject.settings.copy()
 
         # Pop the package type and convert it to a distribution type
-        package_type = settings.pop("package-type")
+        package_type = settings.pop("package-type")  # type: ignore[typeddict-item]
         dist = package_type == "library"
         settings["distribution"] = dist
 
