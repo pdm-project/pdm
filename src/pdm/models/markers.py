@@ -134,7 +134,7 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
                     version = ".".join(str(v) for v in int_versions)
                     op = ">=" if op == ">" else "<"
                 case "==" | "!=":
-                    if len(version.split(".")) < 3:
+                    if not version.endswith(".*") and len(version.split(".")) < 3:
                         version += ".*"
                 case "in" | "not in":
                     version = " ".join(v + ".*" for v in split_version(version))
