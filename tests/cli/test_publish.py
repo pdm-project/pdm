@@ -1,5 +1,6 @@
 import base64
 import os
+import zipfile
 from argparse import Namespace
 
 import pytest
@@ -42,6 +43,32 @@ def test_parse_metadata_with_non_ascii_chars():
     assert meta["summary"] == "caj2pdf 重新组织，方便打包与安装"  # noqa: RUF001
     assert meta["author_email"] == "张三 <san@zhang.me>"
     assert meta["description"].strip() == "# caj2pdf\n\n测试中文项目"
+
+
+def test_package_metadata_license_expression(tmp_path):
+    wheel = tmp_path / "demo-0.0.1-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "w") as zf:
+        zf.writestr(
+            "demo-0.0.1.dist-info/METADATA",
+            "Metadata-Version: 2.4\n"
+            "Name: demo\n"
+            "Version: 0.0.1\n"
+            "License-Expression: MIT\n"
+            "License-File: LICENSE\n"
+            "License-File: NOTICE\n",
+        )
+    meta = PackageFile.from_filename(str(wheel), None).metadata_dict
+    assert meta["metadata_version"] == "2.4"
+    assert meta["license_expression"] == "MIT"
+    assert meta["license_file"] == ["LICENSE", "NOTICE"]
+    assert meta["license"] is None
+
+
+def test_package_metadata_skips_license_file_before_2_4():
+    fullpath = FIXTURES / "artifacts" / "setuptools-68.0.0-py3-none-any.whl"
+    meta = PackageFile.from_filename(str(fullpath), None).metadata_dict
+    assert meta["metadata_version"] == "2.1"
+    assert "license_file" not in meta
 
 
 def test_package_add_signature(tmp_path):
