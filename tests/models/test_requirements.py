@@ -4,7 +4,12 @@ import os
 
 import pytest
 
-from pdm.models.requirements import RequirementError, filter_requirements_with_extras, parse_requirement
+from pdm.models.requirements import (
+    FileRequirement,
+    RequirementError,
+    filter_requirements_with_extras,
+    parse_requirement,
+)
 from tests import FIXTURES
 
 FILE_PREFIX = "file:///" if os.name == "nt" else "file://"
@@ -81,6 +86,51 @@ def test_convert_req_dict_to_req_line(req, result):
     r = parse_requirement(req)
     result = result or req
     assert r.as_line() == result
+
+
+@pytest.mark.parametrize("extension", ["tar.gz", "zip"])
+@pytest.mark.parametrize("prefix", ["child @ ", ""])
+def test_archive_requirement_subdirectory(extension, prefix):
+    line = f"{prefix}https://example.org/source/archive/main.{extension}#subdirectory=src/child"
+    req = parse_requirement(line)
+
+    assert req.subdirectory == "src/child"
+    assert req.as_file_link().subdirectory == "src/child"
+    assert req.as_line() == line
+    assert parse_requirement(req.as_line()).subdirectory == "src/child"
+
+
+@pytest.mark.parametrize("url", ["https://example.org/bundle.zip", "git+https://example.org/repo.git"])
+@pytest.mark.parametrize(
+    "encoded, subdirectory",
+    [("src/a%26b", "src/a&b"), ("src/c%2B%2B", "src/c++"), ("src/a%252Fb", "src/a%2Fb")],
+)
+def test_requirement_encoded_subdirectory(url, encoded, subdirectory):
+    line = f"child @ {url}#subdirectory={encoded}"
+    req = parse_requirement(line)
+
+    assert req.subdirectory == subdirectory
+    assert req.as_file_link().subdirectory == subdirectory
+    assert req.as_line() == line
+    assert parse_requirement(req.as_line()).subdirectory == subdirectory
+
+
+@pytest.mark.parametrize("fragment, expected", [("", "explicit"), ("#subdirectory=src/child", "src/child")])
+def test_file_requirement_explicit_subdirectory(fragment, expected):
+    req = FileRequirement(
+        name="child", url=f"https://example.org/source/archive/main.zip{fragment}", subdirectory="explicit"
+    )
+
+    assert req.subdirectory == expected
+    assert req.as_file_link().subdirectory == expected
+
+
+def test_archive_requirement_with_egg_and_subdirectory():
+    req = parse_requirement("https://example.org/source/archive/main.zip#egg=child&subdirectory=src/child")
+
+    assert req.name == "child"
+    assert req.subdirectory == "src/child"
+    assert req.as_line() == "child @ https://example.org/source/archive/main.zip#subdirectory=src/child"
 
 
 @pytest.mark.parametrize(
