@@ -147,6 +147,13 @@ class LockedRepository(BaseRepository):
                     req.url = root.joinpath(req.path).as_uri()  # type: ignore[attr-defined]
                 candidate = Candidate(req=req, name=package_name, version=package.get("version"))
                 candidate.requires_python = package.get("requires-python", "")
+                if archive := package.get("archive"):
+                    link = candidate.link
+                    assert link is not None
+                    candidate.hashes = [
+                        {"url": link.url_without_fragment, "file": link.filename, "hash": f"{algo}:{value}"}
+                        for algo, value in archive.get("hashes", {}).items()
+                    ]
                 for artifact in itertools.chain(
                     package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []
                 ):
