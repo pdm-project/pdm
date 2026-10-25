@@ -12,6 +12,8 @@ from pdm.models.specifiers import PySpecSet
         ("python_version <= '3.8'", "", "<3.9"),
         ("python_version != '3.8'", "", "!=3.8.*"),
         ("python_version == '3.7'", "", "==3.7.*"),
+        ("python_version == '3.*'", "", "==3.*"),
+        ("python_version != '3.*'", "", "!=3.*"),
         ("python_version in '3.6 3.7'", "", ">=3.6.0,<3.8.0"),
         ("python_full_version >= '3.6.0'", "", ">=3.6"),
         ("python_full_version not in '3.8.3'", "", "!=3.8.3"),
