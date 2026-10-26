@@ -107,6 +107,9 @@ class UvResolver(Resolver):
 
         if dt := self.project.core.state.exclude_newer:
             cmd.extend(["--exclude-newer", dt.isoformat()])
+        for package, dt in self.project.core.state.exclude_newer_overrides.items():
+            value = dt.isoformat() if dt is not None else "false"
+            cmd.extend(["--exclude-newer-package", f"{package}={value}"])
 
         return cmd
 

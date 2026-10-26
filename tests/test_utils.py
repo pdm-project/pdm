@@ -1,4 +1,6 @@
+import os
 import pathlib
+import stat
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -500,7 +502,16 @@ def test_invalidate_project_name(name):
 
 @pytest.mark.parametrize(
     "given,sanitized",
-    [("foo", "foo"), ("Foo.Bar", "Foo.Bar"), ("-foo", "foo"), ("Foo%$Bar", "Foo-Bar"), ("Foo$", "Foo")],
+    [
+        ("foo", "foo"),
+        ("Foo.Bar", "Foo.Bar"),
+        ("-foo", "foo"),
+        ("Foo%$Bar", "Foo-Bar"),
+        ("Foo$", "Foo"),
+        ("__demo__", "demo"),
+        ("--foo..", "foo"),
+        ("my project!_", "my-project"),
+    ],
 )
 def test_sanitize_project_name(given, sanitized):
     assert utils.sanitize_project_name(given) == sanitized
@@ -532,6 +543,16 @@ def test_convert_to_datetime_when_uppercase_t_is_present():
     expected_datetime = datetime.fromisoformat("2025-10-30T10:26:29+00:00")
 
     assert utils.convert_to_datetime(original_datetime) == expected_datetime
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["2025-10-30T10:26:29", "2025-10-30t10:26:29z", "2025-10-30T10:26:29.000+00:00"],
+)
+def test_convert_to_datetime_is_always_timezone_aware(value):
+    expected_datetime = datetime(2025, 10, 30, 10, 26, 29, tzinfo=timezone.utc)
+
+    assert utils.convert_to_datetime(value) == expected_datetime
 
 
 def test_convert_to_datetime_when_uppercase_t_is_absent():
@@ -594,3 +615,42 @@ def test_open_for_write_no_symlink_refuses_symlinked_target(tmp_path):
     # The symlink and its target are both left intact.
     assert link.is_symlink()
     assert real.read_text() == "untouched"
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_atomic_open_for_write_with_bare_filename(tmp_path, monkeypatch, path_type):
+    monkeypatch.chdir(tmp_path)
+    target = path_type("target.lock")
+
+    with utils.atomic_open_for_write(target) as fp:
+        fp.write("new content")
+
+    assert Path(target).read_text(encoding="utf-8") == "new content"
+    assert list(tmp_path.iterdir()) == [tmp_path / "target.lock"]
+
+
+def test_atomic_open_for_write_keeps_the_original_when_the_write_fails(tmp_path, mocker):
+    target = tmp_path / "pyproject.toml"
+    target.write_text("original content", encoding="utf-8")
+    # Fail at whichever call publishes the new content over the destination.
+    mocker.patch("pdm.utils.shutil.copyfile", side_effect=OSError("No space left on device"))
+    mocker.patch("pdm.utils.os.replace", side_effect=OSError("No space left on device"))
+
+    with pytest.raises(OSError), utils.atomic_open_for_write(target) as fp:
+        fp.write("new content")
+
+    assert target.exists(), "the destination was destroyed by a failed write"
+    assert target.read_text(encoding="utf-8") == "original content"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file modes")
+def test_atomic_open_for_write_keeps_the_destination_mode(tmp_path):
+    target = tmp_path / "pdm.lock"
+    target.write_text("original content", encoding="utf-8")
+    target.chmod(0o640)
+
+    with utils.atomic_open_for_write(target) as fp:
+        fp.write("new content")
+
+    assert stat.S_IMODE(target.stat().st_mode) == 0o640
+    assert target.read_text(encoding="utf-8") == "new content"

@@ -39,7 +39,7 @@ def test_init_command(project_no_init, pdm, mocker):
             "authors": [{"email": "me@example.org", "name": "Testing"}],
             "dependencies": [],
             "description": "Default template for PDM package",
-            "license": {"text": "MIT"},
+            "license": "MIT",
             "name": "test-project",
             "requires-python": f"=={python_version}.*",
             "readme": "README.md",
@@ -153,11 +153,45 @@ def test_init_preserves_existing_pyproject_values(project_no_init, pdm, mocker):
     assert data["project"]["version"] == "2.1.0"
     assert data["project"]["description"] == "Existing description"
     assert data["project"]["authors"] == [{"name": "Existing Author", "email": "author@example.org"}]
-    assert data["project"]["license"] == {"text": "Apache-2.0"}
+    assert data["project"]["license"] == "Apache-2.0"
     assert data["project"]["requires-python"] == ">=3.10"
     assert data["project"]["dependencies"] == ["requests"]
     assert data["build-system"] == {"requires": ["hatchling"], "build-backend": "hatchling.build"}
     assert data["tool"]["pdm"]["distribution"] is False
+
+
+@pytest.mark.parametrize(
+    "license_lines,args,expected",
+    [
+        ('license = {file = "LICENSE"}', [], {"file": "LICENSE"}),
+        ('license = "MIT"\nlicense-files = ["LICENSE"]', [], "MIT"),
+        ('license = "MIT"\nlicense-files = ["LICENSE"]', ["--license", "Apache-2.0"], "Apache-2.0"),
+        ('license = {file = "LICENSE"}', ["--license", "MIT"], "MIT"),
+        ('license = {text = "Apache-2.0"}', [], "Apache-2.0"),
+    ],
+    ids=["file", "expression", "new-expression", "file-to-expression", "text-to-expression"],
+)
+def test_init_keeps_existing_license_shape(project_no_init, pdm, mocker, license_lines, args, expected):
+    project_no_init.pyproject._path.write_text(
+        "[project]\n"
+        'name = "existing-project"\n'
+        'version = "2.1.0"\n'
+        f"{license_lines}\n"
+        'requires-python = ">=3.10"\n'
+        "dependencies = []\n"
+    )
+    project_no_init.pyproject.reload()
+    mocker.patch(
+        "pdm.cli.commands.init.get_user_email_from_git",
+        return_value=("Testing", "me@example.org"),
+    )
+
+    result = pdm(["init", "-n", *args], obj=project_no_init)
+
+    assert result.exit_code == 0
+    with open(project_no_init.root.joinpath("pyproject.toml"), "rb") as fp:
+        data = tomllib.load(fp)
+    assert data["project"]["license"] == expected
 
 
 def test_init_updates_existing_pyproject_with_explicit_values(project_no_init, pdm, mocker):
@@ -208,9 +242,9 @@ def test_init_updates_existing_pyproject_with_explicit_values(project_no_init, p
     assert data["project"]["name"] == "updated-project"
     assert data["project"]["version"] == "3.0.0"
     assert data["project"]["description"] == "Updated description"
-    assert data["project"]["license"] == {"text": "MIT"}
+    assert data["project"]["license"] == "MIT"
     assert data["project"]["dependencies"] == ["requests"]
-    assert data["build-system"] == {"requires": ["setuptools>=61"], "build-backend": "setuptools.build_meta"}
+    assert data["build-system"] == {"requires": ["setuptools>=77"], "build-backend": "setuptools.build_meta"}
     assert data["tool"]["pdm"]["distribution"] is True
 
 
@@ -261,7 +295,7 @@ def test_new_command(project_no_init, pdm, mocker):
             "authors": [{"email": "me@example.org", "name": "Testing"}],
             "dependencies": [],
             "description": "Default template for PDM package",
-            "license": {"text": "MIT"},
+            "license": "MIT",
             "name": "test-project",
             "requires-python": f"=={python_version}.*",
             "readme": "README.md",
@@ -417,13 +451,13 @@ def test_init_command_library(project_no_init, pdm, mocker):
             "authors": [{"email": "me@example.org", "name": "Testing"}],
             "dependencies": [],
             "description": "Test Project",
-            "license": {"text": "MIT"},
+            "license": "MIT",
             "name": "test-project",
             "requires-python": f">={python_version}",
             "readme": "README.md",
             "version": "0.1.0",
         },
-        "build-system": {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]},
+        "build-system": {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=77"]},
         "tool": {"pdm": {"distribution": True}},
     }
 
@@ -435,7 +469,7 @@ def test_init_command_library(project_no_init, pdm, mocker):
     "backend_choice,merged_backend",
     [
         (0, {"build-backend": "pdm.backend", "requires": ["pdm-backend", "example"]}),
-        (1, {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=61"]}),
+        (1, {"build-backend": "setuptools.build_meta", "requires": ["setuptools>=77"]}),
     ],
 )
 def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker, backend_choice, merged_backend):
@@ -471,7 +505,7 @@ def test_init_template_build_system(tmp_path, project_no_init, pdm, mocker, back
             "authors": [{"email": "me@example.org", "name": "Testing"}],
             "dependencies": [],
             "description": "Test Project",
-            "license": {"text": "MIT"},
+            "license": "MIT",
             "name": "test-project",
             "requires-python": f">={python_version}",
             "dynamic": ["version"],
@@ -507,7 +541,7 @@ def test_init_non_interactive(project_no_init, pdm, mocker):
             "authors": [{"email": "me@example.org", "name": "Testing"}],
             "dependencies": [],
             "description": "Default template for PDM package",
-            "license": {"text": "MIT"},
+            "license": "MIT",
             "name": project_no_init.root.name,
             "requires-python": f"=={python_version}.*",
             "readme": "README.md",
@@ -575,7 +609,7 @@ def test_init_with_license_non_interactive(project_no_init, pdm, mocker):
             "authors": [{"email": "me@example.org", "name": "Testing"}],
             "dependencies": [],
             "description": "Default template for PDM package",
-            "license": {"text": f"{expected_license}"},
+            "license": expected_license,
             "name": project_no_init.root.name,
             "requires-python": f"=={python_version}.*",
             "readme": "README.md",
@@ -612,7 +646,7 @@ def test_init_with_project_version_non_interactive(project_no_init, pdm, mocker)
             "authors": [{"email": "me@example.org", "name": "Testing"}],
             "dependencies": [],
             "description": "Default template for PDM package",
-            "license": {"text": "MIT"},
+            "license": "MIT",
             "name": project_no_init.root.name,
             "requires-python": f"=={python_version}.*",
             "readme": "README.md",

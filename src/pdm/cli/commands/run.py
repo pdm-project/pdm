@@ -120,6 +120,8 @@ def read_script_metadata(script: str, section: str) -> dict[str, Any] | None:
     else:
         import tomli as tomllib
 
+    # Python runs a script that starts with a UTF-8 BOM, so look for a block on its first line too.
+    script = script.removeprefix("\ufeff")
     matches = [m for m in re.finditer(_METADATA_REGEX, script) if m.group("type") == section]
     if len(matches) > 1:
         raise ValueError(f"Multiple {section} blocks found")
@@ -262,6 +264,9 @@ class TaskRunner:
         from dotenv.main import resolve_variables
 
         project = self.project
+        # The environment is prepared in os.environ, restore it afterwards so
+        # the next task of a composite script doesn't inherit it.
+        saved_environ = os.environ.copy()
         if not shell and args[0].endswith(".py"):
             script_file = os.path.expanduser(args[0])
             if working_dir and not os.path.isabs(script_file):
@@ -337,6 +342,8 @@ class TaskRunner:
         finally:
             signal.signal(signal.SIGTERM, handle_term)
             signal.signal(signal.SIGINT, handle_int)
+            os.environ.clear()
+            os.environ.update(saved_environ)
 
     def run_task(
         self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None, seen: set[str] | None = None

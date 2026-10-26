@@ -1,3 +1,90 @@
+## Release v2.29.3 (2026-10-19)
+
+### Features & Improvements
+
+- Add the `--venv` option to `pdm outdated`, like the other commands that read the installed packages. ([#3904](https://github.com/pdm-project/pdm/issues/3904))
+
+### Bug Fixes
+
+- Fix isolated PEP 517 builds skipping packages that are only visible via the host venv's `--system-site-packages`. ([#3895](https://github.com/pdm-project/pdm/issues/3895))
+- Fix `pdm import` of Poetry projects dropping optional dependencies whose extras entry is spelled differently, and importing optional dependencies with multiple constraints as required ones. ([#3899](https://github.com/pdm-project/pdm/issues/3899))
+- Keep the plain requirement in `pdm export` when the same package is also locked with extras under a narrower marker, so it is no longer missing from `requirements.txt` on the other platforms. ([#3900](https://github.com/pdm-project/pdm/issues/3900))
+- Fix `python_version <= "X.Y"` markers excluding the patch releases of `X.Y`, so `pdm install` skipped such dependencies. ([#3902](https://github.com/pdm-project/pdm/issues/3902))
+- Fix environment variables set by one task of a composite script, via `env` or `env_file`, leaking into the tasks that run after it. ([#3903](https://github.com/pdm-project/pdm/issues/3903))
+- Convert flit's comma-separated `keywords` and obsolete `dev-requires` into valid PEP 621 fields when importing a flit project. ([#3907](https://github.com/pdm-project/pdm/issues/3907))
+- Import custom Pipfile package categories, such as `[docs]`, as dependency groups instead of dropping them. ([#3909](https://github.com/pdm-project/pdm/issues/3909))
+- Keep editable requirements in `[tool.pdm.dev-dependencies]` on `pdm import`, so the written `[dependency-groups]` table stays valid per PEP 735. ([#3910](https://github.com/pdm-project/pdm/issues/3910))
+- Keep Poetry's `develop = true` as an editable requirement when importing dependency groups. ([#3913](https://github.com/pdm-project/pdm/issues/3913))
+- Fix `pdm import` of the project's own Poetry `pyproject.toml` writing each dependency group to both `[tool.pdm.dev-dependencies]` and `[dependency-groups]`. ([#3915](https://github.com/pdm-project/pdm/issues/3915))
+- Import Pipfile packages declared with a `file` URL, such as `{file = "https://..."}`, as URL requirements instead of dropping the URL. ([#3918](https://github.com/pdm-project/pdm/issues/3918))
+- Preserve Poetry platform restrictions as environment markers when importing dependencies. ([#3920](https://github.com/pdm-project/pdm/issues/3920))
+- Read an `exclude-newer` timestamp without a UTC offset as UTC, so `pdm lock` no longer fails with a `TypeError` comparing naive and aware datetimes. ([#3922](https://github.com/pdm-project/pdm/issues/3922))
+- Do not write empty dependency groups, such as `dev = []` from an empty `[dev-packages]` table, when importing from another format. ([#3925](https://github.com/pdm-project/pdm/issues/3925))
+- Strip every leading and trailing `.`, `_` and `-` when `pdm init` derives the project name from the directory, so a folder like `__demo__` no longer produces the invalid name `_demo_`. ([#3927](https://github.com/pdm-project/pdm/issues/3927))
+- `pdm init` now writes `project.license` as a license expression string instead of a `{text = ...}` table, and no longer rewrites an existing `{file = ...}` table or license expression into a value the build backend rejects. ([#3929](https://github.com/pdm-project/pdm/issues/3929))
+- Read the inline metadata of a script that starts with a UTF-8 BOM, which `pdm run` ignored. ([#3931](https://github.com/pdm-project/pdm/issues/3931))
+- Convert a space-separated Poetry version constraint such as `>=1.0 <2.0` like the comma-separated form instead of aborting the import. ([#3934](https://github.com/pdm-project/pdm/issues/3934))
+- Resolve relative `path` entries in a `Pipfile` against the directory of the `Pipfile` when importing, instead of the current working directory. ([#3935](https://github.com/pdm-project/pdm/issues/3935))
+
+### Documentation
+
+- Document what to cache and which install command to use when running PDM on CI platforms other than GitHub Actions. ([#2472](https://github.com/pdm-project/pdm/issues/2472))
+
+
+## Release v2.29.2 (2026-09-17)
+
+### Bug Fixes
+
+- Fix writing lock files specified as bare relative filenames with `pdm lock --lockfile`. ([#3891](https://github.com/pdm-project/pdm/issues/3891))
+- Preserve local paths containing spaces and their extras and environment markers when importing requirements files. ([#3894](https://github.com/pdm-project/pdm/issues/3894))
+
+### Documentation
+
+- List the install-pdm.py options the script actually accepts. ([#3889](https://github.com/pdm-project/pdm/issues/3889))
+
+
+## Release v2.29.1 (2026-09-14)
+
+### Features & Improvements
+
+- Explain missing lockfile groups and provide group-selection recovery guidance when installing, syncing, or updating groups. ([#2682](https://github.com/pdm-project/pdm/issues/2682))
+- Allow package-specific overrides for `exclude-newer` resolution limits. ([#3809](https://github.com/pdm-project/pdm/issues/3809))
+
+### Bug Fixes
+
+- Keep the separating comma out of the operator and accept a `v` prefix when converting Poetry version constraints. ([#3860](https://github.com/pdm-project/pdm/issues/3860))
+- Escape glob characters in the virtualenv lookup prefix, so a project whose directory name contains `[` or `]` can find its own virtualenv. ([#3869](https://github.com/pdm-project/pdm/issues/3869))
+- Write `pyproject.toml` and lockfiles atomically to prevent interrupted writes from truncating them. ([#3870](https://github.com/pdm-project/pdm/issues/3870))
+- Resolve the workspace root before making member paths relative, so a root given as a relative path or reached through a symlink no longer raises `ValueError`. ([#3874](https://github.com/pdm-project/pdm/issues/3874))
+- Replace the destination of an atomic write instead of unlinking it first, so an interrupted write can no longer destroy `pyproject.toml` or the lockfile. ([#3878](https://github.com/pdm-project/pdm/issues/3878))
+- Report the version part that could not be read, instead of blaming a postrelease for every parse failure. ([#3880](https://github.com/pdm-project/pdm/issues/3880))
+- Keep quoted local paths that contain `` - `` when parsing requirements files. ([#3885](https://github.com/pdm-project/pdm/issues/3885))
+
+### Documentation
+
+- Clarify dependency command effects on project declarations, lock metadata, and installed packages in the guide and CLI help. ([#2681](https://github.com/pdm-project/pdm/issues/2681))
+
+
+## Release v2.29.0 (2026-08-29)
+
+### Features & Improvements
+
+- Export editable local dependencies with relative paths in requirements files. ([#3294](https://github.com/pdm-project/pdm/issues/3294))
+- Extend `pdm run` with `--env`, `--env-file` and `--working-dir` options to set or override the corresponding script options dynamically. ([#3829](https://github.com/pdm-project/pdm/issues/3829))
+
+### Bug Fixes
+
+- Restrict a locked package to the platform it was resolved for when it doesn't belong to every lock target, so `pdm lock --platform ... --append` no longer adds entries that get installed on the other targets. ([#3261](https://github.com/pdm-project/pdm/issues/3261))
+- Keep Poetry `include` entries restricted to the sdist format when importing, writing them to `tool.pdm.build.source-includes` instead of dropping them. ([#3854](https://github.com/pdm-project/pdm/issues/3854))
+- Accept `--no-verify-ssl` on `pdm publish`, which was misspelled as `--no-very-ssl`. The old spelling keeps working as an alias. ([#3857](https://github.com/pdm-project/pdm/issues/3857))
+- Convert Poetry tilde constraints with fewer than three components to the bounds Poetry means: `~1.2` becomes `<1.3` rather than `<2.0`, and `~1` no longer produces an invalid `~=1` specifier that aborts the import. ([#3858](https://github.com/pdm-project/pdm/issues/3858))
+- Keep the separating comma out of the operator and accept a `v` prefix when converting Poetry version constraints. ([#3860](https://github.com/pdm-project/pdm/issues/3860))
+- Keep importing a Poetry project when an author or maintainer entry does not fit the `Name <email>` pattern. ([#3861](https://github.com/pdm-project/pdm/issues/3861))
+- Skip `requires-python` when a Pipfile `[requires]` table has no python version, instead of writing `>=None`. ([#3862](https://github.com/pdm-project/pdm/issues/3862))
+- Leave the version and description empty instead of aborting when a flit module cannot be parsed. ([#3864](https://github.com/pdm-project/pdm/issues/3864))
+- Respect dependency group selection options when exporting to `pylock.toml`, producing a single-use lock file that contains only the selected packages. ([#3866](https://github.com/pdm-project/pdm/issues/3866))
+
+
 ## Release v2.28.2 (2026-08-18)
 
 ### Bug Fixes

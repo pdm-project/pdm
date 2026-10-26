@@ -9,6 +9,7 @@ from itertools import zip_longest
 from typing import TYPE_CHECKING, cast
 
 from pdm.cli.commands.base import BaseCommand
+from pdm.cli.options import venv_option
 from pdm.cli.utils import normalize_pattern
 from pdm.models.requirements import strip_extras
 from pdm.utils import normalize_name
@@ -44,6 +45,7 @@ class Command(BaseCommand):
     """Check for outdated packages and list the latest versions on indexes."""
 
     def add_arguments(self, parser: ArgumentParser) -> None:
+        venv_option.add_to_parser(parser)
         parser.add_argument(
             "--json", action="store_const", const="json", dest="format", default="table", help="Output in JSON format"
         )
@@ -59,6 +61,22 @@ class Command(BaseCommand):
         best = finder.find_best_match(package.package).best
         if best:
             package.latest_version = best.version or ""
+
+    @staticmethod
+    def _is_outdated(package: ListPackage) -> bool:
+        from packaging.version import InvalidVersion
+
+        from pdm.utils import parse_version
+
+        if not package.latest_version:
+            return False
+        if not package.installed_version:
+            return True
+        try:
+            # An installed pre-release or local build can be newer than the best match on the index
+            return parse_version(package.latest_version) > parse_version(package.installed_version)
+        except InvalidVersion:
+            return package.latest_version != package.installed_version
 
     @staticmethod
     def _format_json(packages: list[ListPackage]) -> str:
@@ -125,7 +143,7 @@ class Command(BaseCommand):
                 executor.submit(self._populate_latest_version, finder, package)
 
         collected = sorted(
-            [p for p in collected if p.latest_version and p.latest_version != p.installed_version],
+            [p for p in collected if self._is_outdated(p)],
             key=lambda p: p.package,
         )
         if options.format == "json":

@@ -51,8 +51,17 @@ class Version:
                         self.pre = (pre_type, pre_n)
                         break  # pre release version is only at the end
                     else:
+                        # This branch is reached by anything the two cases above
+                        # did not read, not only by a postrelease. An epoch
+                        # (``1!1.0``), a local version (``1.0+local``), a dev
+                        # release (``1.0.dev1``) and a plain typo all landed
+                        # here and were all reported as postreleases, which
+                        # sends the reader looking for a segment that is not
+                        # there. Name the part that failed instead.
                         raise InvalidPyVersion(
-                            f"{version_str}: postreleases are not supported for python version specifiers."
+                            f"{version_str}: {v!r} is not a valid part of a python version "
+                            "specifier. Expected a number, a trailing '*', or a trailing "
+                            "prerelease such as 'a1', 'b2' or 'rc1'."
                         ) from None
             version = tuple(bits)
         self._version: tuple[VersionBit, ...] = version

@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 
 class Command(BaseCommand):
-    """Update package(s) in pyproject.toml"""
+    """Update locked dependency versions and install them"""
 
     arguments = (
         *BaseCommand.arguments,
@@ -48,6 +48,12 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.epilog = (
+            "Resolves updates for the requested packages or selected groups, writes the lockfile, and installs the "
+            "selected dependencies. Version constraints in pyproject.toml are kept unless --unconstrained is given. "
+            "Existing locked groups are preserved, and the update strategy controls which pins are reused. Use "
+            "--no-sync to leave installed packages unchanged."
+        )
         parser.add_argument(
             "-t",
             "--top",

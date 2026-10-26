@@ -13,6 +13,7 @@ from pdm.exceptions import PdmUsageError
 from pdm.formats import FORMATS
 from pdm.formats.pylock import PyLockConverter
 from pdm.models.candidates import Candidate
+from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_INHERIT_METADATA
@@ -69,13 +70,15 @@ class Command(BaseCommand):
     def handle(self, project: Project, options: argparse.Namespace) -> None:
         from pdm.models.repositories.lock import Package
 
+        selection = GroupSelection.from_options(project, options)
         if options.format == "pylock":
             locked_repository = project.get_locked_repository()
             if options.self or options.editable_self:
                 locked_repository.add_package(
                     Package(project.make_self_candidate(editable=options.editable_self), [], "")
                 )
-            doc = tomlkit.dumps(PyLockConverter(project, locked_repository).convert())
+            selected_groups = None if selection.is_unset else list(selection)
+            doc = tomlkit.dumps(PyLockConverter(project, locked_repository).convert(selected_groups=selected_groups))
             if options.output:
                 Path(options.output).write_text(doc, encoding="utf-8")
             else:
@@ -83,7 +86,6 @@ class Command(BaseCommand):
             return
         if options.pyproject:
             options.hashes = False
-        selection = GroupSelection.from_options(project, options)
         if options.markers is False:
             project.core.ui.warn(
                 "The --no-markers option is on, the exported requirements can only work on the current platform"
@@ -108,13 +110,17 @@ class Command(BaseCommand):
                 key=lambda c: not c.req.extras,
             )
             packages = []
-            seen_extras: set[str] = set()
+            extras_markers: dict[str, list[Marker | None]] = {}
             for candidate in candidates:
                 if options.extras:
                     key = candidate.req.key or ""
+                    marker = candidate.req.marker if options.markers else None
                     if candidate.req.extras:
-                        seen_extras.add(key)
-                    elif key in seen_extras:
+                        extras_markers.setdefault(key, []).append(marker)
+                    elif marker in extras_markers.get(key, []):
+                        # Only drop the plain entry when an entry with extras applies to
+                        # exactly the same environments, otherwise it would go missing
+                        # where the extras are not requested.
                         continue
                 elif candidate.req.extras:
                     continue

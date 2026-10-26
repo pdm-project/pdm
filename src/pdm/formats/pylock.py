@@ -108,7 +108,18 @@ class PyLockConverter:
                 repo = self.project.get_repository()
                 repo.fetch_hashes(candidates)
 
-    def convert(self, all_groups: Iterable[str] | None = None) -> dict[str, Any]:
+    def convert(
+        self,
+        all_groups: Iterable[str] | None = None,
+        *,
+        selected_groups: Iterable[str] | None = None,
+    ) -> dict[str, Any]:
+        """Convert the repository, optionally limiting it to a single install set.
+
+        When ``selected_groups`` is provided, group metadata and markers are
+        omitted so installers without dependency-group selection can install
+        every package in the exported lock file.
+        """
         doc = tomlkit.document()
         project = self.project
         lockfile = project.lockfile
@@ -120,6 +131,7 @@ class PyLockConverter:
         if all_groups is None:
             all_groups = list(project.iter_groups())
         extras, groups = self.project.split_extras_groups(list(all_groups))
+        selected_groups_list = list(selected_groups) if selected_groups is not None else None
         env_markers: list[Marker] = []
         for target in repository.targets:
             env_markers.append(target.markers_with_python())
@@ -129,29 +141,39 @@ class PyLockConverter:
                 "lock-version": self.lock_version,
                 "requires-python": str(project.python_requires),
                 "environments": make_array([str(marker) for marker in env_markers], multiline=True),
-                "extras": sorted(extras),
-                "dependency-groups": sorted(groups, key=_group_sort_key),
-                "default-groups": ["default"],
-                "created-by": "pdm",
             }
         )
+        if selected_groups_list is None:
+            doc.update(
+                {
+                    "extras": sorted(extras),
+                    "dependency-groups": sorted(groups, key=_group_sort_key),
+                    "default-groups": ["default"],
+                }
+            )
+        doc["created-by"] = "pdm"
         packages = doc.setdefault("packages", tomlkit.aot())
+        if selected_groups_list is None:
+            selected_packages = list(repository.packages.values())
+        else:
+            selected_packages = list(repository.evaluate_candidates(selected_groups_list, evaluate_markers=False))
 
         with cd(project.root):
-            self._populate_hashes(repository.packages.values())
-            for package in repository.packages.values():
+            self._populate_hashes(selected_packages)
+            for package in selected_packages:
                 if package.candidate.req.extras:
                     continue
                 package_table = self.make_package(package)
                 selection_markers: list[BaseMarker] = []
-                if not package.marker.is_any():
-                    selection_markers.append(package.marker)
-                for item in sorted(package.candidate.req.groups, key=_group_sort_key):
-                    item = normalize_name(item)
-                    if item in extras:
-                        selection_markers.append(parse_marker(f"'{item}' in extras"))
-                    else:
-                        selection_markers.append(parse_marker(f"'{item}' in dependency_groups"))
+                if selected_groups_list is None:
+                    if not package.marker.is_any():
+                        selection_markers.append(package.marker)
+                    for item in sorted(package.candidate.req.groups, key=_group_sort_key):
+                        item = normalize_name(item)
+                        if item in extras:
+                            selection_markers.append(parse_marker(f"'{item}' in extras"))
+                        else:
+                            selection_markers.append(parse_marker(f"'{item}' in dependency_groups"))
                 marker = MarkerUnion.of(*selection_markers) if selection_markers else AnyMarker()
                 if package.candidate.req.marker is not None:
                     marker = package.candidate.req.marker.inner & marker

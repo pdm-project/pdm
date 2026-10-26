@@ -853,6 +853,21 @@ def test_composite_inherit_env(project, pdm, capfd, _echo):
     assert "Third CALLED with VAR=overridden" in out
 
 
+def test_composite_does_not_leak_env_between_tasks(project, pdm, capfd, _echo):
+    (project.root / ".env").write_text("FILE_VAR=42")
+    project.pyproject.settings["scripts"] = {
+        "first": {"cmd": "python echo.py First VAR FILE_VAR", "env": {"VAR": "42"}, "env_file": ".env"},
+        "second": "python echo.py Second VAR FILE_VAR",
+        "test": {"composite": ["first", "second"]},
+    }
+    project.pyproject.write()
+    capfd.readouterr()
+    pdm(["run", "test"], strict=True, obj=project)
+    out, _ = capfd.readouterr()
+    assert "First CALLED with VAR=42 FILE_VAR=42" in out
+    assert "Second CALLED with VAR=None FILE_VAR=None" in out
+
+
 def test_composite_fail_on_first_missing_task(project, pdm, capfd, _echo):
     project.pyproject.settings["scripts"] = {
         "first": "python echo.py First",
@@ -1201,6 +1216,37 @@ def test_run_script_with_inline_metadata(project, pdm, local_finder, local_finde
     with cd(project.root):
         result = pdm(["run", "test_script.py"], obj=project)
         assert result.exit_code == 0
+
+
+def test_run_script_with_inline_metadata_after_bom(project, pdm, local_finder_artifacts):
+    local_artifacts_url = local_finder_artifacts.as_uri()
+    project.root.joinpath("test_script.py").write_text(
+        textwrap.dedent(f"""\
+        # /// script
+        # dependencies = ["first"]
+        #
+        # [[tool.pdm.source]]
+        # name = "pypi"
+        # url = "{local_artifacts_url}"
+        # type = "find_links"
+        # ///
+        from first import first
+
+        assert first([0, False, 1, 2]) == 1
+        """),
+        encoding="utf-8-sig",
+    )
+    with cd(project.root):
+        result = pdm(["run", "test_script.py"], obj=project)
+        assert result.exit_code == 0
+
+
+def test_read_script_metadata_ignores_leading_bom():
+    from pdm.cli.commands.run import read_script_metadata
+
+    script = '# /// script\n# dependencies = ["first"]\n# ///\nimport first\n'
+
+    assert read_script_metadata("\ufeff" + script, "script") == {"dependencies": ["first"]}
 
 
 def test_run_script_pass_run_cwd(project, pdm, capfd):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, cast
@@ -8,6 +9,7 @@ import tomlkit
 
 from pdm import termui
 from pdm.compat import tomllib
+from pdm.utils import atomic_open_for_write
 
 
 class TOMLFile:
@@ -66,7 +68,13 @@ class TOMLFile:
         else:
             data = tomlkit.document()
             data.update(self._data)
-        self._file.write(data)
+        content = data.as_string()
+        if self._file._linesep == "\n":
+            content = content.replace("\r\n", "\n")
+        elif self._file._linesep == "\r\n":
+            content = re.sub(r"(?<!\r)\n", "\r\n", content)
+        with atomic_open_for_write(self._path, encoding="utf-8", newline="") as fp:
+            fp.write(content)
 
     def exists(self) -> bool:
         return self._path.exists()

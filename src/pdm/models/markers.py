@@ -126,15 +126,15 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
         version = marker.value
         if name == "python_version":
             match op:
-                case ">":
+                case ">" | "<=":
                     int_versions = [int(ver) for ver in version.split(".")]
                     if len(int_versions) < 2:
                         int_versions.append(0)
                     int_versions[-1] += 1
                     version = ".".join(str(v) for v in int_versions)
-                    op = ">="
+                    op = ">=" if op == ">" else "<"
                 case "==" | "!=":
-                    if len(version.split(".")) < 3:
+                    if not version.endswith(".*") and len(version.split(".")) < 3:
                         version += ".*"
                 case "in" | "not in":
                     version = " ".join(v + ".*" for v in split_version(version))

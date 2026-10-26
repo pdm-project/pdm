@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from rich.box import ASCII
 
-from pdm.cli.commands.list import Command
+from pdm.cli.commands.list import Command, Listable
 from pdm.models.specifiers import PySpecSet
 from pdm.pytest import Distribution
 from tests import FIXTURES
@@ -873,3 +873,16 @@ def test_list_csv_include_exclude(project, pdm):
     )
     expected = "name,version,groups\n"
     assert expected == result.output
+
+
+@pytest.mark.parametrize(
+    "metadata,expected",
+    [
+        ({"License-Expression": "Apache-2.0 OR BSD-2-Clause"}, "Apache-2.0 OR BSD-2-Clause"),
+        ({"License-Expression": "MIT", "License": "MIT\n\nPermission is hereby granted"}, "MIT"),
+        ({"License": "BSD"}, "BSD"),
+        ({"Classifier": "License :: OSI Approved :: MIT License"}, "MIT License"),
+    ],
+)
+def test_listable_licenses(metadata, expected):
+    assert Listable(Distribution("foo", "1.0", metadata=metadata), set()).licenses == expected

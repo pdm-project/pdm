@@ -3,6 +3,8 @@
 import pytest
 
 from pdm.cli.commands.show import filter_stable
+from pdm.models.project_info import ProjectInfo
+from pdm.pytest import Distribution
 
 
 def test_filter_stable_with_stable_version(mocker):
@@ -69,3 +71,17 @@ def test_show_command_non_distribution_project(project, pdm):
     result = pdm(["show"], obj=project)
     assert result.exit_code != 0
     assert "not a library" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "metadata,expected",
+    [
+        ({"License-Expression": "Apache-2.0 OR BSD-2-Clause"}, "Apache-2.0 OR BSD-2-Clause"),
+        ({"License-Expression": "MIT", "License": "MIT License"}, "MIT"),
+        ({"License": "BSD"}, "BSD"),
+        ({}, ""),
+    ],
+)
+def test_project_info_license(metadata, expected):
+    info = ProjectInfo.from_distribution(Distribution("foo", "1.0", metadata=metadata))
+    assert info.license == expected

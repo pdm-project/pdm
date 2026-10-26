@@ -330,10 +330,11 @@ class Listable:
         self.homepage = dist.metadata.get("Home-Page")
         self.homepage = None if self.homepage == "UNKNOWN" else self.homepage
 
+        # Prefer the SPDX License-Expression (core metadata 2.4, PEP 639).
         # If the License metadata field is empty or UNKNOWN then try to
         # find the license in the Trove classifiers.  There may be more than one
         # so generate a pipe separated list (to avoid complexity with CSV export).
-        self.licenses = dist.metadata.get("License")
+        self.licenses = dist.metadata.get("License-Expression") or dist.metadata.get("License")
         self.licenses = None if self.licenses == "UNKNOWN" else self.licenses
 
         # Sometimes package metadata contains the full license text.

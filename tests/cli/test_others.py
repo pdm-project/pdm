@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import httpx
 import pytest
 
 from pdm.cli import actions
@@ -30,6 +31,22 @@ def test_project_no_init_error(project_no_init, pdm):
 def test_help_option(pdm):
     result = pdm(["--help"])
     assert "usage: pdm [-h]" in result.output.lower()
+
+
+@pytest.mark.parametrize(
+    "command, detail",
+    [
+        ("add", "Use --no-sync to leave the environment unchanged."),
+        ("lock", "Does not install or remove packages."),
+        ("install", "Creates a missing lockfile"),
+        ("sync", "Does not resolve new versions or update the lockfile."),
+        ("update", "Version constraints in pyproject.toml are kept unless --unconstrained is given."),
+    ],
+)
+def test_command_help_explains_state_effects(pdm, command, detail):
+    result = pdm([command, "--help"], strict=True)
+    assert detail in " ".join(result.output.split())
+    assert detail not in pdm(["--help"], strict=True).output
 
 
 def test_pep582_option(pdm):
@@ -126,11 +143,80 @@ def test_import_requirement_no_overwrite(project, pdm, tmp_path):
     assert [r.key for r in project.get_dependencies("web")] == ["flask", "flask-login"]
 
 
-@pytest.mark.network
-def test_search_package(pdm, tmp_path):
+def test_import_editable_requirement_into_pdm_dev_dependencies(project, pdm, tmp_path):
+    tmp_path.joinpath("reqs.txt").write_text("flask\n-e git+https://github.com/pypa/pip.git@main#egg=pip\n")
+    result = pdm(["import", "-d", str(tmp_path.joinpath("reqs.txt"))], obj=project)
+    assert result.exit_code == 0, result.stderr
+
+    # Editable requirements are not valid PEP 508 strings, so they don't belong to [dependency-groups].
+    assert project.pyproject.dependency_groups["dev"] == ["flask"]
+    assert project.pyproject.settings["dev-dependencies"]["dev"] == [
+        "-e git+https://github.com/pypa/pip.git@main#egg=pip"
+    ]
+    assert sorted(r.key for r in project.get_dependencies("dev")) == ["flask", "pip"]
+
+
+def test_import_pipfile_without_dev_packages_skips_empty_group(project, pdm):
+    pipfile = project.root / "Pipfile"
+    pipfile.write_text('[packages]\nrequests = "*"\n\n[dev-packages]\n', encoding="utf-8")
+    pdm(["import", str(pipfile)], obj=project, strict=True)
+
+    project.pyproject.reload()
+    assert "dependency-groups" not in project.pyproject._data
+    assert [r.key for r in project.get_dependencies()] == ["requests"]
+
+
+def test_import_project_poetry_file_does_not_duplicate_groups(project, pdm):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n'
+        '[tool.poetry.dependencies]\npython = "^3.9"\nrequests = "^2.31"\n'
+        '[tool.poetry.group.dev.dependencies]\npytest = "^8.0"\n',
+        encoding="utf-8",
+    )
+    project.pyproject.reload()
+    pdm(["import", "-f", "poetry", str(pyproject)], obj=project, strict=True)
+
+    project.pyproject.reload()
+    assert "dev-dependencies" not in project.pyproject.settings
+    assert project.pyproject.dependency_groups["dev"] == ["pytest<9.0,>=8.0"]
+    assert project.pyproject.dev_dependencies["dev"] == ["pytest<9.0,>=8.0"]
+
+
+def test_search_package(pdm, tmp_path, mocker):
+    from pdm.environments.base import BaseEnvironment
+    from pdm.models.repositories.pypi import PyPIRepository
+
+    search_url = httpx.URL(PyPIRepository.SEARCH_API_URL)
+    requests = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    {"name": "requests", "latest_version": "2.32.3", "description": "Python HTTP for Humans."},
+                    {"name": "requests-mock", "latest_version": "1.12.1", "description": "Mock out responses."},
+                ]
+            },
+        )
+
+    build_session = BaseEnvironment._build_session
+
+    def build_mocked_session(self, *args, **kwargs):
+        kwargs["mounts"] = {f"{search_url.scheme}://{search_url.host}": httpx.MockTransport(handler)}
+        return build_session(self, *args, **kwargs)
+
+    mocker.patch.object(BaseEnvironment, "_build_session", build_mocked_session)
     with cd(tmp_path):
         result = pdm(["search", "requests"], strict=True)
-    assert len(result.output.splitlines()) > 0
+    assert len(requests) == 1
+    assert requests[0].url.path == search_url.path
+    assert requests[0].url.params["q"] == "requests"
+    lines = [line for line in result.output.splitlines() if not line.strip().startswith("INSTALLED:")]
+    assert lines[0].startswith("requests ") and "Python HTTP for Humans." in lines[0]
+    assert lines[1].startswith("requests-mock ") and "Mock out responses." in lines[1]
     assert not tmp_path.joinpath("__pypackages__").exists()
     assert not tmp_path.joinpath(".pdm-python").exists()
 
@@ -210,6 +296,25 @@ def test_export_doesnt_include_dep_with_extras(pdm, fixture_project, extra_opt):
         assert "requests==2.26.0" in result.output.splitlines()
     else:
         assert "requests[security]==2.26.0" in result.output.splitlines()
+
+
+@pytest.mark.usefixtures("repository")
+def test_export_keeps_dep_when_extras_have_narrower_marker(pdm, project):
+    pdm(
+        ["add", "--no-sync", "requests", 'requests[security]; sys_platform == "win32"'],
+        obj=project,
+        strict=True,
+    )
+    result = pdm(["export", "--no-hashes"], obj=project, strict=True)
+    result_lines = result.output.splitlines()
+    assert 'requests[security]==2.19.1; sys_platform == "win32"' in result_lines
+    # requests is needed on every platform, not only where the extra applies
+    assert "requests==2.19.1" in result_lines
+
+    result = pdm(["export", "--no-hashes", "--no-extras"], obj=project, strict=True)
+    result_lines = result.output.splitlines()
+    assert "requests==2.19.1" in result_lines
+    assert not any(line.startswith("requests[") for line in result_lines)
 
 
 def test_completion_command(pdm):

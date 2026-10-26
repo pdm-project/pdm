@@ -14,6 +14,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import sysconfig
@@ -149,13 +150,30 @@ def add_ssh_scheme_to_git_uri(uri: str) -> str:
     return uri
 
 
+def _published_file_mode(filename: str | Path) -> int:
+    """Return the permission bits a file written by ``atomic_open_for_write`` should carry."""
+    try:
+        return stat.S_IMODE(os.stat(filename).st_mode)
+    except OSError:
+        umask = os.umask(0o022)
+        os.umask(umask)
+        return 0o666 & ~umask
+
+
 @contextlib.contextmanager
-def atomic_open_for_write(filename: str | Path, *, mode: str = "w", encoding: str = "utf-8") -> Iterator[IO]:
-    dirname = os.path.dirname(filename)
+def atomic_open_for_write(
+    filename: str | Path, *, mode: str = "w", encoding: str = "utf-8", newline: str | None = None
+) -> Iterator[IO]:
+    dirname = os.path.dirname(filename) or "."
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     fd, name = tempfile.mkstemp(prefix="atomic-write-", dir=dirname)
-    fp = os.fdopen(fd, mode, encoding=encoding if "b" not in mode else None)
+    fp = os.fdopen(
+        fd,
+        mode,
+        encoding=encoding if "b" not in mode else None,
+        newline=newline if "b" not in mode else None,
+    )
     try:
         yield fp
     except Exception:
@@ -163,14 +181,15 @@ def atomic_open_for_write(filename: str | Path, *, mode: str = "w", encoding: st
         raise
     else:
         fp.close()
-        with contextlib.suppress(OSError):
-            os.unlink(filename)
-        # The tempfile is created with mode 600, we need to restore the default mode
-        # with copyfile() instead of move().
+        # The tempfile is created with mode 600, restore the mode the destination
+        # should carry before publishing it.
         # See: https://github.com/pdm-project/pdm/issues/542
-        shutil.copyfile(name, str(filename))
+        with contextlib.suppress(OSError):
+            os.chmod(name, _published_file_mode(filename))
+        os.replace(name, filename)
     finally:
-        os.unlink(name)
+        with contextlib.suppress(OSError):
+            os.unlink(name)
 
 
 @contextlib.contextmanager
@@ -491,7 +510,7 @@ def sanitize_project_name(name: str) -> str:
     """Sanitize the project name and remove all illegal characters"""
     pattern = r"[^a-zA-Z0-9\-_\.]+"
     result = re.sub(pattern, "-", name)
-    result = re.sub(r"^[\._-]|[\._-]$", "", result)
+    result = re.sub(r"^[\._-]+|[\._-]+$", "", result)
     if not result:
         raise PdmException(f"Invalid project name: {name}")
     return result
@@ -555,8 +574,10 @@ def convert_to_datetime(value: str) -> datetime:
             "w": timedelta(weeks=amount),
         }[unit]
         return datetime.now(timezone.utc) - delta
-    if "T" in value:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if "T" in value.upper():
+        dt = datetime.fromisoformat(value.upper().replace("Z", "+00:00"))
+        # A timestamp without an offset is read as UTC, like a bare date
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
     return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
 
