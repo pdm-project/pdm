@@ -124,6 +124,15 @@ You can switch to the `pylock` format with `pdm config` command:
 pdm config lock.format pylock
 ```
 
+Alternatively, set it in `pyproject.toml`:
+
+```toml
+[tool.pdm.lock]
+format = "pylock"
+```
+
+`pyproject.toml` takes precedence over `pdm config`.
+
 ## Specify another lock file to use
 
 By default, PDM uses `pdm.lock` in the current directory. You can specify another lock file with the `-L/--lockfile` option or the `PDM_LOCKFILE` environment variable:
