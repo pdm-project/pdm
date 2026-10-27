@@ -5,7 +5,7 @@ from collections.abc import Iterable, Iterator
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse, urlunparse
 
-import httpx
+import httpx2
 from id import AmbientCredentialError, detect_credential
 from rich.progress import (
     BarColumn,
@@ -24,13 +24,13 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Self
 
-    from httpx._multipart import MultipartStream
+    from httpx2._multipart import MultipartStream
 
     from pdm._types import RepositoryConfig
 
 
-class CallbackWrapperStream(httpx.SyncByteStream):
-    def __init__(self, stream: httpx.SyncByteStream, callback: Callable[[Self], Any]) -> None:
+class CallbackWrapperStream(httpx2.SyncByteStream):
+    def __init__(self, stream: httpx2.SyncByteStream, callback: Callable[[Self], Any]) -> None:
         self._stream = stream
         self._callback = callback
         self.bytes_read = 0
@@ -100,7 +100,7 @@ class Repository:
         except AmbientCredentialError as e:
             self.ui.echo(f"Unable to detect OIDC token for CI platform: {e}", err=True)
             return None
-        except httpx.HTTPError:
+        except httpx2.HTTPError:
             self.ui.echo("Failed to get PyPI token via OIDC", err=True)
             return None
         else:
@@ -136,7 +136,7 @@ class Repository:
             return set()
         return {f"{base}project/{package.metadata['name']}/{package.metadata['version']}/" for package in packages}
 
-    def upload(self, package: PackageFile) -> httpx.Response:
+    def upload(self, package: PackageFile) -> httpx2.Response:
         data_fields = package.metadata_dict
         data_fields.update(
             {

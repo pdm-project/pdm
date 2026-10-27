@@ -5,7 +5,7 @@
 groups = ["default", "all", "doc", "keyring", "pytest", "test", "tox", "workflow"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.1"
-content_hash = "sha256:b96378cc01df722aad923a996567e45555015ea963f314e3a460a3f10b4e85cf"
+content_hash = "sha256:066195d59d10c12a255c29c1cafecfd4454d5e8690f0fa3ff494f631241300ad"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -15,7 +15,7 @@ name = "anyio"
 version = "4.13.0"
 requires_python = ">=3.10"
 summary = "High-level concurrency and networking framework on top of asyncio or Trio"
-groups = ["default", "test"]
+groups = ["default"]
 dependencies = [
     "exceptiongroup>=1.0.2; python_version < \"3.11\"",
     "idna>=2.8",
@@ -111,7 +111,7 @@ name = "certifi"
 version = "2026.10.19"
 requires_python = ">=3.7"
 summary = "Python package for providing Mozilla's CA Bundle."
-groups = ["default", "test"]
+groups = ["default"]
 files = [
     {file = "certifi-2026.10.19-py3-none-any.whl", hash = "sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b"},
     {file = "certifi-2026.10.19.tar.gz", hash = "sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae"},
@@ -645,7 +645,8 @@ name = "h11"
 version = "0.16.0"
 requires_python = ">=3.8"
 summary = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
-groups = ["default", "test"]
+groups = ["default"]
+marker = "sys_platform != \"emscripten\""
 files = [
     {file = "h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"},
     {file = "h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1"},
@@ -653,7 +654,7 @@ files = [
 
 [[package]]
 name = "hishel"
-version = "1.2.1"
+version = "1.4.0"
 requires_python = ">=3.10"
 summary = "Elegant HTTP Caching for Python"
 groups = ["default"]
@@ -662,41 +663,26 @@ dependencies = [
     "typing-extensions>=4.14.1",
 ]
 files = [
-    {file = "hishel-1.2.1-py3-none-any.whl", hash = "sha256:5e1c1e38f4c970eeef69bc8528e85fd5c02eab15a22f9845d30fc880da32b881"},
-    {file = "hishel-1.2.1.tar.gz", hash = "sha256:87212cd31a7a6904352ec5bd7119ed3b43d0ab1259d5995751a2a2b173d7c305"},
+    {file = "hishel-1.4.0-py3-none-any.whl", hash = "sha256:38cb62d7d38fb437dc086f789c26d0cab41310d12497ec3f56dcead4b08571f0"},
+    {file = "hishel-1.4.0.tar.gz", hash = "sha256:e406b052c658ce28629fc31423b9914b637d47d7c923f5fe9e288ec47e4823d1"},
 ]
 
 [[package]]
 name = "hishel"
-version = "1.2.1"
-extras = ["httpx"]
+version = "1.4.0"
+extras = ["httpx2"]
 requires_python = ">=3.10"
 summary = "Elegant HTTP Caching for Python"
 groups = ["default"]
 dependencies = [
     "anyio>=4.9.0",
     "anysqlite>=0.0.5",
-    "hishel==1.2.1",
-    "httpx>=0.28.1",
+    "hishel==1.4.0",
+    "httpx2>=2.9.1",
 ]
 files = [
-    {file = "hishel-1.2.1-py3-none-any.whl", hash = "sha256:5e1c1e38f4c970eeef69bc8528e85fd5c02eab15a22f9845d30fc880da32b881"},
-    {file = "hishel-1.2.1.tar.gz", hash = "sha256:87212cd31a7a6904352ec5bd7119ed3b43d0ab1259d5995751a2a2b173d7c305"},
-]
-
-[[package]]
-name = "httpcore"
-version = "1.0.9"
-requires_python = ">=3.8"
-summary = "A minimal low-level HTTP client."
-groups = ["default", "test"]
-dependencies = [
-    "certifi",
-    "h11>=0.16",
-]
-files = [
-    {file = "httpcore-1.0.9-py3-none-any.whl", hash = "sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"},
-    {file = "httpcore-1.0.9.tar.gz", hash = "sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8"},
+    {file = "hishel-1.4.0-py3-none-any.whl", hash = "sha256:38cb62d7d38fb437dc086f789c26d0cab41310d12497ec3f56dcead4b08571f0"},
+    {file = "hishel-1.4.0.tar.gz", hash = "sha256:e406b052c658ce28629fc31423b9914b637d47d7c923f5fe9e288ec47e4823d1"},
 ]
 
 [[package]]
@@ -713,23 +699,6 @@ dependencies = [
 files = [
     {file = "httpcore2-2.14.0-py3-none-any.whl", hash = "sha256:4c4f64f4b544afeb778c42c0ffb5941b29e671157e90ed3f6dc787c4bca90cd1"},
     {file = "httpcore2-2.14.0.tar.gz", hash = "sha256:4f57a1a8249fe6af589d935cfd456f1d13bbdcb0f0fc72af9142368fc94811d7"},
-]
-
-[[package]]
-name = "httpx"
-version = "0.28.1"
-requires_python = ">=3.8"
-summary = "The next generation HTTP client."
-groups = ["default", "test"]
-dependencies = [
-    "anyio",
-    "certifi",
-    "httpcore==1.*",
-    "idna",
-]
-files = [
-    {file = "httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"},
-    {file = "httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc"},
 ]
 
 [[package]]
@@ -764,19 +733,19 @@ files = [
 ]
 
 [[package]]
-name = "httpx"
-version = "0.28.1"
+name = "httpx2"
+version = "2.14.0"
 extras = ["socks"]
-requires_python = ">=3.8"
+requires_python = ">=3.10"
 summary = "The next generation HTTP client."
 groups = ["default"]
 dependencies = [
-    "httpx==0.28.1",
+    "httpx2==2.14.0",
     "socksio==1.*",
 ]
 files = [
-    {file = "httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"},
-    {file = "httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc"},
+    {file = "httpx2-2.14.0-py3-none-any.whl", hash = "sha256:9d20c13a10bae1773a0be3b0f1e5beeb4bdd549bc3a2ba18efa32897c65403e4"},
+    {file = "httpx2-2.14.0.tar.gz", hash = "sha256:47ad61a3c40282cd8d0dc96311531f00f5bfc71a066c6fe3b36d8f63fb9e4f6e"},
 ]
 
 [[package]]
@@ -798,7 +767,7 @@ name = "idna"
 version = "3.20"
 requires_python = ">=3.9"
 summary = "Internationalized Domain Names in Applications (IDNA)"
-groups = ["default", "test"]
+groups = ["default"]
 files = [
     {file = "idna-3.20-py3-none-any.whl", hash = "sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"},
     {file = "idna-3.20.tar.gz", hash = "sha256:a7db850025b95ded1eae8a46181a1a6c56c92c96f0e2b005d9ff8dc0210cab44"},
@@ -1454,21 +1423,6 @@ files = [
 ]
 
 [[package]]
-name = "pytest-httpx"
-version = "0.36.2"
-requires_python = ">=3.10"
-summary = "Send responses to httpx."
-groups = ["test"]
-dependencies = [
-    "httpx==0.28.*",
-    "pytest==9.*",
-]
-files = [
-    {file = "pytest_httpx-0.36.2-py3-none-any.whl", hash = "sha256:d42ebd5679442dc7bfb0c48e0767b6562e9bc4534d805127b0084171886a5e22"},
-    {file = "pytest_httpx-0.36.2.tar.gz", hash = "sha256:05a56527484f7f4e8c856419ea379b8dc359c36801c4992fdb330f294c690356"},
-]
-
-[[package]]
 name = "pytest-mock"
 version = "3.15.1"
 requires_python = ">=3.9"
@@ -1890,17 +1844,17 @@ files = [
 
 [[package]]
 name = "unearth"
-version = "0.18.2"
-requires_python = ">=3.9"
+version = "0.19.0"
+requires_python = ">=3.10"
 summary = "A utility to fetch and download python packages"
 groups = ["default"]
 dependencies = [
-    "httpx<1,>=0.27.0",
+    "httpx2<3,>=2.0",
     "packaging>=20",
 ]
 files = [
-    {file = "unearth-0.18.2-py3-none-any.whl", hash = "sha256:31fd55d67c0e46a1ebb78993a2010568e6c4231334a3207d18d5d4a549d8d692"},
-    {file = "unearth-0.18.2.tar.gz", hash = "sha256:1e53d7f52f46dd5f875e77ff1c55b12477e215a092e4b66c9764a77df4a9b520"},
+    {file = "unearth-0.19.0-py3-none-any.whl", hash = "sha256:f12c65341303ece9bee986db35ac8aa0d17df4fa000c728a76c8c3798b1f4cf1"},
+    {file = "unearth-0.19.0.tar.gz", hash = "sha256:d85a7b164833c1dc8532a590043cbd7159f6ad2b91fc3e74f2a16ff25ed098c8"},
 ]
 
 [[package]]

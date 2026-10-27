@@ -249,20 +249,20 @@ def test_publish_parse_no_verify_ssl_option(core):
 def test_repository_get_credentials_from_keyring(project, keyring, mocker):
     keyring.save_auth_info("https://test.org/upload", "foo", "barbaz")
     config = RepositoryConfig(config_prefix="repository", name="test", url="https://test.org/upload")
-    basic_auth = mocker.patch("httpx.BasicAuth.__init__", return_value=None)
+    basic_auth = mocker.patch("httpx2.BasicAuth.__init__", return_value=None)
     Repository(project, config)
     basic_auth.assert_called_with(username="foo", password="barbaz")
 
 
-def test_repository_get_token_from_oidc(project, mocker, httpx_mock):
+def test_repository_get_token_from_oidc(project, mocker, httpx2_mock):
     minted_token = "minted_oidc_token"
     test_pypi_url = "https://test.org/upload"
-    httpx_mock.add_response(
+    httpx2_mock.add_response(
         url="https://test.org/_/oidc/audience",
         method="GET",
         json={"audience": "testpypi"},
     )
-    httpx_mock.add_response(
+    httpx2_mock.add_response(
         url="https://test.org/_/oidc/mint-token",
         method="POST",
         json={"token": minted_token},
@@ -277,9 +277,9 @@ def test_repository_get_token_from_oidc(project, mocker, httpx_mock):
     assert base64.b64decode(repository.session.auth._auth_header[6:]).decode("utf-8") == f"__token__:{minted_token}"
 
 
-def test_repository_get_token_from_oidc_request_error(project, mocker, httpx_mock, capsys):
+def test_repository_get_token_from_oidc_request_error(project, mocker, httpx2_mock, capsys):
     test_pypi_url = "https://test.org/upload"
-    httpx_mock.add_response(
+    httpx2_mock.add_response(
         url="https://test.org/_/oidc/audience",
         method="GET",
         status_code=502,
@@ -292,9 +292,9 @@ def test_repository_get_token_from_oidc_request_error(project, mocker, httpx_moc
     assert "Failed to get PyPI token via OIDC" in captured.err
 
 
-def test_repository_get_token_from_oidc_unsupported_platform(project, mocker, httpx_mock, capsys):
+def test_repository_get_token_from_oidc_unsupported_platform(project, mocker, httpx2_mock, capsys):
     test_pypi_url = "https://test.org/upload"
-    httpx_mock.add_response(
+    httpx2_mock.add_response(
         url="https://test.org/_/oidc/audience",
         method="GET",
         json={"audience": "testpypi"},
@@ -312,9 +312,9 @@ def test_repository_get_token_from_oidc_unsupported_platform(project, mocker, ht
     detect_credential_mock.assert_called_once()
 
 
-def test_repository_get_token_misconfigured_github(project, monkeypatch, capsys, httpx_mock):
+def test_repository_get_token_misconfigured_github(project, monkeypatch, capsys, httpx2_mock):
     test_pypi_url = "https://test.org/upload"
-    httpx_mock.add_response(
+    httpx2_mock.add_response(
         url="https://test.org/_/oidc/audience",
         method="GET",
         json={"audience": "testpypi"},

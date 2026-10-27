@@ -81,10 +81,10 @@ def test_install_python(project, pdm, mock_install):
     assert len(result.stdout.splitlines()) > 0
 
 
-def test_install_python_download(project, pdm, mock_install, mocker, httpx_mock):
+def test_install_python_download(project, pdm, mock_install, mocker, httpx2_mock):
     archive = b"python archive"
     url = "https://example.org/python.tar.gz"
-    httpx_mock.add_response(url=url, content=archive)
+    httpx2_mock.add_response(url=url, content=archive)
     mocker.patch("pbs_installer.download", download)
     mocker.patch(
         "pbs_installer.get_download_link",

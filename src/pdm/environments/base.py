@@ -27,7 +27,7 @@ from pdm.utils import deprecation_warning, is_pip_compatible_with_python
 
 if TYPE_CHECKING:
     import unearth
-    from httpx import BaseTransport
+    from httpx2 import BaseTransport
 
     from pdm._types import RepositoryConfig
     from pdm.models.auth import PdmBasicAuth

@@ -36,9 +36,9 @@ from typing import (
     cast,
 )
 
-import httpx
+import httpx2
 import pytest
-from httpx._content import IteratorByteStream
+from httpx2._content import IteratorByteStream
 from pytest_mock import MockerFixture
 from unearth import Link
 
@@ -72,7 +72,7 @@ class FileByteStream(IteratorByteStream):
         self._stream.close()  # type: ignore[attr-defined]
 
 
-class LocalIndexTransport(httpx.BaseTransport):
+class LocalIndexTransport(httpx2.BaseTransport):
     """
     A local file transport for HTTPX.
 
@@ -102,11 +102,11 @@ class LocalIndexTransport(httpx.BaseTransport):
                 )
         return None
 
-    def handle_request(self, request: httpx.Request) -> httpx.Response:
+    def handle_request(self, request: httpx2.Request) -> httpx2.Response:
         request_path = request.url.path
         file_path = self.get_file_path(request_path)
         headers: dict[str, str] = {}
-        stream: httpx.SyncByteStream | None = None
+        stream: httpx2.SyncByteStream | None = None
         content: bytes | None = None
         if request_path in self.overrides:
             status_code = 200
@@ -121,7 +121,7 @@ class LocalIndexTransport(httpx.BaseTransport):
                 headers["Content-Type"] = "text/html"
             elif file_path.suffix == ".json":
                 headers["Content-Type"] = "application/vnd.pypi.simple.v1+json"
-        return httpx.Response(status_code, headers=headers, content=content, stream=stream)
+        return httpx2.Response(status_code, headers=headers, content=content, stream=stream)
 
 
 class RepositoryData:
@@ -344,7 +344,7 @@ _build_session = BaseEnvironment._build_session
 @pytest.fixture
 def build_test_session(pypi_indexes: IndexesDefinition) -> Callable[..., PDMPyPIClient]:
     def get_pypi_session(*args: Any, **kwargs: Any) -> PDMPyPIClient:
-        mounts: dict[str, httpx.BaseTransport] = {}
+        mounts: dict[str, httpx2.BaseTransport] = {}
         for root, specs in pypi_indexes.items():
             index, overrides, strip = specs if isinstance(specs, tuple) else (specs, None, False)
             mounts[root] = LocalIndexTransport(index, overrides=overrides, strip_suffix=strip)
