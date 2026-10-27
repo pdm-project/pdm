@@ -215,3 +215,29 @@ def test_get_hashes_returns_candidate_hashes(mocker):
     candidate.hashes = [{"hash": "sha256:value"}]
 
     assert repository.get_hashes(candidate) is candidate.hashes
+
+
+@pytest.mark.parametrize("source", ["url", "path"])
+@pytest.mark.parametrize("hashes", [{"sha256": "a" * 64}, {"sha256": "a" * 64, "sha512": "b" * 128}])
+def test_read_pylock_archive_hashes(project, source, hashes):
+    filename = "demo-1.0.tar.gz"
+    if source == "url":
+        archive = {"url": f"https://example.org/{filename}#subdirectory=src"}
+    else:
+        (project.root / filename).touch()
+        archive = {"path": filename}
+    lockfile = {
+        "lock-version": "1.0",
+        "created-by": "pdm",
+        "packages": [{"name": "demo", "version": "1.0", "archive": {**archive, "hashes": hashes}}],
+    }
+
+    repository = LockedRepository(lockfile, [], project.environment)
+    candidate = next(iter(repository.packages.values())).candidate
+    link = candidate.link
+
+    assert link is not None
+    assert candidate.hashes == [
+        {"url": link.url_without_fragment, "file": filename, "hash": f"{algo}:{value}"}
+        for algo, value in hashes.items()
+    ]

@@ -1,3 +1,4 @@
+import hashlib
 import shutil
 from argparse import Namespace
 from textwrap import dedent
@@ -1208,3 +1209,27 @@ def test_parse_uv_lock_drops_the_placeholder_root(project):
 
     names = {p.candidate.name for p in resolution.packages}
     assert names == {"packaging"}, f"the placeholder root leaked into the resolution: {names}"
+
+
+@pytest.mark.parametrize("source", ["url", "path"])
+@pytest.mark.parametrize("output_format", ["requirements", "pylock"])
+def test_export_pylock_archive_hashes(project, pdm, source, output_format):
+    artifact = FIXTURES / "artifacts/first-2.0.2-py2.py3-none-any.whl"
+    if source == "url":
+        requirement = f"http://fixtures.test/artifacts/{artifact.name}"
+    else:
+        shutil.copy2(artifact, project.root)
+        requirement = (project.root / artifact.name).as_posix()
+    project.project_config["lock.format"] = "pylock"
+    pdm(["add", "--no-sync", requirement], obj=project, strict=True)
+    expected = {"sha256": hashlib.sha256(artifact.read_bytes()).hexdigest()}
+    saved = tomllib.loads(project.lockfile._path.read_text(encoding="utf-8"))
+    assert saved["packages"][0]["archive"]["hashes"] == expected
+
+    result = pdm(["export", "-f", output_format], obj=project, strict=True)
+
+    if output_format == "requirements":
+        assert f"--hash=sha256:{expected['sha256']}" in result.stdout
+    else:
+        exported = tomllib.loads(result.stdout)
+        assert exported["packages"][0]["archive"]["hashes"] == expected
