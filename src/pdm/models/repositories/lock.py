@@ -345,7 +345,10 @@ class LockedRepository(BaseRepository):
                 for file in entry.candidate.hashes:
                     if file not in existing.candidate.hashes:
                         existing.candidate.hashes.append(file)
-        if markers is not None:
+        # The platform markers can't tell apart targets on the same OS and architecture,
+        # e.g. manylinux and musllinux, so excluding the new target that way would drop
+        # the packages from the previous targets they were resolved for as well.
+        if markers is not None and all(markers[1].matches(target) for target in previous_targets):
             for key, package in self.packages.items():
                 if key not in resolved:
                     _restrict_marker(package, markers[1], [env_spec])
