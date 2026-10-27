@@ -1,3 +1,32 @@
+## Release v2.29.4 (2026-10-27)
+
+### Features & Improvements
+
+- Allow specifying `lock.format` in `pyproject.toml` via the `[tool.pdm.lock]` table. ([#3958](https://github.com/pdm-project/pdm/issues/3958))
+
+### Bug Fixes
+
+- Import a requirements file that starts with a UTF-8 BOM, which failed with a `RequirementError`. ([#3937](https://github.com/pdm-project/pdm/issues/3937))
+- Treat a `Pipfile` version without an operator, such as `requests = "2.31.0"`, as an exact `==` pin when importing, like pipenv does, instead of failing with an invalid specifier error. ([#3939](https://github.com/pdm-project/pdm/issues/3939))
+- Preserve Poetry include entries targeting both source and wheel distributions when importing a project. ([#3941](https://github.com/pdm-project/pdm/issues/3941))
+- Preserve version and description when importing Flit projects with a `src/` layout or an annotated `__version__`. ([#3942](https://github.com/pdm-project/pdm/issues/3942))
+- Require `certifi>=2026.10.19`, which removes the `emSign ECC Root CA - G3` root whose eMudhra intermediates had their private keys compromised. ([#3944](https://github.com/pdm-project/pdm/issues/3944))
+- `pdm outdated` no longer lists a package whose installed version is newer than the latest one found on the index, such as an installed pre-release or local build. ([#3945](https://github.com/pdm-project/pdm/issues/3945))
+- Fix `pdm lock --check` reporting an outdated lockfile when a group is declared in both `[dependency-groups]` and `[tool.pdm.dev-dependencies]`. ([#3947](https://github.com/pdm-project/pdm/issues/3947))
+- Show the license from `License-Expression` (PEP 639) in `pdm show` and `pdm list --fields licenses`. ([#3948](https://github.com/pdm-project/pdm/issues/3948))
+- Stop `pdm lock` from excluding packages from a lock target when another target shares its OS and architecture, e.g. manylinux and musllinux. ([#3950](https://github.com/pdm-project/pdm/issues/3950))
+- Fix a crash when a `python_version` marker compares against a wildcard version such as `python_version == "3.*"`. ([#3951](https://github.com/pdm-project/pdm/issues/3951))
+- Send `License-Expression` and `License-File` with the upload in `pdm publish`, so PyPI shows the license of PEP 639 packages. ([#3952](https://github.com/pdm-project/pdm/issues/3952))
+- Preserve the subdirectory fragment in source archive requirements when resolving dependencies and serializing requirement URLs. ([#3954](https://github.com/pdm-project/pdm/issues/3954))
+- Preserve archive hashes when reading pylock.toml so they remain available for exports. ([#3956](https://github.com/pdm-project/pdm/issues/3956))
+- Fix detection of responses served from the HTTP cache, so cached downloads and index pages are reported as cached again. ([#3961](https://github.com/pdm-project/pdm/issues/3961))
+
+### Dependencies
+
+- Install the download dependencies of pbs-installer so Python installation works with its latest releases. ([#3959](https://github.com/pdm-project/pdm/issues/3959))
+- Upgrade `unearth` to `>=0.19` and migrate the HTTP client from `httpx` to `httpx2`. `pdm.models.session.PDMPyPIClient` and the transports in `pdm.pytest` are now built on `httpx2`, so plugins interacting with them should import `httpx2` instead of `httpx`. ([#3962](https://github.com/pdm-project/pdm/issues/3962))
+
+
 ## Release v2.29.3 (2026-10-19)
 
 ### Features & Improvements

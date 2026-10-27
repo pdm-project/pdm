@@ -4,7 +4,7 @@ import json
 from html.parser import HTMLParser
 from pathlib import Path
 
-import httpx
+import httpx2 as httpx
 
 PROJECT_DIR = Path(__file__).parent.parent
 
