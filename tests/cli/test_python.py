@@ -1,9 +1,10 @@
+import hashlib
 import platform
 import sys
 from pathlib import Path
 
 import pytest
-from pbs_installer import PythonVersion
+from pbs_installer import PythonVersion, download
 
 from pdm.models.python import PythonInfo
 from pdm.utils import parse_version
@@ -78,6 +79,27 @@ def test_install_python(project, pdm, mock_install):
 
     result = pdm(["py", "install", "--list"], obj=project, strict=True)
     assert len(result.stdout.splitlines()) > 0
+
+
+def test_install_python_download(project, pdm, mock_install, mocker, httpx_mock):
+    archive = b"python archive"
+    url = "https://example.org/python.tar.gz"
+    httpx_mock.add_response(url=url, content=archive)
+    mocker.patch("pbs_installer.download", download)
+    mocker.patch(
+        "pbs_installer.get_download_link",
+        return_value=(PythonVersion("cpython", 3, 10, 8), (url, hashlib.sha256(archive).hexdigest())),
+    )
+    install_file = mock_install.side_effect
+
+    def check_archive(filename, destination, original_filename=None, build_dir=False):
+        assert Path(filename).read_bytes() == archive
+        assert original_filename == "python.tar.gz"
+        install_file(filename, destination, original_filename, build_dir)
+
+    mock_install.side_effect = check_archive
+    pdm(["python", "install", "3.10.8"], obj=project, strict=True)
+    mock_install.assert_called_once()
 
 
 def test_install_python_best_match(project, pdm, mock_install, mocker):

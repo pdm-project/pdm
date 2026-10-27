@@ -33,7 +33,7 @@ dependencies = [
     "truststore>=0.10.4",
     "tomli>=1.1.0; python_version < \"3.11\"",
     "hishel[httpx]>=1.0.0",
-    "pbs-installer>=2025.10.7",
+    "pbs-installer[download]>=2025.10.7",
     "httpx[socks]<1,>0.20",
     "filelock>=3.13",
     "httpcore>=1.0.6",
