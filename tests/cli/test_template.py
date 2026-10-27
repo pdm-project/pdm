@@ -66,6 +66,27 @@ def test_module_project_template_generate_application(project_no_init):
     assert (project_no_init.root / "demo.py").exists()
 
 
+def test_template_ignore_file(project_no_init, tmp_path):
+    template_path = tmp_path / "template"
+    (template_path / "docs").mkdir(parents=True)
+    (template_path / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n')
+    (template_path / "main.py").write_text("print('hi')\n")
+    (template_path / "docs" / "notes.md").write_text("template docs\n")
+    (template_path / "debug.log").write_text("noise\n")
+    (template_path / ".pdm-template-ignore").write_text("# template-only files\ndocs/\n*.log\n\n")
+    metadata = {
+        "project": {"name": "foo", "version": "0.1.0", "requires-python": ">=3.10"},
+    }
+
+    with ProjectTemplate(str(template_path)) as template:
+        template.generate(project_no_init.root, metadata)
+
+    assert (project_no_init.root / "main.py").exists()
+    assert not (project_no_init.root / "docs").exists()
+    assert not (project_no_init.root / "debug.log").exists()
+    assert not (project_no_init.root / ".pdm-template-ignore").exists()
+
+
 def test_package_project_template(project_no_init):
     metadata = {
         "project": {"name": "foo", "version": "0.1.0", "requires-python": ">=3.10"},
