@@ -174,7 +174,7 @@ class PDMPyPIClient(PyPIClient):
     def on_response(self, response: httpx.Response) -> None:
         from unearth.utils import ARCHIVE_EXTENSIONS
 
-        if response.extensions.get("from_cache"):
+        if response.extensions.get("hishel_from_cache"):
             response.from_cache = True  # type: ignore[attr-defined]
             if response.url.path.endswith(ARCHIVE_EXTENSIONS):
                 logger.info("Using cached response for %s", response.url)
