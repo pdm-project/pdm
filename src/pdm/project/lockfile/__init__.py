@@ -38,7 +38,7 @@ __all__ = [
 def load_lockfile(project: Project, path: str | Path) -> Lockfile:
     """Load a lockfile from the given path."""
 
-    default_lockfile = PyLock if project.config["lock.format"] == "pylock" else PDMLock
+    default_lockfile = PyLock if project.lock_format == "pylock" else PDMLock
 
     try:
         with open(path, "rb") as f:

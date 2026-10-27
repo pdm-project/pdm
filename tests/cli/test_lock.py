@@ -313,6 +313,33 @@ def test_lock_dependencies(project, lock_format):
         assert package in locked
 
 
+@pytest.mark.usefixtures("repository")
+def test_lock_format_from_pyproject(project):
+    project.add_dependencies(["requests"])
+    project.pyproject.settings["lock"] = {"format": "pylock"}
+    project.pyproject.write()
+    actions.do_lock(project)
+    assert project.lockfile._path.name == "pylock.toml"
+    assert project.lockfile.exists()
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_format_from_pyproject_overrides_config(project):
+    project.add_dependencies(["requests"])
+    project.project_config["lock.format"] = "pdm"
+    project.pyproject.settings["lock"] = {"format": "pylock"}
+    project.pyproject.write()
+    assert project.lock_format == "pylock"
+    actions.do_lock(project)
+    assert project.lockfile._path.name == "pylock.toml"
+
+
+def test_invalid_lock_format_from_pyproject(project):
+    project.pyproject.settings["lock"] = {"format": "invalid"}
+    with pytest.raises(PdmUsageError, match="Invalid lock format"):
+        project.lock_format
+
+
 @pytest.mark.parametrize("args", [("-S", "static_urls"), ("--static-urls",)])
 def test_lock_refresh(pdm, project, repository, args, core, mocker):
     project.add_dependencies(["requests"])

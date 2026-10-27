@@ -208,9 +208,20 @@ class Project:
         return self.workspace.maybe_add()
 
     @property
+    def lock_format(self) -> str:
+        """Return the format of the lock file."""
+        settings = self.pyproject.settings.get("lock", {})
+        value = settings.get("format") if isinstance(settings, Mapping) else None
+        if value is None:
+            return cast(str, self.config["lock.format"])
+        if value not in ("pdm", "pylock"):
+            raise PdmUsageError(f"Invalid lock format '{value!r}', must be 'pdm' or 'pylock'")
+        return cast(str, value)
+
+    @property
     def lockfile(self) -> Lockfile:
         if self._lockfile is None:
-            enable_pylock = self.config["lock.format"] == "pylock"
+            enable_pylock = self.lock_format == "pylock"
             if env_lockfile := os.getenv("PDM_LOCKFILE"):
                 self.set_lockfile(env_lockfile)
             elif self.workspace_project is not None:
