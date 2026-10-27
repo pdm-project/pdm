@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-import httpx
+import httpx2
 import pytest
 
 from pdm.cli import actions
@@ -187,12 +187,12 @@ def test_search_package(pdm, tmp_path, mocker):
     from pdm.environments.base import BaseEnvironment
     from pdm.models.repositories.pypi import PyPIRepository
 
-    search_url = httpx.URL(PyPIRepository.SEARCH_API_URL)
+    search_url = httpx2.URL(PyPIRepository.SEARCH_API_URL)
     requests = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         requests.append(request)
-        return httpx.Response(
+        return httpx2.Response(
             200,
             json={
                 "results": [
@@ -205,7 +205,7 @@ def test_search_package(pdm, tmp_path, mocker):
     build_session = BaseEnvironment._build_session
 
     def build_mocked_session(self, *args, **kwargs):
-        kwargs["mounts"] = {f"{search_url.scheme}://{search_url.host}": httpx.MockTransport(handler)}
+        kwargs["mounts"] = {f"{search_url.scheme}://{search_url.host}": httpx2.MockTransport(handler)}
         return build_session(self, *args, **kwargs)
 
     mocker.patch.object(BaseEnvironment, "_build_session", build_mocked_session)

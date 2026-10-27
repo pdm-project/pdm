@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import shutil
 import textwrap
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 import pytest
 from pytest_mock import MockerFixture
 
@@ -44,7 +45,7 @@ def mock_pypi(mocker: MockerFixture):
     def send(request, **kwargs):
         # consume the data body to make the progress complete
         request.read()
-        return httpx.Response(status_code=200, request=request)
+        return httpx2.Response(status_code=200, request=request)
 
     return mocker.patch("pdm.models.session.PDMPyPIClient.send", side_effect=send)
 
@@ -55,10 +56,42 @@ def uploaded(mocker: MockerFixture):
 
     def fake_upload(package):
         packages.append(package)
-        return httpx.Response(status_code=200, request=httpx.Request("POST", "https://upload.pypi.org/legacy/"))
+        return httpx2.Response(status_code=200, request=httpx2.Request("POST", "https://upload.pypi.org/legacy/"))
 
     mocker.patch.object(Repository, "upload", side_effect=fake_upload)
     return packages
+
+
+class HTTPXMock:
+    """Serve registered responses in place of the network for all ``httpx2.HTTPTransport`` instances."""
+
+    def __init__(self) -> None:
+        self._responses: list[tuple[str, str, dict[str, Any]]] = []
+        self._requested: set[int] = set()
+
+    def add_response(self, url: str, method: str = "GET", **kwargs: Any) -> None:
+        self._responses.append((method.upper(), url, {"status_code": 200, **kwargs}))
+
+    def handle_request(self, request: httpx2.Request) -> httpx2.Response:
+        for i, (method, url, kwargs) in enumerate(self._responses):
+            if request.method == method and str(request.url) == url:
+                self._requested.add(i)
+                return httpx2.Response(request=request, **kwargs)
+        raise httpx2.TimeoutException(f"No response can be found for {request.method} {request.url}", request=request)
+
+    def assert_all_requested(self) -> None:
+        not_requested = [
+            f"{method} {url}" for i, (method, url, _) in enumerate(self._responses) if i not in self._requested
+        ]
+        assert not not_requested, f"The following responses are registered but not requested: {not_requested}"
+
+
+@pytest.fixture
+def httpx2_mock(monkeypatch: pytest.MonkeyPatch) -> Iterator[HTTPXMock]:
+    mock = HTTPXMock()
+    monkeypatch.setattr(httpx2.HTTPTransport, "handle_request", lambda self, request: mock.handle_request(request))
+    yield mock
+    mock.assert_all_requested()
 
 
 @dataclass

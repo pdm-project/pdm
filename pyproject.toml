@@ -22,7 +22,7 @@ dependencies = [
     "rich>=12.3.0",
     "virtualenv>=20",
     "pyproject-hooks",
-    "unearth>=0.17.5",
+    "unearth>=0.19",
     "dep-logic>=0.5",
     "findpython>=0.7.0,<1.0.0a0",
     "tomlkit>=0.11.1,<1",
@@ -32,11 +32,10 @@ dependencies = [
     "installer>=1",
     "truststore>=0.10.4",
     "tomli>=1.1.0; python_version < \"3.11\"",
-    "hishel[httpx]>=1.0.0",
-    "pbs-installer[download]>=2025.10.7",
-    "httpx[socks]<1,>0.20",
+    "hishel[httpx2]>=1.4.0",
+    "pbs-installer[download]>=2026.10.25",
+    "httpx2[socks]>=2.9.1,<3",
     "filelock>=3.13",
-    "httpcore>=1.0.6",
     "certifi>=2026.10.19",
     "id>=1.5.0"
 ]
@@ -83,7 +82,6 @@ test = [
     "pytest-xdist>=1.31.0",
     "pytest-rerunfailures>=10.2",
     "pytest-httpserver>=1.0.6",
-    "pytest-httpx>=0.34.0",
 ]
 tox = [
     "tox",
