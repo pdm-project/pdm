@@ -7,6 +7,7 @@ import subprocess
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 from pdm._types import HiddenText
 from pdm.models.candidates import Candidate
@@ -156,13 +157,16 @@ class UvResolver(Resolver):
             if url := package["source"].get("url"):
                 req = FileRequirement.create(url=url, name=package["name"])
             elif git := package["source"].get("git"):
-                matches = GIT_URL.match(git)
+                source = urlsplit(git)
+                query = parse_qs(source.query)
+                subdirectory = query.pop("subdirectory", [None])[0]
+                matches = GIT_URL.match(source._replace(query=urlencode(query, doseq=True)).geturl())
                 if not matches:
                     raise ValueError(f"Invalid git URL: {git}")
                 url = f"git+{matches.group('repo')}"
-                if ref := matches.group("ref"):
-                    url += f"@{ref}"
-                req = VcsRequirement.create(url=url, name=package["name"])
+                if refs := query.get("rev"):
+                    url += f"@{refs[0]}"
+                req = VcsRequirement.create(url=url, name=package["name"], subdirectory=subdirectory)
                 req.revision = matches.group("revision")
             elif editable := package["source"].get("editable"):
                 req = FileRequirement.create(path=editable, name=package["name"], editable=True)

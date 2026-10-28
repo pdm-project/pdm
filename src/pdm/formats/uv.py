@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 from typing import Any, cast
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 import tomlkit
 
@@ -178,6 +179,8 @@ class _UvFileBuilder:
             result = {req.vcs: req.repo}
             if req.ref:
                 result["rev"] = req.ref
+            if req.subdirectory:
+                result["subdirectory"] = req.subdirectory
         elif req.path:
             result = {"path": req.str_path}
         else:
@@ -188,7 +191,13 @@ class _UvFileBuilder:
 
     def _build_lock_source(self, req: Requirement) -> dict[str, Any]:
         if isinstance(req, VcsRequirement):
-            return {req.vcs: f"{req.repo}?rev={req.ref}#{req.revision}"}
+            source = urlsplit(req.repo)
+            query = dict(parse_qsl(source.query))
+            if req.ref:
+                query["rev"] = req.ref
+            if req.subdirectory:
+                query["subdirectory"] = req.subdirectory
+            return {req.vcs: source._replace(query=urlencode(query), fragment=req.revision or "").geturl()}
         elif isinstance(req, FileRequirement):
             if req.editable:
                 return {"editable": req.str_path}
