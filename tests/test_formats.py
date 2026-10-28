@@ -2,6 +2,7 @@ import hashlib
 import shutil
 from argparse import Namespace
 from textwrap import dedent
+from urllib.parse import quote
 
 import pytest
 
@@ -1233,3 +1234,45 @@ def test_export_pylock_archive_hashes(project, pdm, source, output_format):
     else:
         exported = tomllib.loads(result.stdout)
         assert exported["packages"][0]["archive"]["hashes"] == expected
+
+
+@pytest.mark.parametrize("lock_format", ["pdm", "pylock"])
+@pytest.mark.parametrize("source", ["url", "path"])
+@pytest.mark.parametrize("subdirectory", [None, "src/child", "src/a&b"])
+def test_export_pylock_archive_subdirectory(project, pdm, tmp_path, pypi_indexes, lock_format, source, subdirectory):
+    bundle = tmp_path / "bundle"
+    child = bundle / (subdirectory or "src/child")
+    for directory, name in [(bundle, "parent"), (child, "child")]:
+        directory.mkdir(parents=True, exist_ok=True)
+        directory.joinpath("pyproject.toml").write_text(
+            f'[project]\nname = "{name}"\nversion = "1.0"\ndependencies = []\n', encoding="utf-8"
+        )
+    shutil.make_archive(str(tmp_path / "bundle-1.0"), "zip", tmp_path, "bundle")
+    if source == "url":
+        pypi_indexes["http://archives.test/"] = {"/": tmp_path}
+        url = "http://archives.test/bundle-1.0.zip"
+    else:
+        url = (tmp_path / "bundle-1.0.zip").as_uri()
+    name = "child" if subdirectory else "parent"
+    requirement = f"{name} @ {url}"
+    if subdirectory:
+        requirement += f"#subdirectory={quote(subdirectory)}"
+    project.project_config["lock.format"] = lock_format
+
+    pdm(["add", "--no-sync", requirement], obj=project, strict=True)
+    result = pdm(["export", "-f", "pylock"], obj=project, strict=True)
+
+    exported = tomllib.loads(result.stdout)
+    package = exported["packages"][0]
+    assert package["name"] == name
+    assert package["archive"]["url"] == url
+    assert package["archive"]["hashes"] == {
+        "sha256": hashlib.sha256((tmp_path / "bundle-1.0.zip").read_bytes()).hexdigest()
+    }
+    if subdirectory:
+        assert package["archive"]["subdirectory"] == subdirectory
+    else:
+        assert "subdirectory" not in package["archive"]
+    repository = LockedRepository(exported, [], project.environment)
+    candidate = next(iter(repository.packages.values())).candidate
+    assert candidate.req.subdirectory == subdirectory
