@@ -610,6 +610,26 @@ def test_list_bare_sorted_version(project, pdm):
     assert expected == result.output
 
 
+@pytest.mark.parametrize("homepage", [None, "UNKNOWN"])
+def test_list_sort_missing_homepage(project, pdm, working_set, homepage):
+    for name, value in [
+        ("known-z", "https://z.example"),
+        ("unknown-b", homepage),
+        ("known-a", "https://A.example"),
+        ("unknown-a", homepage),
+    ]:
+        working_set.add_distribution(Distribution(name, "1.0", metadata={"Home-Page": value}))
+
+    result = pdm(["list", "--sort", "homepage,name", "--fields", "name,homepage", "--json"], obj=project, strict=True)
+
+    assert json.loads(result.output) == [
+        {"name": "unknown-a", "homepage": None},
+        {"name": "unknown-b", "homepage": None},
+        {"name": "known-a", "homepage": "https://A.example"},
+        {"name": "known-z", "homepage": "https://z.example"},
+    ]
+
+
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("fake_metadata")
 def test_list_bare_sorted_version_resolve(project, pdm, working_set):
