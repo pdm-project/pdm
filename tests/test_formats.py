@@ -290,6 +290,49 @@ def test_build_uv_pyproject_toml_with_workspace(project):
     assert data["tool"]["uv"]["sources"]["bar"] == {"workspace": True}
 
 
+@pytest.mark.parametrize("source_kind", ["path", "url", "vcs"])
+def test_build_uv_pyproject_preserves_file_requirement_metadata(project, source_kind):
+    wheel = FIXTURES / "artifacts" / "first-2.0.2-py2.py3-none-any.whl"
+    source = {
+        "path": wheel.as_uri(),
+        "url": "https://example.invalid/first-2.0.2-py2.py3-none-any.whl",
+        "vcs": "git+https://example.invalid/first.git@main",
+    }[source_kind]
+    req = parse_requirement(f'first[feature] @ {source} ; sys_platform == "linux"')
+    original = req.as_line()
+    req.groups = ["default", "tools"]
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+
+    with uv_file_builder(project, ">=3.10", [req], locked_repo) as builder:
+        path = builder.build_pyproject_toml()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+
+    expected = 'first[feature]; sys_platform == "linux"'
+    assert data["project"]["dependencies"] == [expected]
+    assert data["project"]["optional-dependencies"]["tools"] == [expected]
+    assert set(data["tool"]["uv"]["sources"]) == {"first"}
+    assert req.as_line() == original
+
+
+def test_build_uv_pyproject_preserves_workspace_file_metadata(project):
+    member = project.root / "packages" / "foo"
+    member.mkdir(parents=True)
+    member.joinpath("pyproject.toml").write_text('[project]\nname = "foo"\nversion = "0.1.0"\n')
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    req = parse_requirement(f'foo[feature] @ {member.as_uri()} ; sys_platform == "linux"')
+    req.groups = ["default"]
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+
+    with uv_file_builder(project, ">=3.10", [req], locked_repo) as builder:
+        path = builder.build_pyproject_toml()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+
+    assert data["project"]["dependencies"] == ['foo[feature]; sys_platform == "linux"']
+    assert data["tool"]["uv"]["sources"]["foo"] == {"workspace": True}
+
+
 def test_build_uv_files_without_project_name_and_version(project):
     """uv requires project.name/version, so a placeholder is filled in for applications
     that declare neither. See issue #3421.
