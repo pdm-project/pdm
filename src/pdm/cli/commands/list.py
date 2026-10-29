@@ -253,7 +253,7 @@ class Command(BaseCommand):
         keys = parse_comma_separated_string(options.sort) if options.sort else ["name"]
         if not all(key in Listable.KEYS for key in keys):
             raise PdmUsageError(f"--sort key must be one of: {','.join(Listable.KEYS)}")
-        records.sort(key=lambda d: tuple(d[key].casefold() for key in keys))
+        records.sort(key=lambda d: tuple((d[key] or "").casefold() for key in keys))
 
         # Write CSV
         if options.csv:
