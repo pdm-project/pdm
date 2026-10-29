@@ -33,10 +33,9 @@ class PyLockConverter:
     def make_package(self, package: Package) -> dict[str, Any]:
         req = package.candidate.req
         candidate = package.candidate
-        result: dict[str, Any] = {
-            "name": candidate.req.key,
-            "version": candidate.version,
-        }
+        result: dict[str, Any] = {"name": candidate.req.key}
+        if candidate.version is not None:
+            result["version"] = candidate.version
         if candidate.requires_python:
             result["requires-python"] = candidate.requires_python
         if isinstance(req, VcsRequirement):
