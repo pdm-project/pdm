@@ -62,6 +62,8 @@ class PyLockConverter:
                 archive = result["archive"] = {"url": req.get_full_url()}
                 if req.path:
                     archive["path"] = req.str_path
+                if req.subdirectory:
+                    archive["subdirectory"] = req.subdirectory
                 for hash_item in candidate.hashes:
                     hash_type, hash_value = hash_item["hash"].split(":", 1)
                     archive.setdefault("hashes", tomlkit.inline_table())[hash_type] = hash_value
