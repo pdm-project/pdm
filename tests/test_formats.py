@@ -1212,6 +1212,56 @@ def test_parse_uv_lock_drops_the_placeholder_root(project):
     assert names == {"packaging"}, f"the placeholder root leaked into the resolution: {names}"
 
 
+@pytest.mark.parametrize("version", [None, "2.0.2"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param('directory = {path = "./local", editable = false}', id="directory"),
+        pytest.param('directory = {path = "./local", editable = true}', id="editable-directory"),
+        pytest.param(
+            'vcs = {type = "git", url = "https://example.org/first.git", '
+            'commit-id = "0123456789abcdef0123456789abcdef01234567"}',
+            id="vcs",
+        ),
+        pytest.param(
+            'archive = {url = "http://fixtures.test/artifacts/first-2.0.2-py2.py3-none-any.whl", '
+            'hashes = {sha256 = "HASH"}}',
+            id="archive",
+        ),
+        pytest.param(
+            'wheels = [{url = "http://fixtures.test/artifacts/first-2.0.2-py2.py3-none-any.whl", '
+            'hashes = {sha256 = "HASH"}}]',
+            id="wheels",
+        ),
+    ],
+)
+def test_export_pylock_optional_version(project, pdm, source, version):
+    artifact = FIXTURES / "artifacts/first-2.0.2-py2.py3-none-any.whl"
+    source = source.replace("HASH", hashlib.sha256(artifact.read_bytes()).hexdigest())
+    local = project.root / "local"
+    local.mkdir()
+    local.joinpath("pyproject.toml").write_text('[project]\nname = "first"\nversion = "2.0.2"\n', encoding="utf-8")
+    lock_path = project.root / "pylock.toml"
+    version_line = f'version = "{version}"\n' if version is not None else ""
+    lock_path.write_text(
+        'lock-version = "1.0"\ncreated-by = "test"\n\n[[packages]]\nname = "first"\n' + version_line + source + "\n",
+        encoding="utf-8",
+    )
+
+    result = pdm(["export", "-f", "pylock", "-L", str(lock_path)], obj=project, strict=True)
+
+    exported = tomllib.loads(result.stdout)
+    package = exported["packages"][0]
+    assert package["name"] == "first"
+    if version is None:
+        assert "version" not in package
+    else:
+        assert package["version"] == version
+    repository = LockedRepository(exported, [], project.environment)
+    candidate = next(iter(repository.packages.values())).candidate
+    assert candidate.version == version
+
+
 @pytest.mark.parametrize("source", ["url", "path"])
 @pytest.mark.parametrize("output_format", ["requirements", "pylock"])
 def test_export_pylock_archive_hashes(project, pdm, source, output_format):
