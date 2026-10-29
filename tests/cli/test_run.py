@@ -488,6 +488,36 @@ def test_interpolate_cwd_placeholder_escapes_all_cmd_exe_operators(monkeypatch, 
     assert result == f"echo C:\\repo^{metachar}ver"
 
 
+def test_interpolate_args_placeholder_shell_quoting_on_windows(monkeypatch):
+    import shlex
+
+    from pdm.cli.commands import run as run_module
+
+    monkeypatch.setattr(run_module.sys, "platform", "win32")
+    args = ["hello world", "it's", 'say "hi"', "a&b", "C:\\Program Files\\", "", "plain"]
+    result, args_interpolated = run_module.interpolate("echo {args}", args, for_shell=True)
+    assert args_interpolated
+    assert result == r"""echo "hello world" it's "say \"hi\"" "a&b" "C:\Program Files\\" "" plain"""
+    # cmd/composite parts are re-parsed with shlex.split, so they keep POSIX quoting.
+    result, _ = run_module.interpolate("echo {args}", args)
+    assert shlex.split(result)[1:] == args
+
+
+@pytest.mark.skipif(os.name != "nt", reason="cmd.exe only")
+@pytest.mark.parametrize("placeholder", [True, False], ids=["with-placeholder", "appended"])
+def test_run_shell_script_passes_args_to_cmd_exe(project, pdm, capfd, placeholder):
+    script = 'python -c "import sys; print(sys.argv[1:])"'
+    project.pyproject.settings["scripts"] = {"test_script": {"shell": f"{script} {{args}}" if placeholder else script}}
+    project.pyproject.write()
+    args = ["hello world", "it's", "a&b"]
+    capfd.readouterr()
+    with cd(project.root):
+        result = pdm(["run", "test_script", *args], obj=project)
+    assert result.exit_code == 0
+    out, _ = capfd.readouterr()
+    assert out.strip() == str(args)
+
+
 def test_interpolate_cwd_with_backslash_u_in_path(monkeypatch):
     from pdm.cli.commands.run import interpolate
 
