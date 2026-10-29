@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import string
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from email.message import Message
@@ -8,6 +9,12 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from importlib.metadata import Distribution
+
+
+def _normalize_label(label: str) -> str:
+    # Project-URL label normalization from the core metadata spec
+    chars_to_remove = string.punctuation + string.whitespace
+    return label.translate(str.maketrans("", "", chars_to_remove)).lower()
 
 
 @dataclass
@@ -32,12 +39,14 @@ class ProjectInfo:
         keywords = metadata.get("Keywords", "").replace(",", ", ")
         platform = metadata.get("Platform", "").replace(",", ", ")
 
-        if "Project-URL" in metadata:
-            project_urls = {
-                k.strip(): v.strip() for k, v in (row.split(",") for row in metadata.get_all("Project-URL", []))
-            }
-        else:
-            project_urls = {}
+        # The label ends at the first comma, the URL itself may contain commas
+        project_urls = {
+            k.strip(): v.strip() for k, v in (row.split(",", 1) for row in metadata.get_all("Project-URL", []))
+        }
+        # Home-page is deprecated, PEP 621 projects only set a "Homepage" Project-URL
+        homepage = metadata.get("Home-page") or next(
+            (url for label, url in project_urls.items() if _normalize_label(label) == "homepage"), ""
+        )
 
         return cls(
             name=metadata.get("Name", ""),
@@ -50,7 +59,7 @@ class ProjectInfo:
             requires_python=metadata.get("Requires-Python", ""),
             platform=platform,
             keywords=keywords,
-            homepage=metadata.get("Home-page", ""),
+            homepage=homepage,
             project_urls=[": ".join(parts) for parts in project_urls.items()],
         )
 
