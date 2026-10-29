@@ -65,14 +65,16 @@ class ActivateCommand(BaseCommand):
                 command, filename = "source", "activate"
         activate_script = venv.interpreter.with_name(filename)
         if activate_script.exists():
-            if platform.system() == "Windows":
-                return f"{self.quote(str(activate_script), shell)}"
+            if platform.system() == "Windows" and shell not in ("powershell", "pwsh"):
+                return self.quote(str(activate_script), shell)
             return f"{command} {self.quote(str(activate_script), shell)}"
         # Conda backed virtualenvs don't have activate scripts
         return f"conda activate {self.quote(str(venv.root), shell)}"
 
     @staticmethod
     def quote(command: str, shell: str) -> str:
-        if shell in ["powershell", "pwsh"] or platform.system() == "Windows":
-            return "{}".format(command.replace("'", "''"))
+        if shell in ["powershell", "pwsh"]:
+            return "'{}'".format(command.replace("'", "''"))
+        if platform.system() == "Windows":
+            return command
         return shlex.quote(command)
