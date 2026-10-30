@@ -125,14 +125,20 @@ def _build_pyspec_from_marker(marker: BaseMarker) -> PySpecSet:
         op = marker.op
         version = marker.value
         if name == "python_version":
+            # python_version is only major.minor: "3.8" > "3.8.0" and "3.8" >= "3.8.1" are both false
             match op:
                 case ">" | "<=":
-                    int_versions = [int(ver) for ver in version.split(".")]
+                    int_versions = [int(ver) for ver in version.split(".")][:2]
                     if len(int_versions) < 2:
                         int_versions.append(0)
                     int_versions[-1] += 1
                     version = ".".join(str(v) for v in int_versions)
                     op = ">=" if op == ">" else "<"
+                case ">=" | "<" if len(parts := version.split(".")) > 2 and all(p.isdigit() for p in parts):
+                    int_versions = [int(ver) for ver in parts]
+                    if any(int_versions[2:]):
+                        int_versions[1] += 1
+                    version = ".".join(str(v) for v in int_versions[:2])
                 case "==" | "!=":
                     if not version.endswith(".*") and len(version.split(".")) < 3:
                         version += ".*"
