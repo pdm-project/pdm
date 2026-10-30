@@ -13,7 +13,14 @@ import tomlkit
 from pdm.models.candidates import Candidate
 from pdm.models.markers import Marker, get_marker
 from pdm.models.repositories import LockedRepository, Package
-from pdm.models.requirements import FileRequirement, Requirement, VcsRequirement, parse_requirement, strip_extras
+from pdm.models.requirements import (
+    FileRequirement,
+    NamedRequirement,
+    Requirement,
+    VcsRequirement,
+    parse_requirement,
+    strip_extras,
+)
 from pdm.project.core import Project
 from pdm.utils import get_requirement_from_override, normalize_name
 
@@ -84,6 +91,8 @@ class _UvFileBuilder:
                 sources[entry] = self._build_source(dep)
             else:
                 entry = dep.as_line()
+            if isinstance(dep, FileRequirement):
+                entry = NamedRequirement.create(name=entry, extras=dep.extras, marker=dep.marker).as_line()
             for group in dep.groups:
                 collected = collected_deps.setdefault(group, [])
                 if entry not in collected:
