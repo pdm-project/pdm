@@ -1,3 +1,18 @@
+## Release v2.29.5 (2026-10-30)
+
+### Bug Fixes
+
+- Preserve archive subdirectories when writing or exporting pylock.toml. ([#3964](https://github.com/pdm-project/pdm/issues/3964))
+- Preserve extras and environment markers on local, URL, Git, and workspace file requirements when translating dependencies for uv. ([#3965](https://github.com/pdm-project/pdm/issues/3965))
+- Preserve Git source subdirectories and encoded refs when generating, reusing, and reading uv lockfiles. ([#3966](https://github.com/pdm-project/pdm/issues/3966))
+- Allow sorting installed packages by optional metadata such as homepage when some values are missing or unknown. ([#3967](https://github.com/pdm-project/pdm/issues/3967))
+- Fill the Homepage in `pdm show` from the `Homepage` Project-URL, and stop `pdm show` failing on a Project-URL that contains a comma. ([#3968](https://github.com/pdm-project/pdm/issues/3968))
+- Quote the activation script path that `pdm venv activate` prints for PowerShell, so `Invoke-Expression (pdm venv activate)` works when the path contains spaces or apostrophes. ([#3970](https://github.com/pdm-project/pdm/issues/3970))
+- On Windows, quote the extra arguments of a `shell` script, and the `{args}` placeholder in it, for `cmd.exe` instead of with POSIX single quotes. ([#3971](https://github.com/pdm-project/pdm/issues/3971))
+- Omit missing package versions when exporting to `pylock.toml`. ([#3972](https://github.com/pdm-project/pdm/issues/3972))
+- Fill the Homepage in `pdm list` from the `Homepage` Project-URL when `Home-page` is missing or unknown. ([#3973](https://github.com/pdm-project/pdm/issues/3973))
+
+
 ## Release v2.29.4 (2026-10-27)
 
 ### Features & Improvements
