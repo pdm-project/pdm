@@ -203,7 +203,10 @@ class TestRepository(BaseRepository):
 
 class Metadata(dict):
     def get_all(self, name: str, fallback: list[str] | None = None) -> list[str] | None:
-        return [self[name]] if name in self else fallback
+        if name in self:
+            val = self[name]
+            return list(val) if isinstance(val, (list, tuple)) else [val]
+        return fallback
 
     def __getitem__(self, key: str, /) -> str:
         return cast(str, dict.get(self, key))

@@ -11,10 +11,13 @@ if TYPE_CHECKING:
     from importlib.metadata import Distribution
 
 
-def _normalize_label(label: str) -> str:
+def normalize_project_url_label(label: str) -> str:
     # Project-URL label normalization from the core metadata spec
     chars_to_remove = string.punctuation + string.whitespace
     return label.translate(str.maketrans("", "", chars_to_remove)).lower()
+
+
+_normalize_label = normalize_project_url_label
 
 
 @dataclass
