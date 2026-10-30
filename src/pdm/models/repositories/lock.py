@@ -109,6 +109,7 @@ class LockedRepository(BaseRepository):
 
     def _read_pylock(self, lockfile: Mapping[str, Any]) -> None:
         root = self.environment.project.root
+        lockfile_root = self.environment.project.lockfile._path.absolute().parent
 
         if "targets" in lockfile.get("tool", {}).get("pdm", {}):
             self.targets = [EnvSpec.from_spec(**t) for t in lockfile["tool"]["pdm"]["targets"]]
@@ -159,7 +160,9 @@ class LockedRepository(BaseRepository):
                 ):
                     algo, hash_value = next(iter(artifact["hashes"].items()))
                     hash_item: FileHash = {"hash": f"{algo}:{hash_value}"}
-                    if "url" in artifact:
+                    if "path" in artifact:
+                        hash_item["url"] = lockfile_root.joinpath(artifact["path"]).as_uri()
+                    elif "url" in artifact:
                         hash_item["url"] = artifact["url"]
                     if "name" in artifact:
                         hash_item["file"] = artifact["name"]

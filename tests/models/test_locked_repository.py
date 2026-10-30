@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-import pytest
+import hashlib
+import shutil
+import tarfile
 
-from pdm.exceptions import CandidateNotFound
+import pytest
+from unearth.errors import HashMismatchError
+
+from pdm.exceptions import CandidateNotFound, RequirementError
 from pdm.models.candidates import Candidate
 from pdm.models.markers import EnvSpec
 from pdm.models.repositories.lock import LockedRepository, Package
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
+from tests import FIXTURES
 
 
 def make_repository(mocker):
@@ -260,3 +266,159 @@ def test_read_pylock_archive_hashes(project, source, hashes):
         {"url": link.url_without_fragment, "file": filename, "hash": f"{algo}:{value}"}
         for algo, value in hashes.items()
     ]
+
+
+@pytest.mark.parametrize("artifact_type", ["wheels", "sdist"])
+@pytest.mark.parametrize("source", ["url", "relative-path", "absolute-path", "path-and-url"])
+@pytest.mark.parametrize("lock_directory", [".", "locks"])
+def test_read_pylock_artifact_locations(project, artifact_type, source, lock_directory):
+    lock_root = project.root / lock_directory
+    project.set_lockfile(lock_root / "pylock.toml")
+    filename = "demo-1.0-py3-none-any.whl" if artifact_type == "wheels" else "demo-1.0.tar.gz"
+    path = lock_root / "local artifacts" / filename
+    url = f"https://example.org/{filename}"
+    artifact = {"hashes": {"sha256": "a" * 64}}
+    if source == "url":
+        artifact["url"] = url
+    else:
+        artifact["path"] = path.as_posix() if source == "absolute-path" else f"local artifacts/{filename}"
+        if source == "path-and-url":
+            artifact["url"] = url
+    package = {"name": "demo", "version": "1.0"}
+    package[artifact_type] = [artifact] if artifact_type == "wheels" else artifact
+    lockfile = {"lock-version": "1.0", "created-by": "test", "packages": [package]}
+
+    repository = LockedRepository(lockfile, [], project.environment)
+    candidate = next(iter(repository.packages.values())).candidate
+
+    assert candidate.hashes == [{"hash": "sha256:" + "a" * 64, "url": url if source == "url" else path.as_uri()}]
+
+
+@pytest.mark.parametrize("with_url", [False, True])
+@pytest.mark.parametrize("lock_directory", [".", "locks"])
+def test_read_pylock_local_wheel_can_be_built(project, mocker, with_url, lock_directory):
+    artifact = FIXTURES / "artifacts/first-2.0.2-py2.py3-none-any.whl"
+    lock_root = project.root / lock_directory
+    project.set_lockfile(lock_root / "pylock.toml")
+    directory = lock_root / "local artifacts"
+    directory.mkdir(parents=True)
+    wheel = directory / artifact.name
+    shutil.copy2(artifact, wheel)
+    wheel_data = {
+        "path": f"local artifacts/{wheel.name}",
+        "hashes": {"sha256": hashlib.sha256(wheel.read_bytes()).hexdigest()},
+    }
+    if with_url:
+        wheel_data["url"] = f"https://example.org/{wheel.name}"
+    lockfile = {
+        "lock-version": "1.0",
+        "created-by": "test",
+        "packages": [{"name": "first", "version": "2.0.2", "wheels": [wheel_data]}],
+    }
+    repository = LockedRepository(lockfile, [], project.environment)
+    candidate = next(iter(repository.packages.values())).candidate
+    find_match = mocker.patch(
+        "unearth.PackageFinder.find_best_match", side_effect=AssertionError("Unexpected index lookup")
+    )
+
+    built = candidate.prepare(project.environment).build()
+
+    assert built.read_bytes() == wheel.read_bytes()
+    find_match.assert_not_called()
+
+
+@pytest.mark.parametrize("artifact_type", ["wheels", "sdist"])
+@pytest.mark.parametrize("with_url", [False, True], ids=["path-only", "path-and-url"])
+@pytest.mark.parametrize("bad_hash", [False, True], ids=["good-hash", "bad-hash"])
+@pytest.mark.parametrize("physical_filename", ["0123456789abcdef", "wrong.tar.bz2"])
+def test_read_pylock_local_artifact_with_explicit_name(
+    project, mocker, artifact_type, with_url, bad_hash, physical_filename
+):
+    is_wheel = artifact_type == "wheels"
+    name, version = ("first", "2.0.2") if is_wheel else ("demo", "0.0.1")
+    filename = f"{name}-{version}-py2.py3-none-any.whl" if is_wheel else f"{name}-{version}.tar.gz"
+    artifact = FIXTURES / "artifacts" / filename
+    content = artifact.read_bytes()
+    lock_root = project.root / "locks"
+    project.set_lockfile(lock_root / "pylock.toml")
+    path = lock_root / "local artifacts" / physical_filename
+    path.parent.mkdir(parents=True)
+    path.write_bytes(content)
+    artifact_data = {
+        "name": filename,
+        "path": f"local artifacts/{path.name}",
+        "hashes": {"sha256": "0" * 64 if bad_hash else hashlib.sha256(content).hexdigest()},
+    }
+    if with_url:
+        # This URL is served by the test fixture, but must never replace the local path.
+        artifact_data["url"] = f"http://fixtures.test/artifacts/{filename}"
+    package = {"name": name, "version": version, artifact_type: [artifact_data] if is_wheel else artifact_data}
+    lockfile = {"lock-version": "1.0", "created-by": "test", "packages": [package]}
+    repository = LockedRepository(lockfile, [], project.environment)
+    candidate = next(iter(repository.packages.values())).candidate
+    find_match = mocker.patch(
+        "unearth.PackageFinder.find_best_match", side_effect=AssertionError("Unexpected index lookup")
+    )
+    prepared = candidate.prepare(project.environment)
+
+    if bad_hash:
+        with pytest.raises(HashMismatchError, match="Hash mismatch"):
+            prepared._obtain(allow_all=False)
+    elif is_wheel:
+        built = prepared.build()
+        assert built.name == filename
+        assert built.read_bytes() == content
+    else:
+        prepared._obtain(allow_all=False)
+        assert prepared._unpacked_dir is not None
+        with tarfile.open(artifact) as archive:
+            for member in ("setup.py", "demo.py"):
+                expected = archive.extractfile(f"{name}-{version}/{member}")
+                assert expected is not None
+                assert (prepared._unpacked_dir / member).read_bytes() == expected.read()
+
+    assert prepared.link is not None
+    assert prepared.link.file_path == path
+    assert prepared.link.filename == filename
+    assert path.read_bytes() == content
+    find_match.assert_not_called()
+
+
+@pytest.mark.parametrize("artifact_type", ["wheels", "sdist"])
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "../first-2.0.2-py2.py3-none-any.whl",
+        "..\\first-2.0.2-py2.py3-none-any.whl",
+        "C:first-2.0.2-py2.py3-none-any.whl",
+        "",
+        ".",
+        "..",
+        "first\u0000.whl",
+    ],
+    ids=["parent-posix", "parent-windows", "drive-relative", "empty", "dot", "parent", "nul"],
+)
+def test_read_pylock_rejects_unsafe_artifact_name_before_io(project, mocker, artifact_type, filename):
+    artifact = {"name": filename, "path": "cache/opaque", "hashes": {"sha256": "a" * 64}}
+    package = {
+        "name": "first",
+        "version": "2.0.2",
+        artifact_type: [artifact] if artifact_type == "wheels" else artifact,
+    }
+    repository = LockedRepository(
+        {"lock-version": "1.0", "created-by": "test", "packages": [package]}, [], project.environment
+    )
+    candidate = next(iter(repository.packages.values())).candidate
+    prepared = candidate.prepare(project.environment)
+    find_match = mocker.patch(
+        "unearth.PackageFinder.find_best_match", side_effect=AssertionError("Unexpected index lookup")
+    )
+    cache = mocker.patch.object(prepared, "_get_build_cache", side_effect=AssertionError("Unexpected cache access"))
+    unpack = mocker.patch.object(prepared, "_unpack", side_effect=AssertionError("Unexpected artifact IO"))
+
+    with pytest.raises(RequirementError, match="Invalid artifact filename"):
+        prepared.build()
+
+    find_match.assert_not_called()
+    cache.assert_not_called()
+    unpack.assert_not_called()
