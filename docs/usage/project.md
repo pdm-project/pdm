@@ -184,7 +184,7 @@ You **must** commit the `pyproject.toml` file. You **should** commit the `pdm.lo
 
 The `pyproject.toml` file must be committed as it contains the project's build metadata and dependencies needed for PDM.
 It is also commonly used by other python tools for configuration. Read more about the `pyproject.toml` file at
-[Pip documentation](https://pip.pypa.io/en/stable/reference/build-system/pyproject-toml/).
+[Python Packaging User Guide](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/).
 
 You should be committing the `pdm.lock` file, by doing so you ensure that all installers are using the same versions of dependencies.
 To learn how to update dependencies see [update existing dependencies](./dependency.md#update-existing-dependencies).
