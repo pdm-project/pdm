@@ -80,6 +80,7 @@ def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
 class _LinkWithFilename(Link):
     """Keep a locked artifact's filename separate from its location."""
 
+    url: str
     filename_override: str | None = None
 
     def __post_init__(self) -> None:
