@@ -422,3 +422,33 @@ def test_read_pylock_rejects_unsafe_artifact_name_before_io(project, mocker, art
     find_match.assert_not_called()
     cache.assert_not_called()
     unpack.assert_not_called()
+
+
+def test_read_pylock_named_local_sdist_preserves_fragment(project):
+    content = (FIXTURES / "artifacts/demo-0.0.1.tar.gz").read_bytes()
+    path = project.root / "opaque"
+    path.write_bytes(content)
+    digest = hashlib.sha256(content).hexdigest()
+    url = f"{path.as_uri()}#sha256={digest}&subdirectory=demo.egg-info"
+    artifact = {"name": "demo-0.0.1.tar.gz", "url": url, "hashes": {"sha256": digest}}
+    repository = LockedRepository(
+        {
+            "lock-version": "1.0",
+            "created-by": "test",
+            "packages": [{"name": "demo", "version": "0.0.1", "sdist": artifact}],
+        },
+        [],
+        project.environment,
+    )
+    candidate = next(iter(repository.packages.values())).candidate
+    prepared = candidate.prepare(project.environment)
+
+    prepared._obtain(allow_all=False)
+
+    assert prepared._unpacked_dir.name == "demo.egg-info"
+    with tarfile.open(FIXTURES / "artifacts/demo-0.0.1.tar.gz") as archive:
+        metadata = archive.extractfile("demo-0.0.1/demo.egg-info/PKG-INFO")
+        assert metadata is not None
+        assert (prepared._unpacked_dir / "PKG-INFO").read_bytes() == metadata.read()
+    assert prepared.link.url == candidate.link.url == url
+    assert path.read_bytes() == content
