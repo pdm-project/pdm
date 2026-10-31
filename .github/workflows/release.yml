@@ -53,7 +53,7 @@ jobs:
           pdm --help
 
       - name: Publish package distributions to PyPI
-        run: pdm publish --no-build
+        uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Get Changelog
         id: get-changelog
