@@ -5,6 +5,7 @@ import hashlib
 import itertools
 import operator
 import os
+import re
 import shutil
 import sys
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
@@ -1147,8 +1148,61 @@ class Project:
         return None
 
     @property
+    def has_configured_lock_targets(self) -> bool:
+        """Return True if lock targets are explicitly configured in pyproject.toml."""
+        settings = self.pyproject.settings.get("lock", {})
+        if not isinstance(settings, Mapping):
+            return False
+        return settings.get("targets") is not None or settings.get("target") is not None
+
+    @property
     def lock_targets(self) -> list[EnvSpec]:
-        return [self.environment.allow_all_spec]
+        """Return the target environments for locking."""
+        settings = self.pyproject.settings.get("lock", {})
+        if not isinstance(settings, Mapping):
+            return [self.environment.allow_all_spec]
+        targets_config = settings.get("targets") if settings.get("targets") is not None else settings.get("target")
+        if targets_config is None:
+            return [self.environment.allow_all_spec]
+        if not isinstance(targets_config, list):
+            raise PdmUsageError(
+                f"Invalid lock targets in pyproject.toml: expected a list, got {type(targets_config).__name__}"
+            )
+        if not targets_config:
+            return [self.environment.allow_all_spec]
+
+        default_requires_python = str(self.environment.allow_all_spec.requires_python)
+        targets: list[EnvSpec] = []
+        seen: set[EnvSpec] = set()
+        for i, target in enumerate(targets_config):
+            if not isinstance(target, Mapping):
+                raise PdmUsageError(
+                    f"Invalid lock target at index {i} in pyproject.toml: expected a table, got {type(target).__name__}"
+                )
+            py = (
+                target.get("requires_python")
+                or target.get("requires-python")
+                or target.get("python")
+                or default_requires_python
+            )
+            if isinstance(py, str) and re.match(r"^\d+(\.\d+)*$", py):
+                py = f">={py}"
+            platform = target.get("platform") or None
+            implementation = target.get("implementation") or None
+            gil_disabled = target.get("gil_disabled", target.get("gil-disabled", False))
+            try:
+                env_spec = EnvSpec.from_spec(
+                    requires_python=str(py),
+                    platform=platform,
+                    implementation=implementation,
+                    gil_disabled=bool(gil_disabled),
+                )
+            except Exception as e:
+                raise PdmUsageError(f"Invalid lock target at index {i} in pyproject.toml: {e}") from e
+            if env_spec not in seen:
+                seen.add(env_spec)
+                targets.append(env_spec)
+        return targets or [self.environment.allow_all_spec]
 
     def get_resolver(self, allow_uv: bool = True) -> type[Resolver]:
         """Get the resolver class to use for the project."""

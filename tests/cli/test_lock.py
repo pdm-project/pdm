@@ -340,6 +340,95 @@ def test_invalid_lock_format_from_pyproject(project):
         project.lock_format
 
 
+@pytest.mark.usefixtures("repository")
+def test_lock_targets_from_pyproject(project):
+    deps = [
+        'django<2; sys_platform == "win32"',
+        'django>=2; sys_platform != "win32"',
+    ]
+    project.add_dependencies(deps)
+    project.pyproject.settings["lock"] = {
+        "targets": [
+            {"platform": "windows"},
+            {"platform": "linux"},
+        ]
+    }
+    project.pyproject.write()
+    actions.do_lock(project)
+    locked = project.get_locked_repository()
+    assert len(locked.targets) == 2
+    assert sorted(c.version for c in locked.all_candidates["django"]) == ["1.11.8", "2.2.9"]
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_targets_cli_override(project, pdm):
+    deps = [
+        'django<2; sys_platform == "win32"',
+        'django>=2; sys_platform != "win32"',
+    ]
+    project.add_dependencies(deps)
+    project.pyproject.settings["lock"] = {
+        "targets": [
+            {"platform": "windows"},
+            {"platform": "linux"},
+        ]
+    }
+    project.pyproject.write()
+    pdm(["lock", "--platform", "windows"], obj=project, strict=True)
+    locked = project.get_locked_repository()
+    assert len(locked.targets) == 1
+    assert locked.targets[0].platform.sys_platform == "win32"
+    assert len(locked.all_candidates["django"]) == 1
+    assert locked.all_candidates["django"][0].version == "1.11.8"
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_targets_with_pylock(project):
+    deps = [
+        'django<2; sys_platform == "win32"',
+        'django>=2; sys_platform != "win32"',
+    ]
+    project.add_dependencies(deps)
+    project.pyproject.settings["lock"] = {
+        "format": "pylock",
+        "targets": [
+            {"platform": "windows"},
+            {"platform": "linux"},
+        ],
+    }
+    project.pyproject.write()
+    actions.do_lock(project)
+    assert project.lockfile._path.name == "pylock.toml"
+    assert project.lockfile.exists()
+    locked = project.get_locked_repository()
+    assert len(locked.targets) == 2
+    assert sorted(c.version for c in locked.all_candidates["django"]) == ["1.11.8", "2.2.9"]
+
+
+def test_lock_targets_invalid_type(project):
+    project.pyproject.settings["lock"] = {"targets": "invalid"}
+    with pytest.raises(PdmUsageError, match=r"Invalid lock targets in pyproject\.toml: expected a list"):
+        _ = project.lock_targets
+
+
+def test_lock_targets_invalid_target_entry(project):
+    project.pyproject.settings["lock"] = {"targets": ["invalid"]}
+    with pytest.raises(PdmUsageError, match=r"Invalid lock target at index 0 in pyproject\.toml: expected a table"):
+        _ = project.lock_targets
+
+
+def test_lock_targets_invalid_target_spec(project):
+    project.pyproject.settings["lock"] = {"targets": [{"platform": "invalid_platform_123"}]}
+    with pytest.raises(PdmUsageError, match=r"Invalid lock target at index 0 in pyproject\.toml"):
+        _ = project.lock_targets
+
+
+def test_lock_targets_singular_alias(project):
+    project.pyproject.settings["lock"] = {"target": [{"platform": "windows"}]}
+    assert len(project.lock_targets) == 1
+    assert project.lock_targets[0].platform.sys_platform == "win32"
+
+
 @pytest.mark.parametrize("args", [("-S", "static_urls"), ("--static-urls",)])
 def test_lock_refresh(pdm, project, repository, args, core, mocker):
     project.add_dependencies(["requests"])

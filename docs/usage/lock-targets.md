@@ -49,6 +49,28 @@ You can ignore some of the criteria, for example, by specifying only `--platform
 
     `--python` option, or `requires-python` criterion in the lock target is still limited by the `requires-python` in `pyproject.toml`. For example, if `requires-python` is `>=3.9` and you specified `--python="<3.11"`, the lock target will be `>=3.9,<3.11`.
 
+## Specify lock targets in `pyproject.toml`
+
+Alternatively, you can configure lock targets declaratively in `pyproject.toml` under `[tool.pdm.lock]`:
+
+```toml
+[tool.pdm.lock]
+targets = [
+    { platform = "windows" },
+    { platform = "linux" },
+    { platform = "macos" },
+]
+```
+
+Each target table can specify:
+
+- `platform`: A platform specifier (e.g. `"windows"`, `"linux"`, `"macos"`, `"manylinux_2_17_x86_64"`).
+- `python` or `requires-python`: A Python version specifier (defaults to `requires-python` in `pyproject.toml`).
+- `implementation`: A Python implementation specifier (e.g. `"cpython"`, `"pypy"`).
+- `gil-disabled`: A boolean flag for free-threaded Python (defaults to `false`).
+
+When `targets` is configured, running `pdm lock` resolves and merges all configured targets into the lockfile in a single pass without needing `--append`.
+
 ## Separate lock files or merge into one
 
 If you need more than one lock targets, you can either create separate lock files for each target or combine them into a single lock file. PDM supports both ways.
