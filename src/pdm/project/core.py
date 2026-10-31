@@ -1202,7 +1202,7 @@ class Project:
             if env_spec not in seen:
                 seen.add(env_spec)
                 targets.append(env_spec)
-        return targets or [self.environment.allow_all_spec]
+        return targets
 
     def get_resolver(self, allow_uv: bool = True) -> type[Resolver]:
         """Get the resolver class to use for the project."""

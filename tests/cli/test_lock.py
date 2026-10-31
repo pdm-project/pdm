@@ -425,8 +425,46 @@ def test_lock_targets_invalid_target_spec(project):
 
 def test_lock_targets_singular_alias(project):
     project.pyproject.settings["lock"] = {"target": [{"platform": "windows"}]}
+    assert project.has_configured_lock_targets is True
     assert len(project.lock_targets) == 1
     assert project.lock_targets[0].platform.sys_platform == "win32"
+
+
+def test_lock_targets_settings_not_mapping(project):
+    project.pyproject.settings["lock"] = "invalid"
+    assert project.has_configured_lock_targets is False
+    assert project.lock_targets == [project.environment.allow_all_spec]
+
+
+def test_lock_targets_none_or_empty(project):
+    project.pyproject.settings["lock"] = {}
+    assert project.has_configured_lock_targets is False
+    assert project.lock_targets == [project.environment.allow_all_spec]
+
+    project.pyproject.settings["lock"] = {"targets": []}
+    assert project.has_configured_lock_targets is True
+    assert project.lock_targets == [project.environment.allow_all_spec]
+
+
+def test_lock_targets_variants_and_deduplication(project):
+    project.pyproject.settings["lock"] = {
+        "targets": [
+            {"python": "3.10"},
+            {"requires-python": ">=3.11"},
+            {"requires_python": ">=3.12", "implementation": "cpython", "gil_disabled": True},
+            {"requires_python": ">=3.12", "implementation": "cpython", "gil_disabled": True},
+            {"implementation": "pypy", "gil-disabled": False},
+            {},
+        ]
+    }
+    assert project.has_configured_lock_targets is True
+    targets = project.lock_targets
+    assert len(targets) == 5
+    assert str(targets[0].requires_python) == ">=3.10"
+    assert str(targets[1].requires_python) == ">=3.11"
+    assert targets[2].implementation.gil_disabled is True
+    assert targets[3].implementation.name == "pypy"
+    assert targets[4].requires_python == project.environment.allow_all_spec.requires_python
 
 
 @pytest.mark.parametrize("args", [("-S", "static_urls"), ("--static-urls",)])
