@@ -2,6 +2,7 @@ import base64
 import os
 from argparse import Namespace
 
+import httpx2
 import pytest
 
 from pdm._types import RepositoryConfig
@@ -61,6 +62,30 @@ def test_package_call_gpg_sign():
         except OSError:
             pass
     assert package.gpg_signature == (package.base_filename + ".asc", b"fake signature")
+
+
+def test_repository_does_not_save_credentials_after_redirect(project, mocker):
+    config = RepositoryConfig(
+        config_prefix="repository",
+        name="test",
+        url="https://example.org/upload",
+        username="abc",
+        password="123",
+    )
+    repository = Repository(project, config)
+    repository._credentials_to_save = ("example.org", "abc", "123")
+    save_credentials = mocker.patch.object(repository, "_save_credentials")
+    response = httpx2.Response(
+        status_code=302,
+        headers={"location": "/login"},
+        request=httpx2.Request("POST", repository.url),
+    )
+    mocker.patch.object(repository.session, "send", return_value=response)
+    package = PackageFile.from_filename(str(FIXTURES / "artifacts" / "demo-0.0.1.tar.gz"), None)
+
+    assert repository.upload(package) is response
+    save_credentials.assert_not_called()
+    assert repository._credentials_to_save == ("example.org", "abc", "123")
 
 
 def test_repository_get_release_urls(project):

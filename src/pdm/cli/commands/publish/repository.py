@@ -170,7 +170,7 @@ class Repository:
 
                 job = progress.add_task("", total=stream.get_content_length())
                 resp = self.session.send(request, follow_redirects=False)
-                if not resp.is_error and self._credentials_to_save is not None:
+                if resp.is_success and self._credentials_to_save is not None:
                     self._save_credentials(*self._credentials_to_save)
                     self._credentials_to_save = None
                 return resp
