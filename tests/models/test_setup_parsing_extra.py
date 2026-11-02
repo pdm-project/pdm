@@ -416,3 +416,18 @@ def test_extras_require_from_kwargs_call_func_name_not_dict_returns_empty(tmp_pa
     assert result.name is None
     assert result.version == "0.0.0"
     assert result.extras_require == {}
+
+
+def test_from_directory_bare_setup_py_keeps_setup_cfg_version(tmp_path):
+    # Declarative setuptools: the version lives in setup.cfg and setup.py is a bare shim
+    tmp_path.joinpath("setup.cfg").write_text("[metadata]\nname = foo\nversion = 1.2.3\n")
+    tmp_path.joinpath("setup.py").write_text("from setuptools import setup\nsetup()\n")
+
+    assert Setup.from_directory(tmp_path) == Setup(name="foo", version="1.2.3")
+
+
+def test_from_directory_setup_cfg_without_version_keeps_pyproject_version(tmp_path):
+    tmp_path.joinpath("pyproject.toml").write_text('[project]\nname = "foo"\nversion = "1.0"\n')
+    tmp_path.joinpath("setup.cfg").write_text("[flake8]\nmax-line-length = 120\n")
+
+    assert Setup.from_directory(tmp_path).version == "1.0"
