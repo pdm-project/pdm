@@ -362,6 +362,7 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
     shell = shell.lower()
     match shell:
         case "zsh" | "bash" | "sh" | "dash":
+            lib_path = pep582_path.replace("'", "'\\''")
             result = textwrap.dedent(
                 f"""
                 if [ -n "$PYTHONPATH" ]; then
