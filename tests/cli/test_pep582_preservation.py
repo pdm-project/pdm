@@ -40,7 +40,7 @@ def test_pep582_setup_preserves_literals_order_and_repeated_exports(
     script = echo.call_args.args[0]
     # A child shell observes only exported variables. NUL separates exact values,
     # including empty search entries, without stripping spaces from the output.
-    observe = "\n/bin/sh -c 'printf \"%s\\000\" \"$PYTHONPATH\"'\n"
+    observe = '\n/bin/sh -c \'printf "%s\\000" "$PYTHONPATH"\'\n'
     env = {"PATH": "/usr/bin:/bin"}
     if pythonpath is not None:
         env["PYTHONPATH"] = pythonpath
