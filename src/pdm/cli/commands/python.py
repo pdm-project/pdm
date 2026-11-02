@@ -167,12 +167,12 @@ class InstallCommand(BaseCommand):
             if not destination.exists() or not interpreter.exists():
                 shutil.rmtree(destination, ignore_errors=True)
                 destination.mkdir(parents=True, exist_ok=True)
-                with tempfile.NamedTemporaryFile() as tf:
-                    tf.close()
-                    original_filename = download(python_file, tf.name, env.session)
+                with tempfile.TemporaryDirectory(prefix="pdm-python-") as temp_dir:
+                    archive = os.path.join(temp_dir, "python-archive")
+                    original_filename = download(python_file, archive, env.session)
                     spinner.update(f"Installing [success]{ver_str}[/]")
                     try:
-                        install_file(tf.name, destination, original_filename)
+                        install_file(archive, destination, original_filename)
                     except ModuleNotFoundError as e:
                         if "zstandard is required" in str(e):
                             raise InstallationError(
