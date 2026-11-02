@@ -88,18 +88,15 @@ def test_use_venv_python(project, pdm):
 def test_use_auto_install_and_no_auto_install_are_mutual_exclusive(project, pdm):
     command = ["use", "--auto-install-min", "-f"]
     with pytest.raises(RuntimeError) as error:
-        result = pdm(command, obj=project, strict=True)
-        assert str(error.value).startswith(f"Call command {command} failed")
-        assert result.exit_code != 0
+        pdm(command, obj=project, strict=True)
+    assert str(error.value).startswith(f"Call command {command} failed")
 
     command = ["use", "--auto-install-max", "-f"]
     with pytest.raises(RuntimeError) as error:
-        result = pdm(command, obj=project, strict=True)
-        assert str(error.value).startswith(f"Call command {command} failed")
-        assert result.exit_code != 0
+        pdm(command, obj=project, strict=True)
+    assert str(error.value).startswith(f"Call command {command} failed")
 
     command = ["use", "--auto-install-max", "--auto-install-min"]
     with pytest.raises(RuntimeError) as error:
-        result = pdm(command, obj=project, strict=True)
-        assert str(error.value).startswith(f"Call command {command} failed")
-        assert result.exit_code != 0
+        pdm(command, obj=project, strict=True)
+    assert str(error.value).startswith(f"Call command {command} failed")
