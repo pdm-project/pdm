@@ -37,6 +37,22 @@ def test_config_set_command(project, pdm):
     assert result.exit_code != 0
 
 
+@pytest.mark.parametrize("local", [False, True])
+def test_config_set_empty_value(project, pdm, local):
+    config = project.project_config if local else project.global_config
+    config["venv.prompt"] = "custom-prompt"
+    args = ["config", "--local"] if local else ["config"]
+
+    result = pdm([*args, "venv.prompt", ""], obj=project)
+    assert result.exit_code == 0
+    config.reload()
+    assert config["venv.prompt"] == ""
+
+    result = pdm(["config", "venv.prompt"], obj=project)
+    assert result.exit_code == 0
+    assert result.output.strip() == ""
+
+
 def test_config_del_command(project, pdm):
     result = pdm(["config", "-l", "python.use_pyenv", "false"], obj=project)
     assert result.exit_code == 0
