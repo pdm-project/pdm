@@ -69,7 +69,7 @@ class Command(BaseCommand):
             return self.edit_file(config_path)
         if options.delete:
             self._delete_config(project, options)
-        elif options.value:
+        elif options.value is not None:
             self._set_config(project, options)
         elif options.key:
             self._get_config(project, options)
