@@ -5,6 +5,7 @@ import hashlib
 import importlib.metadata as im
 import os
 import re
+import shutil
 import warnings
 from functools import cached_property
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, cast, no_type_check
 from zipfile import ZipFile
 
 from packaging.version import InvalidVersion
+from unearth import Link
 
 from pdm import termui
 from pdm.builders import EditableBuilder, WheelBuilder
@@ -40,7 +42,7 @@ from pdm.utils import (
 if TYPE_CHECKING:
     from importlib.metadata import _SimplePath
 
-    from unearth import Link, Package, PackageFinder
+    from unearth import Package, PackageFinder
 
     from pdm._types import FileHash
     from pdm.environments import BaseEnvironment
@@ -74,6 +76,25 @@ def _filter_none(data: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in data.items() if v is not None}
 
 
+@dataclasses.dataclass(eq=False, repr=False)
+class _LinkWithFilename(Link):
+    """Keep a locked artifact's filename separate from its location."""
+
+    url: str
+    filename_override: str | None = None
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.filename_override is not None and (
+            self.filename_override in ("", ".", "..") or any(c in self.filename_override for c in "/\\:\0")
+        ):
+            raise RequirementError(f"Invalid artifact filename: {self.filename_override!r}")
+
+    @property
+    def filename(self) -> str:
+        return self.filename_override if self.filename_override is not None else super().filename
+
+
 def _find_best_match_link(finder: PackageFinder, req: Requirement, files: list[FileHash]) -> Link | None:
     """Get the best matching link for a requirement"""
 
@@ -81,9 +102,7 @@ def _find_best_match_link(finder: PackageFinder, req: Requirement, files: list[F
     # In this case, the requirement must be pinned, so no need to pass allow_prereleases
     # If links are not empty, find the best match from the links, otherwise find from
     # the package sources.
-    from unearth import Link
-
-    links = [Link(f["url"]) for f in files if "url" in f]
+    links = [_LinkWithFilename(f["url"], filename_override=f.get("file")) for f in files if "url" in f]
     hashes = convert_hashes(files)
 
     if not links:
@@ -476,8 +495,25 @@ class PreparedCandidate:
                 download_dir = build_dir
             else:
                 download_dir = tmpdir
+            link = self.link
+            if (
+                isinstance(link, _LinkWithFilename)
+                and link.filename_override is not None
+                and link.is_file
+                and link.file_path.name != link.filename
+            ):
+                # Unearth uses the physical basename for local wheels and archive
+                # decompression. Stage under the logical name, keeping the source
+                # link for cache identity and validating the staged bytes below.
+                artifact = Path(download_dir) / link.filename
+                artifact.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(link.file_path, artifact)
+                url = artifact.as_uri()
+                if link.parsed.fragment:
+                    url += f"#{link.parsed.fragment}"
+                link = dataclasses.replace(link, url=url)
             result = finder.download_and_unpack(
-                self.link,
+                link,
                 build_dir,
                 download_dir,
                 hash_options,
