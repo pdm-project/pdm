@@ -534,6 +534,23 @@ def test_hide_url(url, redacted):
     assert hidden.redacted == str(hidden) == redacted
 
 
+@pytest.mark.parametrize(
+    "username, password, expected",
+    [
+        ("user", "pass", "https://user:pass@example.org/simple"),
+        ("user", "p#ss/w?rd", "https://user:p%23ss%2Fw%3Frd@example.org/simple"),
+        ("user", "100%41", "https://user:100%2541@example.org/simple"),
+        ("me@example.org", "token:oidc/1", "https://me%40example.org:token%3Aoidc%2F1@example.org/simple"),
+        (1000, 123456, "https://1000:123456@example.org/simple"),
+    ],
+)
+def test_url_with_credentials_quotes_auth(username, password, expected):
+    source = RepositoryConfig("pypi", "private", url="https://example.org/simple", username=username, password=password)
+    url = source.url_with_credentials
+    assert url.secret == expected
+    assert str(url) == "https://*****@example.org/simple"
+
+
 def test_fs_supports_link_method_when_method_doesnt_exist():
     assert utils.fs_supports_link_method("nonexistent-link-method") is False
 
