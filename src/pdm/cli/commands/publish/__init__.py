@@ -13,7 +13,7 @@ from pdm.exceptions import PdmUsageError, PublishError
 from pdm.termui import logger
 
 if TYPE_CHECKING:
-    from httpx import Response
+    from httpx2 import Response
 
     from pdm.cli.commands.publish.repository import Repository
     from pdm.project import Project
@@ -123,7 +123,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _check_response(response: Response) -> None:
-        import httpx
+        import httpx2
 
         message = ""
         if response.status_code == 410 and "pypi.python.org" in str(response.url):
@@ -137,7 +137,7 @@ class Command(BaseCommand):
         else:
             try:
                 response.raise_for_status()
-            except httpx.HTTPStatusError as err:
+            except httpx2.HTTPStatusError as err:
                 message = str(err)
                 if response.text:
                     logger.debug(response.text)

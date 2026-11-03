@@ -20,7 +20,7 @@ from pdm.project import Project
 
 
 class Command(BaseCommand):
-    """Install dependencies from lock file"""
+    """Check the lockfile, resolve if needed, and install dependencies"""
 
     arguments = (
         *BaseCommand.arguments,
@@ -35,6 +35,13 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.epilog = (
+            "Creates a missing lockfile or updates an outdated one, then installs the selected locked packages. "
+            "Does not change dependency declarations in pyproject.toml or remove unrelated installed packages. "
+            "Refreshing an existing lockfile preserves its locked groups; run pdm lock with the desired groups "
+            "before installing a group not yet locked. --check refuses a missing or outdated lockfile but still "
+            "installs when it is fresh. --frozen-lockfile prevents lockfile writes, not dependency resolution."
+        )
         parser.add_argument(
             "--check",
             action="store_true",

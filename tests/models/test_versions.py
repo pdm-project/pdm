@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from pdm.models.versions import InvalidPyVersion, Version
@@ -6,6 +8,27 @@ from pdm.models.versions import InvalidPyVersion, Version
 def test_unsupported_post_version() -> None:
     with pytest.raises(InvalidPyVersion):
         Version("3.10.0post1")
+
+
+@pytest.mark.parametrize(
+    ("version", "part"),
+    [
+        ("1!1.0", "1!1"),
+        ("1.0+local", "0+local"),
+        ("1.0.dev1", "dev1"),
+        ("1.0.post1", "post1"),
+        ("3.10.0post1", "0post1"),
+        ("3.x", "x"),
+    ],
+)
+def test_invalid_version_part_is_named_in_the_error(version: str, part: str) -> None:
+    """The message must point at the part that failed.
+
+    Every one of these used to be reported as a postrelease, including the
+    epoch, the local version and the plain typo, none of which contain one.
+    """
+    with pytest.raises(InvalidPyVersion, match=re.escape(repr(part))):
+        Version(version)
 
 
 def test_support_prerelease_version() -> None:

@@ -24,3 +24,20 @@ def test_session_sources_all_proxy(project: Project, mocker, monkeypatch):
     transport_args = mock_get_transport.call_args
     assert transport_args is not None
     assert transport_args.kwargs["proxy"] is None
+
+
+def test_session_marks_cached_responses(tmp_path, httpserver):
+    from pdm._types import RepositoryConfig
+    from pdm.models.session import PDMPyPIClient
+
+    httpserver.expect_request("/simple/foo/").respond_with_data(
+        "<html></html>", headers={"Cache-Control": "max-age=3600"}, content_type="text/html"
+    )
+    source = RepositoryConfig(config_prefix="pypi", name="extra", url=httpserver.url_for("/simple"))
+    with PDMPyPIClient(sources=[source], cache_dir=tmp_path) as session:
+        first = session.get(httpserver.url_for("/simple/foo/"))
+        first.read()
+        assert not getattr(first, "from_cache", False)
+
+        second = session.get(httpserver.url_for("/simple/foo/"))
+        assert second.from_cache is True

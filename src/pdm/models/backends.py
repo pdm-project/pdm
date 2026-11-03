@@ -36,7 +36,7 @@ class FlitBackend(BuildBackend):
     @classmethod
     def build_system(cls) -> BuildSystem:
         return {
-            "requires": ["flit_core>=3.2,<4"],
+            "requires": ["flit_core>=3.12,<4"],
             "build-backend": "flit_core.buildapi",
         }
 
@@ -45,7 +45,7 @@ class SetuptoolsBackend(BuildBackend):
     @classmethod
     def build_system(cls) -> BuildSystem:
         return {
-            "requires": ["setuptools>=61"],
+            "requires": ["setuptools>=77"],
             "build-backend": "setuptools.build_meta",
         }
 

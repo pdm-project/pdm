@@ -8,6 +8,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+from unearth.utils import ARCHIVE_EXTENSIONS
+
 from pdm.compat import tomllib
 from pdm.formats.base import (
     MetaConverter,
@@ -20,7 +22,7 @@ from pdm.formats.base import (
 from pdm.models.markers import Marker, get_marker
 from pdm.models.requirements import FileRequirement, Requirement
 from pdm.models.specifiers import PySpecSet
-from pdm.utils import cd
+from pdm.utils import cd, normalize_name
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -45,7 +47,12 @@ def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
 #: prefix, then the version itself. The operator is restricted to the characters
 #: Poetry actually uses -- matching any non-digit instead swallowed the separating
 #: comma of a multi-constraint string, so ``>=1.0,<2.0`` produced ``>=1.0,,<2.0``.
-VERSION_RE = re.compile(r"([<>=!~^]*)\s*v?\s*(\d.*?)\s*(?=,|$)")
+#: Poetry also accepts a space where that comma is, as in ``>=1.0 <2.0``; the
+#: lookahead requires at least one space there, and only accepts it in front of
+#: another operator. A constraint with no separator at all (``>=1.0<2.0``) and an
+#: unsupported ``||`` disjunction therefore keep failing loudly instead of being
+#: split into a set of constraints that all have to hold.
+VERSION_RE = re.compile(r"([<>=!~^]*)\s*v?\s*(\d.*?)\s*(?=\s+[<>=!~^]|,|$)")
 
 
 def _caret_upper_bound(version: str) -> str:
@@ -100,7 +107,46 @@ def _convert_python(python: str) -> PySpecSet:
     return functools.reduce(operator.or_, parts)
 
 
-def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -> Iterable[str]:
+def _convert_platform(platform: str) -> Marker:
+    """Translate Poetry's generic platform constraints into environment markers."""
+    if not platform or platform.strip() == "*":
+        return get_marker("")
+    alternatives = []
+    for group in re.split(r"\s*\|\|?\s*", platform.strip()):
+        constraints = []
+        for constraint in re.split(r"\s*,\s*", group):
+            if match := re.fullmatch(r"(['\"])(.*?)\1\s*(in|not in)", constraint):
+                value, op = match.group(2, 3)
+                # Poetry treats membership as a list of exact platform names.
+                values = [item for item in re.split(r"[ ,|]+", value.strip()) if item]
+                if not values:
+                    raise ValueError(f"Invalid platform constraint: {constraint}")
+                comparison, combine = ("!=", operator.and_) if op == "not in" else ("==", operator.or_)
+                members = [get_marker(f"sys_platform {comparison} {item!r}") for item in values]
+                constraints.append(functools.reduce(combine, members))
+                continue
+            else:
+                match = re.fullmatch(r"(!=|===|==|=)?\s*(.+?)\s*", constraint)
+                if match is None:
+                    raise ValueError(f"Invalid platform constraint: {constraint}")
+                op, value = match.groups()
+                op = "!=" if op == "!=" else "=="
+            constraints.append(get_marker(f"sys_platform {op} {value!r}"))
+        alternatives.append(functools.reduce(operator.and_, constraints))
+    marker = functools.reduce(operator.or_, alternatives)
+    if marker.is_empty():
+        raise ValueError(f"Invalid platform constraint: {platform}")
+    return marker
+
+
+def _convert_req(
+    name: str, req_dict: RequirementDict | list[RequirementDict], allow_editable: bool = False
+) -> Iterable[str]:
+    """Convert a Poetry dependency to requirement lines.
+
+    ``develop = true`` is turned into an editable requirement only when ``allow_editable``
+    is set, because editable requirements are only allowed in dependency groups.
+    """
     from pdm.models.backends import DEFAULT_BACKEND
 
     backend = DEFAULT_BACKEND(Path.cwd())
@@ -112,7 +158,7 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
 
     if isinstance(req_dict, list):
         for req in req_dict:
-            yield from _convert_req(name, req)
+            yield from _convert_req(name, req, allow_editable)
     elif isinstance(req_dict, str):
         pdm_req = fix_req_path(Requirement.from_req_dict(name, _convert_specifier(req_dict)))
         yield pdm_req.as_line()
@@ -120,6 +166,11 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
         assert isinstance(req_dict, dict)
         req_dict = dict(req_dict)
         req_dict.pop("optional", None)  # Ignore the 'optional' key
+        # Poetry only applies ``develop`` to directories and VCS checkouts, a local
+        # archive stays a plain file requirement.
+        is_archive = str(req_dict.get("path", "")).endswith(ARCHIVE_EXTENSIONS)
+        if req_dict.pop("develop", False) and allow_editable and not is_archive:
+            req_dict["editable"] = True
         if "version" in req_dict:
             req_dict["version"] = _convert_specifier(str(req_dict["version"]))
         markers: list[Marker] = []
@@ -127,6 +178,10 @@ def _convert_req(name: str, req_dict: RequirementDict | list[RequirementDict]) -
             markers.append(get_marker(req_dict.pop("markers")))  # type: ignore[arg-type]
         if "python" in req_dict:
             markers.append(get_marker(_convert_python(str(req_dict.pop("python"))).as_marker_string()))
+        if "platform" in req_dict:
+            platform_marker = _convert_platform(str(req_dict.pop("platform")))
+            if not platform_marker.is_any():
+                markers.append(platform_marker)
         if markers:
             req_dict["marker"] = str(functools.reduce(operator.and_, markers)).replace('"', "'")
         if "rev" in req_dict or "branch" in req_dict or "tag" in req_dict:
@@ -210,22 +265,25 @@ class PoetryMetaConverter(MetaConverter):
     def dependencies(self, source: dict[str, Any]) -> list[str]:
         rv = []
         value, extras = dict(source["dependencies"]), source.pop("extras", {})
+        # Poetry matches extras members to dependencies by normalized name
+        extra_members = {extra: {normalize_name(m) for m in members} for extra, members in extras.items()}
         for key, req_dict in value.items():
-            optional = getattr(req_dict, "items", None) and req_dict.pop("optional", False)
-            for req in _convert_req(key, req_dict):
-                if optional:
-                    for extra, members in extras.items():
-                        if key in members:
-                            self._data.setdefault("optional-dependencies", {}).setdefault(extra, []).append(req)
-                else:
-                    rv.append(req)
+            for constraint in req_dict if isinstance(req_dict, list) else [req_dict]:
+                optional = isinstance(constraint, dict) and constraint.get("optional", False)
+                for req in _convert_req(key, constraint):
+                    if optional:
+                        for extra, members in extra_members.items():
+                            if normalize_name(key) in members:
+                                self._data.setdefault("optional-dependencies", {}).setdefault(extra, []).append(req)
+                    else:
+                        rv.append(req)
         del source["dependencies"]
         return make_array(rv, True)
 
     @convert_from("dev-dependencies")
     def dev_dependencies(self, value: dict) -> None:
         self.settings.setdefault("dev-dependencies", {})["dev"] = make_array(
-            [r for key, req in value.items() for r in _convert_req(key, req)], True
+            [r for key, req in value.items() for r in _convert_req(key, req, allow_editable=True)], True
         )
         raise Unset()
 
@@ -233,7 +291,12 @@ class PoetryMetaConverter(MetaConverter):
     def group_dependencies(self, value: dict[str, dict[str, Any]]) -> None:
         for name, group in value.items():
             self.settings.setdefault("dev-dependencies", {})[name] = make_array(
-                [r for key, req in group.get("dependencies", {}).items() for r in _convert_req(key, req)], True
+                [
+                    r
+                    for key, req in group.get("dependencies", {}).items()
+                    for r in _convert_req(key, req, allow_editable=True)
+                ],
+                True,
             )
         raise Unset()
 
@@ -256,7 +319,8 @@ class PoetryMetaConverter(MetaConverter):
             if not isinstance(item, dict):
                 includes.append(item)
             else:
-                dest = source_includes if "sdist" in item.get("format", "") else includes
+                formats = item.get("format", [])
+                dest = source_includes if "sdist" in formats and "wheel" not in formats else includes
                 dest.append(item["path"])
         if includes:
             self.settings.setdefault("build", {})["includes"] = includes

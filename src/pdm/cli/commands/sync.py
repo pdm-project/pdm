@@ -16,7 +16,7 @@ from pdm.project import Project
 
 
 class Command(BaseCommand):
-    """Synchronize the current working set with lock file"""
+    """Install selected locked packages without updating the lockfile"""
 
     arguments = (
         *BaseCommand.arguments,
@@ -30,6 +30,12 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.epilog = (
+            "Reads group selections from pyproject.toml without changing it. Requires an existing lockfile and "
+            "installs its pinned versions for the selected groups. Does not resolve new versions or update the "
+            "lockfile. Keeps unrelated installed packages by default. --clean removes packages absent from the "
+            "whole lockfile; --clean-unselected also removes packages outside the selected groups."
+        )
         parser.add_argument(
             "-r",
             "--reinstall",

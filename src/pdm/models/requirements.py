@@ -47,10 +47,10 @@ _vcs_req_re = re.compile(
 )
 _file_req_re = re.compile(
     r"(?:(?P<url>\S+://[^\s\[\];]+)|"
-    r"(?P<path>(?:[^\s;\[\]]|\\ )*"
+    r"(?P<path>(?:[^\s;\[\]]|\\ |[\t ])*"
     r"|'(?:[^']|\\')*'"
     r"|\"(?:[^\"]|\\\")*\"))"
-    r"(?P<extras>\[[^\[\]]+\])?(?P<marker>[\t ]*;[^\n]+)?"
+    r"(?P<extras>\[[^\[\]]+\])?(?:[\t ]*;[\t ]*(?P<marker>[^\n]+))?"
 )
 _egg_info_re = re.compile(r"([a-z0-9_.]+)-([a-z0-9_.!+-]+)", re.IGNORECASE)
 T = TypeVar("T", bound="Requirement")
@@ -259,6 +259,8 @@ class FileRequirement(Requirement):
         return (*super()._hash_key(), self.get_full_url(), self.editable)
 
     def guess_name(self) -> str | None:
+        if self.subdirectory and not self.is_vcs:
+            return None
         filename = os.path.basename(urlparse.unquote(url_without_fragments(self.url))).rsplit("@", 1)[0]
         if self.is_vcs:
             if self.vcs == "git":  # type: ignore[attr-defined]
@@ -373,7 +375,7 @@ class FileRequirement(Requirement):
         url = self.get_full_url()
         # only subdirectory is useful in a file link
         if self.subdirectory:
-            url += f"#subdirectory={self.subdirectory}"
+            url += f"#subdirectory={urlparse.quote(self.subdirectory)}"
         return Link(url)
 
     def get_full_url(self) -> str:
@@ -388,7 +390,7 @@ class FileRequirement(Requirement):
         url = self.get_full_url()
         fragments = []
         if self.subdirectory:
-            fragments.append(f"subdirectory={self.subdirectory}")
+            fragments.append(f"subdirectory={urlparse.quote(self.subdirectory)}")
         if self.editable:
             if project_name:
                 fragments.insert(0, f"egg={project_name}{extras}")
@@ -401,6 +403,8 @@ class FileRequirement(Requirement):
     def _parse_name_from_url(self) -> None:
         parsed = urlparse.urlparse(self.url)
         fragments = dict(urlparse.parse_qsl(parsed.fragment))
+        if "subdirectory" in fragments:
+            self.subdirectory = fragments["subdirectory"]
         if "egg" in fragments:
             egg_info = urlparse.unquote(fragments["egg"])
             name, extras = strip_extras(egg_info)
@@ -517,10 +521,12 @@ def parse_requirement(line: str, editable: bool = False) -> Requirement:
         try:
             pkg_req = parse_as_pkg_requirement(line)
         except InvalidRequirement as e:
-            m = _file_req_re.match(line)
+            m = _file_req_re.fullmatch(line)
             if m is None:
                 raise RequirementError(f"{line}: {e}") from None
             args = m.groupdict()
+            if args["path"]:
+                args["path"] = args["path"].rstrip()
             if not line.startswith(".") and not args["url"] and args["path"] and not os.path.exists(args["path"]):
                 raise RequirementError(f"{line}: {e}") from None
             r = FileRequirement.create(**args)

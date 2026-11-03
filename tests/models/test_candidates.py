@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import shutil
+from argparse import Namespace
+from urllib.parse import quote
 
 import pytest
 from unearth import Link
 
 from pdm.exceptions import RequirementError
+from pdm.formats.requirements import convert
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import Requirement, parse_requirement
 from pdm.models.specifiers import PySpecSet
@@ -66,6 +69,45 @@ def test_parse_artifact_metadata(requirement_line, project):
     ]
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
+
+
+@pytest.mark.usefixtures("local_finder")
+@pytest.mark.parametrize("archive_format", ["gztar", "zip"])
+@pytest.mark.parametrize("prefix", ["child @ ", ""])
+@pytest.mark.parametrize("subdirectory", ["src/child", "src/a&b"])
+@pytest.mark.parametrize("via_requirements_file", [False, True])
+def test_archive_candidate_in_subdirectory(
+    project, tmp_path, archive_format, prefix, subdirectory, via_requirements_file
+):
+    source = tmp_path / "bundle"
+    child = source / subdirectory
+    decoy = source / "src" / "a"
+    for directory, name, dependency in [
+        (source, "parent", "parent-dep"),
+        (child, "child", "child-dep"),
+        (decoy, "decoy", "decoy-dep"),
+    ]:
+        directory.mkdir(parents=True, exist_ok=True)
+        directory.joinpath("pyproject.toml").write_text(
+            f'[project]\nname = "{name}"\nversion = "1.0"\ndependencies = ["{dependency}"]\n',
+            encoding="utf-8",
+        )
+    archive = shutil.make_archive(str(tmp_path / "bundle-1.0"), archive_format, tmp_path, "bundle")
+    line = f"{prefix}{Link.from_path(archive).url}#subdirectory={quote(subdirectory)}"
+    if via_requirements_file:
+        req_file = tmp_path / "requirements.txt"
+        req_file.write_text(line + "\n", encoding="utf-8")
+        data, _ = convert(project, req_file, Namespace(dev=False, group=None))
+        line = data["dependencies"][0]
+    req = parse_requirement(line)
+    candidate = Candidate(req)
+
+    assert to_lines(candidate.prepare(project.environment).get_dependencies_from_metadata()) == ["child-dep"]
+    assert candidate.name == "child"
+    assert candidate.version == "1.0"
+    lockfile_entry = candidate.as_lockfile_entry(project.root)
+    assert lockfile_entry["name"] == "child"
+    assert lockfile_entry["subdirectory"] == subdirectory
 
 
 @pytest.mark.usefixtures("local_finder")

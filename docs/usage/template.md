@@ -4,7 +4,7 @@ Similar to `yarn create` and `npm create`, PDM also supports initializing or cre
 The template is given as a positional argument of `pdm new`, in one of the following forms:
 
 - `pdm new django my-project` - Create a new project `my-project` from the template `https://github.com/pdm-project/template-django`
-- `pdm new https://github.com/frostming/pdm-template-django my-project` - Initialize the project from a Git URL. Both HTTPS and SSH URL are acceptable.
+- `pdm new https://github.com/pdm-project/template-django my-project` - Initialize the project from a Git URL. Both HTTPS and SSH URL are acceptable.
 - `pdm new django@v2 my-project` - To check out the specific branch or tag. Full Git URL also supports it.
 - `pdm new /path/to/template my-project` - Initialize the project from a template directory on local filesystem.
 - `pdm new minimal my-project` - Initialize with the builtin "minimal" template, that only generates a `pyproject.toml`.

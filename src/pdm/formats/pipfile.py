@@ -11,6 +11,7 @@ from pdm.compat import tomllib
 from pdm.formats.base import make_array
 from pdm.models.markers import Marker, get_marker
 from pdm.models.requirements import FileRequirement, Requirement
+from pdm.utils import cd
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -21,10 +22,26 @@ if TYPE_CHECKING:
     from pdm.project import Project
 
 MARKER_KEYS = list(default_environment().keys())
+#: Top-level Pipfile tables that are not package categories, as defined by pipenv.
+NON_CATEGORY_SECTIONS = {"build-system", "pipenv", "requires", "scripts", "source", "packages", "dev-packages"}
+
+
+def _convert_specifier(version: str) -> str:
+    """Pipenv reads a version without an operator, like ``"2.31.0"``, as an exact pin."""
+    if version.strip() in ("", "*") or version.lstrip().startswith(("<", ">", "=", "!", "~")):
+        return version
+    return f"=={version}"
 
 
 def convert_pipfile_requirement(name: str, req: RequirementDict, backend: BuildBackend) -> str:
-    if isinstance(req, dict):
+    if isinstance(req, str):
+        req = _convert_specifier(req)
+    elif isinstance(req, dict):
+        if "version" in req:
+            req["version"] = _convert_specifier(str(req["version"]))
+        if "file" in req:
+            # Pipenv stores remote archives as `{file = "<url>"}`.
+            req["url"] = req.pop("file")
         markers: list[Marker] = []
         if "markers" in req:
             markers.append(get_marker(req["markers"]))  # type: ignore[arg-type]
@@ -48,33 +65,41 @@ def check_fingerprint(project: Project, filename: PathLike) -> bool:
 
 
 def convert(project: Project, filename: PathLike, options: Namespace | None) -> tuple[dict[str, Any], dict[str, Any]]:
-    with open(filename, "rb") as fp:
+    # Relative paths in a Pipfile are relative to the Pipfile itself, not the current directory.
+    with open(filename, "rb") as fp, cd(os.path.dirname(os.path.abspath(filename))):
         data = tomllib.load(fp)
-    result = {}
-    settings: dict[str, Any] = {}
-    backend = project.backend
-    if "pipenv" in data and "allow_prereleases" in data["pipenv"]:
-        settings.setdefault("resolution", {})["allow-prereleases"] = data["pipenv"]["allow_prereleases"]
-    if "requires" in data:
-        # `[requires]` may carry only other markers, e.g. `platform_system`. Writing
-        # the missing version out anyway produced `requires-python = ">=None"`, which
-        # is not a valid specifier and breaks the generated pyproject.toml.
-        python_version = data["requires"].get("python_full_version") or data["requires"].get("python_version")
-        if python_version:
-            result["requires-python"] = f">={python_version}"
-    if "source" in data:
-        settings["source"] = data["source"]
-    result["dependencies"] = make_array(  # type: ignore[assignment]
-        [convert_pipfile_requirement(k, req, backend) for k, req in data.get("packages", {}).items()],
-        True,
-    )
-    settings["dev-dependencies"] = {
-        "dev": make_array(
-            [convert_pipfile_requirement(k, req, backend) for k, req in data.get("dev-packages", {}).items()],
+        result = {}
+        settings: dict[str, Any] = {}
+        backend = project.backend
+        if "pipenv" in data and "allow_prereleases" in data["pipenv"]:
+            settings.setdefault("resolution", {})["allow-prereleases"] = data["pipenv"]["allow_prereleases"]
+        if "requires" in data:
+            # `[requires]` may carry only other markers, e.g. `platform_system`. Writing
+            # the missing version out anyway produced `requires-python = ">=None"`, which
+            # is not a valid specifier and breaks the generated pyproject.toml.
+            python_version = data["requires"].get("python_full_version") or data["requires"].get("python_version")
+            if python_version:
+                result["requires-python"] = f">={python_version}"
+        if "source" in data:
+            settings["source"] = data["source"]
+        result["dependencies"] = make_array(  # type: ignore[assignment]
+            [convert_pipfile_requirement(k, req, backend) for k, req in data.get("packages", {}).items()],
             True,
         )
-    }
-    return result, settings
+        settings["dev-dependencies"] = {
+            "dev": make_array(
+                [convert_pipfile_requirement(k, req, backend) for k, req in data.get("dev-packages", {}).items()],
+                True,
+            )
+        }
+        # Any other table is a custom package category, which maps to a dependency group.
+        for category, packages in data.items():
+            if category in NON_CATEGORY_SECTIONS or not isinstance(packages, dict):
+                continue
+            settings["dev-dependencies"][category] = make_array(
+                [convert_pipfile_requirement(k, req, backend) for k, req in packages.items()], True
+            )
+        return result, settings
 
 
 def export(project: Project, candidates: list, options: Any) -> None:

@@ -76,7 +76,7 @@ class RepositoryConfig:
 
     @property
     def url_with_credentials(self) -> HiddenText:
-        from urllib.parse import urlsplit, urlunsplit
+        from urllib.parse import quote, urlsplit, urlunsplit
 
         from pdm.utils import expand_env_vars_in_auth, hide_url
 
@@ -86,7 +86,9 @@ class RepositoryConfig:
             return hide_url(expand_env_vars_in_auth(self.url))
         parsed = urlsplit(self.url)
         *_, netloc = parsed.netloc.rpartition("@")
-        netloc = f"{self.username}:{self.password}@{netloc}"
+        # username and password are raw values, not URL-encoded. Quote them so that
+        # characters like "#", "/" or "%" reach the index unchanged.
+        netloc = f"{quote(str(self.username), safe='')}:{quote(str(self.password), safe='')}@{netloc}"
         url = urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
         return hide_url(url)
 

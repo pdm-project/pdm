@@ -102,16 +102,23 @@ The installer will install PDM into the user site and the location depends on th
 You can pass additional options to the script to control how PDM is installed:
 
 ```bash
-usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--remove] [-p PATH] [-d DEP]
+usage: install-pdm.py [-h] [-v VERSION] [--prerelease] [--no-frozen-deps]
+                      [--remove] [-p PATH] [-d DEP] [--skip-add-to-path]
+                      [-o OUTPUT]
 
 optional arguments:
   -h, --help            show this help message and exit
   -v VERSION, --version VERSION | envvar: PDM_VERSION
                         Specify the version to be installed, or HEAD to install from the main branch
   --prerelease | envvar: PDM_PRERELEASE    Allow prereleases to be installed
+  --no-frozen-deps | envvar: PDM_NO_FROZEN_DEPS
+                        Do not install frozen dependency versions
   --remove | envvar: PDM_REMOVE            Remove the PDM installation
   -p PATH, --path PATH | envvar: PDM_HOME  Specify the location to install PDM
   -d DEP, --dep DEP | envvar: PDM_DEPS     Specify additional dependencies, can be given multiple times
+  --skip-add-to-path | envvar: PDM_SKIP_ADD_TO_PATH
+                        Do not add binary to the PATH.
+  -o OUTPUT, --output OUTPUT               Output file to write the installation info to
 ```
 
 You can either pass the options after the script or set the env var value.

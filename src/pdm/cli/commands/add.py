@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 
 class Command(BaseCommand):
-    """Add package(s) to pyproject.toml and install them"""
+    """Add requirements, update the lockfile, and install the target group"""
 
     arguments = (
         *BaseCommand.arguments,
@@ -49,6 +49,12 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.epilog = (
+            "Writes the requested requirements to pyproject.toml, resolves them with the previously locked groups, "
+            "and updates the lockfile. The target dependency group is added to the locked groups; a new lockfile "
+            "includes the default and target groups. Installs packages from the target group without removing "
+            "unrelated installed packages. Use --no-sync to leave the environment unchanged."
+        )
         parser.add_argument(
             "-d",
             "--dev",

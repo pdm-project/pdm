@@ -13,6 +13,7 @@ from pdm.exceptions import PdmUsageError
 from pdm.formats import FORMATS
 from pdm.formats.pylock import PyLockConverter
 from pdm.models.candidates import Candidate
+from pdm.models.markers import Marker
 from pdm.models.requirements import Requirement
 from pdm.project import Project
 from pdm.project.lockfile import FLAG_INHERIT_METADATA
@@ -109,13 +110,17 @@ class Command(BaseCommand):
                 key=lambda c: not c.req.extras,
             )
             packages = []
-            seen_extras: set[str] = set()
+            extras_markers: dict[str, list[Marker | None]] = {}
             for candidate in candidates:
                 if options.extras:
                     key = candidate.req.key or ""
+                    marker = candidate.req.marker if options.markers else None
                     if candidate.req.extras:
-                        seen_extras.add(key)
-                    elif key in seen_extras:
+                        extras_markers.setdefault(key, []).append(marker)
+                    elif marker in extras_markers.get(key, []):
+                        # Only drop the plain entry when an entry with extras applies to
+                        # exactly the same environments, otherwise it would go missing
+                        # where the extras are not requested.
                         continue
                 elif candidate.req.extras:
                     continue

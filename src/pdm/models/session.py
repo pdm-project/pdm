@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import hishel
-import hishel.httpx
-import httpx
+import hishel.httpx2
+import httpx2
 from unearth.fetchers import PyPIClient
 
 from pdm.__version__ import __version__
@@ -49,9 +49,9 @@ MAX_RETRIES = 4
 def _get_transport(
     verify: bool | SSLContext | str = True,
     cert: tuple[str, str | None] | None = None,
-    proxy: httpx.Proxy | None = None,
-) -> httpx.BaseTransport:
-    return httpx.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy, retries=MAX_RETRIES)
+    proxy: httpx2.Proxy | None = None,
+) -> httpx2.BaseTransport:
+    return httpx2.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy, retries=MAX_RETRIES)
 
 
 class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
@@ -105,12 +105,12 @@ class PDMPyPIClient(PyPIClient):
     def __init__(self, *, sources: list[RepositoryConfig], cache_dir: Path | None = None, **kwargs: Any) -> None:
         import shutil
 
-        from httpx._utils import URLPattern
+        from httpx2._utils import URLPattern
         from unearth.fetchers.sync import LocalFSTransport
 
         if cache_dir is None:
 
-            def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:
+            def cache_transport(transport: httpx2.BaseTransport) -> httpx2.BaseTransport:
                 return transport
         else:
             # clean up old (pre-hishel 1.0) cache
@@ -124,10 +124,10 @@ class PDMPyPIClient(PyPIClient):
                             f.unlink()
             storage = ThreadedSyncSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
 
-            def cache_transport(transport: httpx.BaseTransport) -> httpx.BaseTransport:
-                return hishel.httpx.SyncCacheTransport(next_transport=transport, storage=storage)
+            def cache_transport(transport: httpx2.BaseTransport) -> httpx2.BaseTransport:
+                return hishel.httpx2.SyncCacheTransport(next_transport=transport, storage=storage)
 
-        mounts: dict[str, httpx.BaseTransport] = {"file://": LocalFSTransport()}
+        mounts: dict[str, httpx2.BaseTransport] = {"file://": LocalFSTransport()}
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
         self._proxy_map = {
             URLPattern(key): proxy for key, proxy in self._get_proxy_map(None, allow_env_proxies=True).items()
@@ -135,7 +135,7 @@ class PDMPyPIClient(PyPIClient):
         self._proxy_map = dict(sorted(self._proxy_map.items()))
         for s in sources:
             assert s.url is not None
-            url = httpx.URL(s.url)
+            url = httpx2.URL(s.url)
             if s.verify_ssl is False:
                 self._trusted_host_ports.add((url.host, url.port))
             if s.name == "pypi":
@@ -145,13 +145,13 @@ class PDMPyPIClient(PyPIClient):
         mounts.update(kwargs.pop("mounts", None) or {})
         kwargs.update(follow_redirects=True)
 
-        httpx.Client.__init__(self, mounts=mounts, **kwargs)
+        httpx2.Client.__init__(self, mounts=mounts, **kwargs)
 
         self.headers["User-Agent"] = self._make_user_agent()
         self.event_hooks["response"].append(self.on_response)
         self._transport = cache_transport(self._transport)  # type: ignore[has-type]
 
-    def _transport_for(self, source: RepositoryConfig) -> httpx.BaseTransport:
+    def _transport_for(self, source: RepositoryConfig) -> httpx2.BaseTransport:
         if source.verify_ssl is False:
             verify: str | bool | SSLContext = False
         elif source.ca_certs:
@@ -162,7 +162,7 @@ class PDMPyPIClient(PyPIClient):
             cert = (source.client_cert, source.client_key)
         else:
             cert = None
-        source_url = httpx.URL(cast(str, source.url))
+        source_url = httpx2.URL(cast(str, source.url))
         proxy = next((proxy for pattern, proxy in self._proxy_map.items() if pattern.matches(source_url)), None)
         return _get_transport(verify=verify, cert=cert, proxy=proxy)
 
@@ -171,10 +171,10 @@ class PDMPyPIClient(PyPIClient):
 
         return f"pdm/{__version__} {platform.python_implementation()}/{platform.python_version()} {platform.system()}/{platform.release()}"
 
-    def on_response(self, response: httpx.Response) -> None:
+    def on_response(self, response: httpx2.Response) -> None:
         from unearth.utils import ARCHIVE_EXTENSIONS
 
-        if response.extensions.get("from_cache"):
+        if response.extensions.get("hishel_from_cache"):
             response.from_cache = True  # type: ignore[attr-defined]
             if response.url.path.endswith(ARCHIVE_EXTENSIONS):
                 logger.info("Using cached response for %s", response.url)

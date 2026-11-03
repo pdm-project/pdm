@@ -186,6 +186,8 @@ pdm run --venv test test
 pdm sync --venv test
 # List the packages installed
 pdm list --venv test
+# List the outdated packages
+pdm outdated --venv test
 ```
 
 There are other commands supporting `--venv` flag or `PDM_IN_VENV` environment variable, see the [CLI reference](../reference/cli.md). You should create the virtualenv with `pdm venv create --name <name>` before using this feature.

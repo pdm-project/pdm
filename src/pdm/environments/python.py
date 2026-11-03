@@ -59,6 +59,9 @@ class PythonEnvironment(BaseEnvironment):
         paths = [scheme["platlib"], scheme["purelib"]]
         venv = self.interpreter.get_venv()
         shared_paths = self.extra_paths[:]
-        if venv is not None and venv.include_system_site_packages:
+        # Isolated build prefixes only expose their own site-packages to the PEP 517
+        # subprocess (PYTHONPATH=prefix). Do not treat the host venv's system
+        # site-packages as already installed, or shared build deps get skipped.
+        if self.prefix is None and venv is not None and venv.include_system_site_packages:
             shared_paths.extend(venv.base_paths)
         return WorkingSet(paths, shared_paths=list(dict.fromkeys(shared_paths)))

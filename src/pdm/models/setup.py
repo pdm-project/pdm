@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any, no_type_check
 if TYPE_CHECKING:
     from importlib.metadata import _SimplePath
 
+DEFAULT_VERSION = "0.0.0"
+
 
 @dataclass
 class Setup:
@@ -62,6 +64,10 @@ class _SetupReader:
                 continue
 
             new_result = file_reader(filepath)
+            if result.version and new_result.version == DEFAULT_VERSION:
+                # The readers fall back to the default when a file sets no version,
+                # which must not replace a version found in an earlier file.
+                new_result.version = None
             result.update(new_result)
 
         return result
@@ -103,7 +109,7 @@ class _SetupReader:
 
         return Setup(
             name=cls._find_single_string(setup_call, body, "name"),
-            version=cls._find_single_string(setup_call, body, "version") or "0.0.0",
+            version=cls._find_single_string(setup_call, body, "version") or DEFAULT_VERSION,
             install_requires=cls._find_install_requires(setup_call, body),
             extras_require=cls._find_extras_require(setup_call, body),
             python_requires=cls._find_single_string(setup_call, body, "python_requires"),
@@ -116,7 +122,7 @@ class _SetupReader:
         parser.read(str(file))
 
         name = None
-        version = "0.0.0"
+        version = DEFAULT_VERSION
         if parser.has_option("metadata", "name"):
             name = parser.get("metadata", "name")
 

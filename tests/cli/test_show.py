@@ -1,8 +1,12 @@
 """Additional tests for the show command"""
 
+import importlib.metadata as im
+
 import pytest
 
 from pdm.cli.commands.show import filter_stable
+from pdm.models.project_info import ProjectInfo
+from pdm.pytest import Distribution
 
 
 def test_filter_stable_with_stable_version(mocker):
@@ -69,3 +73,46 @@ def test_show_command_non_distribution_project(project, pdm):
     result = pdm(["show"], obj=project)
     assert result.exit_code != 0
     assert "not a library" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "metadata,expected",
+    [
+        ({"License-Expression": "Apache-2.0 OR BSD-2-Clause"}, "Apache-2.0 OR BSD-2-Clause"),
+        ({"License-Expression": "MIT", "License": "MIT License"}, "MIT"),
+        ({"License": "BSD"}, "BSD"),
+        ({}, ""),
+    ],
+)
+def test_project_info_license(metadata, expected):
+    info = ProjectInfo.from_distribution(Distribution("foo", "1.0", metadata=metadata))
+    assert info.license == expected
+
+
+@pytest.mark.parametrize(
+    "headers,homepage,project_urls",
+    [
+        (
+            ["Project-URL: Homepage, https://example.com", "Project-URL: Source, https://example.com/src"],
+            "https://example.com",
+            ["Homepage: https://example.com", "Source: https://example.com/src"],
+        ),
+        (["Project-URL: Home Page, https://example.com"], "https://example.com", ["Home Page: https://example.com"]),
+        (
+            ["Home-page: https://old.example.com", "Project-URL: Homepage, https://example.com"],
+            "https://old.example.com",
+            ["Homepage: https://example.com"],
+        ),
+        (["Project-URL: Docs, https://example.com/a,b"], "", ["Docs: https://example.com/a,b"]),
+        ([], "", []),
+    ],
+)
+def test_project_info_urls(tmp_path, headers, homepage, project_urls):
+    dist_info = tmp_path / "foo-1.0.dist-info"
+    dist_info.mkdir()
+    dist_info.joinpath("METADATA").write_text(
+        "\n".join(["Metadata-Version: 2.1", "Name: foo", "Version: 1.0", *headers])
+    )
+    info = ProjectInfo.from_distribution(im.PathDistribution(dist_info))
+    assert info.homepage == homepage
+    assert info.project_urls == project_urls

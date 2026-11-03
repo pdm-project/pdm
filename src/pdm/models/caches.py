@@ -21,7 +21,7 @@ from pdm.termui import logger
 from pdm.utils import atomic_open_for_write, create_tracked_tempdir, make_file_executable
 
 if TYPE_CHECKING:
-    from httpx import Client
+    from httpx2 import Client
     from unearth import Link
 
 
@@ -114,12 +114,12 @@ class HashCache:
             with open(link.file_path, "rb") as f:
                 yield from f
         else:
-            import httpx
+            import httpx2
 
             with session.stream("GET", link.normalized) as resp:
                 try:
                     resp.raise_for_status()
-                except httpx.HTTPStatusError as e:
+                except httpx2.HTTPStatusError as e:
                     raise PdmException(f"Failed to read from {link.redacted}: {e}") from e
                 yield from resp.iter_bytes(chunk_size=8192)
 

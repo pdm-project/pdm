@@ -11,6 +11,8 @@ import subprocess
 from dataclasses import dataclass
 from typing import IO, Any, cast
 
+from packaging.version import Version
+
 from pdm.exceptions import PdmUsageError, ProjectError
 from pdm.termui import logger
 
@@ -212,9 +214,15 @@ class PackageFile:
             "description_content_type": meta.get("Description-Content-Type"),
             # Metadata 2.2
             "dynamic": meta.get_all("Dynamic") or (),
+            # Metadata 2.4
+            "license_expression": meta["License-Expression"],
             # Hashes
             **self.get_hashes(),
         }
+        # setuptools writes License-File under Metadata-Version 2.1, where it is not
+        # defined, so only send it from 2.4 on (PEP 639).
+        if Version(meta.get("Metadata-Version", "0")) >= Version("2.4"):
+            data["license_file"] = meta.get_all("License-File") or ()
         if self.gpg_signature is not None:
             data["gpg_signature"] = self.gpg_signature
         return data

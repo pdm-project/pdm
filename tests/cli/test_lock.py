@@ -313,6 +313,33 @@ def test_lock_dependencies(project, lock_format):
         assert package in locked
 
 
+@pytest.mark.usefixtures("repository")
+def test_lock_format_from_pyproject(project):
+    project.add_dependencies(["requests"])
+    project.pyproject.settings["lock"] = {"format": "pylock"}
+    project.pyproject.write()
+    actions.do_lock(project)
+    assert project.lockfile._path.name == "pylock.toml"
+    assert project.lockfile.exists()
+
+
+@pytest.mark.usefixtures("repository")
+def test_lock_format_from_pyproject_overrides_config(project):
+    project.add_dependencies(["requests"])
+    project.project_config["lock.format"] = "pdm"
+    project.pyproject.settings["lock"] = {"format": "pylock"}
+    project.pyproject.write()
+    assert project.lock_format == "pylock"
+    actions.do_lock(project)
+    assert project.lockfile._path.name == "pylock.toml"
+
+
+def test_invalid_lock_format_from_pyproject(project):
+    project.pyproject.settings["lock"] = {"format": "invalid"}
+    with pytest.raises(PdmUsageError, match="Invalid lock format"):
+        project.lock_format
+
+
 @pytest.mark.parametrize("args", [("-S", "static_urls"), ("--static-urls",)])
 def test_lock_refresh(pdm, project, repository, args, core, mocker):
     project.add_dependencies(["requests"])
@@ -801,11 +828,13 @@ def test_lock_check_change_fails(pdm, project, repository):
 
 
 @pytest.mark.usefixtures("repository")
-def test_innovations_with_specified_lockfile(pdm, project, working_set):
+@pytest.mark.parametrize("relative", [False, True])
+def test_innovations_with_specified_lockfile(pdm, project, working_set, monkeypatch, relative):
     project.add_dependencies(["requests"])
-    lockfile = str(project.root / "mylock.lock")
+    monkeypatch.chdir(project.root)
+    lockfile = "mylock.lock" if relative else str(project.root / "mylock.lock")
     pdm(["lock", "--lockfile", lockfile], strict=True, obj=project)
-    assert project.lockfile._path == project.root / "mylock.lock"
+    assert project.lockfile._path.absolute() == project.root / "mylock.lock"
     assert project.is_lockfile_hash_match()
     locked = project.get_locked_repository().candidates
     assert "requests" in locked
@@ -1032,6 +1061,15 @@ def test_lock_exclude_newer(project, pdm, source):
         cmd = ["lock"]
 
     pdm(cmd, obj=project, strict=True, cleanup=False)
+    assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
+
+
+def test_lock_exclude_newer_timestamp_without_offset(project, pdm):
+    project.pyproject.metadata["requires-python"] = ">=3.9"
+    project.project_config["pypi.url"] = "https://my.pypi.org/json"
+    project.add_dependencies(["zipp"])
+
+    pdm(["lock", "--exclude-newer", "2024-01-01T00:00:00"], obj=project, strict=True, cleanup=False)
     assert project.get_locked_repository().candidates["zipp"].version == "3.6.0"
 
 

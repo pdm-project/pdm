@@ -7,13 +7,21 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 from typing import Any, cast
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 import tomlkit
 
 from pdm.models.candidates import Candidate
 from pdm.models.markers import Marker, get_marker
 from pdm.models.repositories import LockedRepository, Package
-from pdm.models.requirements import FileRequirement, Requirement, VcsRequirement, parse_requirement, strip_extras
+from pdm.models.requirements import (
+    FileRequirement,
+    NamedRequirement,
+    Requirement,
+    VcsRequirement,
+    parse_requirement,
+    strip_extras,
+)
 from pdm.project.core import Project
 from pdm.utils import get_requirement_from_override, normalize_name
 
@@ -84,6 +92,8 @@ class _UvFileBuilder:
                 sources[entry] = self._build_source(dep)
             else:
                 entry = dep.as_line()
+            if isinstance(dep, FileRequirement):
+                entry = NamedRequirement.create(name=entry, extras=dep.extras, marker=dep.marker).as_line()
             for group in dep.groups:
                 collected = collected_deps.setdefault(group, [])
                 if entry not in collected:
@@ -178,6 +188,8 @@ class _UvFileBuilder:
             result = {req.vcs: req.repo}
             if req.ref:
                 result["rev"] = req.ref
+            if req.subdirectory:
+                result["subdirectory"] = req.subdirectory
         elif req.path:
             result = {"path": req.str_path}
         else:
@@ -188,7 +200,13 @@ class _UvFileBuilder:
 
     def _build_lock_source(self, req: Requirement) -> dict[str, Any]:
         if isinstance(req, VcsRequirement):
-            return {req.vcs: f"{req.repo}?rev={req.ref}#{req.revision}"}
+            source = urlsplit(req.repo)
+            query = dict(parse_qsl(source.query))
+            if req.ref:
+                query["rev"] = req.ref
+            if req.subdirectory:
+                query["subdirectory"] = req.subdirectory
+            return {req.vcs: source._replace(query=urlencode(query), fragment=req.revision or "").geturl()}
         elif isinstance(req, FileRequirement):
             if req.editable:
                 return {"editable": req.str_path}

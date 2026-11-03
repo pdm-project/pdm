@@ -67,6 +67,9 @@ def render_parser(parser: argparse.ArgumentParser, title: str, heading_level: in
             result.append(line)
         result.append("")
 
+    if parser.epilog:
+        result.append(clean_help(parser.epilog))
+
     return "\n".join(result).rstrip()
 
 

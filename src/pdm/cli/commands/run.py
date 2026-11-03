@@ -79,6 +79,30 @@ def _quote_cwd_for_cmd_exe(path: str) -> str:
     return _CMD_EXE_METACHARS.sub(lambda m: "^" + m.group(), path)
 
 
+def _join_for_cmd_exe(args: Sequence[str]) -> str:
+    """Join arguments for a ``cmd.exe`` command line.
+
+    cmd.exe does not understand the single quotes ``shlex.join`` adds, so use
+    the MSVCRT double-quote convention instead, and also quote an argument
+    that has a cmd.exe operator in it.
+    """
+    parts = []
+    for arg in args:
+        quoted = subprocess.list2cmdline([arg])
+        if quoted == arg and _CMD_EXE_METACHARS.search(arg):
+            # Double trailing backslashes so they don't escape the closing quote.
+            trailing = len(arg) - len(arg.rstrip("\\"))
+            quoted = '"' + arg + "\\" * trailing + '"'
+        parts.append(quoted)
+    return " ".join(parts)
+
+
+def _join_args(args: Sequence[str], for_shell: bool) -> str:
+    if for_shell and sys.platform == "win32":
+        return _join_for_cmd_exe(args)
+    return shlex.join(args)
+
+
 def interpolate(script: str, args: Sequence[str], for_shell: bool = False) -> tuple[str, bool]:
     """Interpolate placeholders in a script.
 
@@ -93,7 +117,7 @@ def interpolate(script: str, args: Sequence[str], for_shell: bool = False) -> tu
     else:
         cwd = shlex.quote(path)
     replacements = {
-        "args": shlex.join(args),
+        "args": _join_args(args, for_shell),
         "pdm": pdm,
         "run_cwd": cwd,
     }
@@ -120,6 +144,8 @@ def read_script_metadata(script: str, section: str) -> dict[str, Any] | None:
     else:
         import tomli as tomllib
 
+    # Python runs a script that starts with a UTF-8 BOM, so look for a block on its first line too.
+    script = script.removeprefix("\ufeff")
     matches = [m for m in re.finditer(_METADATA_REGEX, script) if m.group("type") == section]
     if len(matches) > 1:
         raise ValueError(f"Multiple {section} blocks found")
@@ -262,6 +288,9 @@ class TaskRunner:
         from dotenv.main import resolve_variables
 
         project = self.project
+        # The environment is prepared in os.environ, restore it afterwards so
+        # the next task of a composite script doesn't inherit it.
+        saved_environ = os.environ.copy()
         if not shell and args[0].endswith(".py"):
             script_file = os.path.expanduser(args[0])
             if working_dir and not os.path.isabs(script_file):
@@ -337,6 +366,8 @@ class TaskRunner:
         finally:
             signal.signal(signal.SIGTERM, handle_term)
             signal.signal(signal.SIGINT, handle_int)
+            os.environ.clear()
+            os.environ.update(saved_environ)
 
     def run_task(
         self, task: Task, args: Sequence[str] = (), opts: TaskOptions | None = None, seen: set[str] | None = None
@@ -367,7 +398,7 @@ class TaskRunner:
         elif kind == "shell":
             assert isinstance(value, str)
             script, args_interpolated = interpolate(value, args, for_shell=True)
-            args = script if args_interpolated or not args else f"{script} {shlex.join(args)}"
+            args = script if args_interpolated or not args else f"{script} {_join_args(args, for_shell=True)}"
             shell = True
         elif kind == "call":
             assert isinstance(value, str)

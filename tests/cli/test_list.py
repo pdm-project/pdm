@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from rich.box import ASCII
 
-from pdm.cli.commands.list import Command
+from pdm.cli.commands.list import Command, Listable
 from pdm.models.specifiers import PySpecSet
 from pdm.pytest import Distribution
 from tests import FIXTURES
@@ -610,6 +610,66 @@ def test_list_bare_sorted_version(project, pdm):
     assert expected == result.output
 
 
+@pytest.mark.parametrize("homepage", [None, "UNKNOWN"])
+def test_list_sort_missing_homepage(project, pdm, working_set, homepage):
+    for name, value in [
+        ("known-z", "https://z.example"),
+        ("unknown-b", homepage),
+        ("known-a", "https://A.example"),
+        ("unknown-a", homepage),
+    ]:
+        working_set.add_distribution(Distribution(name, "1.0", metadata={"Home-Page": value}))
+
+    result = pdm(["list", "--sort", "homepage,name", "--fields", "name,homepage", "--json"], obj=project, strict=True)
+
+    assert json.loads(result.output) == [
+        {"name": "unknown-a", "homepage": None},
+        {"name": "unknown-b", "homepage": None},
+        {"name": "known-a", "homepage": "https://A.example"},
+        {"name": "known-z", "homepage": "https://z.example"},
+    ]
+
+
+@pytest.mark.parametrize(
+    "metadata,expected_homepage",
+    [
+        (
+            {"Project-URL": ["Homepage, https://example.com", "Source, https://example.com/src"]},
+            "https://example.com",
+        ),
+        (
+            {"Project-URL": ["Home Page, https://example.com"]},
+            "https://example.com",
+        ),
+        (
+            {"Project-URL": ["home-page, https://example.com"]},
+            "https://example.com",
+        ),
+        (
+            {"Home-Page": "https://old.example.com", "Project-URL": ["Homepage, https://new.example.com"]},
+            "https://old.example.com",
+        ),
+        (
+            {"Home-Page": "UNKNOWN", "Project-URL": ["Homepage, https://fallback.example.com"]},
+            "https://fallback.example.com",
+        ),
+        (
+            {"Project-URL": ["Homepage, https://example.com/a,b"]},
+            "https://example.com/a,b",
+        ),
+        (
+            {"Project-URL": ["Docs, https://example.com/docs"]},
+            None,
+        ),
+    ],
+)
+def test_list_homepage_from_project_url(project, pdm, working_set, metadata, expected_homepage):
+    working_set.add_distribution(Distribution("foo", "1.0", metadata=metadata))
+
+    result = pdm(["list", "--fields", "name,homepage", "--json"], obj=project, strict=True)
+    assert json.loads(result.output) == [{"name": "foo", "homepage": expected_homepage}]
+
+
 @mock.patch("pdm.termui.ROUNDED", ASCII)
 @pytest.mark.usefixtures("fake_metadata")
 def test_list_bare_sorted_version_resolve(project, pdm, working_set):
@@ -873,3 +933,16 @@ def test_list_csv_include_exclude(project, pdm):
     )
     expected = "name,version,groups\n"
     assert expected == result.output
+
+
+@pytest.mark.parametrize(
+    "metadata,expected",
+    [
+        ({"License-Expression": "Apache-2.0 OR BSD-2-Clause"}, "Apache-2.0 OR BSD-2-Clause"),
+        ({"License-Expression": "MIT", "License": "MIT\n\nPermission is hereby granted"}, "MIT"),
+        ({"License": "BSD"}, "BSD"),
+        ({"Classifier": "License :: OSI Approved :: MIT License"}, "MIT License"),
+    ],
+)
+def test_listable_licenses(metadata, expected):
+    assert Listable(Distribution("foo", "1.0", metadata=metadata), set()).licenses == expected

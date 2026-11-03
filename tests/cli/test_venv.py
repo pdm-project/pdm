@@ -289,6 +289,20 @@ def test_venv_activate_no_shell(pdm, mocker, project):
             assert result.output.startswith("source")
 
 
+@pytest.mark.parametrize("shell", ["powershell", "pwsh"])
+def test_venv_activate_powershell_quotes_script_path(mocker, tmp_path, shell):
+    from pdm.cli.commands.venv.activate import ActivateCommand
+
+    scripts = tmp_path / "my project's env" / ("Scripts" if sys.platform == "win32" else "bin")
+    scripts.mkdir(parents=True)
+    (scripts / "Activate.ps1").touch()
+    venv = mocker.Mock(interpreter=scripts / "python")
+    mocker.patch("shellingham.detect_shell", return_value=(shell, None))
+
+    escaped = str(scripts / "Activate.ps1").replace("'", "''")
+    assert ActivateCommand().get_activate_command(venv) == f". '{escaped}'"
+
+
 @pytest.mark.usefixtures("fake_create")
 @pytest.mark.parametrize("keep_pypackages", [True, False])
 def test_venv_auto_create(pdm, mocker, project, keep_pypackages):

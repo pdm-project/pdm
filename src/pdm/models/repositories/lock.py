@@ -109,6 +109,7 @@ class LockedRepository(BaseRepository):
 
     def _read_pylock(self, lockfile: Mapping[str, Any]) -> None:
         root = self.environment.project.root
+        lockfile_root = self.environment.project.lockfile._path.absolute().parent
 
         if "targets" in lockfile.get("tool", {}).get("pdm", {}):
             self.targets = [EnvSpec.from_spec(**t) for t in lockfile["tool"]["pdm"]["targets"]]
@@ -147,12 +148,21 @@ class LockedRepository(BaseRepository):
                     req.url = root.joinpath(req.path).as_uri()  # type: ignore[attr-defined]
                 candidate = Candidate(req=req, name=package_name, version=package.get("version"))
                 candidate.requires_python = package.get("requires-python", "")
+                if archive := package.get("archive"):
+                    link = candidate.link
+                    assert link is not None
+                    candidate.hashes = [
+                        {"url": link.url_without_fragment, "file": link.filename, "hash": f"{algo}:{value}"}
+                        for algo, value in archive.get("hashes", {}).items()
+                    ]
                 for artifact in itertools.chain(
                     package.get("wheels", []), [sdist] if (sdist := package.get("sdist")) else []
                 ):
                     algo, hash_value = next(iter(artifact["hashes"].items()))
                     hash_item: FileHash = {"hash": f"{algo}:{hash_value}"}
-                    if "url" in artifact:
+                    if "path" in artifact:
+                        hash_item["url"] = lockfile_root.joinpath(artifact["path"]).as_uri()
+                    elif "url" in artifact:
                         hash_item["url"] = artifact["url"]
                     if "name" in artifact:
                         hash_item["file"] = artifact["name"]
@@ -338,7 +348,10 @@ class LockedRepository(BaseRepository):
                 for file in entry.candidate.hashes:
                     if file not in existing.candidate.hashes:
                         existing.candidate.hashes.append(file)
-        if markers is not None:
+        # The platform markers can't tell apart targets on the same OS and architecture,
+        # e.g. manylinux and musllinux, so excluding the new target that way would drop
+        # the packages from the previous targets they were resolved for as well.
+        if markers is not None and all(markers[1].matches(target) for target in previous_targets):
             for key, package in self.packages.items():
                 if key not in resolved:
                     _restrict_marker(package, markers[1], [env_spec])

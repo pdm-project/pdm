@@ -10,6 +10,7 @@ import pytest
 from pdm.environments.base import BareEnvironment
 from pdm.environments.local import PythonLocalEnvironment
 from pdm.environments.python import PythonEnvironment
+from pdm.models.working_set import WorkingSet
 from pdm.utils import pdm_scheme
 
 
@@ -192,3 +193,34 @@ def test_process_env_includes_scripts_first(local_env):
     scripts = local_env.get_paths()["scripts"]
     path_entries = env["PATH"].split(os.pathsep)
     assert path_entries[0] == scripts
+
+
+def test_prefixed_env_ignores_host_system_site_packages(project, monkeypatch, tmp_path):
+    """Isolated build prefixes must not inherit host system site-packages (#3895)."""
+    prefix = tmp_path / "pdm-build-env"
+    (prefix / "lib").mkdir(parents=True)
+
+    fake_venv = SimpleNamespace(
+        include_system_site_packages=True,
+        base_paths=["/should/not/be/shared"],
+        env_vars=dict,
+    )
+
+    created: dict[str, list[str]] = {}
+    real_ws = WorkingSet
+
+    def spy(paths=None, shared_paths=None):
+        created["shared_paths"] = list(shared_paths or [])
+        return real_ws(paths, shared_paths)
+
+    monkeypatch.setattr("pdm.environments.python.WorkingSet", spy)
+
+    env = PythonEnvironment(project, python=str(project.python.executable), prefix=str(prefix))
+    monkeypatch.setattr(env.interpreter, "get_venv", lambda: fake_venv)
+    env.get_working_set()
+    assert "/should/not/be/shared" not in created["shared_paths"]
+
+    host = PythonEnvironment(project, python=str(project.python.executable))
+    monkeypatch.setattr(host.interpreter, "get_venv", lambda: fake_venv)
+    host.get_working_set()
+    assert "/should/not/be/shared" in created["shared_paths"]

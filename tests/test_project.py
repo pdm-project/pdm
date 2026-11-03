@@ -150,6 +150,29 @@ def test_workspace_root_adds_members_as_implicit_editable_dependencies(project):
     assert member_dependency.str_path == "./packages/foo"
 
 
+def test_workspace_root_reached_through_a_relative_path(project, core):
+    """`pdm -p ../<workspace>` must still resolve the members' relative paths."""
+    project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
+    project.pyproject.write()
+    member_path = project.root / "packages" / "foo"
+    member_path.mkdir(parents=True)
+    member_path.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "foo"\nversion = "0.1.0"\n',
+        encoding="utf-8",
+    )
+    sibling = project.root.parent / "elsewhere"
+    sibling.mkdir(exist_ok=True)
+    # Project.root is only made absolute, so a `..` survives into it.
+    indirect = core.create_project(sibling / ".." / project.root.name)
+
+    dependencies = indirect.get_dependencies("default")
+
+    member_dependency = dependencies[-1]
+    assert member_dependency.name == "foo"
+    assert member_dependency.editable
+    assert member_dependency.str_path == "./packages/foo"
+
+
 def test_workspace_member_declared_in_dev_group_not_forced_into_default(project, pdm):
     """Workspace members already in other groups must not be re-added to default (#3816)."""
     project.pyproject.settings["workspace"] = {"members": ["packages/*"]}
@@ -387,6 +410,22 @@ def test_invalid_dependency_group(project):
         project.get_dependencies("recursive")
     with pytest.raises(ProjectError, match="Missing group 'missing-group'"):
         project.get_dependencies("missing")
+
+
+def test_dev_dependencies_merge_does_not_modify_dependency_groups(tmp_path, core):
+    pyproject_file = tmp_path / "pyproject.toml"
+    pyproject_file.write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n'
+        '[dependency-groups]\ntest = ["pytest"]\n\n'
+        '[tool.pdm.dev-dependencies]\ntest = ["coverage"]\n'
+    )
+    pyproject = PyProject(pyproject_file, ui=core.ui)
+    content_hash = pyproject.content_hash()
+
+    assert pyproject.dev_dependencies == {"test": ["pytest", "coverage"]}
+    assert pyproject.dev_dependencies == {"test": ["pytest", "coverage"]}
+    assert pyproject.dependency_groups == {"test": ["pytest"]}
+    assert pyproject.content_hash() == content_hash
 
 
 @pytest.mark.path

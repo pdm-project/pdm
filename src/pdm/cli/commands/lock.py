@@ -36,7 +36,7 @@ def _parse_exclude_newer_override(value: str) -> tuple[str, datetime | None]:
 
 
 class Command(BaseCommand):
-    """Resolve and lock dependencies"""
+    """Resolve dependencies and write the lockfile without installing packages"""
 
     arguments = (
         *BaseCommand.arguments,
@@ -50,6 +50,12 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        parser.epilog = (
+            "Reads requirements from pyproject.toml for the selected groups and writes the selected lockfile. Does "
+            "not change pyproject.toml. Does not install or remove packages. With no group-selection options, an "
+            "existing lockfile keeps its recorded groups; use -G:all to lock all declared groups. Lock strategy "
+            "flags are also remembered unless changed with --strategy."
+        )
         parser.add_argument(
             "--refresh",
             action="store_true",
