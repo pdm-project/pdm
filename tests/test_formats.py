@@ -291,6 +291,38 @@ def test_build_uv_pyproject_toml_with_workspace(project):
     assert data["tool"]["uv"]["sources"]["bar"] == {"workspace": True}
 
 
+def test_build_uv_files_when_files_cannot_be_renamed(project, monkeypatch):
+    """The original files may not be renamable, e.g. when pyproject.toml is a
+    bind mount in a container renaming it fails with EBUSY. The builder must
+    fall back to restoring the content in place. See issue #3292.
+    """
+    import errno
+    from pathlib import Path
+
+    def busy_rename(self, target):
+        raise OSError(errno.EBUSY, "Device or resource busy")
+
+    pyproject_path = project.root / "pyproject.toml"
+    original_pyproject = pyproject_path.read_bytes()
+    uv_lock_path = project.root / "uv.lock"
+    uv_lock_path.write_text('[metadata]\nname = "sentinel"\n', encoding="utf-8")
+    original_uv_lock = uv_lock_path.read_bytes()
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    monkeypatch.setattr(Path, "rename", busy_rename)
+    with uv_file_builder(project, ">=3.10", [], locked_repo) as builder:
+        path = builder.build_pyproject_toml()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+        assert data["project"]["requires-python"] == ">=3.10"
+        lock_path = builder.build_uv_lock()
+        with lock_path.open("rb") as fp:
+            lock_data = tomllib.load(fp)
+        assert lock_data["version"] == 1
+    assert pyproject_path.read_bytes() == original_pyproject
+    assert uv_lock_path.read_bytes() == original_uv_lock
+
+
 @pytest.mark.parametrize("source_kind", ["path", "url", "vcs"])
 def test_build_uv_pyproject_preserves_file_requirement_metadata(project, source_kind):
     wheel = FIXTURES / "artifacts" / "first-2.0.2-py2.py3-none-any.whl"
