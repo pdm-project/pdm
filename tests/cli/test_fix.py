@@ -137,4 +137,28 @@ def test_fix_project_config_symlink_refusal_keeps_migration_intact(project, pdm,
 
     assert result.exit_code != 0
     assert old_config.exists(), "`.pdm.toml` was deleted before the rejected write"
-    assert not (project.root / ".pdm-python").exists()
+    # `.pdm-python` may already be created by then; that is idempotent and the
+    # retry will skip it, so only the survival of `.pdm.toml` matters here.
+
+
+def test_fix_project_config_keeps_pdm_toml_ignored_after_refusal(project, pdm, tmp_path):
+    """A refused `.pdm-python` write must not leave `.pdm.toml` no longer ignored.
+
+    `.gitignore` is rewritten by the same fixer, so rewriting it before the
+    `.pdm-python` write can fail would surface the legacy config as an untracked file.
+    """
+    project._saved_python = None
+    old_config = project.root / ".pdm.toml"
+    old_config.write_text(f'[python]\nuse_pyenv = false\npath = "{Path(sys.executable).as_posix()}"\n')
+    gitignore = project.root / ".gitignore"
+    gitignore.write_text(".pdm.toml\n")
+
+    target = tmp_path / "outside" / "victim-file"
+    target.parent.mkdir(parents=True)
+    _make_symlink(project.root / ".pdm-python", target)
+
+    result = pdm(["fix", "project-config"], obj=project)
+
+    assert result.exit_code != 0
+    assert old_config.exists()
+    assert gitignore.read_text() == ".pdm.toml\n", "`.pdm.toml` was left un-ignored after the refusal"

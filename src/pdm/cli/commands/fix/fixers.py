@@ -62,11 +62,6 @@ class ProjectConfigFixer(BaseFixer):
     def fix(self) -> None:
         old_file = self.project.root.joinpath(".pdm.toml")
         config = Config(old_file).self_data
-        # Fix `.gitignore` first: it is the only step whose guard can refuse a
-        # symlink before anything is rewritten, so a refusal here leaves the
-        # migration untouched instead of half-applied.
-        self.log("Fixing .gitignore...", verbosity=Verbosity.DETAIL)
-        self._fix_gitignore()
         python_file = self.project.root.joinpath(".pdm-python")
         # NOTE: `exists()` follows symlinks, so a dangling `.pdm-python` link looks
         # absent here. The write below is what actually refuses the symlink.
@@ -77,6 +72,12 @@ class ProjectConfigFixer(BaseFixer):
             # attacker-controlled value to a path outside the project.
             with open_for_write_no_symlink(python_file) as fp:
                 fp.write(config["python.path"])
+        # Rewrite `.gitignore` here, after `.pdm-python` is settled but before
+        # `.pdm.toml` is deleted. Both writes can refuse a symlinked destination, so
+        # keeping `.gitignore` ahead of the destructive step means neither refusal
+        # can leave `.pdm.toml` behind while it is no longer ignored.
+        self.log("Fixing .gitignore...", verbosity=Verbosity.DETAIL)
+        self._fix_gitignore()
         self.project.project_config  # access the project config to move the config items
         self.log("Moving .pdm.toml to pdm.toml...", verbosity=Verbosity.DETAIL)
         old_file.unlink()
