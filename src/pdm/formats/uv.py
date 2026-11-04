@@ -114,16 +114,28 @@ class _UvFileBuilder:
         return path
 
     def _enter_path(self, path: Path) -> Path:
-        if path.exists():
+        if not path.exists():
+            self.stack.callback(path.unlink, True)
+            return path
+        try:
             name = tempfile.mktemp(dir=path.parent, prefix=f"{path.name}.")
             backup = path.rename(name)
+        except OSError:
+            # The file cannot be renamed, for example when it is a bind mount
+            # in a container (EBUSY) or the directory is read-only. Keep the
+            # content in memory and restore it in place instead.
+            content = path.read_bytes()
+
+            @self.stack.callback
+            def restore_in_place() -> None:
+                path.write_bytes(content)
+        else:
 
             @self.stack.callback
             def restore() -> None:
                 path.unlink(True)
                 backup.rename(path)
-        else:
-            self.stack.callback(path.unlink, True)
+
         return path
 
     def build_uv_lock(self, include_self: bool = False) -> Path:
