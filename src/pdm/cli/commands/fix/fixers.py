@@ -6,7 +6,7 @@ from pathlib import Path
 from pdm.project import Config, Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM
 from pdm.termui import Verbosity
-from pdm.utils import parse_version
+from pdm.utils import open_for_write_no_symlink, parse_version
 
 
 class BaseFixer(abc.ABC):
@@ -54,19 +54,25 @@ class ProjectConfigFixer(BaseFixer):
         content = gitignore.read_text("utf8")
         if ".pdm-python" not in content:
             content = re.sub(r"^\.pdm\.toml$", ".pdm-python", content, flags=re.MULTILINE)
-            gitignore.write_text(content, "utf8")
+            with open_for_write_no_symlink(gitignore) as fp:
+                fp.write(content)
 
     def fix(self) -> None:
         old_file = self.project.root.joinpath(".pdm.toml")
         config = Config(old_file).self_data
-        if not self.project.root.joinpath(".pdm-python").exists() and config.get("python.path"):
+        python_file = self.project.root.joinpath(".pdm-python")
+        # `exists()` follows symlinks, so a dangling link still looks absent here.
+        if not python_file.exists() and config.get("python.path"):
             self.log("Creating .pdm-python...", verbosity=Verbosity.DETAIL)
-            self.project.root.joinpath(".pdm-python").write_text(config["python.path"])
+            with open_for_write_no_symlink(python_file) as fp:
+                fp.write(config["python.path"])
+        # Must stay ahead of the unlink below, so a refusal can't leave `.pdm.toml`
+        # behind but no longer ignored.
+        self.log("Fixing .gitignore...", verbosity=Verbosity.DETAIL)
+        self._fix_gitignore()
         self.project.project_config  # access the project config to move the config items
         self.log("Moving .pdm.toml to pdm.toml...", verbosity=Verbosity.DETAIL)
         old_file.unlink()
-        self.log("Fixing .gitignore...", verbosity=Verbosity.DETAIL)
-        self._fix_gitignore()
 
     def check(self) -> bool:
         return self.project.root.joinpath(".pdm.toml").exists()
