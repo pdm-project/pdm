@@ -452,6 +452,11 @@ class PreparedCandidate:
         :param allow_all: If true, don't validate the wheel tag nor hashes
         :param unpack: Whether to download and unpack the link if it's not local
         """
+        if self._cached and not self._cached.exists():
+            # The cached wheel may have been removed after it was recorded,
+            # e.g. by `pdm cache clear` or external cleanup tools. Treat it
+            # as a cache miss instead of failing with FileNotFoundError.
+            self._cached = None
         if self._cached and self._wheel_compatible(self._cached.name, allow_all):
             return
 

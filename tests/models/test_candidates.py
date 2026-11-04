@@ -264,6 +264,28 @@ def test_sdist_candidate_with_wheel_cache(project, mocker):
     assert wheel.name == built_path.name
 
 
+@pytest.mark.usefixtures("local_finder")
+def test_sdist_candidate_with_missing_cached_wheel(project, mocker):
+    file_link = Link((FIXTURES / "artifacts/demo-0.0.1.tar.gz").as_uri())
+    built_path = FIXTURES / "artifacts/demo-0.0.1-py2.py3-none-any.whl"
+    wheel_cache = project.make_wheel_cache()
+    cache_path = wheel_cache.get_path_for_link(file_link, project.environment.spec)
+    if not cache_path.exists():
+        cache_path.mkdir(parents=True)
+    shutil.copy2(built_path, cache_path)
+    req = parse_requirement(file_link.url)
+    prepared = Candidate(req).prepare(project.environment)
+    prepared.metadata
+    assert prepared._cached is not None
+    # The cached wheel is removed externally after it has been recorded,
+    # e.g. by `pdm cache clear` or a system cleanup tool.
+    prepared._cached.unlink()
+    builder = mocker.patch("pdm.builders.WheelBuilder.build", return_value=str(built_path))
+    wheel = prepared.build()
+    builder.assert_called_once()
+    assert wheel.name == built_path.name
+
+
 @pytest.mark.usefixtures("vcs", "local_finder")
 def test_cache_vcs_immutable_revision(project):
     req = parse_requirement("git+https://github.com/test-root/demo.git@master#egg=demo")
