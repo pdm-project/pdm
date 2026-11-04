@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 
 def test_fix_non_existing_problem(project, pdm):
     result = pdm(["fix", "non-existing"], obj=project)
@@ -71,3 +73,68 @@ def test_fix_project_plugins_replaces_existing_cache_dir(project, pdm):
     assert not old_plugin_dir.exists()
     assert not project.project_plugins_dir.joinpath("stale.py").exists()
     assert project.project_plugins_dir.joinpath("plugin.py").read_text() == "value = 1\n"
+
+
+def _make_symlink(path: Path, target: Path) -> None:
+    try:
+        path.symlink_to(target)
+    except (OSError, NotImplementedError) as e:  # pragma: no cover
+        pytest.skip(f"symlink is not supported: {e}")
+
+
+def test_fix_project_config_refuses_symlinked_pdm_python(project, pdm, tmp_path):
+    """A repo-planted `.pdm-python` symlink must not redirect the write out of the project."""
+    project._saved_python = None
+    old_config = project.root / ".pdm.toml"
+    old_config.write_text('[python]\nuse_pyenv = false\npath = "ATTACKER_CONTROLLED_CONTENT"\n')
+
+    target = tmp_path / "outside" / "victim-file"
+    target.parent.mkdir(parents=True)
+    symlink_path = project.root / ".pdm-python"
+    _make_symlink(symlink_path, target)
+    assert symlink_path.is_symlink()
+    assert not symlink_path.exists()  # dangling, so the vulnerable `exists()` check passed
+
+    result = pdm(["fix", "project-config"], obj=project)
+
+    assert result.exit_code != 0
+    assert not target.exists(), "the write followed the symlink out of the project"
+    assert symlink_path.is_symlink()
+    assert old_config.exists(), "`.pdm.toml` must survive so the fix can be retried"
+
+
+def test_fix_project_config_refuses_symlinked_gitignore(project, pdm, tmp_path):
+    """`_fix_gitignore()` writes `.gitignore` too, so it needs the same guard."""
+    project._saved_python = None
+    old_config = project.root / ".pdm.toml"
+    old_config.write_text(f'[python]\nuse_pyenv = false\npath = "{Path(sys.executable).as_posix()}"\n')
+
+    target = tmp_path / "outside" / "gitignore"
+    target.parent.mkdir(parents=True)
+    target.write_text(".pdm.toml\n")
+    symlink_path = project.root / ".gitignore"
+    _make_symlink(symlink_path, target)
+
+    result = pdm(["fix", "project-config"], obj=project)
+
+    assert result.exit_code != 0
+    assert target.read_text() == ".pdm.toml\n", "the write followed the symlink out of the project"
+    assert symlink_path.is_symlink()
+
+
+def test_fix_project_config_symlink_refusal_keeps_migration_intact(project, pdm, tmp_path):
+    """A refused `.gitignore` write must not leave `.pdm.toml` already deleted."""
+    project._saved_python = None
+    old_config = project.root / ".pdm.toml"
+    old_config.write_text(f'[python]\nuse_pyenv = false\npath = "{Path(sys.executable).as_posix()}"\n')
+
+    target = tmp_path / "outside" / "gitignore"
+    target.parent.mkdir(parents=True)
+    target.write_text(".pdm.toml\n")
+    _make_symlink(project.root / ".gitignore", target)
+
+    result = pdm(["fix", "project-config"], obj=project)
+
+    assert result.exit_code != 0
+    assert old_config.exists(), "`.pdm.toml` was deleted before the rejected write"
+    assert not (project.root / ".pdm-python").exists()

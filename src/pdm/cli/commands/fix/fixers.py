@@ -6,7 +6,7 @@ from pathlib import Path
 from pdm.project import Config, Project
 from pdm.project.lockfile import FLAG_CROSS_PLATFORM
 from pdm.termui import Verbosity
-from pdm.utils import parse_version
+from pdm.utils import open_for_write_no_symlink, parse_version
 
 
 class BaseFixer(abc.ABC):
@@ -54,19 +54,32 @@ class ProjectConfigFixer(BaseFixer):
         content = gitignore.read_text("utf8")
         if ".pdm-python" not in content:
             content = re.sub(r"^\.pdm\.toml$", ".pdm-python", content, flags=re.MULTILINE)
-            gitignore.write_text(content, "utf8")
+            # The guard also covers `.gitignore`, which an untrusted repository can
+            # plant as a symlink just like `.pdm-python`.
+            with open_for_write_no_symlink(gitignore) as fp:
+                fp.write(content)
 
     def fix(self) -> None:
         old_file = self.project.root.joinpath(".pdm.toml")
         config = Config(old_file).self_data
-        if not self.project.root.joinpath(".pdm-python").exists() and config.get("python.path"):
+        # Fix `.gitignore` first: it is the only step whose guard can refuse a
+        # symlink before anything is rewritten, so a refusal here leaves the
+        # migration untouched instead of half-applied.
+        self.log("Fixing .gitignore...", verbosity=Verbosity.DETAIL)
+        self._fix_gitignore()
+        python_file = self.project.root.joinpath(".pdm-python")
+        # NOTE: `exists()` follows symlinks, so a dangling `.pdm-python` link looks
+        # absent here. The write below is what actually refuses the symlink.
+        if not python_file.exists() and config.get("python.path"):
             self.log("Creating .pdm-python...", verbosity=Verbosity.DETAIL)
-            self.project.root.joinpath(".pdm-python").write_text(config["python.path"])
+            # Write through the same no-symlink guard as `Project._saved_python`, so a
+            # repository-supplied `.pdm-python` symlink can't redirect this
+            # attacker-controlled value to a path outside the project.
+            with open_for_write_no_symlink(python_file) as fp:
+                fp.write(config["python.path"])
         self.project.project_config  # access the project config to move the config items
         self.log("Moving .pdm.toml to pdm.toml...", verbosity=Verbosity.DETAIL)
         old_file.unlink()
-        self.log("Fixing .gitignore...", verbosity=Verbosity.DETAIL)
-        self._fix_gitignore()
 
     def check(self) -> bool:
         return self.project.root.joinpath(".pdm.toml").exists()
