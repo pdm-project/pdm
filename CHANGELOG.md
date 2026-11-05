@@ -1,3 +1,27 @@
+## Release v2.29.6 (2026-11-05)
+
+### Bug Fixes
+
+- Fix the uv mode failing when `pyproject.toml` or `uv.lock` cannot be renamed, as happens when they are bind mounts in a container, by falling back to restoring their content in place. ([#3292](https://github.com/pdm-project/pdm/issues/3292))
+- Percent-encode the source username and password in the index URLs passed to uv, so `use_uv` works with credentials that contain characters like `#`, `/` or `%`. ([#3974](https://github.com/pdm-project/pdm/issues/3974))
+- Honor local wheel and sdist paths in pylock.toml, preferring them over URLs while preserving explicit artifact filenames. ([#3975](https://github.com/pdm-project/pdm/issues/3975))
+- Fix the Python range pdm derives from a `python_version` marker that compares against a three-part version, such as `python_version >= "3.8.1"`. ([#3978](https://github.com/pdm-project/pdm/issues/3978))
+- Save prompted credentials only after a successful package upload response. ([#3982](https://github.com/pdm-project/pdm/issues/3982))
+- Keep the version from `pyproject.toml` or `setup.cfg` when a later `setup.cfg` or `setup.py` sets none, instead of resetting it to `0.0.0` while parsing project files. ([#3983](https://github.com/pdm-project/pdm/issues/3983))
+- Allow `pdm config` to set an explicitly provided empty string value instead of treating it as a read operation. ([#3984](https://github.com/pdm-project/pdm/issues/3984))
+- Fix PEP 582 setup for Bash-compatible shells when the installation path contains an apostrophe. ([#3986](https://github.com/pdm-project/pdm/issues/3986))
+- Remove the downloaded archive after `pdm python install` installs an interpreter, instead of leaving it in the temporary directory. ([#3988](https://github.com/pdm-project/pdm/issues/3988))
+- Quote Poetry platform constraints verbatim instead of using `repr()` when converting them to environment markers, so they stay valid under stricter marker string parsing. ([#3993](https://github.com/pdm-project/pdm/issues/3993))
+
+### Documentation
+
+- Fix two dead links in the project and template usage docs. ([#3976](https://github.com/pdm-project/pdm/issues/3976))
+
+### Miscellany
+
+- Publish releases with `pypa/gh-action-pypi-publish` to attach PEP 740 provenance attestations on PyPI. ([#3979](https://github.com/pdm-project/pdm/issues/3979))
+
+
 ## Release v2.29.5 (2026-10-30)
 
 ### Bug Fixes
