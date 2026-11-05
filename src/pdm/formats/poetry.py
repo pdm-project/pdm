@@ -107,6 +107,14 @@ def _convert_python(python: str) -> PySpecSet:
     return functools.reduce(operator.or_, parts)
 
 
+def _platform_marker(op: str, value: str) -> Marker:
+    # PEP 508 marker strings have no escape syntax, so quote the value verbatim
+    # instead of using repr(), which may emit backslash escapes.
+    if "'" in value or '"' in value:
+        raise ValueError(f"Invalid platform constraint: {value}")
+    return get_marker(f"sys_platform {op} '{value}'")
+
+
 def _convert_platform(platform: str) -> Marker:
     """Translate Poetry's generic platform constraints into environment markers."""
     if not platform or platform.strip() == "*":
@@ -122,7 +130,7 @@ def _convert_platform(platform: str) -> Marker:
                 if not values:
                     raise ValueError(f"Invalid platform constraint: {constraint}")
                 comparison, combine = ("!=", operator.and_) if op == "not in" else ("==", operator.or_)
-                members = [get_marker(f"sys_platform {comparison} {item!r}") for item in values]
+                members = [_platform_marker(comparison, item) for item in values]
                 constraints.append(functools.reduce(combine, members))
                 continue
             else:
@@ -131,7 +139,7 @@ def _convert_platform(platform: str) -> Marker:
                     raise ValueError(f"Invalid platform constraint: {constraint}")
                 op, value = match.groups()
                 op = "!=" if op == "!=" else "=="
-            constraints.append(get_marker(f"sys_platform {op} {value!r}"))
+            constraints.append(_platform_marker(op, value))
         alternatives.append(functools.reduce(operator.and_, constraints))
     marker = functools.reduce(operator.or_, alternatives)
     if marker.is_empty():
