@@ -1,1 +1,0 @@
-Refuse to write `.pdm-python` and `.gitignore` through a symlink in `pdm fix`, preventing an untrusted repository from creating a file with attacker-controlled content outside the project root (GHSA-w4j9-f5hm-r74v).
