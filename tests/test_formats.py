@@ -657,7 +657,19 @@ def test_convert_poetry_platform_constraint(project, platform, matches):
 
 @pytest.mark.parametrize(
     "platform",
-    ["linux ||", "|| linux", "linux,", "linux,,darwin", "' ' in", "' ' not in", "win32,darwin", "linux,!=linux"],
+    [
+        "linux ||",
+        "|| linux",
+        "linux,",
+        "linux,,darwin",
+        "' ' in",
+        "' ' not in",
+        "win32,darwin",
+        "linux,!=linux",
+        "it's",
+        "!=it's",
+        "'it's' in",
+    ],
 )
 def test_convert_poetry_platform_rejects_invalid_constraints(project, platform):
     pyproject = project.root / "pyproject.toml"
