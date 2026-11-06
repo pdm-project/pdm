@@ -6,7 +6,9 @@ from functools import lru_cache, reduce
 from typing import TYPE_CHECKING, Any, cast, overload
 
 from dep_logic.markers import (
+    AnyMarker,
     BaseMarker,
+    EmptyMarker,
     InvalidMarker,
     MarkerExpression,
     MarkerUnion,
@@ -22,6 +24,7 @@ from pdm.exceptions import RequirementError
 from pdm.models.specifiers import PySpecSet
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
     from typing import Self
 
 
@@ -91,6 +94,18 @@ class Marker:
         stripped.
         """
         return type(self)(self.inner.without_extras()), type(self)(self.inner.only("extra"))
+
+    def evaluate_extras(self, extras: Collection[str]) -> Marker:
+        """Evaluate extra conditions while preserving the other marker conditions."""
+
+        def evaluate(marker: BaseMarker) -> BaseMarker:
+            if isinstance(marker, (MultiMarker, MarkerUnion)):
+                return type(marker).of(*(evaluate(part) for part in marker.markers))
+            if marker.without_extras().is_any():
+                return AnyMarker() if marker.evaluate({"extra": set(extras) if extras else ""}) else EmptyMarker()
+            return marker
+
+        return type(self)(evaluate(self.inner))
 
 
 @overload

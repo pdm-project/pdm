@@ -666,7 +666,7 @@ class PreparedCandidate:
     def get_dependencies_from_metadata(self) -> list[Requirement]:
         """Get the dependencies of a candidate from metadata."""
         extras = self.req.extras or ()
-        return filter_requirements_with_extras(self.metadata.requires or [], extras)
+        return filter_requirements_with_extras(self.metadata.requires or [], extras, keep_extra_markers=True)
 
     def should_cache(self) -> bool:
         """Determine whether to cache the dependencies and built wheel."""
