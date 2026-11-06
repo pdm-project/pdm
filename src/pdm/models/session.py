@@ -54,7 +54,7 @@ def _get_transport(
     return httpx2.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy, retries=MAX_RETRIES)
 
 
-class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
+class ThreadedSyncSqliteStorage(hishel.SqliteStorage):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._local_conns: dict[int, sqlite3.Connection] = {}
         self._lock = threading.Lock()
@@ -113,19 +113,20 @@ class PDMPyPIClient(PyPIClient):
             def cache_transport(transport: httpx2.BaseTransport) -> httpx2.BaseTransport:
                 return transport
         else:
-            # clean up old (pre-hishel 1.0) cache
-            cache_db = cache_dir / "http-cache.db"
-            if not cache_db.exists():
-                for f in cache_dir.iterdir():
-                    if not f.name.startswith("http-cache.db"):
-                        if f.is_dir():
-                            shutil.rmtree(f, ignore_errors=True)
-                        else:
-                            f.unlink()
+            # clean up old (pre-hishel 1.0 and 2.0) caches
+            for cache in ["http-cache.db", ".cache/hishel"]:
+                cache_db = cache_dir / cache
+                if not cache_db.exists():
+                    for f in cache_dir.iterdir():
+                        if not f.name.startswith(cache):
+                            if f.is_dir():
+                                shutil.rmtree(f, ignore_errors=True)
+                            else:
+                                f.unlink()
             storage = ThreadedSyncSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
 
             def cache_transport(transport: httpx2.BaseTransport) -> httpx2.BaseTransport:
-                return hishel.httpx2.SyncCacheTransport(next_transport=transport, storage=storage)
+                return hishel.httpx2.CacheTransport(next_transport=transport, storage=storage)
 
         mounts: dict[str, httpx2.BaseTransport] = {"file://": LocalFSTransport()}
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
@@ -174,7 +175,7 @@ class PDMPyPIClient(PyPIClient):
     def on_response(self, response: httpx2.Response) -> None:
         from unearth.utils import ARCHIVE_EXTENSIONS
 
-        if response.extensions.get("hishel_from_cache"):
+        if response.extensions.get("caching", {}).get("from_cache"):
             response.from_cache = True  # type: ignore[attr-defined]
             if response.url.path.endswith(ARCHIVE_EXTENSIONS):
                 logger.info("Using cached response for %s", response.url)
