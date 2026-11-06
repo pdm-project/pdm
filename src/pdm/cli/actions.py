@@ -106,7 +106,12 @@ def do_lock(
         targets = [env_spec]
         result_repo = locked_repo  # Append to the same lockfile
     else:
-        targets = [env_spec] if env_spec else (locked_repo.targets[:] or project.lock_targets)
+        if env_spec:
+            targets = [env_spec]
+        elif project.has_configured_lock_targets:
+            targets = project.lock_targets
+        else:
+            targets = locked_repo.targets[:] or project.lock_targets
     # Restrict the target python to within the project's requires-python
     global_requires_python = project.environment.python_requires
     for i, target in enumerate(targets):
