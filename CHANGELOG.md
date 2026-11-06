@@ -1,3 +1,10 @@
+## Release v2.29.7 (2026-11-06)
+
+### Bug Fixes
+
+- Upgrade hishel to support version 2 or greater. ([#3995](https://github.com/pdm-project/pdm/issues/3995))
+
+
 ## Release v2.29.6 (2026-11-05)
 
 ### Bug Fixes
