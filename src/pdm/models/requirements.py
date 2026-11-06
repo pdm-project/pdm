@@ -464,25 +464,32 @@ class VcsRequirement(FileRequirement):
 
 
 def filter_requirements_with_extras(
-    requirement_lines: list[str], extras: Sequence[str], include_default: bool = False
+    requirement_lines: list[str],
+    extras: Sequence[str],
+    include_default: bool = False,
+    *,
+    keep_extra_markers: bool = False,
 ) -> list[Requirement]:
     """Filter the requirements with extras.
     If extras are given, return those with matching extra markers.
     Otherwise, return those without extra markers.
+    Set keep_extra_markers to retain the dependency's original extra conditions.
     """
     result: list[Requirement] = []
     for req in requirement_lines:
         _r = parse_requirement(req)
-        req_extras = get_marker("")
+        has_extras = False
         if _r.marker:
-            rest, req_extras = _r.marker.split_extras()
-            _r.marker = rest if not rest.is_any() else None
-            if not req_extras.evaluate({"extra": extras or ""}):
+            has_extras = _r.marker.inner != _r.marker.inner.without_extras()
+            rest = _r.marker.evaluate_extras(extras)
+            if rest.is_empty():
                 continue
+            if not keep_extra_markers:
+                _r = dataclasses.replace(_r, marker=rest if not rest.is_any() else None)
         # Add to the requirements if:
         # The requirement has no extras while requested extras are empty or include_default is True, or
         # The requirement has extras, in which case the `evaluate()` test must have been passed.
-        if not req_extras.is_any() or include_default or not extras:
+        if has_extras or include_default or not extras:
             result.append(_r)
 
     return result

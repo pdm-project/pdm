@@ -127,7 +127,7 @@ class UvResolver(Resolver):
         hash_cache = self.project.make_hash_cache()
         session = self.environment.session
 
-        def make_requirement(dep: dict[str, Any]) -> str:
+        def make_requirement(dep: dict[str, Any], parent_extra: str | None = None) -> str:
             req = NamedRequirement(name=dep["name"])
             if version := dep.get("version"):
                 req.specifier = get_specifier(f"=={version}")
@@ -135,6 +135,8 @@ class UvResolver(Resolver):
                 req.marker = get_marker(marker)
             if extra := dep.get("extra"):
                 req.extras = extra
+            if parent_extra is not None:
+                req.marker = (req.marker or get_marker("")) & get_marker(f'extra == "{parent_extra}"')
             return req.as_line()
 
         def make_hash(item: dict[str, Any], fallback_url: str | None = None) -> FileHash:
@@ -187,7 +189,7 @@ class UvResolver(Resolver):
                 for group, deps in optional_dependencies.items():
                     extra_entry = Package(
                         candidate.copy_with(replace(req, extras=(group,))),
-                        [f"{req.key}=={candidate.version}", *(make_requirement(dep) for dep in deps)],
+                        [f"{req.key}=={candidate.version}", *(make_requirement(dep, group) for dep in deps)],
                         "",
                     )
                     packages.append(extra_entry)

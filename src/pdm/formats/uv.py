@@ -19,7 +19,7 @@ from pdm.models.requirements import (
     NamedRequirement,
     Requirement,
     VcsRequirement,
-    parse_requirement,
+    filter_requirements_with_extras,
     strip_extras,
 )
 from pdm.project.core import Project
@@ -256,23 +256,21 @@ class _UvFileBuilder:
                 continue
             if not package.candidate.req.extras:
                 deps = [
-                    self._make_dependency(package.candidate, parse_requirement(dep)) for dep in package.dependencies
+                    self._make_dependency(package.candidate, dep)
+                    for dep in filter_requirements_with_extras(package.dependencies, ())
                 ]
                 result["dependencies"] = [dep for dep in deps if dep is not None]
             else:
-                deps = [
-                    self._make_dependency(package.candidate, parse_requirement(dep))
-                    for dep in package.dependencies
-                    if parse_requirement(dep).key != candidate.req.key
-                ]
-                deps = [dep for dep in deps if dep is not None]
                 for extra in package.candidate.req.extras:
-                    # XXX: when depending on a package with extras, the extra dependencies are encoded in
-                    # the corresponding group under optional-dependencies. But in case multiple extras are requested,
-                    # the same dependencies get duplicated in those groups, but it's okay if each single extra is
-                    # never requested alone.
                     if extra not in optional_dependencies:
-                        optional_dependencies[extra] = deps  # type: ignore[assignment]
+                        deps = [
+                            self._make_dependency(package.candidate, dep)
+                            for dep in filter_requirements_with_extras(
+                                package.dependencies, (extra,), include_default=True
+                            )
+                            if dep.key != candidate.req.key
+                        ]
+                        optional_dependencies[extra] = [dep for dep in deps if dep is not None]
 
         if optional_dependencies:
             result["optional-dependencies"] = optional_dependencies

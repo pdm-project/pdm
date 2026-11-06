@@ -389,6 +389,13 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
         # we don't get errors when building wheels.
         valid_deps: list[Requirement] = []
         for dep in deps:
+            if dep.marker:
+                # Extra conditions belong to this parent, not to the resolved package.
+                # Keep the original marker in fetched_dependencies for the lockfile.
+                marker = dep.marker.evaluate_extras(candidate.req.extras or ())
+                if marker.is_empty():
+                    continue
+                dep = dataclasses.replace(dep, marker=marker if not marker.is_any() else None)
             if (
                 dep.requires_python
                 & requires_python

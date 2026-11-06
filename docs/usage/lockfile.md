@@ -133,6 +133,26 @@ format = "pylock"
 
 `pyproject.toml` takes precedence over `pdm config`.
 
+## Dependency extras in `pdm.lock`
+
+A package entry with extras, such as `foo[bar,qux]`, depends on the base package `foo` and the dependencies selected by those extras. Starting with lock format version `4.6`, dependency lines retain their original `extra` markers so consumers can identify which extra contributes each dependency:
+
+```toml
+[[package]]
+name = "foo"
+version = "1.0"
+extras = ["bar", "qux"]
+dependencies = [
+    "foo==1.0",
+    'bar-dep; extra == "bar"',
+    'qux-dep; extra == "qux" and python_version >= "3.10"',
+]
+```
+
+When traversing these dependencies, evaluate `extra` against the containing package entry's extras, then evaluate the remaining environment conditions. Package-level environment markers already have these extra conditions evaluated during resolution.
+
+Existing lock files without dependency extra markers remain readable. Run `pdm lock` to resolve again and record the extra conditions; reusing an older resolution cannot recover the discarded information.
+
 ## Specify another lock file to use
 
 By default, PDM uses `pdm.lock` in the current directory. You can specify another lock file with the `-L/--lockfile` option or the `PDM_LOCKFILE` environment variable:

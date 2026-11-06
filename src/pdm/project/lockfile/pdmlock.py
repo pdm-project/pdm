@@ -25,7 +25,7 @@ class PDMLock(Lockfile):
     SUPPORTED_FLAGS = frozenset(
         (FLAG_STATIC_URLS, FLAG_CROSS_PLATFORM, FLAG_DIRECT_MINIMAL_VERSIONS, FLAG_INHERIT_METADATA)
     )
-    spec_version = parse_version("4.5.1")
+    spec_version = parse_version("4.6.0")
 
     @property
     def hash(self) -> tuple[str, str]:

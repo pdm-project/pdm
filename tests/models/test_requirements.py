@@ -194,3 +194,28 @@ def test_filter_requirements_with_extras():
         'ping; os_name == "nt"',
         "blah",
     ]
+
+
+@pytest.mark.parametrize("keep_extra_markers", [False, True])
+def test_filter_requirements_preserves_extra_branches(keep_extra_markers):
+    line = 'foo; (extra == "a" and python_version < "3.10") or (extra == "b" and python_version >= "3.10")'
+    requirements = filter_requirements_with_extras([line], ("a",), keep_extra_markers=keep_extra_markers)
+    assert len(requirements) == 1
+    expected = line if keep_extra_markers else 'foo; python_version < "3.10"'
+    assert requirements[0] == parse_requirement(expected)
+    if not keep_extra_markers:
+        assert str(requirements[0].requires_python) == "<3.10"
+    assert filter_requirements_with_extras([line], ("c",), keep_extra_markers=keep_extra_markers) == []
+
+
+def test_filter_requirements_retains_extra_provenance():
+    lines = [
+        'foo; extra == "a"',
+        'bar; extra == "b"',
+        'baz; extra == "a" or extra == "b"',
+        'ping; os_name == "nt" and extra == "a"',
+    ]
+    requirements = filter_requirements_with_extras(
+        [*lines, "base", 'missing; extra == "c"'], ("a", "b"), keep_extra_markers=True
+    )
+    assert requirements == [parse_requirement(line) for line in lines]

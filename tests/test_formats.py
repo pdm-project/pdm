@@ -430,6 +430,62 @@ def test_build_uv_lock_root_entry_groups_dependencies(project):
     assert "third" not in listed and "nowhere" not in listed
 
 
+@pytest.mark.parametrize("legacy", [False, True])
+def test_uv_lock_preserves_dependency_extra_groups(project, legacy):
+    from pdm.models.candidates import Candidate
+    from pdm.models.markers import get_marker
+    from pdm.models.repositories import Package
+    from pdm.resolver.uv import UvResolver
+
+    locked_repo = LockedRepository({}, project.sources, project.environment)
+    for name in ("foo", "base", "bar-dep", "qux-dep", "shared", "conditional"):
+        deps = ['base; extra != "disabled"'] if name == "foo" else []
+        locked_repo.add_package(Package(Candidate(parse_requirement(name), name, "1.0"), deps))
+    dependencies = [
+        "foo==1.0",
+        'bar-dep[inner]; extra == "bar"',
+        'qux-dep; extra == "qux"',
+        'shared; extra == "bar" or extra == "qux"',
+        'conditional; (extra == "bar" and os_name == "nt") or (extra == "qux" and os_name == "posix")',
+    ]
+    if legacy:
+        dependencies = [line.split(";")[0] for line in dependencies]
+    req = parse_requirement("foo[bar,qux]")
+    locked_repo.add_package(Package(Candidate(req, "foo", "1.0"), dependencies))
+
+    with uv_file_builder(project, ">=3.10", [req], locked_repo) as builder:
+        path = builder.build_uv_lock()
+        with path.open("rb") as fp:
+            data = tomllib.load(fp)
+        foo = next(p for p in data["package"] if p["name"] == "foo")
+        assert foo["dependencies"] == [{"name": "base"}]
+        for extra, platform in [("bar", "nt"), ("qux", "posix")]:
+            deps = {d["name"]: d for d in foo["optional-dependencies"][extra]}
+            assert set(deps) == (
+                {"bar-dep", "qux-dep", "shared", "conditional"} if legacy else {f"{extra}-dep", "shared", "conditional"}
+            )
+            if extra == "bar" or legacy:
+                assert deps["bar-dep"]["extra"] == ["inner"]
+            if not legacy:
+                assert get_marker(deps["conditional"]["marker"]) == get_marker(f'os_name == "{platform}"')
+
+        resolver = UvResolver(
+            project.environment,
+            requirements=[req],
+            target=project.environment.spec,
+            update_strategy="all",
+            strategies=set(),
+        )
+        packages = {p.candidate.identify(): p for p in resolver._parse_uv_lock(path).packages}
+        for extra in ("bar", "qux"):
+            deps = [parse_requirement(line) for line in packages[f"foo[{extra}]"].dependencies]
+            assert deps[0].as_line() == "foo==1.0"
+            assert all(
+                dep.marker is not None and dep.marker.inner.only("extra") == get_marker(f'extra == "{extra}"').inner
+                for dep in deps[1:]
+            )
+
+
 def test_build_uv_pyproject_toml_keeps_dynamic_version(project):
     project.pyproject.metadata["dynamic"] = ["version"]
     del project.pyproject.metadata["version"]
