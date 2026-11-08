@@ -41,3 +41,21 @@ def test_session_marks_cached_responses(tmp_path, httpserver):
 
         second = session.get(httpserver.url_for("/simple/foo/"))
         assert second.from_cache is True
+
+
+def test_session_cache_survives_a_new_client(tmp_path, httpserver):
+    from pdm._types import RepositoryConfig
+    from pdm.models.session import PDMPyPIClient
+
+    httpserver.expect_request("/simple/foo/").respond_with_data(
+        "<html></html>", headers={"Cache-Control": "max-age=3600"}, content_type="text/html"
+    )
+    source = RepositoryConfig(config_prefix="pypi", name="extra", url=httpserver.url_for("/simple"))
+    tmp_path.joinpath("http-cache.db").write_text("hishel 1 cache")
+    with PDMPyPIClient(sources=[source], cache_dir=tmp_path) as session:
+        session.get(httpserver.url_for("/simple/foo/")).read()
+    assert not tmp_path.joinpath("http-cache.db").exists()
+
+    with PDMPyPIClient(sources=[source], cache_dir=tmp_path) as session:
+        response = session.get(httpserver.url_for("/simple/foo/"))
+        assert response.from_cache is True
