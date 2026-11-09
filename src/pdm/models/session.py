@@ -114,15 +114,24 @@ class PDMPyPIClient(PyPIClient):
                 return transport
         else:
             cache_db = cache_dir / ".cache/hishel"
-            # clean up old (pre-hishel 1.0 and 2.0) caches, everything outside .cache.
-            # Several clients can do this at once, so tolerate files that are already gone.
+            # Clean up caches left by older versions (hishel 0.x files and the hishel 1
+            # http-cache.db), which is everything outside .cache. This is best effort:
+            # several clients can run it at once, and a file may be gone or still in use.
             if not cache_db.exists():
-                for f in cache_dir.iterdir():
-                    if f.name != ".cache":
+                try:
+                    entries = list(cache_dir.iterdir())
+                except OSError:
+                    entries = []
+                for f in entries:
+                    if f.name == ".cache":
+                        continue
+                    try:
                         if f.is_dir():
                             shutil.rmtree(f, ignore_errors=True)
                         else:
                             f.unlink(missing_ok=True)
+                    except OSError:
+                        pass
             storage = ThreadedSyncSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
 
             def cache_transport(transport: httpx2.BaseTransport) -> httpx2.BaseTransport:
