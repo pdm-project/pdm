@@ -106,11 +106,11 @@ def _join_args(args: Sequence[str], for_shell: bool) -> str:
 def interpolate(script: str, args: Sequence[str], for_shell: bool = False) -> tuple[str, bool]:
     """Interpolate placeholders in a script.
 
-    ``run_cwd`` needs shell-specific quoting on Windows. Other script kinds
+    ``pdm`` and ``run_cwd`` need shell-specific quoting on Windows. Other script kinds
     are re-parsed with ``shlex.split``, so POSIX quoting is used for them on all
     platforms.
     """
-    pdm = shlex.join([Path(sys.executable).as_posix(), "-m", "pdm"])
+    pdm = _join_args([Path(sys.executable).as_posix(), "-m", "pdm"], for_shell)
     path = str(Path.cwd())
     if for_shell and sys.platform == "win32":
         cwd = _quote_cwd_for_cmd_exe(path)
