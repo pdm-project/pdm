@@ -62,7 +62,7 @@ Install the prebuilt binary directly with the installer scripts.
 
 ### Install via Python script
 
-PDM requires python version 3.9 or higher.
+PDM requires python version 3.10 or higher.
 
 Like Pip, PDM provides an installation script that will install PDM into an isolated environment.
 
