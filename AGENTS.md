@@ -61,6 +61,15 @@ pdm run doc
 
 Refer to [CONTRIBUTING.md](CONTRIBUTING.md)
 
+### Human Attestation (Required for All PRs)
+
+Every pull request MUST pass Human Attestation before it can be merged. AI assistants may help write code, but a human contributor is accountable for every change.
+
+- A human MUST personally review the full diff, understand it, and confirm it is correct and intended before the PR is opened or marked ready for review.
+- The human attests in the PR description that they have reviewed and take responsibility for the changes. PRs without this attestation will not be merged.
+- AI assistants MUST NOT open, mark ready, approve, or merge a PR on their own, and MUST NOT write or check the attestation on the human's behalf. Stop and hand off to the human for attestation.
+- Do not use automation to bypass, fake, or skip the Human Attestation check.
+
 ## Important Files
 
 - `pyproject.toml`: Project configuration and dependencies
