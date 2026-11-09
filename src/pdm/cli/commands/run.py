@@ -288,13 +288,14 @@ class TaskRunner:
         from dotenv.main import resolve_variables
 
         project = self.project
+        cwd = (project.root / working_dir) if working_dir else project.root if chdir else None
         # The environment is prepared in os.environ, restore it afterwards so
         # the next task of a composite script doesn't inherit it.
         saved_environ = os.environ.copy()
         if not shell and args[0].endswith(".py"):
             script_file = os.path.expanduser(args[0])
-            if working_dir and not os.path.isabs(script_file):
-                script_file = os.path.join(project.root, working_dir, script_file)
+            if cwd is not None and not os.path.isabs(script_file):
+                script_file = os.path.join(cwd, script_file)
             project_env = self._get_script_env(script_file)
         else:
             check_project_file(project)
@@ -341,8 +342,6 @@ class TaskRunner:
                 # The executable belongs to the local packages directory.
                 # Don't load system site-packages
                 os.environ["NO_SITE_PACKAGES"] = "1"
-
-        cwd = (project.root / working_dir) if working_dir else project.root if chdir else None
 
         def forward_signal(signum: int, frame: FrameType | None) -> None:
             if sys.platform == "win32" and signum == signal.SIGINT:
