@@ -340,4 +340,6 @@ class BaseRepository:
             candidate.hashes = self.get_hashes(candidate)
 
         with ThreadPoolExecutor() as executor:
-            executor.map(do_fetch, candidates)
+            # Consume the results so an error in a worker is raised instead of
+            # leaving the candidate with no hashes
+            list(executor.map(do_fetch, candidates))

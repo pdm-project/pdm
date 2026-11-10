@@ -41,3 +41,44 @@ def test_session_marks_cached_responses(tmp_path, httpserver):
 
         second = session.get(httpserver.url_for("/simple/foo/"))
         assert second.from_cache is True
+
+
+def test_session_cache_survives_a_new_client(tmp_path, httpserver):
+    from pdm._types import RepositoryConfig
+    from pdm.models.session import PDMPyPIClient
+
+    httpserver.expect_request("/simple/foo/").respond_with_data(
+        "<html></html>", headers={"Cache-Control": "max-age=3600"}, content_type="text/html"
+    )
+    source = RepositoryConfig(config_prefix="pypi", name="extra", url=httpserver.url_for("/simple"))
+    tmp_path.joinpath("http-cache.db").write_text("hishel 1 cache")
+    with PDMPyPIClient(sources=[source], cache_dir=tmp_path) as session:
+        session.get(httpserver.url_for("/simple/foo/")).read()
+    assert not tmp_path.joinpath("http-cache.db").exists()
+
+    with PDMPyPIClient(sources=[source], cache_dir=tmp_path) as session:
+        response = session.get(httpserver.url_for("/simple/foo/"))
+        assert response.from_cache is True
+
+
+def test_session_cache_cleanup_is_best_effort(tmp_path, mocker):
+    from pathlib import Path
+
+    from pdm._types import RepositoryConfig
+    from pdm.models.session import PDMPyPIClient
+
+    source = RepositoryConfig(config_prefix="pypi", name="extra", url="https://example.org/simple")
+    tmp_path.joinpath("http-cache.db").write_text("held open by another process")
+    tmp_path.joinpath("0a1b2c3d").write_text("hishel 0.x cache file")
+    unlink = Path.unlink
+
+    def locked_unlink(self, missing_ok=False):
+        if self.name == "http-cache.db":
+            raise PermissionError(13, "The process cannot access the file")
+        return unlink(self, missing_ok=missing_ok)
+
+    mocker.patch.object(Path, "unlink", locked_unlink)
+    PDMPyPIClient(sources=[source], cache_dir=tmp_path).close()
+    assert not tmp_path.joinpath("0a1b2c3d").exists()
+
+    PDMPyPIClient(sources=[source], cache_dir=tmp_path / "missing").close()

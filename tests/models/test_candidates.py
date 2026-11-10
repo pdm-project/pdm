@@ -325,6 +325,20 @@ def test_ignore_invalid_py_version(project):
     _ = next(iter(repo.find_candidates(req)))
 
 
+def test_fetch_hashes_raises_worker_errors(project, mocker):
+    repo = project.get_repository()
+    candidates = [Candidate(parse_requirement("demo")), Candidate(parse_requirement("foo"))]
+
+    def get_hashes(candidate):
+        if candidate.name == "foo":
+            raise OSError("cache went away")
+        return [{"url": "https://example.org/demo-0.0.1.tar.gz", "hash": "sha256:abc"}]
+
+    mocker.patch.object(repo, "get_hashes", side_effect=get_hashes)
+    with pytest.raises(OSError, match="cache went away"):
+        repo.fetch_hashes(candidates)
+
+
 def test_find_candidates_from_find_links(project):
     project.pyproject.settings["source"] = [
         {"name": "pypi", "url": "http://fixtures.test/index/demo.html", "verify_ssl": False, "type": "find_links"}
