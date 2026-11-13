@@ -61,3 +61,22 @@ def test_split_pyspec(original, marker, py_spec):
 def test_match_env_spec(marker, env_spec, expected):
     m = get_marker(marker)
     assert m.matches(env_spec) is expected
+
+
+@pytest.mark.parametrize(
+    "marker, extras, expected",
+    [
+        ('extra == "a" or os_name == "nt"', ("a",), ""),
+        ('extra == "a" or os_name == "nt"', ("b",), 'os_name == "nt"'),
+        ('extra == "a" or os_name == "nt"', (), 'os_name == "nt"'),
+        ('extra != "a" and extra != "b"', ("a",), "<empty>"),
+        ('extra != "a" and extra != "b"', ("c",), ""),
+        ('extra == ""', (), ""),
+        ('extra == ""', ("a",), "<empty>"),
+        ('extra == "my-extra"', ("My_Extra",), ""),
+        ('"dev" in dependency_groups and extra == "a"', ("a",), '"dev" in dependency_groups'),
+        ('"a" in extras and extra == "a"', ("a",), '"a" in extras'),
+    ],
+)
+def test_evaluate_extra_markers(marker, extras, expected):
+    assert get_marker(marker).evaluate_extras(extras) == get_marker(expected)
