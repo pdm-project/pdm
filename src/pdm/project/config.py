@@ -203,6 +203,9 @@ class Config(MutableMapping[str, str]):
             "List of python provider names for findpython", default=[], coerce=split_by_comma
         ),
         "python.use_pyenv": ConfigItem("Use the pyenv interpreter", True, coerce=ensure_boolean),
+        "python.use_managed": ConfigItem(
+            "Use Python interpreters managed by PDM", True, env_var="PDM_USE_MANAGED_PYTHON", coerce=ensure_boolean
+        ),
         "python.use_venv": ConfigItem(
             "Use virtual environments when available", True, env_var="PDM_USE_VENV", coerce=ensure_boolean
         ),
