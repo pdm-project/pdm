@@ -555,13 +555,13 @@ def save_version_specifiers(
             if save_strategy == "exact":
                 r.specifier = get_specifier(f"=={version}")
             elif save_strategy in ["compatible", "safe_compatible"]:
+                epoch = f"{version.epoch}!" if version.epoch else ""
                 if version.is_prerelease or version.is_devrelease:
-                    r.specifier = get_specifier(f">={version},<{version.major + 1}")
+                    r.specifier = get_specifier(f">={version},<{epoch}{version.major + 1}")
+                elif save_strategy == "compatible" or len(version.release) < 2:
+                    r.specifier = get_specifier(f"~={epoch}{version.major}.{version.minor}")
                 else:
-                    if save_strategy == "compatible":
-                        r.specifier = get_specifier(f"~={version.major}.{version.minor}")
-                    else:
-                        r.specifier = get_specifier(f"~={version}")
+                    r.specifier = get_specifier(f"~={version}")
             elif save_strategy == "minimum":
                 r.specifier = get_specifier(f">={version}")
 

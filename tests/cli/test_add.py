@@ -459,3 +459,20 @@ def test_add_to_dependency_group_with_include(project, pdm):
     project.pyproject.write()
     pdm(["add", "-Gweb", "requests"], obj=project, strict=True)
     assert project.pyproject.dependency_groups["web"] == [{"include-group": "tz"}, "requests>=2.19.1"]
+
+
+@pytest.mark.usefixtures("working_set")
+@pytest.mark.parametrize(
+    "args,version,expected",
+    [
+        (["--save-compatible"], "311", "foo~=311.0"),
+        (["--save-safe-compatible"], "311", "foo~=311.0"),
+        (["--save-compatible"], "1!2.3.4", "foo~=1!2.3"),
+        (["--save-safe-compatible"], "1!2.3.4", "foo~=1!2.3.4"),
+        (["--save-compatible", "--prerelease"], "1!2.0b1", "foo<1!3,>=1!2.0b1"),
+    ],
+)
+def test_add_save_compatible_unusual_versions(project, repository, pdm, args, version, expected):
+    repository.add_candidate("foo", version)
+    pdm(["add", *args, "foo"], obj=project, strict=True)
+    assert project.pyproject.metadata["dependencies"] == [expected]
