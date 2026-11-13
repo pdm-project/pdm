@@ -303,6 +303,20 @@ def test_venv_activate_powershell_quotes_script_path(mocker, tmp_path, shell):
     assert ActivateCommand().get_activate_command(venv) == f". '{escaped}'"
 
 
+@pytest.mark.parametrize("dirname", ["my project", "R&D"])
+def test_venv_activate_cmd_quotes_script_path(mocker, tmp_path, dirname):
+    from pdm.cli.commands.venv.activate import ActivateCommand
+
+    scripts = tmp_path / dirname / ("Scripts" if sys.platform == "win32" else "bin")
+    scripts.mkdir(parents=True)
+    (scripts / "activate").touch()
+    venv = mocker.Mock(interpreter=scripts / "python")
+    mocker.patch("shellingham.detect_shell", return_value=("cmd", None))
+    mocker.patch("platform.system", return_value="Windows")
+
+    assert ActivateCommand().get_activate_command(venv) == f'"{scripts / "activate"}"'
+
+
 @pytest.mark.usefixtures("fake_create")
 @pytest.mark.parametrize("keep_pypackages", [True, False])
 def test_venv_auto_create(pdm, mocker, project, keep_pypackages):
