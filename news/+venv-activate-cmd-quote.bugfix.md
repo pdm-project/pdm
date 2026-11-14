@@ -1,1 +1,1 @@
-Quote the path that `pdm venv activate` prints on Windows outside PowerShell, so it works in cmd.exe when the path contains spaces or `&`.
+Quote the path that `pdm venv activate` prints on Windows outside PowerShell, so cmd.exe no longer splits it at a space, a comma or `&`.

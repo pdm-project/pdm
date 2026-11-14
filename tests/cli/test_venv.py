@@ -303,7 +303,7 @@ def test_venv_activate_powershell_quotes_script_path(mocker, tmp_path, shell):
     assert ActivateCommand().get_activate_command(venv) == f". '{escaped}'"
 
 
-@pytest.mark.parametrize("dirname", ["my project", "R&D"])
+@pytest.mark.parametrize("dirname", ["my project", "R&D", "a,b"])
 def test_venv_activate_cmd_quotes_script_path(mocker, tmp_path, dirname):
     from pdm.cli.commands.venv.activate import ActivateCommand
 
