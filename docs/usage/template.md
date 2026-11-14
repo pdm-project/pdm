@@ -23,6 +23,20 @@ ownership to `pdm-project` organization(it can be found at the bottom of the rep
 A template repository must be a pyproject-based project, which contains a `pyproject.toml` file with PEP-621 compliant metadata.
 No other special config files are required.
 
+## Ignoring files
+
+Sometimes a template contains files that should not end up in the created project, such as the template's own documentation or editor configuration.
+List such files in a `.pdm-template-ignore` file at the template root, one glob pattern per line. Lines starting with `#` and blank lines are ignored.
+
+```text
+# template-only documentation
+docs/
+*.log
+```
+
+Patterns use `fnmatch` syntax and match against `/`-separated paths relative to the template root (`*` spans directories).
+A pattern naming a directory excludes its whole subtree. The `.pdm-template-ignore` file itself is never copied.
+
 ## Project name replacement
 
 On initialization, the project name in the template will be replaced by the name of the new project. This is done by a recursive full-text search and replace. The import name, which is derived from the project name by replacing all non-alphanumeric characters with underscores and lowercasing, will also be replaced in the same way.
