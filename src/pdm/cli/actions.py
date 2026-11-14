@@ -356,19 +356,22 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
             ui.error("Permission denied, please run the terminal as administrator.")
         ui.info("The environment variable has been saved, please restart the session to take effect.")
         return
-    lib_path = pep582_path.replace("'", "\\'")
+    lib_path = pep582_path.replace("'", "'\\''")
     if shell == "AUTO":
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()
     match shell:
         case "zsh" | "bash" | "sh" | "dash":
-            lib_path = pep582_path.replace("'", "'\\''")
+            # Encode the path as octal escapes (of its UTF-8 bytes) so the
+            # generated source stays pure ASCII; this avoids multibyte handling
+            # differences in shells such as dash (see issue #4007).
+            escaped = "".join(f"\\{byte:03o}" for byte in pep582_path.encode("utf-8"))
             result = textwrap.dedent(
                 f"""
                 if [ -n "$PYTHONPATH" ]; then
-                    export PYTHONPATH='{lib_path}':$PYTHONPATH
+                    export PYTHONPATH="$(printf '%b' '{escaped}')":$PYTHONPATH
                 else
-                    export PYTHONPATH='{lib_path}'
+                    export PYTHONPATH="$(printf '%b' '{escaped}')"
                 fi
                 """
             ).strip()
