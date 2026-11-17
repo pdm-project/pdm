@@ -277,6 +277,22 @@ def test_install_fail_fast(project, pdm, mocker):
     assert handler.call_count == 1
 
 
+@pytest.mark.parametrize("parallel", [True, False])
+@pytest.mark.usefixtures("repository")
+def test_install_failure_shows_error_message_without_traceback(project, pdm, mocker, parallel):
+    project.project_config["install.parallel"] = parallel
+    pdm(["add", "certifi", "--no-sync"], obj=project)
+
+    mocker.patch(
+        "pdm.installers.synchronizers.Synchronizer.install_candidate",
+        side_effect=RuntimeError("install boom"),
+    )
+    result = pdm(["install"], obj=project)
+    assert result.exit_code == 1
+    assert "RuntimeError: install boom" in result.stdout
+    assert "Traceback (most recent call last)" not in result.outputs
+
+
 @pytest.mark.parametrize("command", ["install", "sync", "update"])
 @pytest.mark.parametrize("dev", [False, True])
 @pytest.mark.parametrize(

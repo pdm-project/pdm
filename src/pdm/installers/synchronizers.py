@@ -191,7 +191,7 @@ class Synchronizer(BaseSynchronizer):
                 exc_info = (type(error), error, error.__traceback__)
                 termui.logger.exception("Error occurs %sing %s: ", kind.rstrip("e"), key, exc_info=exc_info)
                 state.parallel_failed.append((kind, key))
-                state.errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception(*exc_info)])
+                state.errors.extend([f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception_only(error)])
                 if self.fail_fast:
                     for job in state.jobs:
                         job.cancel()
@@ -204,10 +204,12 @@ class Synchronizer(BaseSynchronizer):
                 for kind, key in sequential_jobs:
                     try:
                         handlers[kind](key, status.progress)
-                    except Exception:
+                    except Exception as e:
                         termui.logger.exception("Error occurs: ")
                         state.sequential_failed.append((kind, key))
-                        state.errors.extend([f"{kind} [success]{key}[/] failed:\n", traceback.format_exc()])
+                        state.errors.extend(
+                            [f"{kind} [success]{key}[/] failed:\n", *traceback.format_exception_only(e)]
+                        )
                         if self.fail_fast:
                             state.mark_failed = True
                             break
