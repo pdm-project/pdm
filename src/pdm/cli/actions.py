@@ -375,6 +375,7 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
         case "fish":
             result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
         case "tcsh" | "csh":
+            lib_path = pep582_path.replace("'", "'\\''")
             result = textwrap.dedent(
                 f"""
                 if ( $?PYTHONPATH ) then
