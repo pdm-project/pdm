@@ -215,7 +215,7 @@ mytask.composite = [
 
 ### `env`
 
-All environment variables set in the current shell can be seen by `pdm run` and will be expanded when executed.
+Environment variables set in the current shell can be seen by `pdm run` and will be expanded when executed.
 Besides, you can also define some fixed environment variables in your `pyproject.toml`:
 
 ```toml
@@ -233,6 +233,20 @@ Note how we use [TOML's syntax](https://github.com/toml-lang/toml) to define a c
 
 !!! note
     Environment variables specified on a composite task level will override those defined by called tasks.
+
+!!! note "PYTHONPATH in virtualenvs"
+    When running commands in a virtualenv, PDM ignores `PYTHONPATH` inherited from the shell.
+    To add an import path, set `PYTHONPATH` explicitly in the script's `env` or `env_file` instead.
+    For example, replace `PYTHONPATH=src pdm run pytest` with a script configured as follows:
+
+    ```toml
+    [tool.pdm.scripts]
+    test.cmd = "pytest"
+    test.env = {PYTHONPATH = "src"}
+    ```
+
+    Then run `pdm run test`. PEP 582 environments and global projects using a system Python
+    continue to inherit the shell's `PYTHONPATH`.
 
 ### `env_file`
 
