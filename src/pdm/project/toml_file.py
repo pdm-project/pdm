@@ -1,15 +1,46 @@
 from __future__ import annotations
 
 import re
+import sys
+from collections.abc import Mapping, MutableMapping
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import tomlkit
 
 from pdm import termui
 from pdm.compat import tomllib
-from pdm.utils import atomic_open_for_write
+from pdm.utils import atomic_open_for_write, deprecation_warning
+
+if TYPE_CHECKING:
+    from types import FrameType
+
+
+def _same(left: Any, right: Any) -> bool:
+    """Compare two plain TOML values. Unlike ``==``, it tells ``1``, ``1.0`` and ``True`` apart."""
+    if isinstance(left, Mapping) and isinstance(right, Mapping):
+        return left.keys() == right.keys() and all(_same(value, right[key]) for key, value in left.items())
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(map(_same, left, right))
+    return type(left) is type(right) and left == right
+
+
+def _sync_table(target: MutableMapping[str, Any], source: Mapping[str, Any]) -> None:
+    """Make the tomlkit table ``target`` hold the same data as ``source``, touching only the values
+    that differ so that the comments and the formatting of everything else are preserved.
+    """
+    for key in [key for key in target if key not in source]:
+        del target[key]
+    for key, value in source.items():
+        if key not in target:
+            target[key] = value
+            continue
+        current = target[key]
+        if isinstance(current, MutableMapping) and isinstance(value, Mapping):
+            _sync_table(current, value)
+        elif not _same(current.unwrap() if hasattr(current, "unwrap") else current, value):
+            target[key] = value
 
 
 class TOMLFile:
@@ -59,11 +90,39 @@ class TOMLFile:
         self._data = self._parse()
         self._for_write = False
 
+    def _merge_into_document(self) -> tomlkit.TOMLDocument:
+        """Apply the data that was modified without ``open_for_write()`` to the document on disk."""
+        try:
+            doc = self._file.read()
+            _sync_table(doc, self._data)
+            if _same(tomllib.loads(doc.as_string()), self._data):
+                return doc
+            termui.logger.debug("Updating %s in place gives different data", self._path)
+        except Exception as e:
+            termui.logger.debug("Failed to update %s in place: %r", self._path, e)
+        # The document can't be edited in place reliably, write the data without the original styles.
+        doc = tomlkit.document()
+        doc.update(self._data)
+        return doc
+
     def write(self) -> None:
-        if not self._for_write:
-            raise RuntimeError("TOMLFile not opened for write. Call open_for_write() first.")
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        if isinstance(self._data, tomlkit.TOMLDocument):
+        if not self._for_write:
+            # Compatibility for callers that modify the data returned by the read-only parser.
+            # The data stays as it is, since the caller may still hold references to it.
+            stacklevel = 2
+            frame: FrameType | None = sys._getframe(1)
+            while frame is not None and frame.f_globals.get("__name__", "").startswith("pdm.project."):
+                # Point the warning at the caller, not at the write() of a subclass
+                stacklevel += 1
+                frame = frame.f_back
+            deprecation_warning(
+                f"Writing {self._path.name} without calling open_for_write() first is deprecated, "
+                "call it before modifying the data.",
+                stacklevel=stacklevel,
+            )
+            data = self._merge_into_document()
+        elif isinstance(self._data, tomlkit.TOMLDocument):
             data = self._data
         else:
             data = tomlkit.document()
