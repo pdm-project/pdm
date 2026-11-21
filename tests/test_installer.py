@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import venv
+import zipfile
 from collections.abc import Callable
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from pdm.environments.base import BaseEnvironment
 from pdm.environments.local import PythonLocalEnvironment
 from pdm.environments.python import PythonEnvironment
 from pdm.installers import InstallManager
+from pdm.installers.installers import install_wheel
 from pdm.models.cached_package import CachedPackage
 from pdm.models.candidates import Candidate
 from pdm.models.requirements import parse_requirement
@@ -211,6 +213,52 @@ def test_can_install_wheel_with_cache_in_multiple_projects(
 
         for file in CachedPackage.cache_files:
             assert not os.path.exists(os.path.join(lib_path, file))
+
+
+def _build_shared_wheel(dest: Path, dist: str, marker: str) -> Path:
+    """Build a minimal wheel providing the top-level package `sharedpkg`."""
+    wheel = dest / f"{dist}-0.1.0-py3-none-any.whl"
+    dist_info = f"{dist}-0.1.0.dist-info"
+    files = {
+        "sharedpkg/__init__.py": f"MARKER = {marker!r}\n",
+        f"sharedpkg/only_{marker}.py": "",
+        f"{dist_info}/METADATA": f"Metadata-Version: 2.1\nName: {dist}\nVersion: 0.1.0\n",
+        f"{dist_info}/WHEEL": "Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n",
+    }
+    files[f"{dist_info}/RECORD"] = "".join(f"{name},,\n" for name in files) + f"{dist_info}/RECORD,,\n"
+    with zipfile.ZipFile(wheel, "w") as zf:
+        for name, data in files.items():
+            zf.writestr(name, data)
+    return wheel
+
+
+@pytest.mark.parametrize("install_links", [True, False])
+def test_install_warns_when_overwriting_file_from_another_distribution(project, tmp_path, caplog, install_links):
+    caplog.set_level(logging.WARNING, logger="pdm.termui")
+    logging.getLogger("pdm.termui").addHandler(caplog.handler)
+    env = project.environment
+    install_wheel(_build_shared_wheel(tmp_path, "shared_a", "a"), env, install_links=install_links)
+    caplog.clear()
+    install_wheel(_build_shared_wheel(tmp_path, "shared_b", "b"), env, install_links=install_links)
+
+    lib_path = Path(env.get_paths()["purelib"])
+    # The last installed file still wins, but the user is warned about it.
+    assert "MARKER = 'b'" in (lib_path / "sharedpkg" / "__init__.py").read_text()
+    assert any(
+        "shared_b" in message and "shared_a" in message and "sharedpkg/__init__.py" in message
+        for message in caplog.messages
+    )
+
+
+def test_install_does_not_warn_when_reinstalling_same_distribution(project, tmp_path, caplog):
+    caplog.set_level(logging.WARNING, logger="pdm.termui")
+    logging.getLogger("pdm.termui").addHandler(caplog.handler)
+    env = project.environment
+    wheel = _build_shared_wheel(tmp_path, "shared_a", "a")
+    install_wheel(wheel, env, install_links=True)
+    caplog.clear()
+    install_wheel(wheel, env, install_links=True)
+    assert not any("overwrites" in message for message in caplog.messages)
 
 
 def test_url_requirement_is_not_cached(project):

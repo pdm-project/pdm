@@ -16,6 +16,7 @@ from installer.records import RecordEntry
 from installer.sources import WheelContentElement, WheelSource
 from installer.sources import WheelFile as _WheelFile
 
+from pdm import termui
 from pdm.models.cached_package import CachedPackage
 from pdm.utils import make_file_executable
 
@@ -97,11 +98,75 @@ class InstallDestination(SchemeDictionaryDestination):
         *args: Any,
         link_method: LinkMethod = "copy",
         rename_pth: bool = False,
+        dist_name: str | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.link_method = link_method
         self.rename_pth = rename_pth
+        self.dist_name = dist_name
+        # Files that already existed and belonged to another distribution,
+        # mapping the scheme-relative path to the previous owner.
+        self.overwritten_files: dict[str, str] = {}
+        self._record_owners: dict[str, dict[str, str]] = {}
+
+    def _owner_from_cache_link(self, target_path: Path) -> str | None:
+        """Return the distribution owning the cached package a symlink points to."""
+        if not target_path.is_symlink():
+            return None
+        for part in Path(os.readlink(target_path)).parts:
+            if part.endswith(".whl.cache"):
+                return part[: -len(".whl.cache")].split("-")[0]
+        return None
+
+    def _owner_from_records(self, scheme: Scheme, path: str) -> str | None:
+        """Find which installed distribution provides `path` according to the RECORD files."""
+        if scheme not in self._record_owners:
+            owners: dict[str, str] = {}
+            root = Path(self.scheme_dict[scheme])
+            if root.is_dir():
+                for dist_info in root.glob("*.dist-info"):
+                    record = dist_info / "RECORD"
+                    if not record.is_file():
+                        continue
+                    dist = dist_info.name[: -len(".dist-info")].rsplit("-", 1)[0]
+                    for line in record.read_text("utf-8", errors="ignore").splitlines():
+                        entry = line.split(",", 1)[0]
+                        if entry:
+                            owners.setdefault(entry, dist)
+            self._record_owners[scheme] = owners
+        return self._record_owners[scheme].get(path)
+
+    def _previous_owner(self, scheme: Scheme, path: str, target_path: Path) -> str | None:
+        """Return the distribution that provided the existing file, if it isn't this one."""
+        from packaging.utils import canonicalize_name
+
+        owner = self._owner_from_cache_link(target_path)
+        if owner is None:
+            owner = self._owner_from_records(scheme, path)
+        if owner is None or self.dist_name is None:
+            return None
+        if canonicalize_name(owner) == canonicalize_name(self.dist_name):
+            return None
+        return owner
+
+    def _warn_overwritten_files(self) -> None:
+        if not self.overwritten_files:
+            return
+        owners = sorted(set(self.overwritten_files.values()))
+        files = sorted(self.overwritten_files)
+        shown = ", ".join(files[:10])
+        if len(files) > 10:
+            shown += f", and {len(files) - 10} more"
+        termui.logger.warning(
+            "%s overwrites %d file(s) already provided by %s: %s. "
+            "When multiple distributions provide the same file, only the last installed one takes effect, "
+            "which may break the other distributions.",
+            self.dist_name,
+            len(files),
+            ", ".join(owners),
+            shown,
+        )
 
     def _compile_bytecode(self, scheme: Scheme, record: RecordEntry) -> None:
         if self.link_method == "symlink":
@@ -115,7 +180,9 @@ class InstallDestination(SchemeDictionaryDestination):
         records: Iterable[tuple[Scheme, RecordEntry]],
     ) -> None:
         if not _WINDOWS:
-            return super().finalize_installation(scheme, record_file_path, records)
+            result = super().finalize_installation(scheme, record_file_path, records)
+            self._warn_overwritten_files()
+            return result
 
         from installer.destinations import construct_record_file
 
@@ -135,12 +202,18 @@ class InstallDestination(SchemeDictionaryDestination):
         for file_scheme, record in record_list:
             self._compile_bytecode(file_scheme, record)
 
+        self._warn_overwritten_files()
+
     def write_to_fs(self, scheme: Scheme, path: str, stream: BinaryIO, is_executable: bool) -> RecordEntry:
         from installer.records import Hash
         from installer.utils import copyfileobj_with_hashing
 
         target_path = self._path_with_destdir(scheme, path)
         if target_path.exists():
+            if self.dist_name is not None:
+                owner = self._previous_owner(scheme, path, target_path)
+                if owner is not None:
+                    self.overwritten_files[path] = owner
             target_path.unlink()
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -213,6 +286,7 @@ def install_wheel(
         script_kind=script_kind,
         link_method=link_method,
         rename_pth=rename_pth,
+        dist_name=dist_name,
     )
     if install_links:
         package = environment.project.package_cache.cache_wheel(wheel)
