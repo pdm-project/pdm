@@ -942,7 +942,8 @@ class Project:
         from pdm.models.caches import CandidateInfoCache, EmptyCandidateInfoCache
 
         python_hash = hashlib.sha1(str(self.environment.python_requires).encode()).hexdigest()
-        file_name = f"package_meta_{python_hash}.json"
+        # v2 retains dependency extra markers on cached requirements.
+        file_name = f"package_meta_v2_{python_hash}.json"
         return (
             CandidateInfoCache(self.cache("metadata") / file_name)
             if self.core.state.enable_cache
