@@ -445,6 +445,7 @@ def check_update(project: Project) -> None:  # pragma: no cover
         return
 
     this_version = project.core.version
+    project.core.ui.info("Checking for PDM updates...", verbosity=termui.Verbosity.DETAIL)
     latest_version = get_latest_version(project)
     if latest_version is None or parse_version(this_version) >= parse_version(latest_version):
         return
