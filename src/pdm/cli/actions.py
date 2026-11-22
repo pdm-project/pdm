@@ -428,10 +428,20 @@ def get_latest_version(project: Project, expire_after: int = 7 * 24 * 3600) -> s
 
 def check_update(project: Project) -> None:  # pragma: no cover
     """Check if there is a new version of PDM available"""
-    from pdm.cli.utils import is_homebrew_installation, is_pipx_installation, is_scoop_installation
+    from pdm.cli.utils import (
+        is_homebrew_installation,
+        is_pipx_installation,
+        is_scoop_installation,
+        is_uv_tool_installation,
+        is_uvx_runner,
+    )
     from pdm.utils import parse_version
 
-    if project.core.ui.verbosity < termui.Verbosity.NORMAL:
+    if (
+        project.core.ui.verbosity < termui.Verbosity.NORMAL
+        # Don't check updates when running via uvx (ephemeral environment)
+        or is_uvx_runner()
+    ):
         return
 
     this_version = project.core.version
@@ -442,7 +452,9 @@ def check_update(project: Project) -> None:  # pragma: no cover
 
     is_prerelease = parse_version(latest_version).is_prerelease
 
-    if is_pipx_installation():
+    if is_uv_tool_installation():
+        install_command = f"uv tool upgrade {'--prerelease allow ' if is_prerelease else ''}pdm"
+    elif is_pipx_installation():
         install_command = f"pipx upgrade {'--pip-args=--pre ' if is_prerelease else ''}pdm"
     elif is_homebrew_installation():
         install_command = "brew upgrade pdm"

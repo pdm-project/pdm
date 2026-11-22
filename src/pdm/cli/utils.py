@@ -701,6 +701,63 @@ def is_scoop_installation() -> bool:
     return os.name == "nt" and is_path_relative_to(sys.prefix, Path.home() / "scoop/apps/pdm")
 
 
+def is_uv_tool_installation() -> bool:
+    """
+    Detect whether PDM is installed via ``uv tool install``.
+
+    This checks both the default layout and custom UV_TOOL_DIR.
+    """
+    if tool_dir := os.getenv("UV_TOOL_DIR"):
+        if sys.prefix.split(os.sep)[:-1] == tool_dir.split(os.sep):
+            return True
+        if os.name == "nt" and "/" in tool_dir:
+            # When set UV_TOOL_DIR as posix style in Windows
+            # e.g.: `set UV_TOOL_DIR=/d/uv-tools`
+            prefix_parent = Path(sys.prefix).parent
+            tool_path = Path(tool_dir)
+            try:
+                return prefix_parent.samefile(tool_path)
+            except OSError:
+                return prefix_parent.resolve() == tool_path.resolve()
+        else:
+            return False
+    return sys.prefix.split(os.sep)[-3:-1] == ["uv", "tools"]
+
+
+def is_uvx_runner() -> bool:
+    """Detection of whether PDM is being run via ``uvx``."""
+    # uvx runs inside uv's cache directory, e.g.:
+    #   ~/.cache/uv/archive-v0/<hash>/bin/python
+    #   $XDG_CACHE_HOME/uv/archive-v0/<hash>/bin/python
+    # Prefer an exact check against UV_CACHE_DIR when it is set.
+    if cache_dir := os.getenv("UV_CACHE_DIR"):
+        if not sys.prefix.startswith(cache_dir):
+            return False
+        subpath = sys.prefix[len(cache_dir) :].removeprefix(os.sep)
+        head, *relative_parts = subpath.split(os.sep)
+        if head != "uv":
+            return False
+    else:
+        parts = sys.prefix.split(os.sep)
+        index = -1
+        for i, p in enumerate(parts):
+            if p == "uv":
+                index = i + 1
+                break
+        else:
+            return False
+        relative_parts = parts[index : index + 1]
+    try:
+        first_item = relative_parts[0]
+    except IndexError:
+        return False
+    flag = "archive-v"
+    if not first_item.startswith(flag):
+        return False
+    version = first_item.removeprefix(flag)
+    return version == "0" or bool(version and version[0].isdigit())
+
+
 def get_dist_location(dist: Distribution) -> str:
     direct_url = dist.read_text("direct_url.json")
     if not direct_url:
