@@ -130,7 +130,11 @@ class Command(BaseCommand):
 
         content = FORMATS[options.format].export(project, packages, options)
         if options.output:
-            Path(options.output).write_text(content, encoding="utf-8")
+            output_path = Path(options.output)
+            try:
+                output_path.write_text(content, encoding="utf-8")
+            except OSError as e:
+                raise PdmUsageError(f"Failed to write the exported requirements to {output_path}: {e}") from e
         else:
             # Use a regular print to avoid any formatting / wrapping.
             print(content)

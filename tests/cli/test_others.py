@@ -249,6 +249,16 @@ def test_show_self_package(project, pdm):
     assert "test-project\n0.0.0\n" == result.output
 
 
+def test_export_to_unwritable_path(pdm, fixture_project):
+    project = fixture_project("demo-package")
+
+    result = pdm(["export", "--output", str(project.root / "missing-dir" / "requirements.txt")], obj=project)
+
+    assert result.exit_code == 1
+    assert "Failed to write the exported requirements" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_export_to_requirements_txt(pdm, fixture_project):
     project = fixture_project("demo-package")
     requirements_txt = project.root / "requirements.txt"
