@@ -88,6 +88,14 @@ def test_convert_req_dict_to_req_line(req, result):
     assert r.as_line() == result
 
 
+def test_as_pinned_version_preserves_local_version_exclusion():
+    pinned = parse_requirement("fza!=2.0+local").as_pinned_version("2.0")
+
+    assert "2.0" in pinned.specifier
+    assert "2.0+local" not in pinned.specifier
+    assert str(parse_requirement("fza").as_pinned_version("2.0").specifier) == "==2.0"
+
+
 @pytest.mark.parametrize("extension", ["tar.gz", "zip"])
 @pytest.mark.parametrize("prefix", ["child @ ", ""])
 def test_archive_requirement_subdirectory(extension, prefix):

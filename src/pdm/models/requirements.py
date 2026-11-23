@@ -109,7 +109,7 @@ class Requirement:
         if self.is_pinned or not other_version:
             return self
         normalized = comparable_version(other_version)
-        return dataclasses.replace(self, specifier=get_specifier(f"=={normalized}"))
+        return dataclasses.replace(self, specifier=get_specifier(f"=={normalized}") & self.specifier)
 
     def _hash_key(self) -> tuple:
         return (
