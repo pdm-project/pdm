@@ -361,10 +361,20 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()
     match shell:
-        case "zsh" | "bash" | "sh" | "dash":
+        case "zsh" | "bash" | "sh":
+            result = textwrap.dedent(
+                f"""
+                if [ -n "$PYTHONPATH" ]; then
+                    export PYTHONPATH='{lib_path}':$PYTHONPATH
+                else
+                    export PYTHONPATH='{lib_path}'
+                fi
+                """
+            ).strip()
+        case "dash":
             # Encode the path as octal escapes (of its UTF-8 bytes) so the
             # generated source stays pure ASCII; this avoids multibyte handling
-            # differences in shells such as dash (see issue #4007).
+            # differences in dash (see issue #4007).
             escaped = "".join(f"\\{byte:03o}" for byte in pep582_path.encode("utf-8"))
             result = textwrap.dedent(
                 f"""
