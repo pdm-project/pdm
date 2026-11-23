@@ -395,9 +395,16 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
 
 def get_latest_pdm_version_from_pypi(project: Project, prereleases: bool = False) -> str | None:
     """Get the latest version of PDM from PyPI."""
+    from httpx2 import Timeout
+
     environment = BareEnvironment(project)
-    with environment.get_finder([project.default_source]) as finder:
-        candidate = finder.find_best_match("pdm", allow_prereleases=prereleases).best
+    origin_timeout = environment.session._timeout
+    environment.session._timeout = Timeout(5.0, connect=3.0)
+    try:
+        with environment.get_finder([project.default_source]) as finder:
+            candidate = finder.find_best_match("pdm", allow_prereleases=prereleases).best
+    finally:
+        environment.session._timeout = origin_timeout
     return cast(str, candidate.version) if candidate else None
 
 
