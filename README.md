@@ -103,7 +103,7 @@ For alternative installation methods (Python script, package managers, etc.), se
 
 ## Quickstart
 
-**Create a new PDM project**
+**Use PDM with a new project**
 
 ```bash
 pdm new my-project
@@ -111,7 +111,15 @@ pdm new my-project
 
 Answer the prompts, and a PDM project with a `pyproject.toml` file will be ready to use., and a PDM project with a `pyproject.toml` file will be ready to use.
 
-**Install dependencies**
+**Use PDM with existing Python project**
+
+```bash
+pdm install
+```
+
+It reads the `pyproject.toml`, makes `.venv`, installs `[project]` dependencies and writes `pdm.lock`.
+
+**Add new dependency**
 
 ```bash
 pdm add requests flask
