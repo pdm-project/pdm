@@ -36,3 +36,31 @@ def test_pep582_bash_setup_preserves_installation_path(
     assert result.returncode == 0, repr(result.stderr)
     expected = f"{lib_path}:{pythonpath}" if pythonpath else lib_path
     assert result.stdout == expected.encode(), repr(result.stdout)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="csh setup is for POSIX environments")
+@pytest.mark.parametrize("lib_path", ["/opt/pdm/pep582", "/opt/O'Brien/pdm/pep582"])
+@pytest.mark.parametrize("pythonpath", ["", "/existing/packages"])
+def test_pep582_tcsh_setup_preserves_installation_path(
+    project: Project, mocker: MockerFixture, lib_path: str, pythonpath: str
+) -> None:
+    tcsh = shutil.which("tcsh")
+    if tcsh is None:
+        pytest.skip("tcsh is required to evaluate the setup command")
+    mocker.patch("pdm.cli.actions.get_pep582_path", return_value=lib_path)
+    echo = mocker.patch.object(project.core.ui, "echo")
+
+    print_pep582_command(project, "tcsh")
+
+    echo.assert_called_once()
+    script = echo.call_args.args[0]
+    result = subprocess.run(
+        [tcsh, "-f", "-c", script + '\necho -n "$PYTHONPATH"'],
+        env={"PYTHONPATH": pythonpath},
+        capture_output=True,
+        timeout=5,
+    )
+    # tcsh exits 0 after a quoting error, so check stderr instead.
+    assert result.stderr == b"", repr(result.stderr)
+    expected = f"{lib_path}:{pythonpath}" if pythonpath else lib_path
+    assert result.stdout == expected.encode(), repr(result.stdout)
