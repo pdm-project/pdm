@@ -121,16 +121,18 @@ class Command(BaseCommand):
         if editables and no_editable:
             raise PdmUsageError("Cannot use --no-editable with editable packages given.")
         group = selection.one()
+        # The lockfile and the resolved dependencies are keyed by the normalized group name,
+        # while pyproject.toml keeps the name as given.
+        normalized_group = normalize_name(group)
         tracked_names: set[str] = set()
         requirements: list[Requirement] = []
         lock_groups = ["default"] if project.lockfile.empty() else project.lockfile.groups
-        if lock_groups is not None and group not in lock_groups:
+        if lock_groups is not None and normalized_group not in lock_groups:
             if project.enable_write_lockfile:
                 project.core.ui.info(f"Adding group [success]{group}[/] to lockfile")
-            lock_groups.append(group)
+            lock_groups.append(normalized_group)
         if (
-            group == "default"
-            or (not selection.dev and normalize_name(group) not in project.pyproject.dev_dependencies)
+            group == "default" or (not selection.dev and normalized_group not in project.pyproject.dev_dependencies)
         ) and editables:
             raise PdmUsageError("Cannot add editables to the default or optional dependency group")
         for r in [parse_requirement(line, True) for line in editables] + [parse_requirement(line) for line in packages]:
@@ -161,7 +163,7 @@ class Command(BaseCommand):
             )
         project.add_dependencies(requirements, group, selection.dev or False, write=False)
         all_dependencies = project.all_dependencies
-        group_deps = all_dependencies[group]
+        group_deps = all_dependencies[normalized_group]
         for req in group_deps:
             if req.identify() in tracked_names:
                 req.prerelease = prerelease
