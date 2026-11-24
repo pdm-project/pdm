@@ -262,9 +262,13 @@ def export(
         else:
             assert isinstance(candidate, Requirement)
             req = candidate
-        line = req.as_line()
-        if isinstance(req, FileRequirement) and req.editable and req.str_path:
-            line = line.replace(req.get_full_url(), req.str_path, 1)
+        if isinstance(req, FileRequirement) and req.editable and req.str_path and not req.subdirectory:
+            # pip doesn't accept a `#egg=` fragment on a local path, so put the extras on the path instead.
+            extras = f"[{','.join(sorted(req.extras))}]" if req.extras else ""
+            marker = f" {req._format_marker()}" if req.marker else ""
+            line = f"-e {req.str_path}{extras}{marker}"
+        else:
+            line = req.as_line()
         line = project.backend.expand_line(line, options.expandvars)
         if line in collected_req:
             continue
