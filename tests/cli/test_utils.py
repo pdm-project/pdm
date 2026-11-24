@@ -101,13 +101,13 @@ class TestUvTool(UvDetectionTestBase):
     @pytest.mark.parametrize(
         "prefix,tool_dir,expected",
         [
-            (r"D:\uv\tools\pdm", "D:/uv/tools", True),
-            (r"D:\uv\tools\pdm", "D:/uv/tools/", True),
-            (r"D:\uv\tools\pdm", "", False),
-            (r"D:\uv\tools\pdm", "C:/uv/tools/", False),
+            (r"D:\uv-tools\pdm", "D:/uv-tools", True),
+            (r"D:\uv-tools\pdm", "D:/uv-tools/", True),
+            (r"D:\uv-tools\pdm", None, False),
+            (r"D:\uv-tools\pdm", "C:/uv-tools/", False),
         ],
     )
-    def test_windows_uv_tool_installation(self, prefix: str, tool_dir: str, expected: bool, monkeypatch):
+    def test_windows_uv_tool_installation(self, prefix: str, tool_dir: str | None, expected: bool, monkeypatch):
         if tool_dir:
             monkeypatch.setenv(self.env_name, tool_dir)
         monkeypatch.setattr(sys, "prefix", prefix)
