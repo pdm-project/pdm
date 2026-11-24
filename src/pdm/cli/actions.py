@@ -356,13 +356,12 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
             ui.error("Permission denied, please run the terminal as administrator.")
         ui.info("The environment variable has been saved, please restart the session to take effect.")
         return
-    lib_path = pep582_path.replace("'", "\\'")
+    lib_path = pep582_path.replace("'", "'\\''")
     if shell == "AUTO":
         shell = shellingham.detect_shell()[0]
     shell = shell.lower()
     match shell:
-        case "zsh" | "bash" | "sh" | "dash":
-            lib_path = pep582_path.replace("'", "'\\''")
+        case "zsh" | "bash" | "sh":
             result = textwrap.dedent(
                 f"""
                 if [ -n "$PYTHONPATH" ]; then
@@ -372,9 +371,24 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
                 fi
                 """
             ).strip()
+        case "dash":
+            # Encode the path as octal escapes (of its UTF-8 bytes) so the
+            # generated source stays pure ASCII; this avoids multibyte handling
+            # differences in dash (see issue #4007).
+            escaped = "".join(f"\\{byte:03o}" for byte in pep582_path.encode("utf-8"))
+            result = textwrap.dedent(
+                f"""
+                if [ -n "$PYTHONPATH" ]; then
+                    export PYTHONPATH="$(printf '%b' '{escaped}')":$PYTHONPATH
+                else
+                    export PYTHONPATH="$(printf '%b' '{escaped}')"
+                fi
+                """
+            ).strip()
         case "fish":
             result = f"set -x PYTHONPATH '{lib_path}' $PYTHONPATH"
         case "tcsh" | "csh":
+            lib_path = pep582_path.replace("'", "'\\''")
             result = textwrap.dedent(
                 f"""
                 if ( $?PYTHONPATH ) then
@@ -395,9 +409,16 @@ def print_pep582_command(project: Project, shell: str = "AUTO") -> None:
 
 def get_latest_pdm_version_from_pypi(project: Project, prereleases: bool = False) -> str | None:
     """Get the latest version of PDM from PyPI."""
+    from httpx2 import Timeout
+
     environment = BareEnvironment(project)
-    with environment.get_finder([project.default_source]) as finder:
-        candidate = finder.find_best_match("pdm", allow_prereleases=prereleases).best
+    origin_timeout = environment.session._timeout
+    environment.session._timeout = Timeout(5.0, connect=3.0)
+    try:
+        with environment.get_finder([project.default_source]) as finder:
+            candidate = finder.find_best_match("pdm", allow_prereleases=prereleases).best
+    finally:
+        environment.session._timeout = origin_timeout
     return cast(str, candidate.version) if candidate else None
 
 

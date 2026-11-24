@@ -76,5 +76,6 @@ class ActivateCommand(BaseCommand):
         if shell in ["powershell", "pwsh"]:
             return "'{}'".format(command.replace("'", "''"))
         if platform.system() == "Windows":
-            return command
+            # Windows paths can't contain double quotes, so no escaping is needed.
+            return f'"{command}"'
         return shlex.quote(command)
