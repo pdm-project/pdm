@@ -160,10 +160,12 @@ def test_old_python_installs_compatible_dep_logic(project, mocker):
             "pip",
             "install",
             "--upgrade",
+            "--python-version",
+            "3.9",
+            "--only-binary=:all:",
             "--target",
             str(compat_lib),
             "dep-logic<0.7",
-            "packaging<26.4",
         ],
         stdout=subprocess.DEVNULL,
     )
@@ -209,16 +211,18 @@ def test_old_python_repairs_incompatible_packaging_cache(project, mocker):
             "pip",
             "install",
             "--upgrade",
+            "--python-version",
+            "3.9",
+            "--only-binary=:all:",
             "--target",
             str(compat_lib),
             "dep-logic<0.7",
-            "packaging<26.4",
         ],
         stdout=subprocess.DEVNULL,
     )
 
 
-def test_python_38_installs_compatible_compat_libs(project, mocker):
+def test_python_38_installs_target_compat_libs(project, mocker):
     compat_lib = project.cache_dir / ".compat_libs"
     host_interpreter = project.python
     interpreter = SimpleNamespace(
@@ -244,10 +248,12 @@ def test_python_38_installs_compatible_compat_libs(project, mocker):
             "pip",
             "install",
             "--upgrade",
+            "--python-version",
+            "3.8",
+            "--only-binary=:all:",
             "--target",
             str(compat_lib),
-            "dep-logic<0.6",
-            "packaging<26.3",
+            "dep-logic<0.7",
         ],
         stdout=subprocess.DEVNULL,
     )
