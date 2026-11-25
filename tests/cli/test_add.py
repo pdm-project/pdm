@@ -452,6 +452,21 @@ def test_add_group_with_normalized_name(project, pdm, working_set):
 
 
 @pytest.mark.usefixtures("working_set")
+@pytest.mark.parametrize("dev", [False, True])
+def test_add_to_new_group_with_non_normalized_name(project, pdm, dev):
+    args = ["add", "-G", "My_Group", "requests"]
+    if dev:
+        args.insert(1, "-d")
+    pdm(args, obj=project, strict=True)
+    if dev:
+        assert project.pyproject.dependency_groups["My_Group"] == ["requests>=2.19.1"]
+    else:
+        assert project.pyproject.metadata["optional-dependencies"]["My_Group"] == ["requests>=2.19.1"]
+    assert "my-group" in project.lockfile.groups
+    assert "requests" in project.get_locked_repository().candidates
+
+
+@pytest.mark.usefixtures("working_set")
 def test_add_to_dependency_group_with_include(project, pdm):
     from pdm.formats.base import make_array
 
