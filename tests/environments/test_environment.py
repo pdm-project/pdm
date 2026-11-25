@@ -163,10 +163,94 @@ def test_old_python_installs_compatible_dep_logic(project, mocker):
             "--target",
             str(compat_lib),
             "dep-logic<0.7",
+            "packaging<26.4",
         ],
         stdout=subprocess.DEVNULL,
     )
     get_env_spec.assert_called_once_with(interpreter.executable.as_posix(), str(compat_lib))
+
+
+def test_old_python_repairs_incompatible_packaging_cache(project, mocker):
+    compat_lib = project.cache_dir / ".compat_libs"
+    for dist_name, meta in (
+        (
+            "dep_logic-0.6.0.dist-info",
+            "Metadata-Version: 2.1\nName: dep-logic\nVersion: 0.6.0\nRequires-Python: >=3.9\n",
+        ),
+        (
+            "packaging-26.4.dist-info",
+            "Metadata-Version: 2.1\nName: packaging\nVersion: 26.4\nRequires-Python: >=3.10\n",
+        ),
+    ):
+        dist_dir = compat_lib / dist_name
+        dist_dir.mkdir(parents=True)
+        (dist_dir / "METADATA").write_text(meta, encoding="utf-8")
+
+    host_interpreter = project.python
+    interpreter = SimpleNamespace(
+        executable=Path("/python3.9"),
+        major=3,
+        minor=9,
+    )
+    mocker.patch(
+        "pdm.environments.base.PythonInfo.from_path",
+        side_effect=lambda path: interpreter if Path(path) == interpreter.executable else host_interpreter,
+    )
+    mocker.patch.object(BareEnvironment, "pip_command", ["host-python", "-m", "pip"])
+    check_call = mocker.patch("pdm.environments.base.subprocess.check_call")
+
+    environment = PythonEnvironment(project, python=str(interpreter.executable))
+    assert environment._ensure_compat_lib() == str(compat_lib)
+    assert not compat_lib.exists()
+    check_call.assert_called_once_with(
+        [
+            "host-python",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--target",
+            str(compat_lib),
+            "dep-logic<0.7",
+            "packaging<26.4",
+        ],
+        stdout=subprocess.DEVNULL,
+    )
+
+
+def test_python_38_installs_compatible_compat_libs(project, mocker):
+    compat_lib = project.cache_dir / ".compat_libs"
+    host_interpreter = project.python
+    interpreter = SimpleNamespace(
+        executable=Path("/python3.8"),
+        major=3,
+        minor=8,
+    )
+    mocker.patch(
+        "pdm.environments.base.PythonInfo.from_path",
+        side_effect=lambda path: interpreter if Path(path) == interpreter.executable else host_interpreter,
+    )
+    mocker.patch.object(BareEnvironment, "pip_command", ["host-python", "-m", "pip"])
+    working_set = mocker.patch("pdm.environments.base.WorkingSet")
+    working_set.return_value.__getitem__.side_effect = KeyError("dep-logic")
+    check_call = mocker.patch("pdm.environments.base.subprocess.check_call")
+
+    environment = PythonEnvironment(project, python=str(interpreter.executable))
+    assert environment._ensure_compat_lib() == str(compat_lib)
+    check_call.assert_called_once_with(
+        [
+            "host-python",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "--target",
+            str(compat_lib),
+            "dep-logic<0.6",
+            "packaging<26.3",
+        ],
+        stdout=subprocess.DEVNULL,
+    )
 
 
 def test_compatible_dep_logic_is_reused(project, mocker):
