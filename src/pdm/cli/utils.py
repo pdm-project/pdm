@@ -707,21 +707,23 @@ def is_uv_tool_installation() -> bool:
 
     This checks both the default layout and custom UV_TOOL_DIR.
     """
+    sep = os.sep
+    parts = sys.prefix.split(sep)
     if tool_dir := os.getenv("UV_TOOL_DIR"):
-        if sys.prefix.split(os.sep)[:-1] == tool_dir.split(os.sep):
-            return True
-        if os.name == "nt" and "/" in tool_dir:
-            # When set UV_TOOL_DIR as posix style in Windows
-            # e.g.: `set UV_TOOL_DIR=/d/uv-tools`
-            prefix_parent = Path(sys.prefix).parent
-            tool_path = Path(tool_dir)
-            try:
-                return prefix_parent.samefile(tool_path)
-            except OSError:
-                return prefix_parent.resolve() == tool_path.resolve()
-        else:
-            return False
-    return sys.prefix.split(os.sep)[-3:-1] == ["uv", "tools"]
+        parts_without_pdm = parts[:-1]  # .../uv/tools/pdm -> .../uv/tools
+        return _is_same_dir(tool_dir, parts_without_pdm, sep)
+    return parts[-3:-1] == ["uv", "tools"]
+
+
+def _is_same_dir(path: str, parts: list[str], sep: str) -> bool:
+    if path.rstrip(sep).split(sep) == parts:
+        return True
+    p = Path(path)
+    target = sep.join(parts) + sep
+    try:
+        return p.samefile(target)
+    except OSError:
+        return p.resolve() == Path(target).resolve()
 
 
 def is_uvx_runner() -> bool:
@@ -730,32 +732,14 @@ def is_uvx_runner() -> bool:
     #   ~/.cache/uv/archive-v0/<hash>/bin/python
     #   $XDG_CACHE_HOME/uv/archive-v0/<hash>/bin/python
     # Prefer an exact check against UV_CACHE_DIR when it is set.
+    sep = os.sep
+    parts = sys.prefix.split(sep)
+    if len(parts) < 3 or not re.fullmatch(r"archive-v\d+", parts[-2]):
+        return False
+    parts_without_archive = parts[:-2]
     if cache_dir := os.getenv("UV_CACHE_DIR"):
-        if not sys.prefix.startswith(cache_dir):
-            return False
-        subpath = sys.prefix[len(cache_dir) :].removeprefix(os.sep)
-        head, *relative_parts = subpath.split(os.sep)
-        if head != "uv":
-            return False
-    else:
-        parts = sys.prefix.split(os.sep)
-        index = -1
-        for i, p in enumerate(parts):
-            if p == "uv":
-                index = i + 1
-                break
-        else:
-            return False
-        relative_parts = parts[index : index + 1]
-    try:
-        first_item = relative_parts[0]
-    except IndexError:
-        return False
-    flag = "archive-v"
-    if not first_item.startswith(flag):
-        return False
-    version = first_item.removeprefix(flag)
-    return version == "0" or bool(version and version[0].isdigit())
+        return _is_same_dir(cache_dir, parts_without_archive, sep)
+    return "uv" in parts_without_archive
 
 
 def get_dist_location(dist: Distribution) -> str:

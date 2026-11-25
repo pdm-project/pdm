@@ -38,14 +38,16 @@ class TestUvxRunner(UvDetectionTestBase):
     @pytest.mark.parametrize(
         "path,expected",
         [
-            ("uv/archive-v0/F5cKFbuvJzqyyo7y", True),
-            ("uv/archive-v1", True),
-            ("uv/archive-v0.1", True),
-            ("uv/archive-v1.0.0rc1", True),
-            ("uv/archive-v/", False),
-            ("uv/archive-va/", False),
+            ("archive-v0/F5cKFbuvJzqyyo7y", True),
+            ("archive-v1/any-string", True),
+            ("archive-v20/no-matter-what", True),
+            ("archive-v0", False),  # Missing subdir
+            ("archive-v0.1/F5cKFbuvJzqyyo7y", False),
+            ("archive-v1rc1/F5cKFbuvJzqyyo7y", False),
+            ("archive-v/F5cKFbuvJzqyyo7y", False),
+            ("archive-va/F5cKFbuvJzqyyo7y", False),
             ("uv/tools/pdm", False),
-            ("other-tool/archive-v0", False),
+            ("pipx/venvs/pdm", False),
             ("", False),
         ],
     )
@@ -60,13 +62,14 @@ class TestUvxRunner(UvDetectionTestBase):
     @pytest.mark.parametrize(
         "prefix,expected",
         [
-            ("/home/user/.cache/uv/archive-v0/F5cKFbuvJzqyyo7y/pdm", True),
-            ("/home/user/.cache/uv/archive-v1", True),
-            ("/home/user/.cache/uv/archive-v2", True),
-            ("/Users/mac/.cache/uv/archive-v20", True),
-            ("/home/user/.cache/uv/archive-v0.1", True),
-            ("/home/user/.cache/uv/archive-v1.0.0", True),
-            ("/Users/mac/.cache/uv/archive-v2.0.0rc1", True),
+            ("/home/user/.cache/uv/archive-v0/F5cKFbuvJzqyyo7y", True),
+            ("/home/user/.cache/uv/archive-v1/F5cKFbuvJzqyyo7y", True),
+            ("/home/user/.cache/uv/archive-v2/F5cKFbuvJzqyyo7y", True),
+            ("/Users/mac/.cache/uv/archive-v20/F5cKFbuvJzqyyo7y", True),
+            ("/home/user/.cache/uv/archive-v0", False),
+            ("/home/user/.cache/uv/archive-v0.1", False),
+            ("/home/user/.cache/uv/archive-v1.0.0", False),
+            ("/Users/mac/.cache/uv/archive-v2.0.0rc1", False),
             ("/home/user/myproject/.venv", False),
             ("/home/user/.cache/uv/archive-va", False),
             ("/Users/mac/.local/pipx/venvs/pdm", False),
@@ -81,15 +84,16 @@ class TestUvxRunner(UvDetectionTestBase):
     @pytest.mark.parametrize(
         "prefix,expected",
         [
-            (r"C:\Users\alice\.cache\uv\archive-v0\F5cKFbuvJzqyyo7y\pdm", True),
-            (r"C:\Users\alice\.cache\uv\archive-v1\F5cKFbuvJzqyyo7y\pdm", True),
-            (r"D:\any-dir\uv\archive-v1.1\F5cKFbuvJzqyyo7y\pdm", True),
+            (r"C:\Users\alice\AppData\uv\cache\archive-v0\F5cKFbuvJzqyyo7y", True),
+            (r"C:\Users\alice\AppData\uv\cache\archive-v1\F5cKFbuvJzqyyo7y", True),
+            (r"D:\any-dir\uv\cache\archive-v10\F5cKFbuvJzqyyo7y", True),
+            (r"D:\uv\archive-v1.1\F5cKFbuvJzqyyo7y\pdm", False),
             (r"C:\Users\alice\.local\pipx\venvs\pdm", False),
             (r"D:\uv\tools\pdm", False),
             (r"C:\Users\alice\AppData\Roaming\uv\tools\pdm", False),
         ],
     )
-    def test_is_uvx_runner_on_windows_without_env(self, prefix: str, expected: str, monkeypatch):
+    def test_is_uvx_runner_on_windows_without_env(self, prefix: str, expected: bool, monkeypatch):
         monkeypatch.setattr(sys, "prefix", prefix)
         assert utils.is_uvx_runner() is expected
 
@@ -105,6 +109,7 @@ class TestUvTool(UvDetectionTestBase):
             (r"D:\uv-tools\pdm", "D:/uv-tools/", True),
             (r"D:\uv-tools\pdm", None, False),
             (r"D:\uv-tools\pdm", "C:/uv-tools/", False),
+            (r"C:\Users\alice\AppData\uv\cache\archive-v0\F5cKFbuvJzqyyo7y", None, False),
         ],
     )
     def test_windows_uv_tool_installation(self, prefix: str, tool_dir: str | None, expected: bool, monkeypatch):
