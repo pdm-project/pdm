@@ -383,6 +383,29 @@ def test_lock_targets_cli_override(project, pdm):
 
 
 @pytest.mark.usefixtures("repository")
+def test_lock_targets_respects_existing_lockfile(project, pdm):
+    deps = [
+        'django<2; sys_platform == "win32"',
+        'django>=2; sys_platform != "win32"',
+    ]
+    project.add_dependencies(deps)
+    project.pyproject.settings["lock"] = {
+        "targets": [
+            {"platform": "windows"},
+            {"platform": "linux"},
+        ]
+    }
+    project.pyproject.write()
+    lockfile = project.root / "pdm.posix.lock"
+    pdm(["lock", "--platform", "linux", "--lockfile", str(lockfile)], obj=project, strict=True)
+    pdm(["lock", "--lockfile", str(lockfile)], obj=project, strict=True)
+    locked = project.get_locked_repository()
+    assert len(locked.targets) == 1
+    assert locked.targets[0].platform.sys_platform == "linux"
+    assert [c.version for c in locked.all_candidates["django"]] == ["2.2.9"]
+
+
+@pytest.mark.usefixtures("repository")
 def test_lock_targets_with_pylock(project):
     deps = [
         'django<2; sys_platform == "win32"',
@@ -425,24 +448,20 @@ def test_lock_targets_invalid_target_spec(project):
 
 def test_lock_targets_singular_alias(project):
     project.pyproject.settings["lock"] = {"target": [{"platform": "windows"}]}
-    assert project.has_configured_lock_targets is True
     assert len(project.lock_targets) == 1
     assert project.lock_targets[0].platform.sys_platform == "win32"
 
 
 def test_lock_targets_settings_not_mapping(project):
     project.pyproject.settings["lock"] = "invalid"
-    assert project.has_configured_lock_targets is False
     assert project.lock_targets == [project.environment.allow_all_spec]
 
 
 def test_lock_targets_none_or_empty(project):
     project.pyproject.settings["lock"] = {}
-    assert project.has_configured_lock_targets is False
     assert project.lock_targets == [project.environment.allow_all_spec]
 
     project.pyproject.settings["lock"] = {"targets": []}
-    assert project.has_configured_lock_targets is True
     assert project.lock_targets == [project.environment.allow_all_spec]
 
 
@@ -457,7 +476,6 @@ def test_lock_targets_variants_and_deduplication(project):
             {},
         ]
     }
-    assert project.has_configured_lock_targets is True
     targets = project.lock_targets
     assert len(targets) == 5
     assert str(targets[0].requires_python) == ">=3.10"

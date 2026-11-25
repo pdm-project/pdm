@@ -69,7 +69,7 @@ Each target table can specify:
 - `implementation`: A Python implementation specifier (e.g. `"cpython"`, `"pypy"`).
 - `gil-disabled`: A boolean flag for free-threaded Python (defaults to `false`).
 
-When `targets` is configured, running `pdm lock` resolves and merges all configured targets into the lockfile in a single pass without needing `--append`.
+When `targets` is configured and neither CLI target flags nor an existing lockfile's recorded targets are present, running `pdm lock` resolves and merges all configured targets into the lockfile in a single pass without needing `--append`. Existing lockfiles retain their recorded targets unless overridden with CLI flags.
 
 ## Separate lock files or merge into one
 

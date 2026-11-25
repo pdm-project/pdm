@@ -1148,14 +1148,6 @@ class Project:
         return None
 
     @property
-    def has_configured_lock_targets(self) -> bool:
-        """Return True if lock targets are explicitly configured in pyproject.toml."""
-        settings = self.pyproject.settings.get("lock", {})
-        if not isinstance(settings, Mapping):
-            return False
-        return settings.get("targets") is not None or settings.get("target") is not None
-
-    @property
     def lock_targets(self) -> list[EnvSpec]:
         """Return the target environments for locking."""
         settings = self.pyproject.settings.get("lock", {})
