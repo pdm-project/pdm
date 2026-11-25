@@ -157,12 +157,16 @@ class TestUvTool(UvDetectionTestBase):
 
 def test_check_update_uvx_skips(monkeypatch):
     monkeypatch.setattr("pdm.cli.utils.is_uvx_runner", lambda: True)
+    get_latest = MagicMock()
+    monkeypatch.setattr("pdm.cli.actions.get_latest_version", get_latest)
     project = MagicMock()
     project.core.ui.verbosity = 2
     check_update(project)
 
+    get_latest.assert_not_called()
 
-def test_check_update_uv_tool_installation(monkeypatch, capsys):
+
+def test_check_update_uv_tool_installation(monkeypatch):
     monkeypatch.setattr("pdm.cli.utils.is_uvx_runner", lambda: False)
     monkeypatch.setattr("pdm.cli.utils.is_uv_tool_installation", lambda: True)
     monkeypatch.setattr("pdm.cli.actions.get_latest_version", lambda *_: "2.0.0")
