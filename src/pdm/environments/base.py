@@ -14,7 +14,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from packaging.specifiers import SpecifierSet
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion
 
 from pdm._types import NotSet, NotSetType
@@ -67,31 +67,49 @@ class BaseEnvironment(abc.ABC):
 
         compat_versions = {"dep-logic": "<0.7"}
         compat_lib = self.project.cache(".compat_libs")
+        target_python = f"{self.interpreter.major}.{self.interpreter.minor}"
 
-        def is_compatible(pkg: str, specifier: str) -> bool:
+        def dist_supports_target(dist: object) -> bool:
+            metadata = getattr(dist, "metadata", None)
+            if metadata and (requires_python := metadata.get("Requires-Python")):
+                return target_python in SpecifierSet(requires_python)
+            return True
+
+        def is_compatible(working_set: WorkingSet) -> bool:
             try:
-                version = WorkingSet([str(compat_lib)])[pkg].version
-                return version in SpecifierSet(specifier)
-            except (InvalidVersion, KeyError):
+                if not all(
+                    working_set[pkg].version in SpecifierSet(specifier) and dist_supports_target(working_set[pkg])
+                    for pkg, specifier in compat_versions.items()
+                ):
+                    return False
+                return all(dist_supports_target(dist) for dist in working_set.values())
+            except (InvalidSpecifier, InvalidVersion, KeyError):
                 return False
 
         with filelock.FileLock(compat_lib.with_name(f"{compat_lib.name}.lock"), is_singleton=True):
-            for pkg, specifier in compat_versions.items():
-                if not is_compatible(pkg, specifier):
-                    host_environment = BareEnvironment(self.project)
-                    requirement = f"{pkg}{specifier}"
-                    self.project.core.ui.info(f"Installing {requirement} for Python < 3.10 compatibility")
-                    subprocess.check_call(
-                        [
-                            *host_environment.pip_command,
-                            "install",
-                            "--upgrade",
-                            "--target",
-                            str(compat_lib),
-                            requirement,
-                        ],
-                        stdout=subprocess.DEVNULL,
-                    )
+            working_set = WorkingSet([str(compat_lib)])
+            if not is_compatible(working_set):
+                host_environment = BareEnvironment(self.project)
+                requirements = [f"{pkg}{specifier}" for pkg, specifier in compat_versions.items()]
+                self.project.core.ui.info(
+                    f"Installing {' '.join(requirements)} for Python {target_python} compatibility"
+                )
+                if compat_lib.exists():
+                    shutil.rmtree(compat_lib)
+                subprocess.check_call(
+                    [
+                        *host_environment.pip_command,
+                        "install",
+                        "--upgrade",
+                        "--python-version",
+                        target_python,
+                        "--only-binary=:all:",
+                        "--target",
+                        str(compat_lib),
+                        *requirements,
+                    ],
+                    stdout=subprocess.DEVNULL,
+                )
 
         return str(compat_lib)
 
