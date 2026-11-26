@@ -67,6 +67,13 @@ def test_config_del_command(project, pdm):
     assert result.output.strip() == "True"
 
 
+def test_config_del_unknown_key(project, pdm):
+    result = pdm(["config", "--delete", "foo.bar"], obj=project)
+    assert result.exit_code != 0
+    assert "NoConfigError" in result.stderr
+    assert "No such config key: 'foo.bar'" in result.stderr
+
+
 def test_config_env_var_shadowing(project, pdm, monkeypatch):
     monkeypatch.setenv("PDM_PYPI_URL", "https://example.org/simple")
     result = pdm(["config", "pypi.url"], obj=project)

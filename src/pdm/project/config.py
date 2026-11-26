@@ -463,6 +463,8 @@ class Config(MutableMapping[str, str]):
             self._save_config()
             return
 
+        if key not in self._config_map and key not in self.deprecated:
+            raise NoConfigError(key)
         config_key = self.deprecated.get(key, key)
         config = self._config_map[config_key]
         self._file_data.pop(config_key, None)
