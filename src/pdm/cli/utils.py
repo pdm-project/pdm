@@ -22,7 +22,7 @@ from rich.tree import Tree
 from pdm import termui
 from pdm.exceptions import PdmArgumentError, ProjectError
 from pdm.models.specifiers import PySpecSet, get_specifier
-from pdm.utils import comparable_version, is_path_relative_to, normalize_name, url_to_path
+from pdm.utils import comparable_version, normalize_name, url_to_path
 
 if TYPE_CHECKING:
     import importlib.metadata as im
@@ -689,57 +689,55 @@ def merge_dictionary(target: MutableMapping[Any, Any], input: Mapping[Any, Any],
             target[key] = value
 
 
-def is_pipx_installation() -> bool:
-    return sys.prefix.split(os.sep)[-3:-1] == ["pipx", "venvs"]
+def is_pipx_installation(prefix: Path | None = None) -> bool:
+    return (prefix or Path(sys.prefix)).parent.parts[-2:] == ("pipx", "venvs")
 
 
-def is_homebrew_installation() -> bool:
-    return "/libexec" in sys.prefix.replace("\\", "/")
+def is_homebrew_installation(prefix: Path | None = None) -> bool:
+    return "/libexec" in (prefix or Path(sys.prefix)).as_posix()
 
 
-def is_scoop_installation() -> bool:
-    return os.name == "nt" and is_path_relative_to(sys.prefix, Path.home() / "scoop/apps/pdm")
+def is_scoop_installation(prefix: Path | None = None) -> bool:
+    return os.name == "nt" and (prefix or Path(sys.prefix)).is_relative_to(Path.home() / "scoop/apps/pdm")
 
 
-def is_uv_tool_installation() -> bool:
+def is_uv_tool_installation(prefix: Path | None = None) -> bool:
     """
     Detect whether PDM is installed via ``uv tool install``.
 
     This checks both the default layout and custom UV_TOOL_DIR.
     """
-    sep = os.sep
-    parts = sys.prefix.split(sep)
+    parent = (prefix or Path(sys.prefix)).parent
     if tool_dir := os.getenv("UV_TOOL_DIR"):
-        parts_without_pdm = parts[:-1]  # .../uv/tools/pdm -> .../uv/tools
-        return _is_same_dir(tool_dir, parts_without_pdm, sep)
-    return parts[-3:-1] == ["uv", "tools"]
+        return _is_same_file(parent, tool_dir)
+    return parent.parts[-2:] == ("uv", "tools")
 
 
-def _is_same_dir(path: str, parts: list[str], sep: str) -> bool:
-    if path.rstrip(sep).split(sep) == parts:
-        return True
-    p = Path(path)
-    target = sep.join(parts) + sep
+def _is_same_file(path1: Path, path2: str | Path) -> bool:
     try:
-        return p.samefile(target)
+        # Use `samefile` instead of `==` to handle unnormalized paths
+        # e.g.: 'D://UvData\\mix-win/posix-style'
+        return path1.samefile(path2)
     except OSError:
-        return p.resolve() == Path(target).resolve()
+        # Fall back when either path does not exist or is inaccessible.
+        return path1.resolve() == Path(path2).resolve()
 
 
-def is_uvx_runner() -> bool:
+def is_uvx_runner(prefix: Path | None = None) -> bool:
     """Detection of whether PDM is being run via ``uvx``."""
     # uvx runs inside uv's cache directory, e.g.:
-    #   ~/.cache/uv/archive-v0/<hash>/bin/python
-    #   $XDG_CACHE_HOME/uv/archive-v0/<hash>/bin/python
-    # Prefer an exact check against UV_CACHE_DIR when it is set.
-    sep = os.sep
-    parts = sys.prefix.split(sep)
-    if len(parts) < 3 or not re.fullmatch(r"archive-v\d+", parts[-2]):
+    #   $UV_CACHE_DIR/archive-v0/<hash>  (when UV_CACHE_DIR is set)
+    # Default layout if UV_CACHE_DIR is not set:
+    #   - Windows: %LOCALAPPDATA%\uv\cache\archive-v0\<hash>
+    #   - Linux/macOS: ~/.cache/uv/archive-v0/<hash>
+    #     (or $XDG_CACHE_HOME/uv/archive-v0/<hash>)
+    parent = (prefix or Path(sys.prefix)).parent
+    if not re.fullmatch(r"archive-v\d+", parent.name):
         return False
-    parts_without_archive = parts[:-2]
+    target = parent.parent
     if cache_dir := os.getenv("UV_CACHE_DIR"):
-        return _is_same_dir(cache_dir, parts_without_archive, sep)
-    return "uv" in parts_without_archive
+        return _is_same_file(target, cache_dir)
+    return "uv" in target.parts[-2:]
 
 
 def get_dist_location(dist: Distribution) -> str:

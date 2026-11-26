@@ -9,6 +9,7 @@ import os
 import sys
 import textwrap
 from collections.abc import Collection, Iterable
+from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
@@ -458,11 +459,12 @@ def check_update(project: Project) -> None:  # pragma: no cover
     )
     from pdm.utils import parse_version
 
-    if (
-        project.core.ui.verbosity < termui.Verbosity.NORMAL
-        # Don't check updates when running via uvx (ephemeral environment)
-        or is_uvx_runner()
-    ):
+    if project.core.ui.verbosity < termui.Verbosity.NORMAL:
+        return
+
+    # Don't check updates when running via uvx (ephemeral environment)
+    prefix = Path(sys.prefix)
+    if is_uvx_runner(prefix):
         return
 
     this_version = project.core.version
@@ -474,13 +476,13 @@ def check_update(project: Project) -> None:  # pragma: no cover
 
     is_prerelease = parse_version(latest_version).is_prerelease
 
-    if is_uv_tool_installation():
+    if is_uv_tool_installation(prefix):
         install_command = f"uv tool upgrade {'--prerelease allow ' if is_prerelease else ''}pdm"
-    elif is_pipx_installation():
+    elif is_pipx_installation(prefix):
         install_command = f"pipx upgrade {'--pip-args=--pre ' if is_prerelease else ''}pdm"
-    elif is_homebrew_installation():
+    elif is_homebrew_installation(prefix):
         install_command = "brew upgrade pdm"
-    elif is_scoop_installation():
+    elif is_scoop_installation(prefix):
         install_command = "scoop update pdm"
     else:
         install_command = "pdm self update" + (" --pre" if is_prerelease else "")
