@@ -94,7 +94,8 @@ def _convert_specifier(version: str) -> str:
         elif op == "^":
             parts.append(f">={ver},<{_caret_upper_bound(ver)}")
             continue
-        elif not op:
+        elif op in ("", "="):
+            # Poetry reads a bare version and a single `=` as an exact pin.
             op = "=="
         parts.append(f"{op}{ver}")
     return ",".join(parts)
