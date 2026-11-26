@@ -47,7 +47,8 @@ def convert_pipfile_requirement(name: str, req: RequirementDict, backend: BuildB
             markers.append(get_marker(req["markers"]))  # type: ignore[arg-type]
         for key in MARKER_KEYS:
             if key in req:
-                marker = get_marker(f"{key}{req[key]}")
+                # A space keeps alphabetic operators such as `in` apart from the key
+                marker = get_marker(f"{key} {req[key]}")
                 markers.append(marker)
                 del req[key]
 
