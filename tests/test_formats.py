@@ -5,6 +5,7 @@ from textwrap import dedent
 from urllib.parse import quote
 
 import pytest
+import tomlkit
 
 from pdm.compat import tomllib
 from pdm.formats import MetaConvertError, flit, pipfile, poetry, requirements, setup_py
@@ -1268,6 +1269,48 @@ def test_export_pylock_toml(core, pdm):
         result = pdm(["export", "-f", "pylock", "-L", "pdm.no_groups.lock"])
     assert result.exit_code == 1
     assert "inherit_metadata strategy is required for pylock format" in result.stderr
+
+
+@pytest.mark.parametrize("source_lockfile", ["pdm.lock", "pylock.toml"])
+def test_export_pylock_classifies_artifact_urls(project, pdm, source_lockfile):
+    base = "https://example.invalid/packages/first-2.0.2"
+    sdist = {"url": f"{base}.tar.gz?name=other.whl", "hashes": {"sha256": "1" * 64}}
+    wheels = [
+        {"url": f"{base}-cp311-cp311-win_amd64.whl?download=1", "hashes": {"sha256": "2" * 64}},
+        {"url": f"{base}-py3-none-any.whl?download=1#fragment", "hashes": {"sha256": "3" * 64}},
+    ]
+    package = {"name": "first", "version": "2.0.2"}
+    if source_lockfile == "pdm.lock":
+        lock = {
+            "metadata": {
+                "groups": ["default"],
+                "strategy": ["inherit_metadata", "static_urls"],
+                "lock_version": "4.5.0",
+            },
+            "package": [
+                {
+                    **package,
+                    "groups": ["default"],
+                    "files": [
+                        {"url": artifact["url"], "hash": f"sha256:{artifact['hashes']['sha256']}"}
+                        for artifact in [sdist, *wheels]
+                    ],
+                }
+            ],
+        }
+    else:
+        lock = {
+            "lock-version": "1.0",
+            "created-by": "test",
+            "packages": [{**package, "sdist": sdist, "wheels": wheels}],
+        }
+    lock_path = project.root / source_lockfile
+    lock_path.write_text(tomlkit.dumps(lock), encoding="utf-8")
+
+    result = pdm(["export", "-f", "pylock", "-L", str(lock_path)], obj=project, strict=True)
+    (exported,) = tomllib.loads(result.stdout)["packages"]
+    assert exported["sdist"] == sdist
+    assert exported["wheels"] == wheels
 
 
 @pytest.mark.parametrize(
