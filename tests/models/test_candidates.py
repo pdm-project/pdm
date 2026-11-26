@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from argparse import Namespace
 from urllib.parse import quote
@@ -119,9 +120,34 @@ def test_parse_metadata_with_extras(project):
     prepared = candidate.prepare(project.environment)
     assert prepared.link.is_wheel
     assert to_lines(prepared.get_dependencies_from_metadata()) == [
-        "pytest",
-        'requests; python_version >= "3.6"',
+        'pytest; extra == "tests"',
+        'requests; python_version >= "3.6" and extra == "security"',
     ]
+
+    repository = project.get_repository()
+    metadata = repository._get_dependencies_from_metadata(candidate)
+    cached = project.get_repository()._get_dependencies_from_cache(candidate)
+    assert to_lines(cached.dependencies) == to_lines(metadata.dependencies)
+
+
+def test_parse_json_metadata_with_extras(project, index):
+    project.project_config["pypi.url"] = "https://my.pypi.org/simple"
+    dependencies = [
+        'pytest; extra == "tests"',
+        'requests; python_version >= "3.6" and extra == "security"',
+    ]
+    index["/pypi/demo/0.0.1/json"] = json.dumps(
+        {
+            "info": {
+                "requires_dist": ["idna", *dependencies, 'sphinx; extra == "docs"'],
+                "requires_python": "",
+                "summary": "",
+            }
+        }
+    ).encode()
+    candidate = Candidate(parse_requirement("demo[tests,security]"), "demo", "0.0.1")
+    metadata = project.get_repository()._get_dependencies_from_json(candidate)
+    assert to_lines(metadata.dependencies) == dependencies
 
 
 @pytest.mark.usefixtures("local_finder")
@@ -187,8 +213,8 @@ def test_parse_project_file_on_build_error_with_extras(project):
     req.extras = ("security", "tests")
     candidate = Candidate(req)
     deps = to_lines(candidate.prepare(project.environment).get_dependencies_from_metadata())
-    assert 'requests; python_version >= "3.6"' in deps
-    assert "pytest" in deps
+    assert 'requests; python_version >= "3.6" and extra == "security"' in deps
+    assert 'pytest; extra == "tests"' in deps
     assert candidate.name == "demo"
     assert candidate.version == "0.0.1"
 
