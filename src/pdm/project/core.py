@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import hashlib
 import itertools
 import operator
@@ -14,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import tomlkit
+from dep_logic.tags import Implementation, PlatformError
 
 from pdm._types import NotSet, NotSetType, RepositoryConfig
 from pdm.compat import CompatibleSequence, tomllib
@@ -1149,7 +1151,34 @@ class Project:
 
     @property
     def lock_targets(self) -> list[EnvSpec]:
-        return [self.environment.allow_all_spec]
+        """Return the target environments for locking."""
+        targets_config = self.pyproject.settings.get("lock", {}).get("targets")
+        if not targets_config:
+            return [self.environment.allow_all_spec]
+
+        targets: list[EnvSpec] = []
+        seen: set[EnvSpec] = set()
+        for i, target in enumerate(targets_config):
+            try:
+                replace_dict: dict[str, Any] = {}
+                if requires_python := target.get("requires-python"):
+                    replace_dict["requires_python"] = PySpecSet(requires_python)
+                if platform := target.get("platform"):
+                    replace_dict["platform"] = platform
+                if implementation := target.get("implementation"):
+                    replace_dict["implementation"] = implementation
+                env_spec = self.environment.allow_all_spec.replace(**replace_dict)
+                if target.get("gil-disabled") and env_spec.implementation is not None:
+                    env_spec = dataclasses.replace(
+                        env_spec,
+                        implementation=Implementation.parse(env_spec.implementation.name, gil_disabled=True),
+                    )
+            except (PlatformError, ValueError) as e:
+                raise PdmUsageError(f"Invalid lock target at index {i} in pyproject.toml: {e}") from e
+            if env_spec not in seen:
+                seen.add(env_spec)
+                targets.append(env_spec)
+        return targets
 
     def get_resolver(self, allow_uv: bool = True) -> type[Resolver]:
         """Get the resolver class to use for the project."""
