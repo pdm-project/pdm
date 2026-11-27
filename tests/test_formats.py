@@ -116,6 +116,26 @@ def test_convert_pipfile_version_without_operator(project, entry, expected):
 
 
 @pytest.mark.parametrize(
+    "marker,expected",
+    [
+        ("== 'win32'", 'sys_platform == "win32"'),
+        ("in 'linux darwin'", 'sys_platform in "linux darwin"'),
+        ("not in 'linux darwin'", 'sys_platform not in "linux darwin"'),
+    ],
+)
+def test_convert_pipfile_marker_key_operator(project, marker, expected):
+    """A marker key needs a space before alphabetic operators such as `in`."""
+    pipfile_path = project.root / "Pipfile"
+    pipfile_path.write_text(
+        f'[packages]\nuvloop = {{version = ">=0.21.0", sys_platform = "{marker}"}}\n',
+        encoding="utf-8",
+    )
+    result, _ = pipfile.convert(project, pipfile_path, None)
+
+    assert result["dependencies"] == [f"uvloop>=0.21.0; {expected}"]
+
+
+@pytest.mark.parametrize(
     "requires",
     [
         "",  # an empty [requires] table
