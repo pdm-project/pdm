@@ -961,6 +961,38 @@ def test_convert_poetry_space_separated_python_constraint(project):
     assert result["requires-python"] == "<4.0,>=3.8"
 
 
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        # Poetry reads a single `=` as an exact pin, like `==`.
+        ("=2.32.3", "==2.32.3"),
+        ("=2.32.*", "==2.32.*"),
+        ("= 2.32.3", "==2.32.3"),
+        (">=1.0,=1.5", "==1.5,>=1.0"),
+    ],
+)
+def test_convert_poetry_single_equals_constraint(project, constraint, expected):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        f'[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\nfoo = "{constraint}"\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["dependencies"] == [f"foo{expected}"]
+
+
+def test_convert_poetry_single_equals_python_constraint(project):
+    pyproject = project.root / "pyproject.toml"
+    pyproject.write_text(
+        '[tool.poetry]\nname = "demo"\nversion = "0.1.0"\n[tool.poetry.dependencies]\npython = "=3.11.9"\n',
+        encoding="utf-8",
+    )
+    result, _ = poetry.convert(project, pyproject, ns())
+
+    assert result["requires-python"] == "==3.11.9"
+
+
 def test_convert_poetry_constraint_without_a_separator_is_rejected(project):
     """A constraint with no separator must not be read as a space-separated one.
 
