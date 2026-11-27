@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 import tomlkit
 from dep_logic.markers import AnyMarker, BaseMarker, MarkerUnion, parse_marker
+from unearth import Link
 
 from pdm.exceptions import ProjectError
 from pdm.formats.base import make_array, make_inline_table
@@ -70,7 +71,8 @@ class PyLockConverter:
             wheels: list[dict[str, Any]] = tomlkit.array().multiline(True)
             for hash_item in candidate.hashes:
                 hash_type, hash_value = hash_item["hash"].split(":", 1)
-                if hash_item.get("file", "").endswith(".whl") or hash_item.get("url", "").endswith(".whl"):
+                url = hash_item.get("url")
+                if hash_item.get("file", "").endswith(".whl") or (url is not None and Link(url).is_wheel):
                     wheel: dict[str, Any] = {}
                     if "file" in hash_item:
                         wheel["name"] = hash_item["file"]
