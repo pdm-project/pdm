@@ -227,3 +227,23 @@ def test_filter_requirements_retains_extra_provenance():
         [*lines, "base", 'missing; extra == "c"'], ("a", "b"), keep_extra_markers=True
     )
     assert requirements == [parse_requirement(line) for line in lines]
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "expected_id"),
+    [
+        ("foo[Security_Extra]>=1.0", "foo[security-extra]>=1.0", "foo[security-extra]"),
+        ("foo[security.extra]>=1.0", "foo[SECURITY_EXTRA]>=1.0", "foo[security-extra]"),
+        ("foo[A_B,a.b]>=1.0", "foo[a-b]>=1.0", "foo[a-b]"),
+        ("foo[My_Extra] @ https://example.org/foo.zip", "foo[my-extra] @ https://example.org/foo.zip", "foo[my-extra]"),
+    ],
+)
+def test_requirement_normalizes_pep685_extras_in_identify_and_hash_key(first, second, expected_id):
+    r1 = parse_requirement(first)
+    r2 = parse_requirement(second)
+
+    assert r1.identify() == expected_id
+    assert r2.identify() == expected_id
+    assert r1 == r2
+    assert hash(r1) == hash(r2)
+    assert r1.as_line() == first

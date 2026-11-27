@@ -111,10 +111,15 @@ class Requirement:
         normalized = comparable_version(other_version)
         return dataclasses.replace(self, specifier=get_specifier(f"=={normalized}") & self.specifier)
 
+    def _normalized_extras(self) -> frozenset[str] | None:
+        if not self.extras:
+            return None
+        return frozenset(normalize_name(extra) for extra in self.extras)
+
     def _hash_key(self) -> tuple:
         return (
             self.key,
-            frozenset(self.extras) if self.extras else None,
+            self._normalized_extras(),
             str(self.marker) if self.marker else None,
         )
 
@@ -127,7 +132,8 @@ class Requirement:
     def identify(self) -> str:
         if not self.key:
             return _get_random_key(self)
-        extras = "[{}]".format(",".join(sorted(self.extras))) if self.extras else ""
+        normalized = self._normalized_extras()
+        extras = f"[{','.join(sorted(normalized))}]" if normalized else ""
         return self.key + extras
 
     def __repr__(self) -> str:

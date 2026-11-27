@@ -79,6 +79,17 @@ def test_matching_entries_for_named_requirement(mocker):
     ]
 
 
+def test_matching_entries_normalizes_pep685_extras(mocker):
+    repository = make_repository(mocker)
+    demo = make_candidate("demo[Security_Extra]")
+    key = repository._identify_candidate(demo)
+    repository.packages = {key: Package(demo)}
+
+    assert key == ("demo[security-extra]", "1.0", None, False)
+    assert list(repository._matching_entries(parse_requirement("demo[security-extra]"))) == [repository.packages[key]]
+    assert list(repository._matching_entries(parse_requirement("demo[security.extra]"))) == [repository.packages[key]]
+
+
 def test_matching_entries_for_file_requirements(tmp_path, mocker):
     repository = make_repository(mocker)
     first_path = tmp_path / "first"
