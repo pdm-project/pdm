@@ -12,12 +12,13 @@ from pytest_httpserver import HTTPServer
 
 from pdm.compat import tomllib
 from pdm.environments import PythonEnvironment
-from pdm.exceptions import PdmException, PdmUsageError, ProjectError
+from pdm.exceptions import PDMDeprecationWarning, PdmException, PdmUsageError, ProjectError
 from pdm.models.requirements import parse_requirement
 from pdm.models.specifiers import PySpecSet
 from pdm.models.venv import get_venv_python
 from pdm.project.lockfile import PDMLock, PyLock
 from pdm.project.project_file import PyProject
+from pdm.project.toml_file import TOMLFile
 from pdm.utils import atomic_open_for_write, cd, is_path_relative_to, parse_version
 
 if TYPE_CHECKING:
@@ -62,6 +63,91 @@ def test_atomic_toml_write_preserves_line_endings(tmp_path, core):
     content = target.read_bytes()
     assert b"\r\n" in content
     assert b"\n" not in content.replace(b"\r\n", b"")
+
+
+def test_pyproject_write_without_open_for_write(tmp_path, core):
+    # A plugin written before `open_for_write()` existed modifies the data and writes it back
+    target = tmp_path / "pyproject.toml"
+    target.write_bytes(b'# The demo project\r\n[project]\r\nname = "demo"\r\nversion = "3.7.0"  # bumped by CI\r\n')
+    pyproject = PyProject(target, ui=core.ui)
+    metadata = pyproject.metadata
+
+    metadata["version"] = "3.6.0+pr365"
+    with pytest.warns(PDMDeprecationWarning, match="without calling open_for_write") as record:
+        pyproject.write(show_message=False)
+
+    # The warning points at the code that needs to be updated
+    assert [warning.filename for warning in record] == [__file__]
+
+    expected = b'# The demo project\r\n[project]\r\nname = "demo"\r\nversion = "3.6.0+pr365"  # bumped by CI\r\n'
+    assert target.read_bytes() == expected
+
+    # The data held by the caller is still the one that gets written
+    metadata["version"] = "3.6.1"
+    with pytest.warns(PDMDeprecationWarning):
+        pyproject.write(show_message=False)
+
+    assert target.read_bytes() == expected.replace(b"3.6.0+pr365", b"3.6.1")
+
+
+def test_toml_write_without_open_for_write_keeps_untouched_styles(tmp_path, core):
+    target = tmp_path / "pyproject.toml"
+    target.write_text(
+        """\
+[project]
+name = "demo"  # the name
+dependencies = [
+    "requests>=2",  # http client
+]
+keywords = ["one", "two"]
+
+[tool.pdm]
+distribution = true  # build it
+
+[tool.removed]
+key = "value"
+""",
+        encoding="utf-8",
+    )
+    toml_file = TOMLFile(target, ui=core.ui)
+    data = toml_file._data
+    data["project"]["keywords"].append("three")
+    data["project"]["requires-python"] = ">=3.10"
+    data["tool"]["pdm"]["version"] = {"source": "scm"}
+    del data["tool"]["removed"]
+
+    with pytest.warns(PDMDeprecationWarning):
+        toml_file.write()
+
+    content = target.read_text(encoding="utf-8")
+    assert tomllib.loads(content) == data
+    for kept in ('name = "demo"  # the name', '    "requests>=2",  # http client', "distribution = true  # build it"):
+        assert kept in content
+    # The data is still the plain one held by the caller
+    assert toml_file._data is data
+    assert type(data["project"]["keywords"]) is list
+
+
+@pytest.mark.parametrize("failure", ["error", "different data", "missing file"])
+def test_toml_write_without_open_for_write_always_writes_the_data(tmp_path, core, mocker, failure):
+    target = tmp_path / "data.toml"
+    if failure != "missing file":
+        target.write_text("[table]\nkey = 1  # comment\n", encoding="utf-8")
+    toml_file = TOMLFile(target, ui=core.ui)
+    toml_file._data["table"] = {"key": True, "other": [1, 2]}
+    # When the document can't be updated in place, the data is written without the original styles
+    if failure == "error":
+        mocker.patch("pdm.project.toml_file._sync_table", side_effect=ValueError("unsupported"))
+    elif failure == "different data":
+        mocker.patch("pdm.project.toml_file._sync_table")
+
+    with pytest.warns(PDMDeprecationWarning):
+        toml_file.write()
+
+    with target.open("rb") as fp:
+        written = fp.read().decode("utf-8")
+    assert tomllib.loads(written) == {"table": {"key": True, "other": [1, 2]}}
+    assert "key = true" in written
 
 
 def get_python_versions() -> list[PythonVersion]:
