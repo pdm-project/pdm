@@ -55,6 +55,21 @@ def check_fingerprint(project: Project | None, filename: Path | str) -> bool:
 VERSION_RE = re.compile(r"([<>=!~^]*)\s*v?\s*(\d.*?)\s*(?=\s+[<>=!~^]|,|$)")
 
 
+def _split_version_parts(version: str) -> tuple[str, list[int]]:
+    epoch, sep, release = version.partition("!")
+    prefix = f"{epoch}!" if sep else ""
+    body = release if sep else epoch
+    numbers = [int(match.group()) if (match := re.match(r"\d+", part)) else 0 for part in body.split(".")]
+    return prefix, numbers
+
+
+def _format_upper_bound(prefix: str, numbers: list[int], index: int) -> str:
+    bumped = numbers[: index + 1]
+    bumped[-1] += 1
+    parts = [str(number) for number in bumped + [0] * (len(numbers) - index - 1)]
+    return f"{prefix}{'.'.join(parts)}"
+
+
 def _caret_upper_bound(version: str) -> str:
     """Return the exclusive upper bound of a Poetry caret requirement.
 
@@ -62,11 +77,9 @@ def _caret_upper_bound(version: str) -> str:
     component, so ``^0.2.3`` means ``<0.3.0`` and ``^0.0.3`` means ``<0.0.4``.
     If every component is zero, the last one is bumped, matching ``^0.0`` -> ``<0.1``.
     """
-    numbers = [int(match.group()) if (match := re.match(r"\d+", part)) else 0 for part in version.split(".")]
+    prefix, numbers = _split_version_parts(version)
     index = next((i for i, number in enumerate(numbers) if number), len(numbers) - 1)
-    bumped = numbers[: index + 1]
-    bumped[-1] += 1
-    return ".".join(str(number) for number in bumped + [0] * (len(numbers) - index - 1))
+    return _format_upper_bound(prefix, numbers, index)
 
 
 def _tilde_upper_bound(version: str) -> str:
@@ -78,11 +91,9 @@ def _tilde_upper_bound(version: str) -> str:
     three components are present: ``~=1.2`` means ``<2.0``, and ``~=1`` is not even a
     valid specifier.
     """
-    numbers = [int(match.group()) if (match := re.match(r"\d+", part)) else 0 for part in version.split(".")]
+    prefix, numbers = _split_version_parts(version)
     index = min(1, len(numbers) - 1)
-    bumped = numbers[: index + 1]
-    bumped[-1] += 1
-    return ".".join(str(number) for number in bumped + [0] * (len(numbers) - index - 1))
+    return _format_upper_bound(prefix, numbers, index)
 
 
 def _convert_specifier(version: str) -> str:

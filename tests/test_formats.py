@@ -820,6 +820,13 @@ def test_convert_poetry_optional_dependency_extras_matching(project):
         ("^0.0.3", "<0.0.4,>=0.0.3"),
         ("^0.0", "<0.1,>=0.0"),
         ("^0", "<1,>=0"),
+        # PEP 440 epochs must be preserved in the upper bound and excluded from release parsing.
+        ("^1!1.2.6", "<1!2.0.0,>=1!1.2.6"),
+        ("^1!2.0.1", "<1!3.0.0,>=1!2.0.1"),
+        ("^1!0.1.2", "<1!0.2.0,>=1!0.1.2"),
+        ("^1!0.0.2", "<1!0.0.3,>=1!0.0.2"),
+        ("^1!0.0", "<1!0.1,>=1!0.0"),
+        ("^2!1", "<2!2,>=2!1"),
     ],
 )
 def test_convert_poetry_caret_constraint(project, constraint, expected):
@@ -844,6 +851,10 @@ def test_convert_poetry_caret_constraint(project, constraint, expected):
         ("~0.2.3", "<0.3.0,>=0.2.3"),
         ("~0.0", "<0.1,>=0.0"),
         ("~0", "<1,>=0"),
+        ("~1!1.2.6", "<1!1.3.0,>=1!1.2.6"),
+        ("~1!1.2", "<1!1.3,>=1!1.2"),
+        ("~1!1", "<1!2,>=1!1"),
+        ("~1!0.2.3", "<1!0.3.0,>=1!0.2.3"),
     ],
 )
 def test_convert_poetry_tilde_constraint(project, constraint, expected):
