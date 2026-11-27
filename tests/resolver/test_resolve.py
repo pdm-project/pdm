@@ -213,6 +213,52 @@ def test_resolve_conflicting_dependencies(resolve, repository):
         resolve(["foo", "bar"])
 
 
+def test_resolve_transitive_dependency_without_candidates(resolve, repository, monkeypatch):
+    from pdm.exceptions import CandidateNotFound
+    from pdm.pytest import TestRepository
+
+    repository.add_candidate("foo", "0.1.0")
+    repository.add_candidate("foo", "0.2.0")
+    repository.add_dependencies("foo", "0.2.0", ["missing>=1.0"])
+
+    original_find_candidates = TestRepository._find_candidates
+
+    def _find_candidates(self, req, minimal_version):
+        if req.key == "missing":
+            raise CandidateNotFound(f"Unable to find candidates for {req.key}")
+        return original_find_candidates(self, req, minimal_version)
+
+    monkeypatch.setattr(TestRepository, "_find_candidates", _find_candidates)
+
+    result = resolve(["foo"])
+
+    assert result["foo"].version == "0.1.0"
+    assert "missing" not in result
+
+
+def test_resolve_direct_dependency_without_candidates(resolve):
+    with pytest.raises(ResolutionImpossible):
+        resolve(["nonexistent"])
+
+
+def test_resolve_direct_dependency_candidate_not_found(resolve, repository, monkeypatch):
+    from pdm.exceptions import CandidateNotFound
+    from pdm.pytest import TestRepository
+
+    repository.add_candidate("foo", "0.1.0")
+    original_find_candidates = TestRepository._find_candidates
+
+    def _find_candidates(self, req, minimal_version):
+        if req.key == "foo":
+            raise CandidateNotFound(f"Unable to find candidates for {req.key}")
+        return original_find_candidates(self, req, minimal_version)
+
+    monkeypatch.setattr(TestRepository, "_find_candidates", _find_candidates)
+
+    with pytest.raises(ResolutionImpossible):
+        resolve(["foo"])
+
+
 @pytest.mark.parametrize("overrides", ["2.1", ">=1.8", "==2.1"])
 def test_resolve_conflicting_dependencies_with_overrides(project, resolve, repository, overrides):
     repository.add_candidate("foo", "0.1.0")

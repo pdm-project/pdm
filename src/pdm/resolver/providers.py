@@ -250,11 +250,14 @@ class BaseProvider(AbstractProvider[Requirement, Candidate, str]):
                             if parsed_version.is_prerelease:
                                 prerelease = True
                                 break
-            found = self.repository.find_candidates(
-                requirement,
-                self.allow_prereleases if prerelease is None else prerelease,
-                minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
-            )
+            try:
+                found = self.repository.find_candidates(
+                    requirement,
+                    self.allow_prereleases if prerelease is None else prerelease,
+                    minimal_version=self.direct_minimal_versions and self._is_direct_requirement(requirement),
+                )
+            except CandidateNotFound:
+                return
 
             current_version: str | None = None
             collected_wheels: list[Candidate] = []
