@@ -701,6 +701,33 @@ def is_scoop_installation() -> bool:
     return os.name == "nt" and is_path_relative_to(sys.prefix, Path.home() / "scoop/apps/pdm")
 
 
+def is_uv_tool_installation() -> bool:
+    """
+    Detect whether PDM is installed via ``uv tool install``.
+
+    This checks both the default layout and custom UV_TOOL_DIR.
+    """
+    tool_dir = os.getenv("UV_TOOL_DIR")
+    parent = Path(sys.prefix).parent
+    return parent == Path(tool_dir) if tool_dir else parent.parts[-2:] == ("uv", "tools")
+
+
+def is_uvx_runner() -> bool:
+    """Detection of whether PDM is being run via ``uvx``."""
+    # uvx runs inside uv's cache directory, e.g.:
+    #   $UV_CACHE_DIR/archive-v0/<hash>  (when UV_CACHE_DIR is set)
+    # Default layout if UV_CACHE_DIR is not set:
+    #   - Windows: %LOCALAPPDATA%\uv\cache\archive-v0\<hash>
+    #   - Linux/macOS: ~/.cache/uv/archive-v0/<hash>
+    #     (or $XDG_CACHE_HOME/uv/archive-v0/<hash>)
+    parent = Path(sys.prefix).parent
+    if not re.fullmatch(r"archive-v\d+", parent.name):
+        return False
+    cache_dir = os.getenv("UV_CACHE_DIR")
+    target = parent.parent
+    return target == Path(cache_dir) if cache_dir else "uv" in target.parts[-2:]
+
+
 def get_dist_location(dist: Distribution) -> str:
     direct_url = dist.read_text("direct_url.json")
     if not direct_url:
