@@ -51,6 +51,9 @@ You can ignore some of the criteria, for example, by specifying only `--platform
 
 ## Specify lock targets in `pyproject.toml`
 
+!!! tip
+    Added in 2.30.0.
+
 Alternatively, you can configure lock targets declaratively in `pyproject.toml` under `[tool.pdm.lock]`:
 
 ```toml
@@ -65,7 +68,7 @@ targets = [
 Each target table can specify:
 
 - `platform`: A platform specifier (e.g. `"windows"`, `"linux"`, `"macos"`, `"manylinux_2_17_x86_64"`).
-- `python` or `requires-python`: A Python version specifier (defaults to `requires-python` in `pyproject.toml`).
+- `requires-python`: A Python version specifier (defaults to `requires-python` in `pyproject.toml`).
 - `implementation`: A Python implementation specifier (e.g. `"cpython"`, `"pypy"`).
 - `gil-disabled`: A boolean flag for free-threaded Python (defaults to `false`).
 

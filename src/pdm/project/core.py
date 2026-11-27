@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import hashlib
 import itertools
 import operator
 import os
-import re
 import shutil
 import sys
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import tomlkit
+from dep_logic.tags import Implementation, PlatformError
 
 from pdm._types import NotSet, NotSetType, RepositoryConfig
 from pdm.compat import CompatibleSequence, tomllib
@@ -1150,46 +1151,28 @@ class Project:
     @property
     def lock_targets(self) -> list[EnvSpec]:
         """Return the target environments for locking."""
-        settings = self.pyproject.settings.get("lock", {})
-        if not isinstance(settings, Mapping):
-            return [self.environment.allow_all_spec]
-        targets_config = settings.get("targets") if settings.get("targets") is not None else settings.get("target")
-        if targets_config is None:
-            return [self.environment.allow_all_spec]
-        if not isinstance(targets_config, list):
-            raise PdmUsageError(
-                f"Invalid lock targets in pyproject.toml: expected a list, got {type(targets_config).__name__}"
-            )
+        targets_config = self.pyproject.settings.get("lock", {}).get("targets")
         if not targets_config:
             return [self.environment.allow_all_spec]
 
-        default_requires_python = str(self.environment.allow_all_spec.requires_python)
         targets: list[EnvSpec] = []
         seen: set[EnvSpec] = set()
         for i, target in enumerate(targets_config):
-            if not isinstance(target, Mapping):
-                raise PdmUsageError(
-                    f"Invalid lock target at index {i} in pyproject.toml: expected a table, got {type(target).__name__}"
-                )
-            py = (
-                target.get("requires_python")
-                or target.get("requires-python")
-                or target.get("python")
-                or default_requires_python
-            )
-            if isinstance(py, str) and re.match(r"^\d+(\.\d+)*$", py):
-                py = f">={py}"
-            platform = target.get("platform") or None
-            implementation = target.get("implementation") or None
-            gil_disabled = target.get("gil_disabled", target.get("gil-disabled", False))
             try:
-                env_spec = EnvSpec.from_spec(
-                    requires_python=str(py),
-                    platform=platform,
-                    implementation=implementation,
-                    gil_disabled=bool(gil_disabled),
-                )
-            except Exception as e:
+                replace_dict: dict[str, Any] = {}
+                if requires_python := target.get("requires-python"):
+                    replace_dict["requires_python"] = PySpecSet(requires_python)
+                if platform := target.get("platform"):
+                    replace_dict["platform"] = platform
+                if implementation := target.get("implementation"):
+                    replace_dict["implementation"] = implementation
+                env_spec = self.environment.allow_all_spec.replace(**replace_dict)
+                if target.get("gil-disabled") and env_spec.implementation is not None:
+                    env_spec = dataclasses.replace(
+                        env_spec,
+                        implementation=Implementation.parse(env_spec.implementation.name, gil_disabled=True),
+                    )
+            except (PlatformError, ValueError) as e:
                 raise PdmUsageError(f"Invalid lock target at index {i} in pyproject.toml: {e}") from e
             if env_spec not in seen:
                 seen.add(env_spec)
